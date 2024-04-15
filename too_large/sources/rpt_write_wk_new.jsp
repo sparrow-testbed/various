@@ -1,0 +1,91 @@
+<%@ page contentType = "text/html; charset=UTF-8" %>
+<% String WISEHUB_LANG_TYPE="KR";%>
+<%@ page import="sepoa.fw.util.*" %>
+<%@ page import="java.util.*"%>   <%-- Vector,HashMap --%>
+<%@ page import="sepoa.fw.srv.*"%>  <%-- SepoaOut --%>
+<%@ page import="sepoa.fw.log.*"%>
+<%-- <%@ include file="/include/sepoa_common.jsp" %> --%>
+<%@ include file="/include/sepoa_session.jsp"%>
+<%-- <%@ include file="/include/sepoa_scripts.jsp"%>
+<%@ include file="/include/code_common.jsp"%> --%>
+
+<%	
+	String user_id 	= JSPUtil.paramCheck (info.getSession("ID"));
+
+	String current_date = SepoaDate.getShortDateString();//현재 시스템 날짜
+    String current_time = SepoaDate.getShortTimeString();//현재 시스템 시간
+%>
+
+<%
+	String SUBJECT 		  = JSPUtil.nullChk(JSPUtil.CheckInjection3(request.getParameter("SUBJECT")));
+	String CONTENT 		  = JSPUtil.nullChk(JSPUtil.CheckInjection3(request.getParameter("CONTENT")));
+//	String COMPANY_CODE	  = JSPUtil.nullChk(JSPUtil.CheckInjection3(request.getParameter("COMPANY_CODE")));
+    String COMPANY_CODE	  = info.getSession("COMPANY_CODE");
+    String DEPARTMENT_NAME_LOC = info.getSession("DEPARTMENT_NAME_LOC");
+	String DEPT_TYPE	  = JSPUtil.nullChk(JSPUtil.CheckInjection3(request.getParameter("DEPT_TYPE")));
+	String GONGJI_GUBUN   = JSPUtil.nullChk(JSPUtil.CheckInjection3(request.getParameter("GONGJI_GUBUN")));
+	String VIEW_USER_TYPE = JSPUtil.nullChk(JSPUtil.CheckInjection3(request.getParameter("VIEW_USER_TYPE")));
+	String FROM_DATE = SepoaString.getDateUnDashFormat(JSPUtil.nullChk(JSPUtil.CheckInjection3(request.getParameter("from_date"))));
+	String TO_DATE = SepoaString.getDateUnDashFormat(JSPUtil.nullChk(JSPUtil.CheckInjection3(request.getParameter("to_date"))));
+	
+	String pop_chk = request.getParameter("pop_chk");
+	String publish_flag="";
+	
+	String load_flag = "";
+	
+	if("true".equals(pop_chk)){
+		publish_flag="Y";
+	}else{
+		publish_flag="N";
+	}
+	
+	if (COMPANY_CODE.length() < 0)
+	{
+		COMPANY_CODE = "";
+	}
+	if (DEPT_TYPE.length() < 0)
+	{
+		DEPT_TYPE = "";
+	}
+	String ATTACH_NO 	= JSPUtil.nullChk(JSPUtil.CheckInjection3(request.getParameter("ATTACH_NO")));
+	String con_type = request.getParameter("con_type"); // 'N'은 공지사항, 'Q'는 Q&A
+      if(con_type == null) con_type = "";	 	  	  
+
+	String[][] args = {{SUBJECT,COMPANY_CODE,DEPT_TYPE,CONTENT,ATTACH_NO,user_id,current_date,current_time,"N", con_type,GONGJI_GUBUN,publish_flag,FROM_DATE,TO_DATE,VIEW_USER_TYPE,DEPARTMENT_NAME_LOC}};
+
+	Object[] obj = {args};
+	SepoaOut value = ServiceConnector.doService(info, "MT_014", "CONNECTION","setInsertRpt_New", obj);
+	
+	if(value.flag) {
+		load_flag = "Y";
+	} else {
+		load_flag = "N";
+	}
+	
+%>
+<%-- [{
+	"con_type":"<%=con_type%>",
+	"message":"<%=value.message%>"
+}] --%>
+<%-- <html>
+<head>
+<title></title>
+
+<link rel="stylesheet" href="../../../css/body_create.css" type="text/css">--%>
+<Script language="javascript">
+	
+(function Init()
+{
+	var con_type = "<%=con_type%>";
+	alert("<%=value.message%>");
+	parent.go_list('/admin/rpt_list_new.jsp', 'MUO141000008', 4, '');
+<%-- 	parent.location.href = "rpt_write_new.jsp?con_type="+con_type+"&load_flag="+"<%=load_flag%>"; --%>
+})();
+
+</Script>
+<!-- 
+</head>
+<body bgcolor="#FFFFFF" text="#000000" onLoad="Init();">
+</body>
+</html>
+ --> 

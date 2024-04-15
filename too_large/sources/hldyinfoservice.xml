@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<service>
+	<method name="isHldy">
+		<![CDATA[
+		SELECT HLDY_DSCD
+		FROM CCMI308TM
+		WHERE BAS_DT = TO_CHAR(SYSDATE,'YYYYMMDD')	
+		]]>	
+	</method>
+</service>

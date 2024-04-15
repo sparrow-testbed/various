@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+<service>
+	<method name="et_getMultilangList">
+	<![CDATA[
+    SELECT 
+        HOUSE_CODE,
+		SCREEN_ID,
+        LANGUAGE,
+        CODE,
+        TYPE,
+        CONTENTS,
+        GETUSERNAME(CHANGE_USER_ID,HOUSE_CODE,'KO') ADD_USER_ID,
+        GETDATEFORMAT(CHANGE_DATE) AS ADD_DATE,
+        COL_TYPE,
+        COL_FORMAT ,
+        NVL(COL_WIDTH, 0) AS COL_WIDTH,
+        NVL(COL_MAX_LEN, 0) AS COL_MAX_LEN,
+        COL_ALIGN  ,
+        COL_VISIBLE,
+        SELECTED_YN,
+        COL_SEQ    ,
+        COL_COLOR  ,
+        COL_COMBO  ,
+        COL_SORT   ,
+        NVL(DEL_FLAG, 'N') STATUS
+    FROM SLANG
+    WHERE NVL(DEL_FLAG, 'N') = 'N'
+<OPT=S,S> AND UPPER(SCREEN_ID) = ?</OPT>
+<OPT=S,S> AND UPPER(LANGUAGE)= ?</OPT>
+<OPT=S,S> AND UPPER(TYPE)= ?</OPT>
+<OPT=S,S> AND (UPPER(CONTENTS) LIKE UPPER('%' || ? || '%') OR</OPT>
+<OPT=S,S>     UPPER(CODE) LIKE UPPER('%' || ? || '%')) </OPT>
+<OPT=S,S> AND HOUSE_CODE = ? </OPT>
+    ORDER BY SCREEN_ID, LANGUAGE, TYPE, COL_SEQ	
+	]]>
+	</method>
+
+	<method name="et_insertMultilang_select">
+	<![CDATA[
+        SELECT COUNT(*) CNT 
+          FROM SLANG 
+<OPT=F,S>         WHERE SCREEN_ID = ?</OPT>
+<OPT=F,S>           AND LANGUAGE = ?</OPT>
+<OPT=F,S>           AND CODE = ?</OPT>
+	]]>
+    </method>
+
+	<method name="et_insertMultilang_update">
+	<![CDATA[
+        update slang set
+            house_code = ?,
+            type = ?,
+            contents = ?, 
+            del_flag = 'N', 
+            change_user_id = ?, 
+            change_date = ?, 
+            change_time = ?, 
+            col_type    = ?, 
+            col_format  = ?, 
+            col_width   = CASE WHEN TYPE = 'B' THEN NVL(?, 0) ELSE ? END, 
+            col_max_len = ?, 
+            col_align   = ?, 
+            col_visible = ?, 
+            selected_yn = ?, 
+            col_seq     = ?, 
+            col_color   = ?, 
+            col_combo   = ?, 
+            col_sort    = ?  
+        where screen_id = ? 
+          and language = ? 
+          and code = ? 
+	]]>
+    </method>
+
+	<method name="et_insertMultilang_insert">
+	<![CDATA[
+	insert into slang 
+	( 
+		house_code,  
+		screen_id,  
+		language,  
+		code,  
+		type,  
+		contents,  
+		add_user_id,  
+		add_date,  
+		add_time,  
+	    col_type   , 
+	    col_format , 
+	    col_width  , 
+	    col_max_len, 
+	    col_align  , 
+	    col_visible, 
+	    selected_yn, 
+	    col_seq    , 
+	    col_color  , 
+	    col_combo  , 
+	    col_sort   , 
+		del_flag     
+	) values ( 
+		?,	 
+		?,	 
+		?,	 
+		?,	 
+		?,	 
+		?,	 
+		?,	 
+		?,	 
+		?,	 
+	    ?, 
+	    ?, 
+	    ?, 
+	    ?, 
+	    ?, 
+	    ?, 
+	    ?, 
+	    ?, 
+	    ?, 
+	    ?, 
+	    ?, 
+		? 
+	)	 
+	]]>
+    </method>
+
+</service>

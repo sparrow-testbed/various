@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+	<service>
+		<method name="setDelete">
+		    <![CDATA[
+		    		DELETE FROM SCPGL 
+		    		WHERE CT_FLAG IN ('CA','CB','CE','CW')		    		
+		    		AND CONT_NO = ${CONT_NO}
+		    		AND CONT_GL_SEQ = ${CONT_GL_SEQ}		    		
+				]]>
+		</method>
+		<method name="getCreateList">
+		    <![CDATA[
+				SELECT  A.CONT_NO                           
+			    ,		A.CONT_GL_SEQ                       
+			    ,       A.SUBJECT                           
+			    ,       A.SELLER_CODE                       
+			    ,       GETCOMPANYNAMELOC('000', A.SELLER_CODE, 'S') AS SELLER_CODE_TEXT	
+			    ,       A.CT_FLAG		
+			    ,       GETCODETEXT2('M286', A.CT_FLAG, 'KO') AS CT_NAME 		
+			    ,       A.CONT_AMT       
+			    ,       TO_CHAR(TO_DATE(A.CONT_DATE), 'YYYY/MM/DD') AS CONT_ADD_DATE                     
+			    ,       A.SIGN_PERSON_ID                    
+			    ,       A.SIGN_PERSON_NAME                  
+			    ,       A.CONT_FROM                         
+			    ,       A.CONT_TO                           
+			    ,       A.CONT_DATE                         
+			    ,       A.CONT_TYPE                         
+			    ,       A.ELE_CONT_FLAG                     
+			    ,       A.ASSURE_FLAG                       
+			    ,       A.START_START_INS_FLAG              
+			    ,       A.CONT_PROCESS_FLAG                 
+			    ,       A.CONT_ASSURE_PERCENT               
+			    ,       A.CONT_ASSURE_AMT                   
+			    ,       A.FAULT_INS_PERCENT                 
+			    ,       A.FAULT_INS_AMT                     
+			    ,       A.PAY_DIV_FLAG                      
+			    ,       A.FAULT_INS_TERM                    
+			    ,       A.BD_NO                             
+			    ,       A.BD_COUNT                          
+			    ,       A.AMT_GUBUN                         
+			    ,       A.TEXT_NUMBER                       
+			    ,       A.DELAY_CHARGE                      
+			    ,       A.DELV_PLACE                        
+			    ,       SUBSTR(A.REMARK,1,50) AS REMARK                            
+			    ,       A.CTRL_DEMAND_DEPT                  
+			    ,       A.CTRL_CODE                         
+			    ,       A.COMPANY_CODE                      
+			    ,       A.ACCOUNT_CODE                      
+			    ,       A.ACCOUNT_NAME                      
+			    ,       A.REJECT_REASON                      
+			    ,       A.RFQ_TYPE                          
+			    ,       A.CONT_TYPE1_TEXT                   
+			    ,       A.CONT_TYPE2_TEXT                   
+			    ,		(                                        
+			         		SELECT MAX( CONT_GL_SEQ )              
+			         		FROM   SCPGL                           
+			         		WHERE  CONT_NO            = A.CONT_NO  
+			         		AND    NVL(DEL_FLAG, 'N') = 'N'        
+			       		) AS MAX_CONT_GL_SEQ		  
+			    ,		A.DELV_PLACE                             
+			    ,       A.SG_LEV1      	                      
+			    ,       A.SG_LEV2	                              
+			    ,       A.SG_LEV3  	                          
+			    ,       A.ADD_TAX_FLAG	                          
+			    ,       A.ITEM_TYPE	                          
+			    ,       A.RD_DATE	                          
+			    ,       A.CONT_TOTAL_GUBUN	                          
+			    ,       A.CONT_PRICE	                          
+			    ,       A.BEFORE_CONT_FROM	                          
+			    ,       A.BEFORE_CONT_TO	                          
+			    ,       A.BEFORE_CONT_AMT	                          
+			    ,       A.BEFORE_ITEM_TYPE	                           
+			    ,       A.TTL_ITEM_QTY	   
+			    ,		A.EXEC_NO     
+				,		A.CONT_FORM_NO      
+			    FROM 	SCPGL A                     
+		    	WHERE 	A.DEL_FLAG = 'N'
+		    	AND 	A.CONT_DATE BETWEEN $S{from_cont_date}
+		    	AND 	$S{to_cont_date}
+		    	AND 	UPPER(A.SUBJECT) LIKE '%'|| UPPER($S{subject}) ||'%'
+		    	AND 	A.SIGN_PERSON_ID = $S{ctrl_person_id}
+		    	ORDER BY A.ADD_DATE DESC , A.ADD_TIME DESC
+				]]>
+		</method>
+		<method name="getCreateList_bak">
+		    <![CDATA[
+		    		SELECT
+		    			 GL.CONT_NUMBER AS CONT_NO 
+		    		   , GL.CONT_GL_SEQ
+		    		   , GL.SUBJECT
+		    		   , GL.SELLER_COMPANY_NAME AS SELLER_CODE_TEXT
+		    		   , GL.SELLER_CODE	AS SELLER_CODE
+		    		   , GETCODETEXT1('M286', GL.CT_FLAG, '#language#' ) AS CT_NAME
+		    		   , GL.CT_FLAG
+		    		   , GL.SIGN_PERSON_ID
+		    		   , GL.CONT_AMT
+		    		   , GETDATEFORMAT(GL.CONT_ADD_DATE) AS CONT_ADD_DATE
+		    		   , GL.CONT_TYPE
+		    		   , GETCODETEXT1('M125', GL.CONT_TYPE, '#language#') AS CONT_TYPE_TEXT
+		    		   , GETCODETEXT1('M225', GL.INS_VENDOR_NO, '#language#') AS CONT_INS_VN
+		    		   , GL.PRE_INS_NO
+		    		   , GL.CONT_INS_NO
+		    		   , GL.FAULT_INS_NO
+		    		   , GL.ATTACH_PRE_INS_NO AS PRE_FILE_NO
+		    		   , GL.ATTACH_CONT_INS_NO  AS CONT_FILE_NO
+		    		   , GL.ATTACH_FAULT_INS_NO AS FAULT_FILE_NO
+		    		   , GL.PRE_INS_PATH
+		    		   , GL.CONT_INS_PATH
+		    		   , GL.FAULT_INS_PATH
+		    		   , GL.CONT_FROM
+		    		   , GL.CONT_TO
+		    		   , GL.CONT_REJECT_REASON AS REJECT_REASON
+		    		   FROM SCTGL GL 
+		    		   WHERE 1 = 1
+		    		   AND GL.DEL_FLAG = 'N'
+		    		   AND GL.COMPANY_CODE = $S{company_code}
+		    		   AND GL.CONT_ADD_DATE BETWEEN $S{from_cont_date}
+		    		   AND $S{to_cont_date}
+		    		   AND GL.CONT_TYPE = $S{cont_type}
+		    		   AND UPPER(GL.SUBJECT) LIKE '%'|| UPPER($S{subject}) ||'%'
+		    		   AND GL.CT_FLAG = CASE WHEN $S{ct_flag} = 'all' THEN GL.CT_FLAG ELSE 
+		    		   $S{ct_flag} END 
+		    		   ORDER BY GL.ADD_DATE DESC , GL.ADD_TIME DESC
+				]]>
+		</method>
+	</service>

@@ -1,0 +1,106 @@
+<html>
+<head>
+<title>『Clean계약제도』시행 안내문</title>
+<meta http-equiv="Content-Type" content="text/html; charset=euc-kr">
+</head>
+<script LANGUAGE="JavaScript">
+/*
+    function closewin()
+    {
+		var s = "EPRO[popup02]"
+
+		if (document.forms[0].chkClose.checked) 
+			setCookie(s,"true", 1);
+		else 
+			clearCookie(s);
+
+		window.close();
+    }
+
+	function setCookie(name, value, expire) 
+	{
+		var expire_date = new Date();
+		expire_date = new Date(expire_date.getTime() + 60*60*24*1000);
+		document.cookie = name + "=" + escape(value) + "; expires=" + expire_date.toGMTString() +"; path=/"; 
+	}
+	
+	function clearCookie(name)
+	{
+		var today = new Date()
+		var expire_date = new Date(today.getTime() - 60*60*24*1000)
+		document.cookie = name + "= " + "; expires=" + expire_date.toGMTString()
+	}
+
+
+*/
+
+function setCookie(name, value, expiredays) {
+	var today = new Date();
+	today.setDate( today.getDate() + expiredays );
+	document.cookie = name + "=" + escape( value ) + "; path=/; expires=" + today.toGMTString() + ";";
+}
+
+function closeWin() {
+	if( document.frmPopUp02.chkClose.checked ) {
+		setCookie("notice02", "no", 1);
+	}
+	window.close();
+}
+</script>
+
+<body bgcolor="#FFFFFF" text="#000000">
+	<form id="frmPopUp02" name="frmPopUp02">
+	<table align="center">
+		<tr>
+			<td>
+				<span style="font-size:14px; font-weight:bold; color:black">■ 『Clean계약제도』시행 안내문</span><br><br>
+				<span style="font-size:12px; color:black">
+					&nbsp;&nbsp;&nbsp;우리은행에서는 윤리경영을 경영전략의 중요한 축으로 채택하여 "우리윤리<br>
+					강령"을 제정하는 등 정도경영을 위한 다양한 노력과 활동을 전개하고 있으며,<br><br>
+					
+					투명한 은행경영 및 공정한 업무처리가 귀사와 우리은행간 상호이익 창출<br>
+					은 물론,  사회발전과 기업경쟁력 향상의 중요한 관건임을 인식하고,  각종<br>
+					계약부문의 투명성을 강화하기 위하여 Clean계약제를 시행하고 있습니다.<br><br>
+					
+					우리은행의  계약 및 구매 관련  임직원은 은행에서 시행하는 모든 공사,<br>
+					용역, 물품구매 등의 입찰, 계약체결 및 계약이행 과정에서 공정하고 투명<br>
+					하게 업무를 수행하겠으며, 계약체결 및 계약이행과 관련하여 어떠한 경우<br>
+					에도 금품, 향응, 사적금전대차(알선포함) 등을 요구하지도 않고 받지도 않겠습니다.<br><br>
+					
+					&nbsp;&nbsp;은행 임직원이 계약 및 구매와  관련하여 금품, 향응, 사적금전대차<br>
+					(알선포함) 등의 제공을 요구하는 경우, 사이트 상단 '고객의소리'에 제보해 주시고,<br>
+					이러한 제보와 관련하여 귀사에 어떠한 불이익도 없을 것을 약속 드립니다.<br><br>
+					
+					또한 귀사에서 우리은행과 입찰, 계약체결 및 계약이행  과정에서  환경,<br>
+					인권, 회계 등 비윤리적인 문제가 발생하거나 계약 및 구매 관련 임직원에게<br>
+					금품, 향응, 사적금전대차(알선포함) 등을 제공할 경우에는  입찰자격 제한,<br>
+					계약해지 또는 거래중단 등 불이익 조치를 취할 것입니다.<br><br>
+					
+					우리은행은  경영의 투명성을 제고하기 위하여 더욱 노력할 것을 약속드리며,<br>
+					귀사도 우리은행 윤리경영의 발전을 위해 적극 협조해 주시기 바랍니다.<br>
+					감사합니다.<br><br>
+				</span>
+			</td>
+		</tr>
+		<tr  style="display:none"><td><a href="javascript:opener.topMenuClick('/admin/rpt_write_new.jsp', 'MUO141000008', '4', '');self.close();" ><span style="font-size:12px; color:blue"><b>☞ "고객의 소리" 바로가기</b></span></a></td></tr>
+		<tr><td>&nbsp;</td></tr>		
+		<tr>
+			<td align="center">
+				 <img src="/images/top/logo.gif"  border="0"  width="100"  height="20">
+			</td>
+		</tr>		
+		<tr>
+			<td>
+				<br><br>
+				<input type="checkbox" name="chkClose" id="chkClose" onclick="javascript:closeWin();" value="T" >
+				<span style="font-size:12px; color:black">1일동안 열지 않음</span>
+			</td>
+		</tr>
+	</table>
+</body>
+
+</html>
+<script type="text/javascript">
+ var objBody = document.getElementsByTagName("body");
+ objBody[0].setAttribute("oncontextmenu",function(){return false;});
+</script>

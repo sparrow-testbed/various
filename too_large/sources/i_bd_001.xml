@@ -1,0 +1,2746 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<service> 
+
+	<!-- ICT 사용 : 생성된 공고 수정 및 상세조회를 위하여 가져오기-->	
+	<method name="getPrHeaderDetail">
+		<![CDATA[
+	         SELECT
+	                HD.CHANGE_USER_NAME_LOC
+	               ,HD.SIGN_PERSON_ID
+	               ,HD.SIGN_PERSON_NAME
+	               ,HD.SIGN_DATE
+	               ,HD.SIGN_STATUS
+	               ,HD.CHANGE_DATE
+	               ,HD.BID_TYPE
+	               ,HD.CONT_TYPE1
+	               ,HD.CONT_TYPE2
+	               ,HD.ES_FLAG
+	               ,(SELECT TEXT1 FROM SCODE WHERE TYPE = 'M966_ICT' AND CODE = HD.ES_FLAG)   AS ES_FLAG_TEXT_D 
+	               ,GETICOMCODE2(HD.HOUSE_CODE, 'M974_ICT', HD.CONT_TYPE1)	AS CONT_TYPE1_TEXT_D	-- 공고문 상세조회시 사용
+	               ,GETICOMCODE2(HD.HOUSE_CODE, 'M973_ICT', HD.CONT_TYPE2)	AS CONT_TYPE2_TEXT_D	-- 공고문 상세조회시 사용
+	               ,NULL													AS CONT_TYPE1_TEXT_O	-- 사용불명
+	               ,(case when HD.CONT_TYPE2 in ('TA')      then '( ' || TCO_PERIOD || '년 TCO )'
+	                      when HD.CONT_TYPE2 in ('RA','RC') then '( 마감시간 ' || RA_TIME01 || '분안에 1순위가 변동 시  ' || RA_TIME01 || '분 연장)'
+	                      else ''
+	                 end)													AS CONT_TYPE2_TEXT_O	-- 공고문 상세조회시 사용
+	               ,NULL													AS CONT_TYPE1_TEXT_CS	-- 사용불명
+	               ,NULL													AS CONT_TYPE2_TEXT_CS	-- 사용불명
+	               ,HD.TCO_PERIOD											AS TCO_PERIOD
+	               ,HD.RA_TIME01											AS RA_TIME01
+	               ,HD.RA_TIME02											AS RA_TIME02
+	               ,HD.ANN_TITLE
+	               ,HD.ANN_NO					 							--과거 입찰공고까지 모두 보기 위해서 ANN_NO를 공고번호로 조회
+	               ,HD.ANN_DATE
+	               ,HD.ANN_ITEM
+	               ,CONVERT_DATE(HD.RD_DATE )								AS RD_DATE
+	               ,HD.DELY_PLACE
+	               ,HD.LIMIT_CRIT
+	               ,HD.PROM_CRIT
+	               ,GETICOMCODE2(HD.HOUSE_CODE, 'M930_ICT', HD.PROM_CRIT)	AS PROM_CRIT_NAME
+	               ,convert_date(HD.APP_BEGIN_DATE )						AS APP_BEGIN_DATE
+	               ,HD.APP_BEGIN_TIME
+	               ,SUBSTR(HD.APP_BEGIN_TIME, 0, 2)							AS APP_BEGIN_TIME_HOUR
+	               ,SUBSTR(HD.APP_BEGIN_TIME, 3, 2)							AS APP_BEGIN_TIME_MINUTE
+	               ,convert_date(HD.APP_END_DATE )							AS APP_END_DATE
+	               ,HD.APP_END_TIME
+	               ,SUBSTR(HD.APP_END_TIME, 0, 2)							AS APP_END_TIME_HOUR
+	               ,SUBSTR(HD.APP_END_TIME, 3, 2)							AS APP_END_TIME_MINUTE
+	               ,HD.APP_PLACE
+	               ,HD.APP_ETC
+	               ,HD.ATTACH_NO
+	               ,(SELECT NVL(COUNT(Z.DOC_NO),0)
+	                   FROM SFILE Z
+	                  WHERE Z.DOC_NO = HD.ATTACH_NO)						AS ATTACH_CNT
+	               ,(SELECT COUNT(Z.BID_NO)
+	                   FROM ICOYBDAP_ICT Z
+	                  WHERE Z.HOUSE_CODE = PG.HOUSE_CODE
+	                    AND Z.BID_NO     = PG.BID_NO
+	                    AND Z.BID_COUNT  = PG.BID_COUNT
+	                    AND Z.BID_CANCEL = 'N'
+	                    AND Z.STATUS IN ('C', 'R'))							AS VENDOR_CNT
+	               ,GETVENDORS_ICT(HD.HOUSE_CODE, HD.BID_NO, HD.BID_COUNT)	AS VENDOR_INFO
+	               ,HD.ANNOUNCE_DATE
+	               ,HD.ANNOUNCE_TIME_FROM
+	               ,HD.ANNOUNCE_TIME_TO
+	               ,HD.ANNOUNCE_AREA
+	               ,HD.ANNOUNCE_PLACE
+	               ,HD.ANNOUNCE_NOTIFIER
+	               ,HD.ANNOUNCE_RESP
+	               ,HD.DOC_FRW_DATE
+	               ,HD.ANNOUNCE_COMMENT
+	               ,HD.ANNOUNCE_FLAG
+	               ,HD.ANNOUNCE_TEL
+	               ,HD.BID_STATUS
+	               ,HD.ESTM_FLAG
+	               ,HD.COST_STATUS
+	               ,HD.PR_NO
+	               ,HD.CTRL_CODE
+	               ,HD.ANN_TIME
+	               ,PG.VOTE_COUNT
+	               ,CONVERT_DATE(PG.BID_BEGIN_DATE)							AS BID_BEGIN_DATE
+	               ,PG.BID_BEGIN_TIME
+	               ,SUBSTR(PG.BID_BEGIN_TIME, 0, 2)							AS BID_BEGIN_TIME_HOUR
+	               ,SUBSTR(PG.BID_BEGIN_TIME, 3, 2)							AS BID_BEGIN_TIME_MINUTE
+	               ,CONVERT_DATE(PG.BID_END_DATE)							AS BID_END_DATE
+	               ,PG.BID_END_TIME
+	               ,SUBSTR(PG.BID_END_TIME, 0, 2)							AS BID_END_TIME_HOUR
+	               ,SUBSTR(PG.BID_END_TIME, 3, 2)							AS BID_END_TIME_MINUTE
+	               ,PG.BID_PLACE
+	               ,PG.BID_ETC
+	               ,CONVERT_DATE(PG.OPEN_DATE)								AS OPEN_DATE
+	               ,PG.OPEN_TIME
+	               ,SUBSTR(PG.OPEN_TIME, 0, 2)								AS OPEN_TIME_HOUR
+	               ,SUBSTR(PG.OPEN_TIME, 3, 2)								AS OPEN_TIME_MINUTE
+	               ,HD.CTRL_AMT
+	               ,CERTV
+	               ,TIMESTAMP
+	               ,SIGN_CERT
+	               ,CRYP_CERT
+	               ,NULL													AS LOCATION_VALUES
+	               ,HD.ESTM_KIND
+	               ,HD.ESTM_RATE
+	               ,HD.ESTM_MAX
+	               ,HD.ESTM_VOTE
+	               ,HD.FROM_CONT
+	               ,NULL													AS FROM_CONT_TEXT
+	               ,NVL(HD.FROM_LOWER_BND, 0)								AS FROM_LOWER_BND
+	               ,HD.ASUMTN_OPEN_YN
+	               ,HD.CONT_TYPE_TEXT
+	               ,HD.CONT_PLACE
+	               ,HD.BID_PAY_TEXT
+	               ,HD.BID_CANCEL_TEXT
+	               ,HD.BID_JOIN_TEXT
+	               ,HD.REMARK
+	               ,HD.ESTM_MAX_VOTE
+	               ,HD.STANDARD_POINT
+	               ,HD.TECH_DQ
+	               ,HD.AMT_DQ
+	               ,HD.BID_NO
+	               ,HD.BID_COUNT
+	               ,GETUSERNAME(HD.HOUSE_CODE,HD.ADD_USER_ID,'LOC' )	AS ADD_USER_NAME
+	               ,NULL												AS ITEM_COUNT        
+	               ,NULL												AS BASIC_AMT
+	               ,HD.BID_EVAL_SCORE
+	               ,HD.REPORT_ETC
+				   ,X_PURCHASE_QTY  															-- 2. 입찰에 부치는 사항 > 다. 구매수량
+	               ,X_MAKE_SPEC    																-- 2. 입찰에 부치는 사항 > 라. 제조사양
+	               ,X_BASIC_ADD         														-- 2. 입찰에 부치는 사항 > 마. 유의사항
+	               ,X_RELATIVE_ADD       														-- 5. 입찰관련사항 > 마. 유의사항
+	               ,CONVERT_DATE(X_DOC_SUBMIT_DATE)						AS X_DOC_SUBMIT_DATE    -- 4. 제출서류 목록 및 제출기일 > 가. 제출기한     
+	               ,X_DOC_SUBMIT_TIME       													-- 4. 제출서류 목록 및 제출기일 > 제출시간
+	               ,SUBSTR(X_DOC_SUBMIT_TIME, 0, 2)						AS X_DOC_SUBMIT_TIME_HOUR
+	               ,SUBSTR(X_DOC_SUBMIT_TIME, 3, 2)						AS X_DOC_SUBMIT_TIME_MINUTE
+	               ,X_ESTM_CHECK            													-- 2. 입찰에 부치는 사항 > 나. 예정가격 > 공개여부                               
+	               ,X_PERSON_IN_CHARGE  														-- 2. 입찰에 부치는 사항 > 다. 담당기술역                                   
+	               ,X_QUALIFICATION         													-- 3. 입찰참가자격 > 나. 기타                              
+	               ,COST_SETTLE_TERMS   														-- 9. 계약관련사항 > 대금결제조건(구매) / 대금지급방법(공사)
+	               ,ANN_VERSION																	-- 입찰서 버전		                      
+	               ,ITEM_TYPE																	-- 10. 기타사항 > 나. 품목구분               
+	               ,NULL												AS ITEM_TYPE_TEXT_D		-- 10. 기타사항 > 나. 품목구분               
+	               ,X_AUTO_FLAG																	-- 자동개찰여부                             
+	               ,BID_INPUT_TYPE  															-- 입찰서 입력기준    
+	               ,NULL												AS X_ESTM_AMT    
+	               ,HD.INP_CNF      AS INP_CNF
+	               ,HD.ANN_NO2 
+		           ,HD.ANN_COUNT2
+		           ,(SELECT ANN_ITEM FROM ICOYBDHD2_ICT WHERE ANN_NO = HD.ANN_NO2 AND ANN_COUNT = HD.ANN_COUNT2) AS ANN_ITEM2   
+		           ,HD.BIZ_NO
+		           ,(SELECT BIZ_NM FROM ICOYRQBZ_ICT WHERE BIZ_NO = HD.BIZ_NO) AS BIZ_NM		           
+		           ,MATERIAL_CLASS1
+		           ,MATERIAL_CLASS2
+		           ,GETFILENAMES(HD.ATTACH_NO) AS RPT_GETFILENAMES
+		           ,HD.ADD_USER_DEPT
+	           FROM				ICOYBDHD_ICT	HD
+	           		INNER JOIN	ICOYBDPG_ICT	PG	ON	1=1
+	           										AND HD.HOUSE_CODE = PG.HOUSE_CODE
+	           										AND HD.BID_NO     = PG.BID_NO
+	           										AND HD.BID_COUNT  = PG.BID_COUNT
+	          WHERE HD.HOUSE_CODE = ${house_code}
+	            AND (HD.BID_NO    = $S{BID_NO} 
+	            	OR HD.ANN_NO  = $S{BID_NO})  -- 결재시 DOC_NO가 ANN_NO로 들어가므로
+	            AND HD.BID_COUNT  = $S{BID_COUNT}
+	         -- AND HD.STATUS IN ('C', 'R') --
+	         -- AND PG.STATUS IN ('C', 'R') --
+		]]>
+	</method>
+	
+	<method name="getBidVedorList_ICT">
+	<![CDATA[
+		SELECT VENDOR_CODE AS SELLER_CODE
+		     ,GETVENDORNAME_ICT('000',VENDOR_CODE) AS SELLER_NAME
+		FROM ICOYBDAP_ICT
+		WHERE STATUS IN ('C','R')
+		AND HOUSE_CODE = ${house_code}
+		AND BID_NO = ${BID_NO}
+		AND BID_COUNT = ${BID_COUNT}
+		ORDER BY VENDOR_CODE
+	]]>    
+    </method>
+	
+	
+	<method name="getDefaultPrhd">
+		<![CDATA[
+			SELECT 
+				  HOUSE_CODE
+				, $S{NEW_PR_NO} AS PR_NO
+				, STATUS
+				, ADD_DATE
+				, ADD_TIME
+				, ADD_USER_ID
+				, CHANGE_DATE
+				, CHANGE_TIME
+				, CHANGE_USER_ID
+				, COMPANY_CODE
+				, PLANT_CODE
+				, PR_TOT_AMT
+				, PR_TYPE
+				, DEMAND_DEPT
+				, SIGN_STATUS
+				, SIGN_DATE
+				, SIGN_PERSON_ID
+				, DEMAND_DEPT_NAME
+				, SIGN_PERSON_NAME
+				, REMARK
+				, SUBJECT
+				, PR_LOCATION
+				, SALES_USER_DEPT
+				, SALES_USER_ID
+				, CONTRACT_HOPE_DAY
+				, AHEAD_FLAG
+				, SHIPPER_TYPE
+				, CUST_CODE
+				, SALES_TYPE
+				, REQ_TYPE
+				, RETURN_HOPE_DAY
+				, CREATE_TYPE
+				, EXPECT_AMT
+				, CUST_NAME
+				, IF_FLAG
+				, PC_FLAG
+				, ATTACH_NO 
+			FROM ICOYPRHD 
+			WHERE HOUSE_CODE = ${house_code}
+			AND   PR_NO = ${PR_NO}
+			
+		]]>
+	</method>
+	
+	
+	<method name="getDefaultPrdt">
+		<![CDATA[
+			SELECT 
+			      PRDT.HOUSE_CODE
+				, $S{NEW_PR_NO} AS PR_NO
+				, LPAD ( ROWNUM || '0' , '5','0') AS PR_SEQ
+				, PRDT.STATUS
+				, PRDT.ADD_DATE
+				, PRDT.ADD_TIME
+				, PRDT.ADD_USER_ID
+				, PRDT.CHANGE_DATE
+				, PRDT.CHANGE_TIME
+				, PRDT.CHANGE_USER_ID
+				, PRDT.COMPANY_CODE
+				, PRDT.PLANT_CODE
+				, PRDT.ITEM_NO
+				, PRDT.SHIPPER_TYPE
+				, PRDT.PR_PROCEEDING_FLAG
+				, PRDT.PURCHASE_LOCATION
+				, PRDT.CTRL_CODE
+				, PRDT.UNIT_MEASURE
+				, QTDT.ITEM_QTY AS PR_QTY
+				, PRDT.CUR
+				, QTDT.UNIT_PRICE AS UNIT_PRICE
+				, QTDT.ITEM_AMT AS PR_AMT
+				, PRDT.RD_DATE
+				, PRDT.PURCHASER_ID
+				, PRDT.PURCHASER_NAME
+				, PRDT.REC_VENDOR_CODE
+				, PRDT.DELY_TO_LOCATION
+				, PRDT.SAMPLE_FLAG
+				, PRDT.TBE_FLAG
+				, PRDT.PURCHASE_DEPT
+				, PRDT.REC_VENDOR_NAME
+				, PRDT.PURCHASE_DEPT_NAME
+				, PRDT.BEFORE_CTRL_CODE
+				, PRDT.DELY_TO_ADDRESS
+				, PRDT.DESCRIPTION_LOC
+				, PRDT.SPECIFICATION
+				, PRDT.CONFIRM_DATE
+				, PRDT.CONFIRM_TIME
+				, PRDT.CONFIRM_USER_ID
+				, PRDT.EXCHANGE_RATE
+				, PRDT.PE_CLOSE_FLAG
+				, PRDT.ON_PR_FLAG
+				, PRDT.KNTTP
+				, PRDT.ZEXKN
+				, PRDT.ORDER_SEQ
+				, PRDT.BID_STATUS
+				, PRDT.ACCOUNT_TYPE
+				, PRDT.DELY_TO_ADDRESS_CD
+				, PRHD.DEMAND_DEPT
+			 FROM ICOYPRHD PRHD,ICOYPRDT PRDT, ICOYRQDT RQDT, ICOYQTDT QTDT
+			 WHERE PRHD.HOUSE_CODE   = PRDT.HOUSE_CODE
+			 AND   PRHD.PR_NO        = PRDT.PR_NO
+			 AND   PRDT.HOUSE_CODE   = RQDT.HOUSE_CODE
+			 AND   PRDT.COMPANY_CODE = RQDT.COMPANY_CODE
+			 AND   PRDT.PR_NO        = RQDT.PR_NO
+			 AND   PRDT.PR_SEQ       = RQDT.PR_SEQ
+			 AND   RQDT.HOUSE_CODE   = QTDT.HOUSE_CODE
+			 AND   RQDT.RFQ_NO       = QTDT.RFQ_NO
+			 AND   RQDT.RFQ_SEQ      = QTDT.RFQ_SEQ
+			 AND   QTDT.SETTLE_FLAG  = 'Y'
+			 AND   PRDT.PR_NO || PRDT.PR_SEQ IN ( $IN{ PR_NO_SEQ } );
+			
+		]]>
+	</method>
+	<method name="setDefaultPrhd">
+		<![CDATA[
+				INSERT INTO ICOYPRHD (
+					  HOUSE_CODE
+					, PR_NO
+					, STATUS
+					, ADD_DATE
+					, ADD_TIME
+					, ADD_USER_ID
+					, CHANGE_DATE
+					, CHANGE_TIME
+					, CHANGE_USER_ID
+					, COMPANY_CODE
+					, PLANT_CODE
+					, PR_TOT_AMT
+					, PR_TYPE
+					, DEMAND_DEPT
+					, SIGN_STATUS
+					, SIGN_DATE
+					, SIGN_PERSON_ID
+					, DEMAND_DEPT_NAME
+					, SIGN_PERSON_NAME
+					, REMARK
+					, SUBJECT
+					, PR_LOCATION
+					, SALES_USER_DEPT
+					, SALES_USER_ID
+					, CONTRACT_HOPE_DAY
+					, AHEAD_FLAG
+					, SHIPPER_TYPE
+					, CUST_CODE
+					, SALES_TYPE
+					, REQ_TYPE
+					, RETURN_HOPE_DAY
+					, CREATE_TYPE
+					, EXPECT_AMT
+					, CUST_NAME
+					, IF_FLAG
+					, PC_FLAG
+					, ATTACH_NO 
+				)VALUES(
+					  ${HOUSE_CODE}
+					, ${PR_NO}
+					, ${STATUS}
+					, ${ADD_DATE}
+					, ${ADD_TIME}
+					, ${ADD_USER_ID}
+					, ${CHANGE_DATE}
+					, ${CHANGE_TIME}
+					, ${CHANGE_USER_ID}
+					, ${COMPANY_CODE}
+					, ${PLANT_CODE}
+					, ${PR_TOT_AMT}
+					, ${PR_TYPE}
+					, ${DEMAND_DEPT}
+					, ${SIGN_STATUS}
+					, ${SIGN_DATE}
+					, ${SIGN_PERSON_ID}
+					, ${DEMAND_DEPT_NAME}
+					, ${SIGN_PERSON_NAME}
+					, ${REMARK}
+					, ${SUBJECT}
+					, ${PR_LOCATION}
+					, ${SALES_USER_DEPT}
+					, ${SALES_USER_ID}
+					, ${CONTRACT_HOPE_DAY}
+					, ${AHEAD_FLAG}
+					, ${SHIPPER_TYPE}
+					, ${CUST_CODE}
+					, ${SALES_TYPE}
+					, ${REQ_TYPE}
+					, ${RETURN_HOPE_DAY}
+					, ${CREATE_TYPE}
+					, ${EXPECT_AMT}
+					, ${CUST_NAME}
+					, ${IF_FLAG}
+					, ${PC_FLAG}
+					, ${ATTACH_NO}
+				)
+		]]>
+	</method>
+	
+	
+	<method name="setDefaultPrdt">
+		<![CDATA[
+			INSERT INTO ICOYPRDT ( 
+			      HOUSE_CODE
+				, PR_NO
+				, PR_SEQ
+				, STATUS
+				, ADD_DATE
+				, ADD_TIME
+				, ADD_USER_ID
+				, CHANGE_DATE
+				, CHANGE_TIME
+				, CHANGE_USER_ID
+				, COMPANY_CODE
+				, PLANT_CODE
+				, ITEM_NO
+				, SHIPPER_TYPE
+				, PR_PROCEEDING_FLAG
+				, PURCHASE_LOCATION
+				, CTRL_CODE
+				, UNIT_MEASURE
+				, PR_QTY
+				, CUR
+				, UNIT_PRICE
+				, PR_AMT
+				, RD_DATE
+				, PURCHASER_ID
+				, PURCHASER_NAME
+				, REC_VENDOR_CODE
+				, DELY_TO_LOCATION
+				, SAMPLE_FLAG
+				, TBE_FLAG
+				, PURCHASE_DEPT
+				, REC_VENDOR_NAME
+				, PURCHASE_DEPT_NAME
+				, BEFORE_CTRL_CODE
+				, DELY_TO_ADDRESS
+				, DESCRIPTION_LOC
+				, SPECIFICATION
+				, CONFIRM_DATE
+				, CONFIRM_TIME
+				, CONFIRM_USER_ID
+				, EXCHANGE_RATE
+				, PE_CLOSE_FLAG
+				, ON_PR_FLAG
+				, KNTTP
+				, ZEXKN
+				, ORDER_SEQ
+				, BID_STATUS
+				, ACCOUNT_TYPE
+				, DELY_TO_ADDRESS_CD
+				, DEMAND_DEPT
+			) VALUES (
+			      ${HOUSE_CODE}
+				, ${PR_NO}
+				, ${PR_SEQ}
+				, ${STATUS}
+				, ${ADD_DATE}
+				, ${ADD_TIME}
+				, ${ADD_USER_ID}
+				, ${CHANGE_DATE}
+				, ${CHANGE_TIME}
+				, ${CHANGE_USER_ID}
+				, ${COMPANY_CODE}
+				, ${PLANT_CODE}
+				, ${ITEM_NO}
+				, ${SHIPPER_TYPE}
+				, 'P'
+				, ${PURCHASE_LOCATION}
+				, ${CTRL_CODE}
+				, ${UNIT_MEASURE}
+				, ${PR_QTY}
+				, ${CUR}
+				, ${UNIT_PRICE}
+				, ${PR_AMT}
+				, ${RD_DATE}
+				, ${PURCHASER_ID}
+				, ${PURCHASER_NAME}
+				, ${REC_VENDOR_CODE}
+				, ${DELY_TO_LOCATION}
+				, ${SAMPLE_FLAG}
+				, ${TBE_FLAG}
+				, ${PURCHASE_DEPT}
+				, ${REC_VENDOR_NAME}
+				, ${PURCHASE_DEPT_NAME}
+				, ${BEFORE_CTRL_CODE}
+				, ${DELY_TO_ADDRESS}
+				, ${DESCRIPTION_LOC}
+				, ${SPECIFICATION}
+				, ${CONFIRM_DATE}
+				, ${CONFIRM_TIME}
+				, ${CONFIRM_USER_ID}
+				, ${EXCHANGE_RATE}
+				, ${PE_CLOSE_FLAG}
+				, ${ON_PR_FLAG}
+				, ${KNTTP}
+				, ${ZEXKN}
+				, ${ORDER_SEQ}
+				, ${BID_STATUS}
+				, ${ACCOUNT_TYPE}
+				, ${DELY_TO_ADDRESS_CD}
+				, ${DEMAND_DEPT}
+			)
+			
+		]]>
+	</method>
+	
+	<method name="getDefaultPrData">
+		<![CDATA[
+			SELECT 
+				 A.PR_NO
+				,B.PR_SEQ
+				,A.PR_TYPE
+				,A.REQ_TYPE
+				,A.CREATE_TYPE
+				,A.SHIPPER_TYPE
+				,A.SUBJECT 
+				,B.CUR
+			FROM ICOYPRHD A, ICOYPRDT B 
+			WHERE A.HOUSE_CODE = B.HOUSE_CODE
+			AND A.COMPANY_CODE = B.COMPANY_CODE
+			AND A.PR_NO = B.PR_NO
+			AND A.PR_NO = ${NEW_PR_NO}
+			
+		]]>
+	</method>
+	
+	<method name="getDefaultBdPrNo">
+		<![CDATA[
+			SELECT 
+				 BD_PR_NO
+			FROM ICOYPRDT 
+			WHERE 1=1
+			AND HOUSE_CODE = ${house_code}
+			AND PR_NO || PR_SEQ IN ( $IN{ PR_NO_SEQ } )
+			GROUP BY BD_PR_NO
+		]]>
+	</method>
+	
+	<method name="getDefaultBd">
+		<![CDATA[
+			SELECT 
+				 A.PR_NO, A.PR_SEQ
+			FROM ICOYBDDT A , ICOYBDHD B
+			WHERE 1=1
+			AND A.HOUSE_CODE = B.HOUSE_CODE
+			AND A.BID_NO = B.BID_NO
+			AND A.BID_COUNT = B.BID_COUNT
+			AND A.HOUSE_CODE = ${house_code}
+			AND A.PR_NO = ${BD_PR_NO}
+		    AND A.BID_COUNT IN ( SELECT MAX(BID_COUNT) FROM ICOYBDDT WHERE PR_NO = ${BD_PR_NO} ) 
+			AND B.STATUS != 'D'
+		    AND B.BID_STATUS NOT IN ( 'NB', 'CC' )
+			UNION ALL
+			SELECT 
+				 A.PR_NO, A.PR_SEQ
+			FROM ICOYRADT A, ICOYRAHD B
+			WHERE 1=1
+			AND A.HOUSE_CODE = B.HOUSE_CODE
+			AND A.RA_NO = B.RA_NO
+			AND A.RA_COUNT = B.RA_COUNT			
+			AND A.HOUSE_CODE = ${house_code}
+			AND A.PR_NO = ${BD_PR_NO}
+		    AND A.RA_COUNT IN ( SELECT MAX(RA_COUNT) FROM ICOYRADT WHERE PR_NO = ${BD_PR_NO} ) 
+			AND B.STATUS != 'D'
+		    AND B.RA_FLAG NOT IN ('D')
+		    AND A.SETTLE_FLAG NOT IN ('N')
+		]]>
+	</method>
+		
+	<method name="delDefaultBdPrNo">
+		<![CDATA[
+			UPDATE ICOYPRDT SET 
+				 STATUS = 'D'
+			WHERE 1=1
+			AND HOUSE_CODE = ${house_code}
+			AND PR_NO = ${BD_PR_NO}
+		]]>
+	</method>
+	
+	<method name="setDefaultBdPrNo1">
+		<![CDATA[
+			UPDATE ICOYPRDT SET 
+				 BD_PR_NO = NULL
+			WHERE 1=1
+			AND HOUSE_CODE = ${house_code}
+			AND BD_PR_NO = ${BD_PR_NO}
+		]]>
+	</method>
+	
+	<method name="setDefaultBdPrNo2">
+		<![CDATA[
+			UPDATE ICOYPRDT SET 
+				 BD_PR_NO = ${NEW_PR_NO}
+			WHERE 1=1
+			AND HOUSE_CODE = ${house_code}
+			AND PR_NO || PR_SEQ = ${ PR_NO_SEQ } 
+		]]>
+	</method>
+	
+	<method name="getPreBdCancelCheck">
+		<![CDATA[
+			SELECT 
+				BID_STATUS
+			FROM ICOYBDHD A
+			WHERE A.HOUSE_CODE = ${HOUSE_CODE}
+			AND A.BID_NO = ${BID_NO}
+			AND TO_NUMBER(A.BID_COUNT) = TO_NUMBER(${BID_COUNT}) - 1
+			
+		]]>
+	</method>
+	
+<method name="getPrItemDetail">
+	<![CDATA[
+    	    SELECT
+                  DT.PR_NO
+                 ,DT.PR_SEQ
+                 ,DT.ITEM_NO
+                 ,DT.DESCRIPTION_LOC
+                 ,DT.SPECIFICATION
+                 ,DT.UNIT_MEASURE
+                 ,DT.PR_QTY as RFQ_QTY
+                 ,DT.CUR
+                 ,CONVERT_DATE(DT.RD_DATE) AS RD_DATE
+                 ,DT.DELY_TO_ADDRESS
+                 ,DT.WARRANTY
+                 ,DT.REC_VENDOR_NAME
+                 ,'' as ATTACH_NO
+                 ,DT.MAKER_CODE
+                 ,DT.MAKER_NAME
+                 ,DT.UNIT_PRICE as PURCHASE_PRE_PRICE
+                 ,DT.EXCHANGE_RATE
+                 ,DT.PR_AMT as RFQ_AMT
+                 ,(nvl(DT.PR_AMT,0) * nvl(DT.EXCHANGE_RATE,0)) as RFQ_KRW_AMT
+                 --,DT.DELY_TO_LOCATION
+                 ,HD.DELY_TO_LOCATION
+                 ,DT.TECHNIQUE_TYPE
+                 ,DT.TECHNIQUE_GRADE
+                 ,DT.TECHNIQUE_FLAG
+                 ,DT.INPUT_FROM_DATE
+                 ,DT.INPUT_TO_DATE
+                 ,'' as HUMAN_NO
+                 ,'' as HUMAN_VENDOR_CODE
+                 ,'' as HUMAN_VENDOR_NAME
+                 ,DT.REMARK
+                 ,DT.YEAR_QTY
+                 ,'' as GISUL_RFQ
+                 ,DT.PLANT_CODE
+                 ,DT.Z_CODE1
+                 ,GETUSERNAME(DT.HOUSE_CODE, DT.CHANGE_USER_ID ,'LOC') AS CHANGE_USER_NAME
+                 ,'' as VENDOR_SELECTED_REASON
+                 ,'' as COST_COUNT
+                 ,'' as VENDOR_CNT
+                 ,'' as DELY_TO_LOCATION_NAME
+                 ,DT.STR_FLAG
+                 ,DT.PURCHASE_LOCATION
+                 ,'' as SG_REFITEM
+                 ,HD.PC_FLAG
+                 ,HD.PC_REASON
+                 ,HD.PR_TYPE
+                 ,NVL((SELECT TCO_FLAG FROM ICOMMTGL WHERE ITEM_NO=DT.ITEM_NO),'N') TCO_FLAG
+             FROM ICOYPRHD HD, ICOYPRDT DT
+            WHERE HD.HOUSE_CODE  = ${house_code}
+              AND HD.STATUS     != 'D'
+              AND DT.HOUSE_CODE  = HD.HOUSE_CODE
+              AND DT.PR_NO       = HD.PR_NO
+              AND DT.STATUS     != 'D'
+	        AND (DT.PR_NO||DT.PR_SEQ) IN ( $IN{ PR_NO_SEQ } )
+	        ORDER BY DT.PR_NO, TO_NUMBER(DT.PR_SEQ)  
+	]]>
+</method>
+<!-- 공고생성 start -->	
+	<method name="et_getGonggoCount2">
+		<![CDATA[
+         SELECT NVL(COUNT(PR_NO), 0)
+           FROM ICOYPRDT
+          WHERE HOUSE_CODE = ${house_code}
+            AND PR_NO  = ${PR_NO}   
+            AND PR_SEQ  IN ( $IN{ PR_SEQ } ) 
+           -- AND BID_STATUS NOT IN ('PR','CC','NB')
+            AND PR_PROCEEDING_FLAG != 'P'
+		]]>
+	</method>
+
+	<!-- ICT 사용 -->	
+	<method name="et_setBDHDCreate">
+		<![CDATA[
+         INSERT INTO ICOYBDHD_ICT
+				(
+				 HOUSE_CODE             
+				,BID_NO 
+				,BID_COUNT              
+				,COMPANY_CODE           
+				,STATUS                 
+				,ADD_DATE               
+				,ADD_TIME               
+				,ADD_USER_ID            
+				,ADD_USER_NAME_LOC      
+				,ADD_USER_NAME_ENG      
+				,ADD_USER_DEPT          
+				,CHANGE_DATE            
+				,CHANGE_TIME            
+				,CHANGE_USER_ID         
+				,CHANGE_USER_NAME_LOC   
+				,CHANGE_USER_NAME_ENG   
+				,CHANGE_USER_DEPT       
+				,SIGN_PERSON_ID         
+				,SIGN_PERSON_NAME       
+				,SIGN_DATE              
+				,SIGN_STATUS            
+				,BID_TYPE               
+				,CONT_TYPE1             
+				,CONT_TYPE2             
+				,ANN_TITLE              
+				,ANN_NO                 
+				,ANN_DATE               
+				,ANN_ITEM               
+				,LIMIT_CRIT             
+				,PROM_CRIT              
+				,APP_BEGIN_DATE         
+				,APP_BEGIN_TIME         
+				,APP_END_DATE           
+				,APP_END_TIME           
+				,ATTACH_NO              
+				,ANNOUNCE_DATE          
+				,ANNOUNCE_TIME_FROM     
+				,ANNOUNCE_TIME_TO       
+				,ANNOUNCE_HOST          
+				,ANNOUNCE_AREA          
+				,ANNOUNCE_PLACE         
+				,ANNOUNCE_NOTIFIER      
+				,ANNOUNCE_RESP          
+				,DOC_FRW_DATE           
+				,ANNOUNCE_COMMENT       
+				,ANNOUNCE_FLAG          
+				,BID_STATUS             
+				,ESTM_FLAG              
+				,COST_STATUS            
+				,PR_NO                  
+				,CTRL_CODE              
+				,ANNOUNCE_TEL           
+				,CTRL_AMT
+				,ESTM_KIND
+				,ESTM_RATE
+				,ESTM_MAX
+				,ESTM_VOTE
+				,FROM_CONT
+				,FROM_LOWER_BND
+				,ASUMTN_OPEN_YN
+				,CONT_TYPE_TEXT
+				,CONT_PLACE
+				,BID_PAY_TEXT
+				,BID_CANCEL_TEXT
+				,BID_JOIN_TEXT
+				,REMARK
+				,ESTM_MAX_VOTE
+				,STANDARD_POINT
+				,TECH_DQ
+				,AMT_DQ
+				,RD_DATE
+				,DELY_PLACE
+				,BID_EVAL_SCORE
+				,REPORT_ETC 
+				,LOC_CODE
+				,LOC_CNT
+				,X_PURCHASE_QTY			-- 2. 입찰에 부치는 사항 > 다. 구매수량                                       
+				,X_MAKE_SPEC			-- 2. 입찰에 부치는 사항 > 라. 제조사양                                        
+				,X_BASIC_ADD			-- 2. 입찰에 부치는 사항 > 마. 유의사항                                   
+				,X_RELATIVE_ADD			-- 5. 입찰관련사항 > 마. 유의사항                                  
+				,X_DOC_SUBMIT_DATE		-- 10.입찰서류제출 마감일      X_DOC_SUBMIT_DATE                    
+				,X_DOC_SUBMIT_TIME		-- 10.입찰서류제출 마감시분    X_DOC_SUBMIT_TIME_HOUR_MINUTE                
+				,X_ESTM_CHECK			-- 2. 입찰에 부치는 사항 > 나. 예정가격 > 공개여부                               
+				,X_PERSON_IN_CHARGE		-- 2. 입찰에 부치는 사항 > 다. 담당기술역                                   
+				,X_QUALIFICATION		-- 3. 입찰참가자격 > 나. 기타                              
+				,COST_SETTLE_TERMS		-- 9. 계약관련사항 > 대금결제조건(구매) / 대금지급방법(공사)
+				,ANN_VERSION			-- 입찰서 버전		                      
+				,ITEM_TYPE				-- 10. 기타사항 > 나. 품목구분
+				,X_AUTO_FLAG			-- 자동개찰여부                 
+				,BID_INPUT_TYPE			-- 입찰서 작성기준
+				,TCO_PERIOD				-- TCO유지보수기간
+				,RA_TIME01				-- 역경매_제한시간
+				,RA_TIME02				-- 역경매_연장시간
+				,APP_ETC				-- 특이사항
+				,ES_FLAG  
+				,INP_CNF
+				,ANN_NO2
+				,ANN_COUNT2
+				,BIZ_NO
+				,MATERIAL_CLASS1
+				,MATERIAL_CLASS2              				             
+				)
+		VALUES
+				(
+				 ${HOUSE_CODE}                        
+				,${BID_NO}                            
+				,${BID_COUNT}                          
+				,${COMPANY_CODE}                           
+				,'C'                           -- STATUS
+				,${ADD_DATE}   
+				,${ADD_TIME}  
+				,${ID}                              
+				,${NAME_LOC}                            
+				,${NAME_ENG}                           
+				,${DEPT}                            
+				,${ADD_DATE}   
+				,${ADD_TIME}   
+				,${ID}                             
+				,${NAME_LOC}                         
+				,${NAME_ENG}                          
+				,${DEPT}                             
+				,$S{SIGN_USER_ID}								-- SIGN_PERSON_ID
+				,$S{SIGN_USER_NAME}								-- SIGN_PERSON_NAME
+				,''												-- SIGN_DATE
+				,${PFLAG}									    -- SIGN_STATUS
+				,${BID_TYPE                 }
+				,$S{CONT_TYPE1              }
+				,$S{CONT_TYPE2              }
+				,$S{ANN_TITLE               }
+				,$S{ANN_NO                  }
+				,$S{ANN_DATE                }
+				,$S{ANN_ITEM                }
+				,$S{LIMIT_CRIT              }
+				,$S{PROM_CRIT               }
+				,$S{APP_BEGIN_DATE          }
+				,$S{APP_BEGIN_TIME          }
+				,$S{APP_END_DATE            }
+				,$S{APP_END_TIME            }
+				,$S{attach_no               }
+				,$S{ANNOUNCE_DATE           }
+				,$S{ANNOUNCE_TIME_FROM      }
+				,$S{ANNOUNCE_TIME_TO        }
+				,''
+				,$S{ANNOUNCE_AREA           }
+				,$S{ANNOUNCE_PLACE          }
+				,$S{ANNOUNCE_NOTIFIER       }
+				,$S{ANNOUNCE_RESP           }
+				,$S{DOC_FRW_DATE            }
+				,$S{ANNOUNCE_COMMENT        }
+				,$S{ANNOUNCE_FLAG           }
+				,${BID_STATUS}
+				,'N'                           -- ESTM_FLAG
+				,''                            -- COST_STATUS
+				,$S{PR_NO                                     }
+				,$S{CTRL_CODE                                 }
+				,$S{ANNOUNCE_TEL                              }
+				,$S{CTRL_AMT                                  }
+				,$S{ESTM_KIND                                 }
+				,$S{ESTM_RATE                                 }
+				,$S{ESTM_MAX                                  }
+				,$S{ESTM_VOTE                                 }
+				,$S{FROM_CONT                                 }
+				,$S{FROM_LOWER_BND                            }
+				,$S{ASUMTN_OPEN_YN                            }
+				,$S{CONT_TYPE_TEXT                            }
+				,$S{CONT_PLACE                                }
+				,$S{BID_PAY_TEXT                              }
+				,$S{BID_CANCEL_TEXT                           }
+				,$S{BID_JOIN_TEXT                             }
+				,$S{REMARK                                    }
+				,$S{ESTM_MAX_VOTE                             }
+				,$S{STANDARD_POINT                            }
+				,$S{TECH_DQ                                   }
+				,$S{AMT_DQ                                    }
+				,$S{RD_DATE                                   }
+				,$S{DELY_PLACE                                }
+				,$S{BID_EVAL_SCORE                            }
+				,$S{REPORT_ETC                                } 
+				,$S{LOC_CODE                                  }
+				,$S{LOC_CNT                                   } 
+				,$S{X_PURCHASE_QTY                            }	-- 2. 입찰에 부치는 사항 > 다. 구매수량                        
+				,$S{X_MAKE_SPEC                               }	-- 2. 입찰에 부치는 사항 > 라. 제조사양                        
+				,$S{X_BASIC_ADD                               } 	-- 2. 입찰에 부치는 사항 > 마. 유의사항                        
+				,$S{X_RELATIVE_ADD                            }  	-- 5. 입찰관련사항 > 마. 유의사항                            
+				,$S{X_DOC_SUBMIT_DATE                         }  	-- 10.입찰서류제출 마감일                
+				,$S{X_DOC_SUBMIT_TIME_HOUR_MINUTE             }  	-- 10.입찰서류제출 마감시분             
+				,DECODE( $S{X_ESTM_CHECK } , 'true', 'Y', 'N' )  	-- 2. 입찰에 부치는 사항 > 나. 예정가격 > 공개여부                 
+				,$S{X_PERSON_IN_CHARGE                        } 	-- 2. 입찰에 부치는 사항 > 다. 담당기술역                       
+				,$S{X_QUALIFICATION                           }  	-- 3. 입찰참가자격 > 나. 기타                              
+				,$S{hidCOST_SETTLE_TERMS                      } 	-- 9. 계약관련사항 > 대금결제조건(구매) / 대금지급방법(공사)            
+				,$S{ANN_VERSION                               }	-- 입찰서 버전		                                  
+				,$S{ITEM_TYPE                                 }	-- 10. 기타사항 > 나. 품목구분                                                  
+				,$S{X_AUTO_FLAG                               }	-- 자동개찰여부                                                                 
+				,$S{BID_INPUT_TYPE                            }	-- 입찰서 작성기준
+				,$S{TCO_PERIOD                                }	-- TCO유지보수기간
+				,$S{RA_TIME01                                 }	-- 역경매_제한시간
+				,$S{RA_TIME02                                 }	-- 역경매_연장시간
+				,$S{APP_ETC                                   }	-- 특이사항
+			    ,$S{ES_FLAG                                   }			
+			    ,$S{INP_CNF                                   }
+			    ,$S{ANN_NO2                 }
+				,$S{ANN_COUNT2              }
+				,$S{BIZ_NO                  }
+				,$S{MATERIAL_CLASS1           }
+				,$S{MATERIAL_CLASS2      }									    			    			 
+				)
+		]]>
+	</method>
+
+	<!-- ICT 사용 -->	
+	<method name="et_setBDHDCreate_U">
+		<![CDATA[
+         INSERT INTO ICOYBDHD_ICT
+				(
+				 HOUSE_CODE             
+				,BID_NO 
+				,BID_COUNT              
+				,COMPANY_CODE           
+				,STATUS                 
+				,ADD_DATE               
+				,ADD_TIME               
+				,ADD_USER_ID            
+				,ADD_USER_NAME_LOC      
+				,ADD_USER_NAME_ENG      
+				,ADD_USER_DEPT          
+				,CHANGE_DATE            
+				,CHANGE_TIME            
+				,CHANGE_USER_ID         
+				,CHANGE_USER_NAME_LOC   
+				,CHANGE_USER_NAME_ENG   
+				,CHANGE_USER_DEPT       
+				,SIGN_PERSON_ID         
+				,SIGN_PERSON_NAME       
+				,SIGN_DATE              
+				,SIGN_STATUS            
+				,BID_TYPE               
+				,CONT_TYPE1             
+				,CONT_TYPE2             
+				,ANN_TITLE              
+				,ANN_NO                 
+				,ANN_DATE               
+				,ANN_ITEM               
+				,LIMIT_CRIT             
+				,PROM_CRIT              
+				,APP_BEGIN_DATE         
+				,APP_BEGIN_TIME         
+				,APP_END_DATE           
+				,APP_END_TIME           
+				,ATTACH_NO              
+				,ANNOUNCE_DATE          
+				,ANNOUNCE_TIME_FROM     
+				,ANNOUNCE_TIME_TO       
+				,ANNOUNCE_HOST          
+				,ANNOUNCE_AREA          
+				,ANNOUNCE_PLACE         
+				,ANNOUNCE_NOTIFIER      
+				,ANNOUNCE_RESP          
+				,DOC_FRW_DATE           
+				,ANNOUNCE_COMMENT       
+				,ANNOUNCE_FLAG          
+				,BID_STATUS             
+				,ESTM_FLAG              
+				,COST_STATUS            
+				,PR_NO                  
+				,CTRL_CODE              
+				,ANNOUNCE_TEL           
+				,CTRL_AMT
+				,ESTM_KIND
+				,ESTM_RATE
+				,ESTM_MAX
+				,ESTM_VOTE
+				,FROM_CONT
+				,FROM_LOWER_BND
+				,ASUMTN_OPEN_YN
+				,CONT_TYPE_TEXT
+				,CONT_PLACE
+				,BID_PAY_TEXT
+				,BID_CANCEL_TEXT
+				,BID_JOIN_TEXT
+				,REMARK
+				,ESTM_MAX_VOTE
+				,STANDARD_POINT
+				,TECH_DQ
+				,AMT_DQ
+				,RD_DATE
+				,DELY_PLACE
+				,BID_EVAL_SCORE
+				,REPORT_ETC 
+				,LOC_CODE
+				,LOC_CNT
+				,X_PURCHASE_QTY			-- 2. 입찰에 부치는 사항 > 다. 구매수량                                       
+				,X_MAKE_SPEC			-- 2. 입찰에 부치는 사항 > 라. 제조사양                                        
+				,X_BASIC_ADD			-- 2. 입찰에 부치는 사항 > 마. 유의사항                                   
+				,X_RELATIVE_ADD			-- 5. 입찰관련사항 > 마. 유의사항                                  
+				,X_DOC_SUBMIT_DATE		-- 10.입찰서류제출 마감일      X_DOC_SUBMIT_DATE              
+				,X_DOC_SUBMIT_TIME		-- 10.입찰서류제출 마감시분    X_DOC_SUBMIT_TIME_HOUR_MINUTE                   
+				,X_ESTM_CHECK			-- 2. 입찰에 부치는 사항 > 나. 예정가격 > 공개여부                               
+				,X_PERSON_IN_CHARGE		-- 2. 입찰에 부치는 사항 > 다. 담당기술역                                   
+				,X_QUALIFICATION		-- 3. 입찰참가자격 > 나. 기타                              
+				,COST_SETTLE_TERMS		-- 9. 계약관련사항 > 대금결제조건(구매) / 대금지급방법(공사)
+				,ANN_VERSION			-- 입찰서 버전		                      
+				,ITEM_TYPE				-- 10. 기타사항 > 나. 품목구분
+				,X_AUTO_FLAG			-- 자동개찰여부                 
+				,BID_INPUT_TYPE			-- 입찰서 작성기준
+				,TCO_PERIOD				-- TCO유지보수기간
+				,RA_TIME01				-- 역경매_제한시간
+				,RA_TIME02				-- 역경매_연장시간
+				,ES_FLAG
+				,APP_ETC
+				,INP_CNF
+				,ANN_NO2
+				,ANN_COUNT2
+				,BIZ_NO
+				,MATERIAL_CLASS1
+				,MATERIAL_CLASS2                                       				
+				)
+		VALUES
+				(
+				 ${HOUSE_CODE}                        
+				,${BID_NO}                            
+				,${BID_COUNT}                          
+				,${COMPANY_CODE}                           
+				,'C'                           -- STATUS
+				,${ADD_DATE}   
+				,${ADD_TIME}  
+				,${ID}                              
+				,${NAME_LOC}                            
+				,${NAME_ENG}                           
+				,${DEPT}                            
+				,${ADD_DATE}   
+				,${ADD_TIME}   
+				,${ID}                             
+				,${NAME_LOC}                         
+				,${NAME_ENG}                          
+				,${DEPT}                             
+				,$S{SIGN_USER_ID}								-- SIGN_PERSON_ID
+				,$S{SIGN_USER_NAME}								-- SIGN_PERSON_NAME
+				,''												-- SIGN_DATE
+				,${PFLAG}									    -- SIGN_STATUS
+				,${BID_TYPE                 }
+				,$S{CONT_TYPE1              }
+				,$S{CONT_TYPE2              }
+				,$S{ANN_TITLE               }
+				,$S{ANN_NO                  }
+				,$S{ANN_DATE                }
+				,$S{ANN_ITEM                }
+				,$S{LIMIT_CRIT              }
+				,$S{PROM_CRIT               }
+				,$S{APP_BEGIN_DATE          }
+				,$S{APP_BEGIN_TIME          }
+				,$S{APP_END_DATE            }
+				,$S{APP_END_TIME            }
+				,$S{attach_no               }
+				,$S{ANNOUNCE_DATE           }
+				,$S{ANNOUNCE_TIME_FROM      }
+				,$S{ANNOUNCE_TIME_TO        }
+				,''
+				,$S{ANNOUNCE_AREA           }
+				,$S{ANNOUNCE_PLACE          }
+				,$S{ANNOUNCE_NOTIFIER       }
+				,$S{ANNOUNCE_RESP           }
+				,$S{DOC_FRW_DATE            }
+				,$S{ANNOUNCE_COMMENT        }
+				,$S{ANNOUNCE_FLAG           }
+				,${BID_STATUS}
+				,'N'                           -- ESTM_FLAG
+				,''                            -- COST_STATUS
+				,$S{PR_NO                                     }
+				,$S{CTRL_CODE                                 }
+				,$S{ANNOUNCE_TEL                              }
+				,$S{CTRL_AMT                                  }
+				,$S{ESTM_KIND                                 }
+				,$S{ESTM_RATE                                 }
+				,$S{ESTM_MAX                                  }
+				,$S{ESTM_VOTE                                 }
+				,$S{FROM_CONT                                 }
+				,$S{FROM_LOWER_BND                            }
+				,$S{ASUMTN_OPEN_YN                            }
+				,$S{CONT_TYPE_TEXT                            }
+				,$S{CONT_PLACE                                }
+				,$S{BID_PAY_TEXT                              }
+				,$S{BID_CANCEL_TEXT                           }
+				,$S{BID_JOIN_TEXT                             }
+				,$S{REMARK                                    }
+				,$S{ESTM_MAX_VOTE                             }
+				,$S{STANDARD_POINT                            }
+				,$S{TECH_DQ                                   }
+				,$S{AMT_DQ                                    }
+				,$S{RD_DATE                                   }
+				,$S{DELY_PLACE                                }
+				,$S{BID_EVAL_SCORE                            }
+				,$S{REPORT_ETC                                } 
+				,$S{LOC_CODE                                  }
+				,$S{LOC_CNT                                   } 
+				,$S{X_PURCHASE_QTY                            }	-- 2. 입찰에 부치는 사항 > 다. 구매수량                        
+				,$S{X_MAKE_SPEC                               }	-- 2. 입찰에 부치는 사항 > 라. 제조사양                        
+				,$S{X_BASIC_ADD                               } 	-- 2. 입찰에 부치는 사항 > 마. 유의사항                        
+				,$S{X_RELATIVE_ADD                            }  	-- 5. 입찰관련사항 > 마. 유의사항                            				
+				,$S{X_DOC_SUBMIT_DATE                         }  	-- 10.입찰서류제출 마감일                  
+				,$S{X_DOC_SUBMIT_TIME_HOUR_MINUTE             }  	-- 10.입찰서류제출 마감시분             				               
+				,DECODE( $S{X_ESTM_CHECK } , 'true', 'Y', 'N' )  	-- 2. 입찰에 부치는 사항 > 나. 예정가격 > 공개여부                 
+				,$S{X_PERSON_IN_CHARGE                        } 	-- 2. 입찰에 부치는 사항 > 다. 담당기술역                       
+				,$S{X_QUALIFICATION                           }  	-- 3. 입찰참가자격 > 나. 기타                              
+				,$S{hidCOST_SETTLE_TERMS                      } 	-- 9. 계약관련사항 > 대금결제조건(구매) / 대금지급방법(공사)            
+				,$S{ANN_VERSION                               }	-- 입찰서 버전		                                  
+				,$S{ITEM_TYPE                                 }	-- 10. 기타사항 > 나. 품목구분                                                  
+				,$S{X_AUTO_FLAG                               }	-- 자동개찰여부                                                                 
+				,$S{BID_INPUT_TYPE                            }	-- 입찰서 작성기준
+				,$S{TCO_PERIOD                                }	-- TCO유지보수기간
+				,$S{RA_TIME01                                 }	-- 역경매_제한시간
+				,$S{RA_TIME02                                 }	-- 역경매_연장시간
+				,$S{ES_FLAG                                   }		
+				,$S{APP_ETC                                   }	
+				,$S{INP_CNF                                   }	
+				,$S{ANN_NO2                 }
+				,$S{ANN_COUNT2              }
+				,$S{BIZ_NO                  }
+				,$S{MATERIAL_CLASS1           }
+				,$S{MATERIAL_CLASS2      }																							
+				)
+		]]>
+	</method>
+
+
+	<!-- ICT 사용 -->
+	<method name="et_setBDDTCreate">
+		<![CDATA[
+				INSERT INTO ICOYBDDT_ICT
+							(
+							 HOUSE_CODE
+							,BID_NO
+							,BID_COUNT
+							,ITEM_SEQ
+							,STATUS
+							,ADD_DATE
+							,ADD_TIME
+							,ADD_USER_ID
+							,ADD_USER_NAME_LOC
+							,ADD_USER_NAME_ENG
+							,ADD_USER_DEPT
+							,CHANGE_DATE
+							,CHANGE_TIME
+							,CHANGE_USER_ID
+							,CHANGE_USER_NAME_LOC
+							,CHANGE_USER_NAME_ENG
+							,CHANGE_USER_DEPT
+							,DESCRIPTION_LOC
+							,UNIT_MEASURE
+							,PR_QTY
+							,CUR
+							,UNIT_PRICE
+							,PR_AMT
+							,PR_NO
+							,PR_SEQ
+							,SPECIFICATION
+							,BUYER_ITEM_NO
+							)
+				VALUES
+							(
+							 ${HOUSE_CODE                   }
+							,${BID_NO                       }
+							,${BID_COUNT                    }
+							,TO_CHAR(${ITEM_SEQ}, 'FM000000')	-- ITEM_SEQ
+							,'C'                         		-- STATUS
+							,${ADD_DATE                     }	-- ADD_DATE
+							,${ADD_TIME                     }	-- ADD_TIME
+							,${ID                           }
+							,${NAME_LOC                     }
+							,${NAME_ENG                     }
+							,${DEPT                         }
+							,${ADD_DATE                     } -- CHANGE_DATE
+							,${ADD_TIME                     } -- CHANGE_TIME
+							,${ID                           }
+							,${NAME_LOC                     }
+							,${NAME_ENG                     }
+							,${DEPT                         }
+							,$S{DESCRIPTION_LOC             }
+							,$S{UNIT_MEASURE                }
+							,$S{QTY                         }
+							,$S{CUR                         }
+							,$S{UNIT_PRICE                  }
+							,$S{AMT                         }
+							,$S{PR_NO                       }
+							,$S{PR_SEQ                      }
+							,$S{SPECIFICATION               }
+							,$S{ITEM_NO                     }
+							)
+		]]>
+	</method>
+	
+	<!-- ICT 사용 : 입찰 진행 정보 -->
+	<method name="et_setBDPGCreate">
+		<![CDATA[
+         INSERT INTO ICOYBDPG_ICT (
+                                 HOUSE_CODE
+                                ,BID_NO
+                                ,BID_COUNT
+                                ,VOTE_COUNT
+                                ,STATUS
+                                ,ADD_DATE
+                                ,ADD_TIME
+                                ,ADD_USER_ID
+                                ,ADD_USER_NAME_LOC
+                                ,ADD_USER_NAME_ENG
+                                ,ADD_USER_DEPT
+                                ,BID_BEGIN_DATE
+                                ,BID_BEGIN_TIME
+                                ,BID_END_DATE
+                                ,BID_END_TIME
+                                ,BID_PLACE
+                                ,BID_ETC
+                                ,OPEN_DATE
+                                ,OPEN_TIME
+         ) VALUES (
+                               	${HOUSE_CODE}
+                    			,${BID_NO}
+                    			,${BID_COUNT}
+                                ,'1'
+                                ,'C'                           
+                                ,${ADD_DATE}   -- ADD_DATE
+                                ,${ADD_TIME}   -- ADD_TIME
+                                ,${ID}
+                                ,${NAME_LOC}
+                                ,${NAME_ENG}
+                                ,${DEPT}
+                                ,$S{BID_BEGIN_DATE}  --입찰서 제출일시
+                                ,$S{BID_BEGIN_TIME_HOUR_MINUTE  }
+                                ,$S{BID_END_DATE  }
+                                ,$S{BID_END_TIME_HOUR_MINUTE}
+                                ,$S{BID_PLACE     } --입찰장소
+                                ,$S{BID_ETC       } --기타사항
+                                ,$S{OPEN_DATE     }  --개찰일시
+                                ,$S{OPEN_TIME_HOUR_MINUTE     }
+         )
+		]]>
+	</method>
+
+	<!-- ICT 사용 : 입찰 진행 정보 LOG -->
+	<method name="et_setBDPG_LOGCreate">
+		<![CDATA[
+         INSERT INTO ICOYBDPG_LOG_ICT
+         						(
+                                 HOUSE_CODE
+                                ,BID_NO
+                                ,BID_COUNT
+                                ,VOTE_COUNT
+                                ,LOG_SEQ
+                                ,BID_BEGIN_DATE
+                                ,BID_BEGIN_TIME
+                                ,BID_END_DATE
+                                ,BID_END_TIME
+                                ,CHANGE_DATE
+                                ,CHANGE_TIME
+                                )
+         VALUES
+         						(
+                               	 ${HOUSE_CODE}
+                    			,${BID_NO}
+                    			,${BID_COUNT}
+                                ,'1'
+                                ,1
+                                ,$S{BID_BEGIN_DATE}
+                                ,$S{BID_BEGIN_TIME_HOUR_MINUTE  }
+                                ,$S{BID_END_DATE  }
+                                ,$S{BID_END_TIME_HOUR_MINUTE}
+								,TO_CHAR(SYSDATE,'YYYYMMDD')
+								,TO_CHAR(SYSDATE,'HH24MISS')
+								)
+		]]>
+	</method>
+	
+	<!-- ICT 사용 -->
+	<method name="et_setBDAPCreate">
+		<![CDATA[
+         INSERT INTO ICOYBDAP_ICT (
+                                 HOUSE_CODE
+                                ,BID_NO
+                                ,BID_COUNT
+                                ,VENDOR_CODE
+                                ,STATUS
+                                ,ADD_DATE
+                                ,ADD_TIME
+                                ,ADD_USER_ID
+                                ,ADD_USER_NAME_LOC
+                                ,ADD_USER_NAME_ENG
+                                ,ADD_USER_DEPT
+                                ,APP_DATE
+                                ,APP_TIME
+                                ,EXPLAN_FLAG
+                                ,UNT_FLAG
+                                ,ACHV_FLAG
+                                ,FINAL_FLAG
+                                ,INCO_REASON
+                                ,SUPI_ID
+         ) VALUES (
+                                 ${HOUSE_CODE}
+                    		    ,${BID_NO}
+                    		    ,${BID_COUNT}
+                                ,${VENDOR_CODE}
+                                ,'R'                           -- STATUS
+                                ,${ADD_DATE}   -- ADD_DATE
+                                ,${ADD_TIME}   -- ADD_TIME
+                                ,${ID}                             -- ADD_USER_ID
+                                ,${NAME_LOC}
+                                ,${NAME_ENG}
+                                ,${DEPT}
+                                ,${ADD_DATE}                   -- APP_DATE
+                                ,${ADD_TIME}                   -- APP_TIME
+                                ,''                            -- EXPLAN_FLAG
+                                ,'N'                           -- UNT_FLAG
+                                ,'Y'                           -- ACHV_FLAG
+                                ,'Y'                           -- FINAL_FLAG
+                                ,''                            -- INCO_REASON
+                                ,${SUPI_ID}
+         )
+		]]>
+	</method>
+	
+	<!-- [R102010206735] [2020-10-30] IT구매 입찰 프로세스 변경에 따른 IT전자입찰시스템 기능 수정변경 -->
+	<method name="et_setBDATCreate">
+		<![CDATA[
+		INSERT INTO ICOYBDAT_ICT (
+			HOUSE_CODE
+			,BID_NO
+			,BID_COUNT
+			,VENDOR_CODE
+			,ADD_DATE
+			,ADD_TIME
+			,ADD_USER_ID
+			,ADD_USER_NAME_LOC			
+			,ATTACH_NO
+		) VALUES (
+			${HOUSE_CODE}
+			,${BID_NO}
+			,${BID_COUNT}
+			,${VENDOR_CODE}
+			,TO_CHAR(SYSDATE,'YYYYMMDD')
+			,TO_CHAR(SYSDATE,'HH24MISS')
+			,${ID}
+			,${NAME_LOC}			
+			,'1000000000000'
+		)
+		]]>                       	
+	</method>
+	
+	<!-- [R102010206735] [2020-10-30] IT구매 입찰 프로세스 변경에 따른 IT전자입찰시스템 기능 수정변경 -->
+	<method name="et_setQTEECreate">
+		<![CDATA[
+		INSERT                      
+		INTO ICOMQTEE_ICT               
+		(                           
+		HOUSE_CODE,                 
+		VENDOR_CODE,                
+		BID_NO,                 		
+		BID_COUNT,                  
+		STATUS,                   	
+		ADD_DATE,                   
+		ADD_TIME,                   
+		ADD_USER_ID,                
+		ADD_USER_NAME_LOC,          
+		ADD_USER_NAME_ENG,          
+		CHANGE_DATE,                
+		CHANGE_TIME,                
+		CHANGE_USER_ID,             
+		CHANGE_USER_NAME_LOC,       
+		CHANGE_USER_NAME_ENG        
+		) VALUES                    
+		(                           
+		${HOUSE_CODE},                 
+		${VENDOR_CODE},                
+		${BID_NO},                 		
+		${BID_COUNT},                  
+		'C',            				
+		TO_CHAR(SYSDATE,'YYYYMMDD'),
+		TO_CHAR(SYSDATE,'HH24MISS'),
+		${ID},                      			
+		${NAME_LOC},             				
+		${NAME_LOC},             				
+		TO_CHAR(SYSDATE,'YYYYMMDD'),
+		TO_CHAR(SYSDATE,'HH24MISS'),
+		${ID},                      			
+		${NAME_LOC},             				
+		${NAME_LOC}             				
+		)
+		]]>                                	
+	</method>  	
+	
+	<method name="et_setBDRCreate">
+		<![CDATA[
+         INSERT INTO ICOYBDRC (
+                                 HOUSE_CODE
+                                ,BID_NO
+                                ,BID_COUNT
+                                ,RC_CODE
+                                ,RC_NAME
+                                ,ADD_DATE
+                                ,ADD_TIME
+                                ,ADD_USER_ID
+                                ,ADD_USER_NAME_LOC
+                                ,ADD_USER_NAME_ENG
+                                ,ADD_USER_DEPT
+                                ,CHANGE_DATE
+                                ,CHANGE_TIME
+                                ,CHANGE_USER_ID
+                                ,CHANGE_USER_NAME_LOC
+                                ,CHANGE_USER_NAME_ENG
+                                ,CHANGE_USER_DEPT
+         ) VALUES (
+                                 
+                                ${HOUSE_CODE}
+                    			,${BID_NO}
+                    			,${BID_COUNT}
+                                ,${RC_CODE}
+                                ,${RC_NAME}
+                                ,${ADD_DATE}   -- ADD_DATE
+                                ,${ADD_TIME}   -- ADD_TIME
+                                ,${ID}       -- ADD_USER_ID
+                                ,${NAME_LOC}
+                                ,${NAME_ENG}
+                                ,${DEPT    }
+                                ,${ADD_DATE}   -- ADD_DATE
+                                ,${ADD_TIME}   -- ADD_TIME
+                                ,${ID}       -- ADD_USER_ID
+                                ,${NAME_LOC}
+                                ,${NAME_ENG}
+                                ,${DEPT    }
+         )
+		]]>
+	</method>
+	
+	<!-- ICT 사용 -->
+	<method name="et_setInsertBDES">
+		<![CDATA[
+             INSERT INTO ICOYBDES_ICT (
+                                 HOUSE_CODE
+                                ,BID_NO
+                                ,BID_COUNT
+                                ,STATUS
+                                ,ADD_DATE
+                                ,ADD_TIME
+                                ,ADD_USER_ID
+                                ,ADD_USER_NAME_LOC
+                                ,ADD_USER_NAME_ENG
+                                ,ADD_USER_DEPT
+                                ,CHANGE_DATE
+                                ,CHANGE_TIME
+                                ,CHANGE_USER_ID
+                                ,CHANGE_USER_NAME_LOC
+                                ,CHANGE_USER_NAME_ENG
+                                ,CHANGE_USER_DEPT
+                                ,REQ_YN
+                                ,BASIC_AMT
+             ) VALUES ( 
+                                ${HOUSE_CODE}
+                    			,${BID_NO}
+                    			,${BID_COUNT}
+                                ,'C'
+                                ,${ADD_DATE}
+                                ,${ADD_TIME}
+                                ,${ID}       -- ADD_USER_ID
+                                ,${NAME_LOC}
+                                ,${NAME_ENG}
+                                ,${DEPT    }
+                                ,${ADD_DATE}
+                                ,${ADD_TIME}
+                                ,${ID}       -- ADD_USER_ID
+                                ,${NAME_LOC}
+                                ,${NAME_ENG}
+                                ,${DEPT    }
+                                ,'N'
+                                ,${BASIC_AMT}
+             )
+		]]>
+	</method>
+	
+	<method name="et_setPRDTUPDATE_Gonggo">
+		<![CDATA[
+		UPDATE ICOYPRDT 
+		       SET PR_PROCEEDING_FLAG = ${PR_PROCEEDING_FLAG}  
+          			, PURCHASER_ID = ${session.ID}
+          			, PURCHASER_NAME = ${PURCHASER_NAME}
+		 WHERE HOUSE_CODE = ${HOUSE_CODE} 
+		       AND (PR_NO, PR_SEQ) IN 
+				       (SELECT PR_NO, 
+				              PR_SEQ 
+				         FROM ICOYBDDT 
+				        WHERE HOUSE_CODE = ${HOUSE_CODE}
+				              AND BID_NO = ${BID_NO}
+				              AND BID_COUNT = ${BID_COUNT}
+				       )
+		]]>
+	</method> 
+<!-- 공고생성 end -->	
+
+	<method name="getBidAnnounce">
+		<![CDATA[
+         SELECT
+                BID_NO
+               ,BID_COUNT
+               ,ANNOUNCE_DATE
+               ,ANNOUNCE_TIME_FROM
+               ,ANNOUNCE_TIME_TO
+               ,ANNOUNCE_AREA
+               ,ANNOUNCE_PLACE
+               ,ANNOUNCE_NOTIFIER
+               ,ANNOUNCE_FLAG
+               ,ANNOUNCE_TEL
+               ,DOC_FRW_DATE
+               ,ANNOUNCE_RESP
+               ,ANNOUNCE_COMMENT
+               ,GETVENDORS(HOUSE_CODE, BID_NO, BID_COUNT) AS VENDOR_VALUES
+               ,LOC_CODE
+               ,LOC_CNT
+          FROM ICOYBDHD
+		  WHERE HOUSE_CODE = ${HOUSE_CODE}
+			AND BID_NO = ${BID_NO}
+			AND BID_COUNT = ${BID_COUNT}
+            AND STATUS IN ('C','R')
+		]]>
+	</method>
+
+	<!-- ICT 사용 : 공고문 시간 경과 여부 체크 -->
+	<method name="et_chkModify">
+		<![CDATA[
+				SELECT
+						(case when TO_NUMBER(TO_CHAR(SYSDATE,'YYYYMMDD')) <= TO_NUMBER('#ANN_DATE#')
+										then 'Y'
+										else 'N'
+						 end) as status
+				  FROM ICOYBDHD_ICT HD
+				 WHERE 1=1
+				   AND HD.HOUSE_CODE = ${HOUSE_CODE}
+				   AND HD.BID_NO     = ${bid_no}
+				   AND HD.BID_COUNT  = ${bid_count}
+				   AND HD.STATUS IN ('C', 'R')
+		]]>
+	</method>	
+	<!-- ICT 사용 -->
+	<method name="et_delBDDT">
+		<![CDATA[
+         DELETE FROM ICOYBDDT_ICT
+          WHERE HOUSE_CODE         = ${HOUSE_CODE}
+            AND BID_NO             = ${BID_NO}
+            AND BID_COUNT          = ${BID_COUNT}
+		]]>
+	</method> 
+	<!-- ICT 사용 -->
+	<method name="et_delBDAP">
+		<![CDATA[
+         DELETE FROM ICOYBDAP_ICT
+          WHERE HOUSE_CODE         = ${HOUSE_CODE}
+            AND BID_NO             = ${BID_NO}
+            AND BID_COUNT          = ${BID_COUNT}
+		]]>
+	</method>
+	<!-- [R102010206735] [2020-10-30] IT구매 입찰 프로세스 변경에 따른 IT전자입찰시스템 기능 수정변경 -->
+	<method name="et_delBDAT">
+		<![CDATA[        
+		DELETE 	FROM ICOYBDAT_ICT
+		WHERE  	HOUSE_CODE = ${HOUSE_CODE}
+		AND 	BID_NO = ${BID_NO}
+		AND		BID_COUNT = ${BID_COUNT}
+		]]>		
+	</method>	
+	<!-- [R102010206735] [2020-10-30] IT구매 입찰 프로세스 변경에 따른 IT전자입찰시스템 기능 수정변경 -->
+	<method name="et_delQTEE">
+		DELETE 	FROM ICOMQTEE_ICT
+		WHERE	HOUSE_CODE	= ${HOUSE_CODE}
+		AND 	BID_NO		= ${BID_NO}
+		AND  	BID_COUNT	= ${BID_COUNT}
+	</method>  		  
+	<!-- ICT 사용 -->
+	<method name="et_delBDPG">
+		<![CDATA[
+        DELETE FROM ICOYBDPG_ICT
+          WHERE HOUSE_CODE         = ${HOUSE_CODE}
+            AND BID_NO             = ${BID_NO}
+            AND BID_COUNT          = ${BID_COUNT}
+		]]>
+	</method> 
+
+	<!-- ICT 사용 -->
+	<method name="et_delBDPG_LOG">
+		<![CDATA[
+        DELETE FROM ICOYBDPG_LOG_ICT
+          WHERE HOUSE_CODE         = ${HOUSE_CODE}
+            AND BID_NO             = ${BID_NO}
+            AND BID_COUNT          = ${BID_COUNT}
+		]]>
+	</method>
+	
+	<method name="et_delBDRC">
+		<![CDATA[
+           DELETE FROM ICOYBDRC
+          	WHERE HOUSE_CODE         = ${HOUSE_CODE}
+            AND BID_NO             = ${BID_NO}
+            AND BID_COUNT          = ${BID_COUNT}
+		]]>
+	</method>
+	<!-- ICT 사용 -->
+	<method name="et_delBDES">
+		<![CDATA[
+           DELETE FROM ICOYBDES_ICT
+          	WHERE HOUSE_CODE       = ${HOUSE_CODE}
+            AND BID_NO             = ${BID_NO}
+            AND BID_COUNT          = ${BID_COUNT}
+		]]>
+	</method>
+	<!-- ICT 사용 --> 
+	<method name="et_delBDHD">
+		<![CDATA[
+           DELETE FROM ICOYBDHD_ICT
+          	WHERE HOUSE_CODE       = ${HOUSE_CODE}
+            AND BID_NO             = ${BID_NO}
+            AND BID_COUNT          = ${BID_COUNT}
+		]]>
+	</method>
+	<method name="et_setPRDTUPDATE_Gonggo_Old">
+		<![CDATA[
+         UPDATE ICOYPRDT
+            SET   PR_PROCEEDING_FLAG = 'P'
+          WHERE HOUSE_CODE = ${HOUSE_CODE}  
+            AND (PR_NO , PR_SEQ) IN (
+                                   		SELECT PR_NO , PR_SEQ 
+                                        FROM ICOYBDDT
+                                        WHERE HOUSE_CODE = ${HOUSE_CODE}  
+                                          AND BID_NO     = ${BID_NO}
+                                          AND BID_COUNT  = ${BID_COUNT}   
+                                     )
+		]]>
+	</method>
+<!-- 공고수정 end -->
+
+	
+<!-- 공고확정 start -->
+	<!-- ICT 사용 -->
+	<method name="et_setStatusUpdateBDHD">
+		<![CDATA[
+			         UPDATE ICOYBDHD_ICT
+			            SET ANN_DATE       = ${ANN_DATE      }	
+			               ,APP_BEGIN_DATE = ${APP_BEGIN_DATE}
+			               ,APP_BEGIN_TIME = ${APP_BEGIN_TIME}
+			               ,APP_END_DATE   = ${APP_END_DATE  }
+			               ,APP_END_TIME   = ${APP_END_TIME  }    
+			               ,SIGN_STATUS    = 'C'
+			               ,BID_STATUS     = ${BID_STATUS}
+			               ,STATUS         = 'C'
+			               ,CHANGE_DATE    = TO_CHAR(SYSDATE,'YYYYMMDD')
+			               ,CHANGE_TIME    = TO_CHAR(SYSDATE,'HH24MISS')
+			               ,CERTV          = $S{CERTV      	}
+			               ,TIMESTAMP      = $S{TIMESTAMP   }
+			               ,SIGN_CERT      = $S{SIGN_CERT   }
+			               ,CRYP_CERT      = $S{CRYP_CERT   }
+			               ,ES_FLAG        = $S{ES_FLAG   }			               
+			          WHERE HOUSE_CODE     = ${HOUSE_CODE}
+			            AND BID_NO         = ${BID_NO}
+			            AND BID_COUNT      = ${BID_COUNT}
+		]]>
+	</method>
+
+	<!-- ICT 사용 -->
+	<method name="et_setStatusUpdateBDPG">
+		<![CDATA[
+			         UPDATE ICOYBDPG_ICT
+			            SET BID_BEGIN_DATE = ${BID_BEGIN_DATE		}
+			               ,BID_BEGIN_TIME = ${BID_BEGIN_TIME_HOUR_MINUTE   }
+			               ,BID_END_DATE   = ${BID_END_DATE                 }
+			               ,BID_END_TIME   = ${BID_END_TIME_HOUR_MINUTE     }
+			               ,OPEN_DATE      = ${OPEN_DATE                    }
+			               ,OPEN_TIME      = ${OPEN_TIME_HOUR_MINUTE        } 
+			               ,CHANGE_DATE    = TO_CHAR(SYSDATE,'YYYYMMDD')
+			               ,CHANGE_TIME    = TO_CHAR(SYSDATE,'HH24MISS')
+			               ,BID_PLACE      = ${BID_PLACE} 
+			          WHERE HOUSE_CODE     = ${HOUSE_CODE}
+			            AND BID_NO         = ${BID_NO}
+			            AND BID_COUNT      = ${BID_COUNT}
+			            AND VOTE_COUNT     = ${VOTE_COUNT}
+		]]>
+	</method>
+	
+	<!-- ICT 사용 -->
+	<method name="et_setStatusBeforeUpdateBDHD">
+		<![CDATA[
+         UPDATE ICOYBDHD_ICT
+            SET STATUS               	= 'D'
+               ,CHANGE_USER_ID       	= ${ID}
+               ,CHANGE_USER_DEPT	 	= ${DEPT}
+               ,CHANGE_USER_NAME_ENG 	= ${NAME_ENG}
+               ,CHANGE_USER_NAME_LOC 	= ${NAME_LOC}
+               ,CHANGE_DATE          	= TO_CHAR(SYSDATE,'YYYYMMDD')
+               ,CHANGE_TIME          	= TO_CHAR(SYSDATE,'HH24MISS')
+          WHERE HOUSE_CODE  			=  ${HOUSE_CODE}
+            AND BID_NO      			=  ${BID_NO}
+            AND BID_COUNT            	<= TO_NUMBER(${BID_COUNT})
+		]]>
+	</method>
+
+
+
+	<!-- 공고확정 end -->	
+	<method name="setApprovalRequest_selectSSCGL">
+	<![CDATA[ 
+	SELECT COUNT( * ) CNT   
+	   FROM SSCGL
+	WHERE DOC_NO     =  ${doc_no}
+	    AND DOC_SEQ     = ${doc_seq}    
+	AND APP_STATUS <> 'R'                
+	]]>
+	</method> 
+	<method name="setApprovalRequest_deleteSSCGL">
+	<![CDATA[ 
+	 DELETE FROM SSCGL  
+	  WHERE DOC_NO = ${doc_no}   
+	    AND DOC_SEQ     = ${doc_seq}              
+	]]>
+	</method> 
+	<method name="setApprovalRequest_deleteSSCLN">
+	<![CDATA[ 
+	   DELETE FROM SSCLN  
+	  WHERE DOC_NO = ${doc_no}    
+	    AND DOC_SEQ     = ${doc_seq}              
+	]]>
+	</method>  
+	<method name="setApprovalRequest_insertSSCGL">
+	<![CDATA[ 
+	   INSERT INTO SSCGL (  
+	    COMPANY_CODE      
+	  , DOC_TYPE          
+	  , DOC_NO            
+	  , PLANT_CODE        
+	  , DOC_SEQ           
+	  , APPROVALID        
+	  , STRATEGY_TYPE     
+	  , AUTO_MANUAL_FLAG  
+	  , APP_STAGE         
+	  , APP_STATUS        
+	  , ARGENT_FLAG       
+	  , SHIPPER_TYPE      
+	  , CTRL_PERSON_ID    
+	  , ACCOUNT_CODE      
+	  , CUR               
+	  , NEXT_SIGN_USER_ID 
+	  , ADD_DATE          
+	  , ADD_TIME          
+	  , ADD_USER_ID       
+	  , CHANGE_DATE       
+	  , CHANGE_TIME       
+	  , CHANGE_USER_ID    
+	  , SUBJECT           
+	  , SIGN_REMARK       
+	  , UPRESNO           
+	  , UPTIME            
+	  , UPSEQ             
+	  , SYSTEM_FLAG       
+	  , DEL_FLAG          
+	  , PR_DATE           
+	  , ITEM_COUNT        
+	  , TTL_AMT           
+	  , CONV_TTL_AMT      
+	  ) VALUES (          
+	   ${company_code}     --회사코드
+	 , ${doc_type}         --문서타입(scode.type=M999)
+	 , ${doc_no}           --결재문서번호
+	 , ''     
+	 , ${doc_seq}          --결재문서항번
+	 , ''     
+	 , ''     
+	 , ${auto_manual_flag}     
+	 , ${app_stage}        --결재단계
+	 , ${app_status}       --결재상태코드
+	 , ''     
+	 , ''     
+	 , ''     
+	 , ''     
+	 , ''     
+	 , ''     
+	 , ${current.date}     --상신일
+	 , ${current.time}     --상신시간   
+	 , ${session.ID}       --상신자
+	 , ''     
+	 , ''     
+	 , ''     
+	 , ${subject}       --제목
+	 , ''     
+	 , ''     
+	 , ''     
+	 , ''     
+	 , ''     
+	 , 'N'     
+	 , ''     
+	 , '0'     
+	 , '0'     
+	 , '0'     
+	 )                       
+	]]>
+	</method> 
+	<method name="setApprovalRequest_insertSSCLN">
+	<![CDATA[ 
+	 INSERT INTO SSCLN (  
+	    COMPANY_CODE        
+	  , DOC_TYPE            
+	  , DOC_NO              
+	  , DOC_SEQ             
+	  , SIGN_PATH_SEQ       
+	  , PLANT_CODE          
+	  , PROCEEDING_FLAG     
+	  , APP_STATUS          
+	  , SIGN_CHECK          
+	  , SIGN_USER_ID        
+	  , SIGN_POSITION       
+	  , SIGN_M_POSITION     
+	  , SIGN_DATE           
+	  , SIGN_TIME           
+	  , SIGN_REMARK         
+	  , ORIGIN_SIGN_USER_ID 
+	  , SIGN_AUTO_FLAG 	   
+	  ) VALUES (            
+	   ${COMPANY_CODE}   --회사코드
+	 , ${DOC_TYPE}       --문서타입
+	 , ${DOC_NO}         --결재문서번호
+	 , ${DOC_SEQ}        --결재문서항번
+	 , ${SIGN_PATH_SEQ}   --결재자순서
+	 , ''   
+	 , ${PROCEEDING_FLAG}   
+	 , ${APP_STATUS}      --결재상태코드
+	 , ${SIGN_CHECK}      --결재상태(차기결재자관련)
+	 , ${SIGN_USER_ID}     --결재자
+	 , ''   
+	 , ''   
+	 , ''   
+	 , ''   
+	 , ''   
+	 , ''   
+	 , ${SIGN_AUTO_FLAG}   --일괄승인여부
+	 )                     
+	]]>
+	</method> 
+	<method name="setApprovalRequest_updateICOYBDHD">
+	<![CDATA[ 
+	  UPDATE ICOYBDHD                
+	    SET SIGN_STATUS    = 'P'   
+	    ,ANN_NO = ${ann_no}
+	  WHERE COMPANY_CODE   = ${company_code}    
+	    AND BID_NO    = ${bid_no} 
+	    AND BID_COUNT     = ${bid_count}                
+	]]>
+	</method> 
+	
+	<!-- ICT 사용 -->
+	<method name="getMaxBidCount">
+	<![CDATA[	
+		SELECT	MAX(TO_NUMBER(BID_COUNT)) + 1 AS BID_COUNT
+		  FROM	ICOYBDHD_ICT
+		 WHERE	HOUSE_CODE  = ${HOUSE_CODE}       
+		   AND	BID_NO		= ${BID_NO} 
+		
+	]]>
+	</method>
+
+
+	<!-- ICT 사용 -->
+	<method name="et_chkUGonggo_20161202_bak">
+	<![CDATA[ 
+			SELECT	COUNT(*) STATUS
+			  FROM ICOYBDPG_ICT A1, ICOYBDHD_ICT A2
+			 WHERE 1=1
+			   AND A1.HOUSE_CODE = A2.HOUSE_CODE
+			   AND A1.BID_NO     = A2.BID_NO
+			   AND A1.BID_COUNT  = A2.BID_COUNT
+			   AND A1.STATUS IN ('C','R')
+			   AND A2.STATUS IN ('C','R')
+			   AND A1.HOUSE_CODE = ${HOUSE_CODE}
+			   AND A1.BID_NO     = ${BID_NO}
+			   AND TO_NUMBER(TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')) <= TO_NUMBER(A1.BID_BEGIN_DATE||A1.BID_BEGIN_TIME)			   			                                                       
+	]]>
+	</method>
+	
+	<method name="et_chkUGonggo">
+	<![CDATA[
+		 SELECT SUM(A.CNT) CNT
+          FROM
+          ( 
+           SELECT   COUNT(*) CNT
+			 FROM  	ICOYBDHD_ICT BDHD
+			 		LEFT OUTER JOIN	ICOYBDPG_ICT BDPG	ON  BDHD.HOUSE_CODE = BDPG.HOUSE_CODE
+			 										AND BDHD.BID_NO     = BDPG.BID_NO
+			 										AND BDHD.BID_COUNT  = BDPG.BID_COUNT
+			WHERE   BDHD.SIGN_STATUS  IN ('C')
+			  AND   BDHD.BID_STATUS   IN ('CC','SB')
+			  AND   BDHD.STATUS       IN ('C' ,'R')
+			  AND   BDPG.STATUS       IN ('C' ,'R')
+			  AND	BDHD.HOUSE_CODE = ${HOUSE_CODE}
+			  AND	BDHD.BID_NO     = ${BID_NO}
+		   UNION ALL
+		   SELECT   COUNT(BDHD.BID_NO) CNT
+			 FROM  	ICOYBDHD_ICT BDHD
+			 		INNER JOIN	ICOYBDVO_ICT BDVO	ON  BDHD.HOUSE_CODE = BDVO.HOUSE_CODE
+			 										    AND BDHD.BID_NO     = BDVO.BID_NO
+			 										    AND BDHD.BID_COUNT  = BDVO.BID_COUNT
+			WHERE   BDHD.SIGN_STATUS  IN ('C')
+			  AND   BDHD.BID_STATUS   IN ('AC','UC','RR','NB')			  
+			  AND   BDHD.STATUS       IN ('C' ,'R')
+			  AND   BDVO.VOTE_COUNT   = 1
+			  AND	BDHD.HOUSE_CODE = ${HOUSE_CODE}
+			  AND	BDHD.BID_NO     = ${BID_NO}		  
+		  )A		   		                                         
+		]]>
+	</method>     
+
+
+	<!-- ICT 사용 -->
+	<method name="et_getGonggoIsValid">
+		<![CDATA[
+			SELECT DECODE(NVL(COUNT(BID_COUNT), 0), 0, 'Y', 1, 'Y', 'N')  
+			  FROM ICOYBDHD_ICT                                                 
+			 WHERE HOUSE_CODE =  ${HOUSE_CODE}                             
+			   AND BID_NO     =  ${BID_NO}                     
+			   AND STATUS IN ('C', 'R')                                      
+		
+			]]>
+	</method> 
+	
+	<!-- ICT 사용  -->
+	<method name="et_chkCGonggo">
+		<![CDATA[ 
+				select
+						(case when (   TO_NUMBER(TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')) < TO_NUMBER(PG.BID_END_DATE||PG.BID_END_TIME)
+									 OR PG.BID_END_DATE IS NULL) then 'Y'
+							else 'N'
+						 end)                        AS STATUS
+				from  ICOYBDHD_ICT HD
+				    , ICOYBDPG_ICT PG
+				where 1=1
+				  and HD.HOUSE_CODE  = ${HOUSE_CODE}
+				  and HD.BID_NO      = ${BID_NO}
+				  and HD.BID_COUNT   = ${BID_COUNT}
+				  and PG.HOUSE_CODE  = HD.HOUSE_CODE
+				  and PG.BID_NO      = HD.BID_NO
+				  and PG.BID_COUNT   = HD.BID_COUNT
+				  and PG.VOTE_COUNT  = (select max(Z.VOTE_COUNT)
+				  						  from ICOYBDPG_ICT Z
+				  						 where Z.HOUSE_CODE = PG.HOUSE_CODE
+				  						   and Z.BID_NO     = PG.BID_NO
+				  						   and Z.BID_COUNT  = PG.BID_COUNT
+				  						   and Z.STATUS    IN ('C', 'R')
+				  						)
+				and HD.STATUS      IN ('C', 'R')
+				and PG.STATUS      IN ('C', 'R')
+		]]>
+	</method> 
+
+
+	<!-- ICT 사용 -->
+	<method name="et_setBDLNCancelConfirmCreate">
+		<![CDATA[
+				INSERT INTO ICOYBDDT_ICT	(
+											  HOUSE_CODE
+											, BID_NO
+											, BID_COUNT
+											, ITEM_SEQ
+											, STATUS
+											, ADD_DATE
+											, ADD_TIME
+											, ADD_USER_ID
+											, ADD_USER_NAME_LOC
+											, ADD_USER_NAME_ENG
+											, ADD_USER_DEPT
+											, CHANGE_DATE
+											, CHANGE_TIME
+											, CHANGE_USER_ID
+											, CHANGE_USER_NAME_LOC
+											, CHANGE_USER_NAME_ENG
+											, CHANGE_USER_DEPT
+											, BUYER_ITEM_NO
+											, DESCRIPTION_LOC
+											, UNIT_MEASURE
+											, PR_QTY
+											, CUR
+											, UNIT_PRICE
+											, PR_AMT
+											, SBID_PRICE
+											, SBID_AMT
+											, PR_NO
+											, PR_SEQ
+											, SPECIFICATION
+											)
+				(
+				select
+											  HOUSE_CODE
+											, BID_NO
+											, (select max(TO_NUMBER(Z.BID_COUNT)) + 1
+											     from ICOYBDHD_ICT Z
+											    where Z.HOUSE_CODE  = A1.HOUSE_CODE
+											      and Z.BID_NO      = A1.BID_NO)
+											, ITEM_SEQ
+											, 'C'
+											, TO_CHAR(SYSDATE,'YYYYMMDD')
+											, TO_CHAR(SYSDATE,'HH24MISS')
+											, ${ID}
+											, ${NAME_LOC}
+											, ${NAME_ENG}
+											, ${DEPT}
+											, TO_CHAR(SYSDATE,'YYYYMMDD')
+											, TO_CHAR(SYSDATE,'HH24MISS')
+											, ${ID}
+											, ${NAME_LOC}
+											, ${NAME_ENG}
+											, ${DEPT}
+											, BUYER_ITEM_NO
+											, DESCRIPTION_LOC
+											, UNIT_MEASURE
+											, PR_QTY
+											, CUR
+											, UNIT_PRICE
+											, PR_AMT
+											, SBID_PRICE
+											, SBID_AMT
+											, PR_NO
+											, PR_SEQ
+											, SPECIFICATION
+				 from ICOYBDDT_ICT A1
+				where HOUSE_CODE = ${HOUSE_CODE}
+				  and BID_NO     = ${BID_NO}
+				  and BID_COUNT  = ${BID_COUNT}
+				  and STATUS    IN ('C', 'R')
+				)
+		]]>
+	</method>
+
+
+	<!-- ICT 사용 -->
+	<method name="et_setBDPGCancelConfirmCreate">
+		<![CDATA[
+
+					INSERT INTO ICOYBDPG_ICT	(
+												  HOUSE_CODE
+												, BID_NO
+												, BID_COUNT
+												, VOTE_COUNT
+												, STATUS
+												, ADD_DATE
+												, ADD_TIME
+												, ADD_USER_ID
+												, ADD_USER_NAME_LOC
+												, ADD_USER_NAME_ENG
+												, ADD_USER_DEPT
+												, BID_BEGIN_DATE
+												, BID_BEGIN_TIME
+												, BID_END_DATE
+												, BID_END_TIME
+												, BID_PLACE
+												, BID_ETC
+												)
+					(
+					SELECT
+												  ${HOUSE_CODE}
+												, ${BID_NO}
+												, (SELECT MAX(TO_NUMBER(Z.BID_COUNT)) + 1
+												     FROM ICOYBDHD_ICT Z
+												    WHERE Z.HOUSE_CODE  = A1.HOUSE_CODE
+												      AND Z.BID_NO		= A1.BID_NO)
+												, '1'
+												, 'C'                           -- STATUS
+												, TO_CHAR(SYSDATE,'YYYYMMDD')   -- ADD_DATE
+												, TO_CHAR(SYSDATE,'HH24MISS')   -- ADD_TIME
+												, ${ID}                         -- ADD_USER_ID
+												, ${NAME_LOC}                   -- ADD_USER_NAME_LOC
+												, ${NAME_END}                   -- ADD_USER_NAME_ENG
+												, ${DEPT}                       -- ADD_USER_DEPT
+												, ${ANN_DATE}                   -- BID_BEGIN_DATE
+												, '000000'                      -- BID_BEGIN_TIME
+												, ${E_ANN_DATE}                 -- BID_END_DATE
+												, '000000'                      -- BID_END_TIME
+												, BID_PLACE
+												, ${BID_ETC}
+					  FROM ICOYBDPG_ICT A1
+					 WHERE HOUSE_CODE = ${HOUSE_CODE}
+					   AND BID_NO     = ${BID_NO}
+					   AND BID_COUNT  = ${BID_COUNT}
+					   AND STATUS     IN ('C', 'R')
+					)
+
+		]]>
+	</method>
+
+
+	<!-- ICT 사용 -->
+	<method name="et_setBDAPCancelConfirmCreate">
+		<![CDATA[
+
+				INSERT INTO ICOYBDAP_ICT	(
+											  HOUSE_CODE
+											, BID_NO
+											, BID_COUNT
+											, VENDOR_CODE
+											, STATUS
+											, ADD_DATE
+											, ADD_TIME
+											, ADD_USER_ID
+											, ADD_USER_NAME_LOC
+											, ADD_USER_NAME_ENG
+											, ADD_USER_DEPT
+											, APP_DATE
+											, APP_TIME
+											, EXPLAN_FLAG
+											, UNT_FLAG
+											, ACHV_FLAG
+											, FINAL_FLAG
+											, INCO_REASON
+											)
+				(
+				SELECT
+											  ${HOUSE_CODE}
+											, ${BID_NO}
+											, (SELECT max(TO_NUMBER(Z.BID_COUNT)) + 1
+											     FROM ICOYBDHD_ICT Z
+											    WHERE Z.HOUSE_CODE  = A1.HOUSE_CODE
+											      AND Z.BID_NO		= A1.BID_NO)
+											, VENDOR_CODE
+											, 'C'
+											, TO_CHAR(SYSDATE,'YYYYMMDD')	-- ADD_DATE
+											, TO_CHAR(SYSDATE,'HH24MISS')	-- ADD_TIME
+											, ${ID}							-- ADD_USER_ID
+											, ${NAME_LOC}					-- ADD_USER_NAME_LOC
+											, ${NAME_END}					-- ADD_USER_NAME_ENG
+											, ${DEPT}						-- ADD_USER_DEPT
+											, APP_DATE
+											, APP_TIME
+											, EXPLAN_FLAG
+											, UNT_FLAG
+											, ACHV_FLAG
+											, FINAL_FLAG
+											, INCO_REASON
+				  FROM ICOYBDAP_ICT A1
+				 WHERE HOUSE_CODE = ${HOUSE_CODE}
+				   AND BID_NO     = ${BID_NO}
+				   AND BID_COUNT  = ${BID_COUNT}
+				   AND BID_CANCEL = 'N'
+				   AND STATUS     IN ('C', 'R')
+				)
+		]]>
+	</method>
+	
+	
+	
+	<!-- ICT 사용 -->
+	<method name="et_setBDHDCancelConfirmCreate">
+		<![CDATA[
+
+				INSERT INTO ICOYBDHD_ICT	(
+											  HOUSE_CODE
+											, BID_NO
+											, BID_COUNT
+											, COMPANY_CODE
+											, STATUS
+											, ADD_DATE
+											, ADD_TIME
+											, ADD_USER_ID
+											, ADD_USER_NAME_LOC
+											, ADD_USER_NAME_ENG
+											, ADD_USER_DEPT
+											, CHANGE_DATE
+											, CHANGE_TIME
+											, CHANGE_USER_ID
+											, CHANGE_USER_NAME_LOC
+											, CHANGE_USER_NAME_ENG
+											, CHANGE_USER_DEPT
+											, SIGN_PERSON_ID
+											, SIGN_PERSON_NAME
+											, SIGN_DATE
+											, SIGN_STATUS
+											, BID_TYPE
+											, CONT_TYPE1
+											, CONT_TYPE2
+											, PROM_CRIT
+											, ANN_TITLE
+											, ANN_NO
+											, ANN_DATE
+											, ANN_ITEM
+											, APP_BEGIN_DATE
+											, APP_BEGIN_TIME
+											, APP_END_DATE
+											, APP_END_TIME
+											, BID_STATUS
+											, PR_NO
+											, CTRL_CODE
+											, ANN_TIME
+											, RD_DATE
+											, DELY_PLACE
+											, LIMIT_CRIT
+											, CTRL_AMT
+											, ESTM_KIND
+											, ESTM_VOTE
+											, FROM_LOWER_BND
+											, CONT_PLACE
+											, BID_CANCEL_TEXT
+											, BID_JOIN_TEXT
+											, TECH_DQ
+											, AMT_DQ
+											, BID_EVAL_SCORE
+											, LOC_CNT
+											, X_PURCHASE_QTY
+											, X_BASIC_ADD
+											, X_RELATIVE_ADD
+											, X_DOC_SUBMIT_DATE
+											, X_DOC_SUBMIT_TIME
+											, X_ESTM_CHECK
+											, COST_SETTLE_TERMS
+											, ANN_VERSION
+											, X_MAKE_SPEC
+											, ITEM_TYPE
+											, X_AUTO_FLAG
+											, APP_ETC
+											, ES_FLAG
+											)
+				(
+				SELECT
+											  HOUSE_CODE
+											, ${BID_NO                 }
+											, (SELECT MAX(TO_NUMBER(Z.BID_COUNT)) + 1
+											     FROM ICOYBDHD_ICT Z
+											    WHERE Z.HOUSE_CODE  = A1.HOUSE_CODE
+											      AND Z.BID_NO		= A1.BID_NO  )
+											, ${COMPANY_CODE}
+											, 'R'
+											, TO_CHAR(SYSDATE,'YYYYMMDD')
+											, TO_CHAR(SYSDATE,'HH24MISS')
+											, ${ID}
+											, ${NAME_LOC}
+											, ${NAME_ENG}
+											, ${DEPT}
+											, TO_CHAR(SYSDATE,'YYYYMMDD')
+											, TO_CHAR(SYSDATE,'HH24MISS')
+											, ${ID}
+											, ${NAME_LOC}
+											, ${NAME_ENG}
+											, ${DEPT}
+											, ''
+											, ''
+											, ''
+											, 'C'
+											, ${BID_TYPE                }
+											, CONT_TYPE1
+											, CONT_TYPE2
+											, PROM_CRIT
+											, ${ANN_TITLE              }
+											, ${ANN_NO                  }
+											, ${ANN_DATE                }
+											, ${ANN_ITEM               }
+											, ${ANN_DATE              }
+											, '000000'
+											, ${E_ANN_DATE}
+											, '000000'
+											, 'CX'
+											, PR_NO
+											, ${CTRL_CODE}
+											, '000000'
+											, RD_DATE
+											, DELY_PLACE
+											, LIMIT_CRIT
+											, CTRL_AMT
+											, ESTM_KIND
+											, ESTM_VOTE
+											, FROM_LOWER_BND
+											, CONT_PLACE
+											, BID_CANCEL_TEXT
+											, BID_JOIN_TEXT
+											, TECH_DQ
+											, AMT_DQ
+											, BID_EVAL_SCORE
+											, LOC_CNT
+											, X_PURCHASE_QTY
+											, X_BASIC_ADD
+											, X_RELATIVE_ADD
+											, X_DOC_SUBMIT_DATE
+											, X_DOC_SUBMIT_TIME
+											, X_ESTM_CHECK
+											, COST_SETTLE_TERMS
+											, ANN_VERSION
+											, X_MAKE_SPEC
+											, ITEM_TYPE
+											, X_AUTO_FLAG
+											, APP_ETC
+											, ES_FLAG
+				FROM ICOYBDHD_ICT A1
+				WHERE HOUSE_CODE = ${HOUSE_CODE}
+				AND   BID_NO     = ${BID_NO}
+				AND   BID_COUNT  = ${BID_COUNT}
+				)
+		]]>
+	</method>
+
+
+	<method name="et_setPRDTUPDATE_Confirm_Gonggo">
+		<![CDATA[
+         UPDATE ICOYPRDT
+            SET PR_PROCEEDING_FLAG = 'P'  
+          WHERE HOUSE_CODE       = ${HOUSE_CODE}  
+            AND (PR_NO, PR_SEQ)  IN (
+                    SELECT PR_NO, PR_SEQ
+                      FROM ICOYBDDT
+                     WHERE BID_NO    = ${BID_NO}                    
+                       AND BID_COUNT =  ${BID_COUNT}            
+                    )
+		]]>
+	</method>
+	
+	<!-- ICT 사용 -->
+	<method name="et_setBDDTCancelCreate">
+		<![CDATA[
+
+				INSERT INTO ICOYBDDT_ICT	(
+											  HOUSE_CODE
+											, BID_NO
+											, BID_COUNT
+											, ITEM_SEQ
+											, STATUS
+											, ADD_DATE
+											, ADD_TIME
+											, ADD_USER_ID
+											, ADD_USER_NAME_LOC
+											, ADD_USER_NAME_ENG
+											, ADD_USER_DEPT
+											, CHANGE_DATE
+											, CHANGE_TIME
+											, CHANGE_USER_ID
+											, CHANGE_USER_NAME_LOC
+											, CHANGE_USER_NAME_ENG
+											, CHANGE_USER_DEPT
+											, BUYER_ITEM_NO
+											, DESCRIPTION_LOC
+											, UNIT_MEASURE
+											, PR_QTY
+											, CUR
+											, UNIT_PRICE
+											, PR_AMT
+											, SBID_PRICE
+											, SBID_AMT
+											, PR_NO
+											, PR_SEQ
+											, SPECIFICATION
+											)
+				(
+				SELECT
+											  HOUSE_CODE
+											, BID_NO
+											/*, (SELECT MAX(TO_NUMBER(Z.BID_COUNT)) + 1
+											     FROM ICOYBDHD_ICT Z
+											    WHERE Z.HOUSE_CODE  = A1.HOUSE_CODE
+											      AND Z.BID_NO		= A1.BID_NO)*/
+											, ${C_BID_COUNT}
+											, ITEM_SEQ
+											, 'C'
+											, TO_CHAR(SYSDATE,'YYYYMMDD')
+											, TO_CHAR(SYSDATE,'HH24MISS')
+											, ${ID}
+											, ${NAME_LOC}
+											, ${NAME_ENG}
+											, ${DEPT}
+											, TO_CHAR(SYSDATE,'YYYYMMDD')
+											, TO_CHAR(SYSDATE,'HH24MISS')
+											, ${ID}
+											, ${NAME_LOC}
+											, ${NAME_ENG}
+											, ${DEPT}
+											, BUYER_ITEM_NO
+											, DESCRIPTION_LOC
+											, UNIT_MEASURE
+											, PR_QTY
+											, CUR
+											, UNIT_PRICE
+											, PR_AMT
+											, SBID_PRICE
+											, SBID_AMT
+											, PR_NO
+											, PR_SEQ
+											, SPECIFICATION
+				FROM  ICOYBDDT_ICT A1
+				WHERE HOUSE_CODE = ${HOUSE_CODE}
+				AND   BID_NO     = ${BID_NO}
+				AND   BID_COUNT  = ${BID_COUNT}
+				AND   STATUS     IN ('C', 'R')
+				)
+		]]>
+	</method>
+
+
+	<!-- ICT 사용 -->
+	<method name="et_setBDPGCancelCreate">
+		<![CDATA[
+
+				INSERT INTO ICOYBDPG_ICT	(
+											  HOUSE_CODE
+											, BID_NO
+											, BID_COUNT
+											, VOTE_COUNT
+											, STATUS
+											, ADD_DATE
+											, ADD_TIME
+											, ADD_USER_ID
+											, ADD_USER_NAME_LOC
+											, ADD_USER_NAME_ENG
+											, ADD_USER_DEPT
+											, BID_BEGIN_DATE
+											, BID_BEGIN_TIME
+											, BID_END_DATE
+											, BID_END_TIME
+											, BID_ETC
+											)
+				(
+				SELECT
+											  ${HOUSE_CODE}
+											, ${BID_NO}
+											/*, (SELECT MAX(TO_NUMBER(Z.BID_COUNT)) + 1
+											     FROM ICOYBDHD_ICT Z
+											    WHERE Z.HOUSE_CODE  = A1.HOUSE_CODE
+											      AND Z.BID_NO		= A1.BID_NO    )*/
+											, ${C_BID_COUNT}											
+											, '1'
+											, 'C'							-- STATUS
+											, TO_CHAR(SYSDATE,'YYYYMMDD')	-- ADD_DATE
+											, TO_CHAR(SYSDATE,'HH24MISS')	-- ADD_TIME
+											, ${ID}
+											, ${NAME_LOC}
+											, ${NAME_ENG}
+											, ${DEPT}
+											, ${ANN_DATE}					-- BID_BEGIN_DATE
+											, '000000'						-- BID_BEGIN_TIME
+											, ${E_ANN_DATE}					-- BID_END_DATE
+											, '000000'						-- BID_END_TIME
+											, ${BID_ETC}
+				FROM ICOYBDPG_ICT A1
+				WHERE HOUSE_CODE =  ${HOUSE_CODE}
+				AND   BID_NO     =  ${BID_NO}
+				AND   BID_COUNT  =  ${BID_COUNT}
+				AND   STATUS     IN ('C', 'R')
+				)
+
+		]]>
+	</method>
+
+
+	<!-- ICT 사용 -->
+	<method name="et_setBDAPCancelCreate">
+		<![CDATA[
+
+				INSERT INTO ICOYBDAP_ICT	(
+											  HOUSE_CODE
+											, BID_NO
+											, BID_COUNT
+											, VENDOR_CODE
+											, STATUS
+											, ADD_DATE
+											, ADD_TIME
+											, ADD_USER_ID
+											, ADD_USER_NAME_LOC
+											, ADD_USER_NAME_ENG
+											, ADD_USER_DEPT
+											, APP_DATE
+											, APP_TIME
+											, EXPLAN_FLAG
+											, UNT_FLAG
+											, ACHV_FLAG
+											, FINAL_FLAG
+											, INCO_REASON
+											)
+				(
+				SELECT
+											  ${HOUSE_CODE}
+											, ${BID_NO}
+											/*, (SELECT MAX(TO_NUMBER(Z.BID_COUNT)) + 1
+											     FROM ICOYBDHD_ICT Z
+											    WHERE Z.HOUSE_CODE  = A1.HOUSE_CODE
+											      AND Z.BID_NO		= A1.BID_NO     )*/
+											, ${C_BID_COUNT}											
+											, VENDOR_CODE
+											, 'C'
+											, TO_CHAR(SYSDATE,'YYYYMMDD')   -- ADD_DATE
+											, TO_CHAR(SYSDATE,'HH24MISS')   -- ADD_TIME
+											, ${ID}
+											, ${NAME_LOC}
+											, ${NAME_ENG}
+											, ${DEPT}
+											, APP_DATE
+											, APP_TIME
+											, EXPLAN_FLAG
+											, UNT_FLAG
+											, ACHV_FLAG
+											, FINAL_FLAG
+											, INCO_REASON
+				FROM ICOYBDAP_ICT A1
+				WHERE HOUSE_CODE =  ${HOUSE_CODE}
+				AND   BID_NO     =  ${BID_NO}
+				AND   BID_COUNT  =  ${BID_COUNT}
+				AND   BID_CANCEL = 'N'
+				AND   STATUS     IN ('C', 'R')
+				)
+		]]>
+	</method>
+	
+	
+	
+	<!-- ICT 사용 -->
+	<method name="et_setBDHDCancelCreate">
+		<![CDATA[
+
+				INSERT INTO ICOYBDHD_ICT	(
+											  HOUSE_CODE
+											, BID_NO
+											, BID_COUNT
+											, COMPANY_CODE
+											, STATUS
+											, ADD_DATE
+											, ADD_TIME
+											, ADD_USER_ID
+											, ADD_USER_NAME_LOC
+											, ADD_USER_NAME_ENG
+											, ADD_USER_DEPT
+											, CHANGE_DATE
+											, CHANGE_TIME
+											, CHANGE_USER_ID
+											, CHANGE_USER_NAME_LOC
+											, CHANGE_USER_NAME_ENG
+											, CHANGE_USER_DEPT
+											, SIGN_PERSON_ID
+											, SIGN_PERSON_NAME
+											, SIGN_DATE
+											, SIGN_STATUS
+											, BID_TYPE
+											, CONT_TYPE1
+											, CONT_TYPE2
+											, PROM_CRIT
+											, ANN_TITLE
+											, ANN_NO
+											, ANN_DATE
+											, ANN_ITEM
+											, APP_BEGIN_DATE
+											, APP_BEGIN_TIME
+											, APP_END_DATE
+											, APP_END_TIME
+											, BID_STATUS
+											, PR_NO
+											, CTRL_CODE
+											, ANN_TIME
+											, RD_DATE
+											, DELY_PLACE
+											, LIMIT_CRIT
+											, CTRL_AMT
+											, ESTM_KIND
+											, ESTM_VOTE
+											, FROM_LOWER_BND
+											, CONT_PLACE
+											, BID_CANCEL_TEXT
+											, BID_JOIN_TEXT
+											, TECH_DQ
+											, AMT_DQ
+											, BID_EVAL_SCORE
+											, LOC_CNT
+											, X_PURCHASE_QTY
+											, X_BASIC_ADD
+											, X_RELATIVE_ADD
+											, X_DOC_SUBMIT_DATE
+											, X_DOC_SUBMIT_TIME
+											, X_ESTM_CHECK
+											, COST_SETTLE_TERMS
+											, ANN_VERSION
+											, X_MAKE_SPEC
+											, ITEM_TYPE
+											, X_AUTO_FLAG
+											, APP_ETC
+											, ES_FLAG
+											, INP_CNF
+											)
+				(
+				SELECT
+											  HOUSE_CODE
+											, ${BID_NO                 }
+											/*, (SELECT MAX(TO_NUMBER(BID_COUNT)) + 1
+											    FROM ICOYBDHD_ICT Z
+											   WHERE Z.HOUSE_CODE = A1.HOUSE_CODE
+											     AND Z.BID_NO     = A1.BID_NO  )*/
+											, ${C_BID_COUNT}											
+											, ${COMPANY_CODE}
+											, 'C'
+											, TO_CHAR(SYSDATE,'YYYYMMDD')
+											, TO_CHAR(SYSDATE,'HH24MISS')
+											, ${ID}
+											, ${NAME_LOC}
+											, ${NAME_ENG}
+											, ${DEPT}
+											, TO_CHAR(SYSDATE,'YYYYMMDD')
+											, TO_CHAR(SYSDATE,'HH24MISS')
+											, ${ID}
+											, ${NAME_LOC}
+											, ${NAME_ENG}
+											, ${DEPT}
+											, ''
+											, ''
+											, ''
+											, ${SIGN_STATUS            }
+											, ${BID_TYPE               }
+											, CONT_TYPE1
+											, CONT_TYPE2
+											, PROM_CRIT
+											, ${ANN_TITLE               }
+											, ${ANN_NO                 }
+											, ${ANN_DATE              }
+											, ${ANN_ITEM              }
+											, ${ANN_DATE            }
+											, '000000'
+											, ${E_ANN_DATE             }
+											, '000000'
+											, ${BID_STATUS            }
+											, PR_NO
+											, ${CTRL_CODE             }
+											, '000000'
+											, RD_DATE
+											, DELY_PLACE
+											, LIMIT_CRIT
+											, CTRL_AMT
+											, ESTM_KIND
+											, ESTM_VOTE
+											, FROM_LOWER_BND
+											, CONT_PLACE
+											, BID_CANCEL_TEXT
+											, BID_JOIN_TEXT
+											, TECH_DQ
+											, AMT_DQ
+											, BID_EVAL_SCORE
+											, LOC_CNT
+											, X_PURCHASE_QTY
+											, X_BASIC_ADD
+											, X_RELATIVE_ADD
+											, X_DOC_SUBMIT_DATE
+											, X_DOC_SUBMIT_TIME
+											, X_ESTM_CHECK
+											, COST_SETTLE_TERMS
+											, ANN_VERSION
+											, X_MAKE_SPEC
+											, ITEM_TYPE
+											, X_AUTO_FLAG
+											, APP_ETC
+											, ES_FLAG
+											, INP_CNF
+				FROM ICOYBDHD_ICT A1
+				WHERE HOUSE_CODE = ${HOUSE_CODE}
+				AND   BID_NO     = ${BID_NO}
+				AND   BID_COUNT  = ${BID_COUNT}
+				)
+		]]>
+	</method>
+
+
+
+	
+	<method name="getBdAnnVersion">
+		SELECT 	CODE 
+		FROM 	SCODE 
+		WHERE 	TYPE = 'VR001'
+		AND 	HOUSE_CODE = '#HOUSE_CODE#'
+		AND 	NVL(DEL_FLAG, 'N') = 'N'
+		AND 	USE_FLAG = 'Y'
+	</method>  
+
+	<method name="setBdAnnVersion">
+		UPDATE SCODE SET
+		CODE = ${CODE}
+		WHERE 	TYPE = 'VR001'
+		AND 	HOUSE_CODE = ${HOUSE_CODE}
+		AND 	NVL(DEL_FLAG, 'N') = 'N'
+		AND 	USE_FLAG = 'Y' 
+	</method>  
+	
+	
+	<!-- ICT 사용 -->
+	<method name="bddt_delPreBdDelete">
+		 UPDATE ICOYBDDT_ICT
+		    SET STATUS = 'D'
+		  WHERE HOUSE_CODE = ${HOUSE_CODE}
+		    AND BID_NO     = ${BID_NO}
+		    AND BID_COUNT  = ${BID_COUNT}
+	</method> 
+	
+	<!-- ICT 사용 -->
+	<method name="bdpg_delPreBdDelete">
+		 UPDATE ICOYBDPG_ICT
+		    SET STATUS = 'D'
+		  WHERE HOUSE_CODE = ${HOUSE_CODE}
+		    AND BID_NO     = ${BID_NO}
+		    AND BID_COUNT  = ${BID_COUNT}
+	</method> 
+	
+	<!-- ICT 사용 -->
+	<method name="bdap_delPreBdDelete">
+		 UPDATE ICOYBDAP_ICT
+		    SET STATUS = 'D'
+		  WHERE HOUSE_CODE = ${HOUSE_CODE}
+		    AND BID_NO     = ${BID_NO}
+		    AND BID_COUNT  = ${BID_COUNT}
+	</method> 
+	
+	<!-- ICT 사용 -->
+	<method name="bdhd_delPreBdDelete">
+		 UPDATE ICOYBDHD_ICT
+		    SET STATUS = 'D'
+		 	   ,BID_STATUS = CASE WHEN ${BID_STATUS} = 'CC' THEN 'CC'
+		 	                      ELSE BID_STATUS
+		 	                 END
+		 WHERE HOUSE_CODE = ${HOUSE_CODE}
+		   AND BID_NO     = ${BID_NO}
+		   AND BID_COUNT  = ${BID_COUNT}
+	</method>
+	
+	<method name="getBidNoCheck">
+		<![CDATA[
+			SELECT 
+				 COUNT(BID_NO) CNT
+			FROM ICOYBDHD_ICT 
+			WHERE 1=1
+			AND HOUSE_CODE = ${HOUSE_CODE}
+			AND BID_NO     <> ${BID_NO}
+		    AND BID_COUNT  = ${BID_COUNT}
+		    AND ANN_NO     = ${ANN_NO}
+		]]>
+	</method> 
+	
+	<method name="et_chkApprRep">
+	<![CDATA[
+		SELECT COUNT(*) CNT 
+		FROM ICOYBDHD_ICT A, ICOYBDPG_ICT B
+		WHERE A.HOUSE_CODE = B.HOUSE_CODE 
+		AND A.BID_NO = B.BID_NO 
+		AND A.BID_COUNT = B.BID_COUNT
+		AND A.STATUS IN ('C','R')
+		AND B.STATUS IN ('C','R')
+		AND A.HOUSE_CODE = ${HOUSE_CODE}
+		AND A.BID_NO = ${BID_NO}
+		AND A.BID_COUNT = ${BID_COUNT}
+		AND A.BID_STATUS IN ('AT','UT','AJ','UJ')
+		AND A.SIGN_STATUS IN ('T','B')
+		AND NVL(A.INP_CNF,'N') = 'Y'
+		AND B.BID_BEGIN_DATE||BID_BEGIN_TIME > TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')
+	]]>
+	</method>
+	
+	<method name="getQuery_ANN_NO2">
+	<![CDATA[	
+			SELECT  A.ANN_NO2 
+		          , A.ANN_COUNT2
+		          , (SELECT ANN_ITEM FROM ICOYBDHD2_ICT WHERE ANN_NO = A.ANN_NO2 AND ANN_COUNT = A.ANN_COUNT2) AS ANN_ITEM2
+			FROM (
+						SELECT	  HD.ANN_NO		AS ANN_NO2
+								, HD.ANN_COUNT  AS ANN_COUNT2
+						FROM	ICOYBDHD2_ICT	HD
+						WHERE 	1=1
+			  <OPT=S,S> AND		HD.HOUSE_CODE  = ? </OPT>
+						AND		HD.STATUS IN ('C' ,'R')
+              <OPT=S,S> AND		HD.ADD_USER_DEPT = ? </OPT>
+			            AND		SUBSTR(HD.ANN_STATUS,2,1) IN  ('C','E')
+			            MINUS
+			            SELECT	  HD.ANN_NO2
+						        , HD.ANN_COUNT2                                    													
+						FROM	            ICOYBDHD_ICT	HD
+								INNER JOIN	ICOYBDPG_ICT	PG	ON	PG.HOUSE_CODE  = HD.HOUSE_CODE
+																AND	PG.BID_NO      = HD.BID_NO
+																AND	PG.BID_COUNT   = HD.BID_COUNT
+						WHERE 	1=1
+			  <OPT=S,S> AND		HD.HOUSE_CODE  = ? </OPT>
+			            AND		HD.BID_STATUS  IN ('AT','AP','RR','SB','AC','UT','UP','UC','CT','CP','CJ')			        
+			            AND		HD.STATUS IN ('C' ,'R')
+            		    AND		PG.STATUS IN ('C' ,'R')
+			  <OPT=S,S> AND		HD.ADD_USER_DEPT = ? </OPT>
+			            AND     HD.ANN_NO2 IS NOT NULL   
+                )A
+			WHERE 1=1 
+			ORDER BY A.ANN_NO2 DESC, A.ANN_COUNT2 DESC                                                                       
+	]]>
+	</method>
+</service>

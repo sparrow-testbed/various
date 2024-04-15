@@ -1,0 +1,77 @@
+<html>
+<head>
+<title>"고객의 소리" 신설 안내 </title>
+<meta http-equiv="Content-Type" content="text/html; charset=euc-kr">
+</head>
+<script LANGUAGE="JavaScript">
+/*
+    function closewin()
+    {
+		var s = "EPRO[popup01]"
+
+		if (document.forms[0].chkClose.checked) 
+			setCookie(s,"true", 1);
+		else 
+			clearCookie(s);
+
+		window.close();
+    }
+
+	function setCookie(name, value, expire) 
+	{
+		var expire_date = new Date();
+		expire_date = new Date(expire_date.getTime() + 60*60*24*1000);
+		document.cookie = name + "=" + escape(value) + "; expires=" + expire_date.toGMTString() +"; path=/"; 
+	}
+	
+	function clearCookie(name)
+	{
+		var today = new Date()
+		var expire_date = new Date(today.getTime() - 60*60*24*1000)
+		document.cookie = name + "= " + "; expires=" + expire_date.toGMTString()
+	}
+*/
+
+function setCookie(name, value, expiredays) {
+	var today = new Date();
+	today.setDate( today.getDate() + expiredays );
+	document.cookie = name + "=" + escape( value ) + "; path=/; expires=" + today.toGMTString() + ";";
+}
+
+function closeWin() {
+	if( document.frmPopUp01.chkClose.checked ) {
+		setCookie("notice01", "no", 1);
+	}
+	window.close();
+}
+
+</script>
+
+<body bgcolor="#FFFFFF" text="#000000">
+	<form id="frmPopUp01" name="frmPopUp01">
+	<table align="center">
+		<tr>
+			<td>
+				<span style="font-size:14px; font-weight:bold; color:black">■ '고객의 소리' 신설</span><br><br>
+				<span style="font-size:12px; color:black">
+				&nbsp;&nbsp;&nbsp;○ 주요내용<br><br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- 입찰 및 계약관련 Clean계약 위반사례<br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- 상호발전(상생) 할 수 있는 제안(아이디어)<br><br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;☞ 사이트 상단 "고객의 소리" 메뉴이용  <br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;▶ 단,등록내용은 총무부장만 열람이 가능하며 <br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;비밀이 보장됩니다.<br><br>
+				</span>								
+			</td>
+		</tr>
+		<tr style="display:none"><td><a href="javascript:opener.topMenuClick('/admin/rpt_write_new.jsp', 'MUO141000008', '4', '');self.close();" ><span style="font-size:12px; color:blue"><b>☞ "고객의 소리" 바로가기</b></span></a></td></tr>		
+		<tr>
+			<td>
+				<input type="checkbox" name="chkClose" id="chkClose" onclick="javascript:closeWin();" value="T" >
+				<span style="font-size:12px; color:black">1일동안 열지 않음</span>
+			</td>
+		</tr>
+	</table>
+</body>
+
+</html>
+

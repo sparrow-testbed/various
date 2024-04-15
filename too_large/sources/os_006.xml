@@ -1,0 +1,1084 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<service>
+	<method name="selectSoList">
+		SELECT
+		   A.OSQ_NO
+		   , A.OSQ_COUNT
+		   , A.OSQ_SEQ
+		   , B.VENDOR_CODE
+		   , GETVENDORNAME(B.HOUSE_CODE, B.VENDOR_CODE) AS VENDOR_NAME
+		   , CASE WHEN C.OSQ_FLAG = 'T' OR C.SIGN_STATUS IN ('T','C')
+		    	THEN '작성중'
+		    	WHEN C.osq_flag = 'P' AND  C.SIGN_STATUS = 'E'
+		    	THEN '실사요청'
+		    	WHEN C.osq_flag = 'D' AND  C.SIGN_STATUS = 'E'
+		    	THEN '실사포기'
+		    	WHEN C.osq_flag = 'E' AND  C.SIGN_STATUS = 'E'
+		    	THEN '실사진행'
+		    	WHEN C.osq_flag = 'C' AND  C.SIGN_STATUS = 'E'
+		    	THEN '실사완료'
+		    	WHEN C.osq_flag = 'R' AND  C.SIGN_STATUS = 'E'
+		    	THEN '실사반려'
+		   	END AS STATUS_NAME
+		   	, A.ITEM_NO
+		   	, D.DESCRIPTION_LOC
+		   	, A.UNIT_MEASURE
+		   	, A.OSQ_AMT
+		   	, A.MAKE_AMT_CODE
+		   	, GETICOMCODE2(A.HOUSE_CODE,'M799', A.MAKE_AMT_CODE) AS MAKE_AMT_NAME
+		   	, E.ITEM_WIDTH
+		   	, E.ITEM_HEIGHT
+		   	, E.ITEM_AMT
+		   	, E.ITEM_QTY
+		   	, C.OSQ_FLAG
+		--   	, CASE WHEN F.PR_PROCEEDING_FLAG = 'E'
+		--    	THEN 'Y'
+		--    	ELSE 'N'
+		--   	END AS PR_PROCEEDING_FLAG
+			, '' AS PR_PROCEEDING_FLAG
+		   	, C.SUBJECT
+		    , A.PR_NO
+		   	, A.PR_SEQ
+		   	, A.P_ITEM_NO
+			, OMGL.DESCRIPTION_LOC AS P_DESCRIPTION_LOC
+		    , OMGL.BOM_NAME AS P_BOM_NAME
+		    , A.P_SEQ
+		    , GETFILEATTCOUNT(G.ATTACH_NO) ATTACH_CNT              
+			, G.ATTACH_NO AS ATTACH_NO		 			
+			, G.ATTACH_NO AS ATTACH_NO_H
+		FROM SOSLN A
+		INNER JOIN SOSSE B 
+			ON A.HOUSE_CODE = B.HOUSE_CODE 
+			AND A.OSQ_NO  = B.OSQ_NO  
+			AND A.OSQ_COUNT = B.OSQ_COUNT 
+			AND A.OSQ_SEQ = B.OSQ_SEQ
+		INNER JOIN SOSGL C 
+			ON A.HOUSE_CODE = C.HOUSE_CODE 
+			AND A.OSQ_NO  = C.OSQ_NO  
+			AND A.OSQ_COUNT = C.OSQ_COUNT
+		INNER JOIN ICOMMTGL D 
+			ON A.HOUSE_CODE = D.HOUSE_CODE 
+			AND A.ITEM_NO = D.ITEM_NO
+		LEFT OUTER JOIN SORLN E 
+			ON A.HOUSE_CODE = E.HOUSE_CODE 
+			AND A.OSQ_NO  = E.OSQ_NO  
+			AND A.OSQ_COUNT = E.OSQ_COUNT 
+			AND A.OSQ_SEQ = E.OSQ_SEQ		
+		INNER JOIN SORGL G 
+			ON A.HOUSE_CODE = G.HOUSE_CODE 
+			AND A.OSQ_NO  = G.OSQ_NO  
+			AND A.OSQ_COUNT = G.OSQ_COUNT
+		--INNER JOIN ICOYPRDT F 
+		--	ON A.HOUSE_CODE = F.HOUSE_CODE 
+		--	AND A.PR_NO   = F.PR_NO   
+		--	AND A.PR_SEQ    = F.PR_SEQ
+		LEFT OUTER JOIN (
+						SELECT
+							A.HOUSE_CODE
+							, B.ITEM_NO
+							, A.SEQ
+							, B.DESCRIPTION_LOC
+							, A.BOM_NAME
+							, ( 
+								SELECT
+									COUNT(1)
+								FROM SBOMLN
+								WHERE HOUSE_CODE = A.HOUSE_CODE
+									AND P_ITEM_NO = A.P_ITEM_NO
+									AND SEQ = A.SEQ
+							) AS CNT
+						FROM SBOMGL A
+						INNER JOIN ICOMMTGL B 
+							ON A.P_ITEM_NO = B.ITEM_NO
+						) OMGL
+			ON A.HOUSE_CODE = OMGL.HOUSE_CODE
+				AND A.P_ITEM_NO = OMGL.ITEM_NO 
+				AND A.P_SEQ = OMGL.SEQ
+		WHERE
+			A.HOUSE_CODE = ${HOUSE_CODE}
+		AND 
+			A.STATUS IN ('C','R')
+		AND 
+			C.STATUS IN ('C','R')			
+		<if test="${osqFlag}" operator="eq" value="T">
+			AND  (C.OSQ_FLAG = 'T' OR C.SIGN_STATUS IN ('T','C'))
+		</if>
+		<if test="${osqFlag}" operator="eq" value="P">
+			<![CDATA[
+			AND  C.osq_flag    = 'P'
+			AND  C.SIGN_STATUS = 'E'
+			]]>
+		</if>
+		<if test="${osqFlag}" operator="eq" value="D">
+			<![CDATA[
+			AND  C.osq_flag    = 'D'
+			AND  C.SIGN_STATUS = 'E'
+			]]>
+		</if>
+		<if test="${osqFlag}" operator="eq" value="E">
+			<![CDATA[
+			AND  C.osq_flag    = 'E'
+			AND  C.SIGN_STATUS = 'E'
+			]]>
+		</if>
+		<if test="${osqFlag}" operator="eq" value="C">
+			AND  C.osq_flag    = 'C'
+			AND  C.SIGN_STATUS = 'E'
+		</if>
+		<if test="${osqFlag}" operator="eq" value="R">
+			AND  C.osq_flag    = 'R'
+			AND  C.SIGN_STATUS = 'E'
+		</if>
+		AND C.OSQ_CLOSE_DATE BETWEEN ${startDate}
+			AND ${endDate}
+		ORDER BY
+			A.OSQ_NO DESC,
+			A.OSQ_COUNT DESC,
+			A.PR_NO,
+			A.PR_SEQ ,
+			A.OSQ_SEQ
+	</method>
+	
+	<method name="selectSoslnList">
+		SELECT
+			HOUSE_CODE,
+			OSQ_NO,
+			OSQ_COUNT,
+			OSQ_SEQ
+		FROM
+			SOSLN
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			OSQ_NO     = ${OSQ_NO}
+		AND
+			OSQ_COUNT  = ${OSQ_COUNT}
+	</method>
+	
+	<method name="update_prhd">
+		UPDATE
+			ICOYPRHD
+		SET
+			PR_TOT_AMT = ${PR_TOT_AMT}			
+		WHERE
+		    HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			PR_NO = ${PR_NO}
+	</method>
+	
+	<method name="update_prdt_flag">
+		UPDATE
+			ICOYPRDT
+		SET
+			PR_PROCEEDING_FLAG = 'E',
+			PO_VENDOR_CODE = ${PO_VENDOR_CODE},
+			PO_UNIT_PRICE = ${UNIT_PRICE},
+			UNIT_PRICE = ${UNIT_PRICE},
+			PR_AMT = ${PR_AMT},
+			PR_QTY = ${PR_QTY},
+			CHANGE_DATE        = TO_CHAR(SYSDATE, 'YYYYMMDD'),
+			CHANGE_TIME        = TO_CHAR(SYSDATE, 'HH24MISS'),
+			CHANGE_USER_ID     = ${CHANGE_USER_ID},
+			DELY_TO_ADDRESS   = ${DELY_TO_ADDRESS}
+		WHERE
+			PR_NO = ${PR_NO}
+		AND	
+			PR_SEQ = ${PR_SEQ} 
+	</method>
+	
+	<method name="update_prdt_flag_old">
+		UPDATE
+			ICOYPRDT
+		SET
+			PR_PROCEEDING_FLAG = 'E',
+			PO_VENDOR_CODE = ${PO_VENDOR_CODE},
+			PO_UNIT_PRICE = ${UNIT_PRICE},
+			CHANGE_DATE        = TO_CHAR(SYSDATE, 'YYYYMMDD'),
+			CHANGE_TIME        = TO_CHAR(SYSDATE, 'HH24MISS'),
+			CHANGE_USER_ID     = ${CHANGE_USER_ID}
+		WHERE
+			PR_NO = ${PR_NO}
+		AND	
+			PR_SEQ = LPAD(${PR_SEQ}, 5, '0') 
+	</method>
+	
+	<method name="updateComplete">
+		UPDATE
+			ICOYPRDT
+		SET
+			PR_PROCEEDING_FLAG = 'E',
+			PO_VENDOR_CODE     = (
+				SELECT
+					VENDOR_CODE
+				FROM
+					SORLN
+				WHERE
+					HOUSE_CODE = ${HOUSE_CODE}
+				AND
+					OSQ_NO     = ${OSQ_NO}
+				AND
+					OSQ_COUNT  = ${OSQ_COUNT}
+				AND
+					OSQ_SEQ    = ${OSQ_SEQ}
+			),
+			PO_UNIT_PRICE      = (
+				SELECT
+					ITEM_AMT
+				FROM
+					SORLN
+				WHERE
+					HOUSE_CODE = ${HOUSE_CODE}
+				AND
+					OSQ_NO     = ${OSQ_NO}
+				AND
+					OSQ_COUNT  = ${OSQ_COUNT}
+				AND
+					OSQ_SEQ    = ${OSQ_SEQ}
+			),
+			CHANGE_DATE        = TO_CHAR(SYSDATE, 'YYYYMMDD'),
+			CHANGE_TIME        = TO_CHAR(SYSDATE, 'HH24MISS'),
+			CHANGE_USER_ID     = ${CHANGE_USER_ID}
+		WHERE
+			(HOUSE_CODE, PR_NO, PR_SEQ) = (
+				SELECT
+					HOUSE_CODE,
+					PR_NO,
+					PR_SEQ
+				FROM
+					SOSLN
+				WHERE
+					HOUSE_CODE = ${HOUSE_CODE}
+				AND
+					OSQ_NO     = ${OSQ_NO}
+				AND
+					OSQ_COUNT  = ${OSQ_COUNT}
+				AND
+					OSQ_SEQ    = ${OSQ_SEQ}
+			)
+	</method>
+	
+	<method name="updateSorglUpdate">
+		UPDATE
+			SORGL
+		SET
+			PR_NO = ${PR_NO}
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			OSQ_NO     = ${OSQ_NO}
+		AND
+			OSQ_COUNT  = ${OSQ_COUNT}
+	</method>
+	
+	<method name="updateSorlnUpdate">
+		UPDATE
+			SORLN
+		SET
+			SETTLE_FLAG = ${SETTLE_FLAG},
+			SETTLE_DATE = TO_CHAR(SYSDATE, 'YYYYMMDD')
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			OSQ_NO     = ${OSQ_NO}
+		AND
+			OSQ_COUNT  = ${OSQ_COUNT}
+	</method>
+	
+	<method name="updateSosglInfo">
+		UPDATE
+			SOSGL
+		SET
+			OSQ_FLAG = ${OSQ_FLAG}
+		WHERE
+			HOUSE_CODE     = ${HOUSE_CODE}
+		AND                
+			OSQ_NO         = ${OSQ_NO}
+		AND                
+			OSQ_COUNT      = ${OSQ_COUNT}
+		
+	</method>
+	
+	<method name="updateSoslnInfo">
+		UPDATE
+			SOSLN
+		SET
+			PR_NO = ${PR_NO}
+		WHERE
+			HOUSE_CODE     = ${HOUSE_CODE}
+		AND                
+			OSQ_NO         = ${OSQ_NO}
+		AND                
+			OSQ_COUNT      = ${OSQ_COUNT}
+		
+	</method>
+	
+	<method name="updateUnComplete">
+		UPDATE
+			ICOYPRDT
+		SET
+			PR_PROCEEDING_FLAG = 'G',
+			PO_VENDOR_CODE     = NULL,
+			PO_UNIT_PRICE      = NULL,
+			CHANGE_DATE        = TO_CHAR(SYSDATE, 'YYYYMMDD'),
+			CHANGE_TIME        = TO_CHAR(SYSDATE, 'HH24MISS'),
+			CHANGE_USER_ID     = ${CHANGE_USER_ID}
+		WHERE
+			(HOUSE_CODE, PR_NO, PR_SEQ) IN (
+				SELECT
+					HOUSE_CODE,
+					PR_NO,
+					PR_SEQ
+				FROM
+					SOSLN
+				WHERE
+					HOUSE_CODE = ${HOUSE_CODE}
+				AND
+					OSQ_NO     = ${OSQ_NO}
+				AND
+					OSQ_COUNT  = ${OSQ_COUNT}
+			)
+	</method>
+	
+	<method name="updateReject">
+		UPDATE SOSGL
+		SET OSQ_FLAG = ${OSQ_FLAG}
+		WHERE HOUSE_CODE     = ${HOUSE_CODE}
+		AND OSQ_NO         = ${OSQ_NO}
+		AND OSQ_COUNT      = ${OSQ_COUNT}
+	</method>
+	
+	<method name="get_sosln_list">
+		SELECT 
+			OSGL.HOUSE_CODE
+			, OSGL.OSQ_NO
+			, OSLN.OSQ_COUNT
+			, LPAD(1, 6, 0) AS OSQ_SEQ
+			, 'C' AS STATUS
+			, OSLN.COMPANY_CODE
+			, '' AS PLANT_CODE
+			, 'N' AS OSQ_PROCEEDING_FLAG
+			, OSLN.ITEM_NO
+			, OSLN.UNIT_MEASURE
+			, OSLN.RD_DATE
+			, '' AS VALID_FROM_DATE
+			, '' AS VALID_TO_DATE
+			, '' AS PURCHASE_PRE_PRICE
+			, OSLN.OSQ_QTY
+			, OSLN.OSQ_AMT
+			, OSLN.BID_COUNT
+			, '' AS CUR
+			, '' AS PR_NO
+			, '' AS PR_SEQ
+			, 'N' AS SETTLE_FLAG
+			, '0' AS SETTLE_QTY
+			, '' AS TBE_FLAG
+			, '' AS TBE_DEPT
+			, OSLN.PRICE_TYPE
+			, OSLN.TBE_PROCEEDING_FLAG
+			, OSLN.SAMPLE_FLAG
+			, OSLN.DELY_TO_LOCATION
+			, OSLN.DELY_TO_DEPT
+			, OSLN.ATTACH_NO
+			, OSLN.SHIPPER_TYPE
+			, OSLN.CONTRACT_FLAG
+			, OSLN.COST_COUNT
+			, OSLN.YEAR_QTY
+			, OSLN.DELY_TO_ADDRESS
+			, OSLN.MIN_PRICE
+			, OSLN.MAX_PRICE
+			, OSLN.STR_FLAG
+			, OSLN.AUTO_PO_FLAG
+			, OSLN.Z_REMARK
+			, OSLN.TBE_NO
+			, OSLN.TBE_DATE
+			, OSLN.TECHNIQUE_GRADE
+			, OSLN.TECHNIQUE_TYPE
+			, OSLN.INPUT_FROM_DATE
+			, OSLN.INPUT_TO_DATE
+			, OSLN.TECHNIQUE_FLAG
+			, OSLN.SPECIFICATION
+			, OSLN.MAKER_NAME
+			, OSLN.SET_FLAG
+			, OSLN.MAKE_AMT_CODE
+			, OSLN.P_ITEM_NO
+		    , ORGL.PR_NO
+	    FROM SOSLN OSLN
+	    LEFT OUTER JOIN SOSGL OSGL
+	  		ON OSLN.HOUSE_CODE = OSGL.HOUSE_CODE
+	    	AND OSLN.OSQ_NO = OSGL.OSQ_NO
+	    LEFT OUTER JOIN SORGL ORGL
+	    	ON OSLN.HOUSE_CODE = ORGL.HOUSE_CODE
+	    	AND OSLN.OSQ_NO = ORGL.OSQ_NO
+	    WHERE 1=1
+		AND OSGL.HOUSE_CODE = ${HOUSE_CODE}
+		AND OSGL.OSQ_NO = ${OSQ_NO}
+		ORDER BY OSLN.OSQ_SEQ
+	</method>
+	
+	<method name="get_sosln_list_new">
+		SELECT 
+			OSGL.HOUSE_CODE
+			, OSGL.OSQ_NO
+			, OSGL.REMARK
+			, OSGL.SUBJECT
+			, OSLN.OSQ_COUNT
+			, LPAD(1, 6, 0) AS OSQ_SEQ
+			, 'C' AS STATUS
+			, OSLN.COMPANY_CODE
+			, '' AS PLANT_CODE
+			, 'N' AS OSQ_PROCEEDING_FLAG
+			, OSLN.ITEM_NO
+			, OSLN.UNIT_MEASURE
+			, OSLN.RD_DATE
+			, '' AS VALID_FROM_DATE
+			, '' AS VALID_TO_DATE
+			, '' AS PURCHASE_PRE_PRICE
+			, OSLN.OSQ_QTY
+			, OSLN.OSQ_AMT
+			, OSLN.BID_COUNT
+			, '' AS CUR
+			, OSLN.PR_NO
+			, OSLN.PR_SEQ
+			, 'N' AS SETTLE_FLAG
+			, '0' AS SETTLE_QTY
+			, '' AS TBE_FLAG
+			, '' AS TBE_DEPT
+			, OSLN.PRICE_TYPE
+			, OSLN.TBE_PROCEEDING_FLAG
+			, OSLN.SAMPLE_FLAG
+			, OSLN.DELY_TO_LOCATION
+			, OSLN.DELY_TO_DEPT
+			, OSLN.ATTACH_NO
+			, OSLN.SHIPPER_TYPE
+			, OSLN.CONTRACT_FLAG
+			, OSLN.COST_COUNT
+			, OSLN.YEAR_QTY
+			, OSLN.DELY_TO_ADDRESS
+			, OSLN.MIN_PRICE
+			, OSLN.MAX_PRICE
+			, OSLN.STR_FLAG
+			, OSLN.AUTO_PO_FLAG
+			, OSLN.Z_REMARK
+			, OSLN.TBE_NO
+			, OSLN.TBE_DATE
+			, OSLN.TECHNIQUE_GRADE
+			, OSLN.TECHNIQUE_TYPE
+			, OSLN.INPUT_FROM_DATE
+			, OSLN.INPUT_TO_DATE
+			, OSLN.TECHNIQUE_FLAG
+			, OSLN.SPECIFICATION
+			, OSLN.MAKER_NAME
+			, OSLN.SET_FLAG
+			, OSLN.MAKE_AMT_CODE
+			, OSLN.P_ITEM_NO
+			, ORGL.TTL_AMT
+			
+			, OSGL.ADD_USER_ID ID
+			, (SELECT USER_NAME_LOC FROM ICOMLUSR WHERE USER_ID = OSGL.ADD_USER_ID) NAME_LOC
+			, (SELECT COMPANY_CODE FROM ICOMLUSR WHERE USER_ID = OSGL.ADD_USER_ID) COMPANY_CODE
+			, (SELECT PR_LOCATION FROM ICOMLUSR WHERE USER_ID = OSGL.ADD_USER_ID) LOCATION_CODE		
+			, (SELECT DEPT FROM ICOMLUSR WHERE USER_ID = OSGL.ADD_USER_ID) DEPARTMENT	
+	    FROM SOSLN OSLN
+	    LEFT OUTER JOIN SOSGL OSGL
+	  		ON OSLN.HOUSE_CODE = OSGL.HOUSE_CODE
+	    	AND OSLN.OSQ_NO = OSGL.OSQ_NO
+	    LEFT OUTER JOIN SORGL ORGL
+	    	ON OSLN.HOUSE_CODE = ORGL.HOUSE_CODE
+	    	AND OSLN.OSQ_NO = ORGL.OSQ_NO
+	    WHERE 1=1
+		AND OSGL.HOUSE_CODE = ${HOUSE_CODE}
+		AND OSGL.OSQ_NO = ${OSQ_NO}
+		ORDER BY OSLN.OSQ_SEQ
+	</method>
+	
+	<method name="get_prhd_list">
+		SELECT
+			HOUSE_CODE
+			, PR_NO
+			, STATUS
+			, COMPANY_CODE
+			, PLANT_CODE
+			, PR_TOT_AMT
+			, PR_TYPE
+			, DEMAND_DEPT
+			, SIGN_STATUS
+			, SIGN_DATE
+			, SIGN_PERSON_ID
+			, DEMAND_DEPT_NAME
+			, SIGN_PERSON_NAME
+			, TEL_NO
+			, REMARK
+			, SUBJECT
+			, PR_LOCATION
+			, CTRL_DEPT
+			, CTRL_FLAG
+			, CTRL_DATE
+			, CTRL_PERSON_ID
+			, CTRL_REASON
+			, CTRL_DEPT_NAME
+			, CTRL_PERSON_NAME
+			, RECEIVE_TERM
+			, ORDER_NO
+			, SALES_USER_DEPT
+			, SALES_USER_ID
+			, CONTRACT_HOPE_DAY
+			, TAKE_USER_NAME
+			, TAKE_TEL
+			, REC_REASON
+			, AHEAD_FLAG
+			, CONTRACT_FROM_DATE
+			, CONTRACT_TO_DATE
+			, SHIPPER_TYPE
+			, MAINTENANCE_TERM
+			, DELY_TO_CONDITION
+			, COMPUTE_REASON
+			, CUST_CODE
+			, SALES_AMT
+			, SALES_TYPE
+			, ORDER_NAME
+			, REQ_TYPE
+			, RETURN_HOPE_DAY
+			, HARD_MAINTANCE_TERM
+			, SOFT_MAINTANCE_TERM
+			, ATTACH_NO
+			, CREATE_TYPE
+			, EXPECT_AMT
+			, BID_PR_NO
+			, CUST_NAME
+			, PROJECT_FLAG
+			, ORDER_POSSIBLE_AMT
+			, USAGE
+			, DELIVERY_PLACE
+			, DELIVERY_PLACE_INFO
+			, PROJECT_DEPT
+			, PROJECT_PM
+			, BSART
+			, CUST_TYPE
+			, VATYN
+			, REGDATE
+			, CTRL_SIGN_STATUS
+			, INTROMTHD
+			, REGPAYNM
+			, REQDEPT
+			, IF_FLAG
+			, ORDER_COUNT
+			, WBS
+			, WBS_NAME
+			, DELY_TO_LOCATION
+			, DELY_TO_ADDRESS
+			, DELY_TO_USER
+			, DELY_TO_PHONE
+			, PC_FLAG
+			, PC_REASON
+			, PRE_CONT_SEQ
+			, PRE_CONT_COUNT
+		FROM ICOYPRHD 
+		WHERE 1=1
+		AND HOUSE_CODE = ${HOUSE_CODE}
+		AND PR_NO = ${PR_NO}
+	</method>
+	
+	<method name="get_address_osln_20151230bak">
+		SELECT DELY_TO_ADDRESS, DELY_TO_DEPT FROM (
+			SELECT 
+				ROWNUM AS NUM,
+				DELY_TO_ADDRESS ,
+				DELY_TO_DEPT
+		FROM SOSLN 
+		WHERE OSQ_NO = ${OSQ_NO} 
+		AND NVL(P_ITEM_NO , ITEM_NO) = ${ITEM_NO} 
+		ORDER BY P_ITEM_NO, OSQ_SEQ
+		) A WHERE A.NUM = 1			
+	</method>
+	
+	<method name="get_address_osln">
+		SELECT DELY_TO_ADDRESS, DELY_TO_DEPT FROM (
+			SELECT 
+				ROWNUM AS NUM,
+				DELY_TO_ADDRESS ,
+				DELY_TO_DEPT
+		FROM SOSLN 
+		WHERE OSQ_NO = ${OSQ_NO} 
+		AND ITEM_NO = ${ITEM_NO} 
+		ORDER BY ITEM_NO, OSQ_SEQ
+		) A WHERE A.NUM = 1		
+	</method>
+	
+	<method name="select_orgl_vendor">
+		SELECT 
+			VENDOR_CODE
+		FROM SORGL 
+		WHERE OSQ_NO = ${OSQ_NO} 
+	</method>
+	
+	<method name="get_osln_group_list_20151230bak">
+		SELECT
+			OSLN.P_ITEM_NO
+			, '1' AS ITEM_QTY
+			, SUM(ORLN.ITEM_AMT) AS ITEM_AMT
+			, (SELECT KTGRM FROM ICOMMTGL WHERE ITEM_NO = OSLN.P_ITEM_NO) AS KTGRM
+			, (SELECT DESCRIPTION_LOC FROM ICOMMTGL WHERE ITEM_NO = OSLN.P_ITEM_NO) AS DESCRIPTION_LOC
+			, (SELECT BASIC_UNIT FROM ICOMMTGL WHERE ITEM_NO = OSLN.P_ITEM_NO) AS BASIC_UNIT
+			, (SELECT SPECIFICATION FROM ICOMMTGL WHERE ITEM_NO = OSLN.P_ITEM_NO) AS SPECIFICATION
+			, OSLN.OSQ_NO
+			, OSLN.PR_NO, OSLN.PR_SEQ
+		FROM SOSLN OSLN
+		LEFT OUTER JOIN SORLN ORLN
+		ON OSLN.HOUSE_CODE = ORLN.HOUSE_CODE
+		AND OSLN.OSQ_NO = ORLN.OSQ_NO
+		AND OSLN.OSQ_SEQ = ORLN.OSQ_SEQ	
+		WHERE 1=1
+		AND OSLN.HOUSE_CODE = ${HOUSE_CODE}
+		AND OSLN.OSQ_NO = ${OSQ_NO}
+		AND NVL(OSLN.P_ITEM_NO, 'N') != 'N'
+		GROUP BY OSLN.P_ITEM_NO, OSLN.OSQ_NO, OSLN.PR_NO, OSLN.PR_SEQ
+		
+		UNION ALL
+		
+		SELECT
+			OSLN.ITEM_NO AS P_ITEM_NO
+			, TO_CHAR(ORLN.ITEM_QTY)AS ITEM_QTY
+			, ORLN.ITEM_AMT AS ITEM_AMT
+			, (SELECT KTGRM FROM ICOMMTGL WHERE ITEM_NO = OSLN.ITEM_NO) AS KTGRM
+			, (SELECT DESCRIPTION_LOC FROM ICOMMTGL WHERE ITEM_NO = OSLN.ITEM_NO) AS DESCRIPTION_LOC
+			, (SELECT BASIC_UNIT FROM ICOMMTGL WHERE ITEM_NO = OSLN.ITEM_NO) AS BASIC_UNIT
+			, (SELECT SPECIFICATION FROM ICOMMTGL WHERE ITEM_NO = OSLN.ITEM_NO) AS SPECIFICATION
+			, OSLN.OSQ_NO
+			, OSLN.PR_NO, OSLN.PR_SEQ
+		FROM SOSLN OSLN
+		LEFT OUTER JOIN SORLN ORLN
+		ON OSLN.HOUSE_CODE = ORLN.HOUSE_CODE
+		AND OSLN.OSQ_NO = ORLN.OSQ_NO
+		AND OSLN.OSQ_SEQ = ORLN.OSQ_SEQ
+		WHERE 1=1
+		AND OSLN.HOUSE_CODE = ${HOUSE_CODE}
+		AND OSLN.OSQ_NO = ${OSQ_NO}
+		AND NVL(OSLN.P_ITEM_NO, 'N') = 'N'
+		
+		ORDER BY P_ITEM_NO		
+	</method>
+	<method name="get_osln_group_list_20160215bak">
+		SELECT
+			OSLN.ITEM_NO AS P_ITEM_NO
+			, TO_CHAR(ORLN.ITEM_QTY) AS ITEM_QTY
+			, ORLN.ITEM_AMT AS ITEM_AMT
+			, (SELECT KTGRM FROM ICOMMTGL WHERE ITEM_NO = OSLN.ITEM_NO) AS KTGRM
+			, (SELECT DESCRIPTION_LOC FROM ICOMMTGL WHERE ITEM_NO = OSLN.ITEM_NO) AS DESCRIPTION_LOC
+			, (SELECT BASIC_UNIT FROM ICOMMTGL WHERE ITEM_NO = OSLN.ITEM_NO) AS BASIC_UNIT
+			, (SELECT SPECIFICATION FROM ICOMMTGL WHERE ITEM_NO = OSLN.ITEM_NO) AS SPECIFICATION
+			, OSLN.OSQ_NO
+			, OSLN.PR_NO, OSLN.PR_SEQ
+		FROM SOSLN OSLN
+		LEFT OUTER JOIN SORLN ORLN
+		ON OSLN.HOUSE_CODE = ORLN.HOUSE_CODE
+		AND OSLN.OSQ_NO = ORLN.OSQ_NO
+		AND OSLN.OSQ_SEQ = ORLN.OSQ_SEQ	
+		WHERE 1=1
+		AND OSLN.HOUSE_CODE = ${HOUSE_CODE}
+		AND OSLN.OSQ_NO = ${OSQ_NO}
+		AND NVL(OSLN.P_ITEM_NO, 'N') != 'N'
+		
+		UNION ALL
+		
+		SELECT
+			OSLN.ITEM_NO AS P_ITEM_NO
+			, TO_CHAR(ORLN.ITEM_QTY)AS ITEM_QTY
+			, ORLN.ITEM_AMT AS ITEM_AMT
+			, (SELECT KTGRM FROM ICOMMTGL WHERE ITEM_NO = OSLN.ITEM_NO) AS KTGRM
+			, (SELECT DESCRIPTION_LOC FROM ICOMMTGL WHERE ITEM_NO = OSLN.ITEM_NO) AS DESCRIPTION_LOC
+			, (SELECT BASIC_UNIT FROM ICOMMTGL WHERE ITEM_NO = OSLN.ITEM_NO) AS BASIC_UNIT
+			, (SELECT SPECIFICATION FROM ICOMMTGL WHERE ITEM_NO = OSLN.ITEM_NO) AS SPECIFICATION
+			, OSLN.OSQ_NO
+			, OSLN.PR_NO, OSLN.PR_SEQ
+		FROM SOSLN OSLN
+		LEFT OUTER JOIN SORLN ORLN
+		ON OSLN.HOUSE_CODE = ORLN.HOUSE_CODE
+		AND OSLN.OSQ_NO = ORLN.OSQ_NO
+		AND OSLN.OSQ_SEQ = ORLN.OSQ_SEQ
+		WHERE 1=1
+		AND OSLN.HOUSE_CODE = ${HOUSE_CODE}
+		AND OSLN.OSQ_NO = ${OSQ_NO}
+		AND NVL(OSLN.P_ITEM_NO, 'N') = 'N'
+		
+		ORDER BY P_ITEM_NO		
+	</method>
+	<method name="get_osln_group_list">
+		SELECT 
+			      A.HOUSE_CODE 
+			    , A.OSQ_NO
+			    , A.PR_NO
+			    , A.PR_SEQ
+				, A.ITEM_NO
+				, A.ITEM_QTY
+				, A.ITEM_AMT
+				, (SELECT KTGRM FROM ICOMMTGL WHERE ITEM_NO = A.ITEM_NO) AS KTGRM
+				, (SELECT DESCRIPTION_LOC FROM ICOMMTGL WHERE ITEM_NO = A.ITEM_NO) AS DESCRIPTION_LOC
+				, (SELECT BASIC_UNIT FROM ICOMMTGL WHERE ITEM_NO = A.ITEM_NO) AS BASIC_UNIT
+				, (SELECT SPECIFICATION FROM ICOMMTGL WHERE ITEM_NO = A.ITEM_NO) AS SPECIFICATION
+				, A.VENDOR_CODE AS VENDOR_CODE   
+				, (SELECT MAX(DELY_TO_ADDRESS)
+				     FROM SOSLN
+				    WHERE HOUSE_CODE = A.HOUSE_CODE
+				      AND OSQ_NO = A.OSQ_NO 
+				      AND OSQ_COUNT = A.OSQ_COUNT) AS	 DELY_TO_ADDRESS	
+				, (SELECT MAX(DELY_TO_DEPT)
+				     FROM SOSLN
+				    WHERE HOUSE_CODE = A.HOUSE_CODE
+				      AND OSQ_NO = A.OSQ_NO
+				      AND OSQ_COUNT = A.OSQ_COUNT) AS	 DELY_TO_DEPT		 
+				, (SELECT COUNT(*) CNT 
+								      FROM ICOYPRDT 
+								    WHERE HOUSE_CODE = A.HOUSE_CODE
+								        AND PR_NO = A.PR_NO 
+								        AND PR_SEQ = A.PR_SEQ 
+								        AND STATUS IN ('C','R')) AS CNT 	
+				, A.RD_DATE AS RD_DATE        	
+			FROM
+			(
+					SELECT
+					      OSLN.HOUSE_CODE AS HOUSE_CODE
+					    , OSLN.OSQ_NO AS OSQ_NO
+					    , OSLN.OSQ_COUNT AS OSQ_COUNT
+					    , OSLN.PR_NO AS PR_NO
+					    , OSLN.PR_SEQ AS PR_SEQ
+						, MAX(OSLN.P_ITEM_NO) AS ITEM_NO
+						, 1 AS ITEM_QTY
+						, SUM(ORLN.ITEM_AMT) AS ITEM_AMT
+						, MAX(ORLN.VENDOR_CODE) AS VENDOR_CODE
+						, MAX(OSLN.RD_DATE) AS RD_DATE
+					FROM SOSLN OSLN
+						LEFT OUTER JOIN SORLN ORLN
+						ON OSLN.HOUSE_CODE = ORLN.HOUSE_CODE
+						AND OSLN.OSQ_NO = ORLN.OSQ_NO
+						AND OSLN.OSQ_COUNT = ORLN.OSQ_COUNT
+						AND OSLN.OSQ_SEQ = ORLN.OSQ_SEQ
+					WHERE 1=1
+					AND OSLN.HOUSE_CODE = ${HOUSE_CODE}
+					AND OSLN.OSQ_NO = ${OSQ_NO}
+					AND NVL(OSLN.P_ITEM_NO, 'N') != 'N'
+					GROUP BY OSLN.HOUSE_CODE,OSLN.OSQ_NO,OSLN.OSQ_COUNT,OSLN.PR_NO,OSLN.PR_SEQ
+					UNION ALL
+					SELECT
+					      OSLN.HOUSE_CODE AS HOUSE_CODE
+					    , OSLN.OSQ_NO AS OSQ_NO
+					    , OSLN.OSQ_COUNT AS OSQ_COUNT
+					    , OSLN.PR_NO AS PR_NO
+					    , OSLN.PR_SEQ AS PR_SEQ
+						, MAX(OSLN.ITEM_NO) AS ITEM_NO
+						, SUM(ORLN.ITEM_QTY) AS ITEM_QTY
+						, SUM(ORLN.ITEM_AMT) AS ITEM_AMT
+						, MAX(ORLN.VENDOR_CODE) AS VENDOR_CODE
+						, MAX(OSLN.RD_DATE) AS RD_DATE
+					FROM SOSLN OSLN
+						LEFT OUTER JOIN SORLN ORLN
+						ON OSLN.HOUSE_CODE = ORLN.HOUSE_CODE
+						AND OSLN.OSQ_NO = ORLN.OSQ_NO
+						AND OSLN.OSQ_COUNT = ORLN.OSQ_COUNT
+						AND OSLN.OSQ_SEQ = ORLN.OSQ_SEQ
+					WHERE 1=1
+					AND OSLN.HOUSE_CODE = ${HOUSE_CODE}
+					AND OSLN.OSQ_NO = ${OSQ_NO}
+					AND NVL(OSLN.P_ITEM_NO, 'N') = 'N'
+					GROUP BY OSLN.HOUSE_CODE,OSLN.OSQ_NO,OSLN.OSQ_COUNT,OSLN.PR_NO,OSLN.PR_SEQ
+			)A
+	</method>
+	
+	<!-- 	ICOYPRHD 테이블 삭제 -->
+    <method name="PRHDDelete">
+    	<![CDATA[
+	    	DELETE FROM ICOYPRHD
+	      	WHERE HOUSE_CODE = ${HOUSE_CODE}
+	        AND PR_NO = ${PR_NO}
+	  	]]>
+  	</method>
+	
+	<!-- 	ICOYPRDT 테이블 삭제 -->
+    <method name="PRDTDelete">
+    	<![CDATA[
+	    	DELETE FROM ICOYPRDT
+	      	WHERE HOUSE_CODE = ${HOUSE_CODE}
+	        AND PR_NO = ${PR_NO}
+	  	]]>
+  	</method>
+  
+ 	<method name="insert_prhd">
+		INSERT INTO ICOYPRHD (
+			HOUSE_CODE,     PR_NO,              STATUS,           COMPANY_CODE,        PLANT_CODE,          
+			PR_TOT_AMT,     PR_TYPE,            DEMAND_DEPT,      SIGN_STATUS,         SIGN_DATE,
+			SIGN_PERSON_ID, SIGN_PERSON_NAME,   DEMAND_DEPT_NAME, REMARK,              SUBJECT,
+			PR_LOCATION,    ORDER_NO,           SALES_USER_DEPT,  SALES_USER_ID,       CONTRACT_HOPE_DAY,
+			CUST_CODE,      CUST_NAME,          EXPECT_AMT,       SALES_TYPE,          ORDER_NAME,
+			REQ_TYPE,       RETURN_HOPE_DAY,    ATTACH_NO,        HARD_MAINTANCE_TERM, SOFT_MAINTANCE_TERM,
+			CREATE_TYPE,    SHIPPER_TYPE,       ADD_TIME,         ADD_USER_ID,         CHANGE_DATE,
+			CHANGE_TIME,    CHANGE_USER_ID,     BSART,            CUST_TYPE,           ADD_DATE,
+			AHEAD_FLAG,     CONTRACT_FROM_DATE, CONTRACT_TO_DATE, SALES_AMT,           PROJECT_PM,
+			ORDER_COUNT,    WBS,                DELY_TO_LOCATION, DELY_TO_ADDRESS,     DELY_TO_USER,
+			DELY_TO_PHONE
+		)
+		VALUES (
+			${HOUSE_CODE},
+			${PR_NO},
+			${STATUS},
+			${COMPANY_CODE},
+			${PLANT_CODE},
+			
+			${PR_TOT_AMT},
+			${PR_TYPE},
+			${DEMAND_DEPT},
+			${SIGN_STATUS},
+			${SIGN_DATE},
+			
+			${SIGN_PERSON_ID},
+			${SIGN_PERSON_NAME},
+			${DEMAND_DEPT_NAME},
+			${REMARK},
+			${SUBJECT},
+			
+			${PR_LOCATION},
+			${ORDER_NO},
+			${SALES_DEPT},
+			${SALES_USER_ID},
+			${CONTRACT_HOPE_DAY},
+			
+			${CUST_CODE},
+			${CUST_NAME},
+			${EXPECT_AMT},
+			${SALES_TYPE},
+			${ORDER_NAME},
+			
+			${REQ_TYPE},
+			${RETURN_HOPE_DAY},
+			${ATTACH_NO},
+			${HARD_MAINTANCE_TERM},
+			${SOFT_MAINTANCE_TERM},
+			
+			${CREATE_TYPE},
+			'D',
+			TO_CHAR(SYSDATE, 'HH24MISS'),
+			${ADD_USER_ID},
+			TO_CHAR(SYSDATE, 'YYYYMMDD'),
+			
+			TO_CHAR(SYSDATE, 'HH24MISS'),
+			${ADD_USER_ID_1},
+			${BSART},
+			${CUST_TYPE},
+			${ADD_DATE},
+			
+			${AHEAD_FLAG},
+			${CONTRACT_FROM_DATE},
+			${CONTRACT_TO_DATE},
+			${SALES_AMT},
+			${PROJECT_PM},
+			
+			${ORDER_COUNT},
+			${PJT_SEQ},
+			${DELY_LOCATION},
+			${DELY_TO_ADDRESS},
+			${DELY_TO_USER},
+			
+			${DELY_TO_PHONE}			
+		)
+	</method>
+  	
+  	<method name="insert_prdt">
+		INSERT INTO ICOYPRDT (
+			HOUSE_CODE,         PR_NO,             PR_SEQ,             STATUS,          COMPANY_CODE,
+			PLANT_CODE,         ITEM_NO,           PR_PROCEEDING_FLAG, CTRL_CODE,       UNIT_MEASURE,
+			PR_QTY,             CUR,               UNIT_PRICE,         PR_AMT,          RD_DATE,
+			ATTACH_NO,          REC_VENDOR_CODE,   DELY_TO_LOCATION,   REC_VENDOR_NAME, DESCRIPTION_LOC,
+			SPECIFICATION,      MAKER_NAME,        MAKER_CODE,         REMARK,          SAMPLE_FLAG,
+			TBE_FLAG,           PURCHASE_LOCATION, PURCHASER_ID,       PURCHASER_NAME,  PURCHASE_DEPT,
+			PURCHASE_DEPT_NAME, TECHNIQUE_GRADE,   TECHNIQUE_TYPE,     INPUT_FROM_DATE, INPUT_TO_DATE,
+			ADD_DATE,           ADD_TIME,          ADD_USER_ID,        CHANGE_DATE,     CHANGE_TIME,
+			CHANGE_USER_ID,     KNTTP,             ZEXKN,              ORDER_NO,        ORDER_SEQ,
+			WBS_NO,             WBS_SUB_NO,        WBS_TXT,            CONTRACT_DIV,    DELY_TO_ADDRESS,
+			WARRANTY,           EXCHANGE_RATE,     SHIPPER_TYPE,       WBS_NAME,        ORDER_COUNT,
+			PRE_TYPE,           PRE_PO_NO,         PRE_PO_SEQ,         ACCOUNT_TYPE,    ASSET_TYPE,		
+			DELY_TO_ADDRESS_CD, P_ITEM_NO,         PO_VENDOR_CODE,     PO_UNIT_PRICE,     BEFORE_CTRL_CODE,
+			BID_STATUS,        CONFIRM_QTY,       DEMAND_DEPT				
+		)
+		VALUES(
+			${HOUSE_CODE},                
+			${PR_NO},                     
+			nvl((select LPAD((max(PR_SEQ)+10), 5, '0') from ICOYPRDT where PR_NO = ${PR_NO}),'00010'),  
+			${STATUS},                   
+			${COMPANY_CODE},
+			
+			${PLANT_CODE},                
+			${ITEM_NO},                   
+			${PR_PROCEEDING_FLAG},    
+			${CTRL_CODE},                 
+			${UNIT_MEASURE},
+			
+			NVL(${PR_QTY},0),            
+			${CUR},                       
+			NVL(${UNIT_PRICE}, 0),   
+			NVL(${PR_AMT}, 0),           
+			${RD_DATE},
+			
+			${ATTACH_NO},                 
+			${REC_VENDOR_CODE},           
+			${DELY_TO_LOCATION},      
+			${REC_VENDOR_NAME},           
+			${DESCRIPTION_LOC},
+			
+			${SPECIFICATION},             
+			${MAKER_NAME},                
+			${MAKER_CODE},            
+			${REMARK},                    
+			'N',
+			
+			'N',                          
+			${PURCHASE_LOCATION},         
+			${PURCHASER_ID},          
+			GETUSERNAMELOC(${HOUSE_CODE}
+			,  ${PURCHASER_NAME}),            
+			${PURCHASE_DEPT},
+			
+			GETDEPTNAMELOC(${HOUSE_CODE}
+			, ${COMPANY_CODE}
+			, ${PURCHASE_DEPT_NAME}),        
+			${TECHNIQUE_GRADE},           
+			${TECHNIQUE_TYPE},        
+			${INPUT_FROM_DATE},           
+			${INPUT_TO_DATE},
+			
+			TO_CHAR(SYSDATE, 'YYYYMMDD'), 
+			TO_CHAR(SYSDATE, 'HH24MISS'), 
+			${ADD_USER_ID},           
+			TO_CHAR(SYSDATE, 'YYYYMMDD'), 
+			TO_CHAR(SYSDATE, 'HH24MISS'),
+			
+			${CHANGE_USER_ID},            
+			${KNTTP},                     
+			${ZEXKN},                 
+			${ORDER_NO},                  
+			${ORDER_SEQ},
+			
+			SUBSTR(${WBS_NO}, 1, 8),      
+			${WBS_SUB_NO},                
+			${WBS_TXT},               
+			${CONTRACT_DIV},              
+			${DELY_TO_ADDRESS},
+			
+			${WARRANTY},                  
+			${EXCHANGE_RATE},             
+			'D',                      
+			${WBS_NAME},                  
+			${ORDER_COUNT},
+			
+		    ${PRE_TYPE},                  
+		    ${PRE_PO_NO},                 
+		    ${PRE_PO_SEQ},            
+		    ${ACCOUNT_TYPE},              
+		    ${ASSET_TYPE},
+		    
+		    ${DELY_TO_ADDRESS_CD},
+		    ${P_ITEM_NO},
+		    ${PO_VENDOR_CODE},
+		    ${UNIT_PRICE},
+		    ${BEFORE_CTRL_CODE},
+		    		    
+		    ${BID_STATUS},
+		    ${CONFIRM_QTY},
+		    ${DEMAND_DEPT}
+		)
+	</method>
+	
+	<method name="insert_prdt_old">
+		INSERT INTO ICOYPRDT (
+			HOUSE_CODE,         PR_NO,             PR_SEQ,             STATUS,          COMPANY_CODE,
+			PLANT_CODE,         ITEM_NO,           PR_PROCEEDING_FLAG, CTRL_CODE,       UNIT_MEASURE,
+			PR_QTY,             CUR,               UNIT_PRICE,         PR_AMT,          RD_DATE,
+			ATTACH_NO,          REC_VENDOR_CODE,   DELY_TO_LOCATION,   REC_VENDOR_NAME, DESCRIPTION_LOC,
+			SPECIFICATION,      MAKER_NAME,        MAKER_CODE,         REMARK,          SAMPLE_FLAG,
+			TBE_FLAG,           PURCHASE_LOCATION, PURCHASER_ID,       PURCHASER_NAME,  PURCHASE_DEPT,
+			PURCHASE_DEPT_NAME, TECHNIQUE_GRADE,   TECHNIQUE_TYPE,     INPUT_FROM_DATE, INPUT_TO_DATE,
+			ADD_DATE,           ADD_TIME,          ADD_USER_ID,        CHANGE_DATE,     CHANGE_TIME,
+			CHANGE_USER_ID,     KNTTP,             ZEXKN,              ORDER_NO,        ORDER_SEQ,
+			WBS_NO,             WBS_SUB_NO,        WBS_TXT,            CONTRACT_DIV,    DELY_TO_ADDRESS,
+			WARRANTY,           EXCHANGE_RATE,     SHIPPER_TYPE,       WBS_NAME,        ORDER_COUNT,
+			PRE_TYPE,           PRE_PO_NO,         PRE_PO_SEQ,         ACCOUNT_TYPE,    ASSET_TYPE,		
+			DELY_TO_ADDRESS_CD, P_ITEM_NO
+		)
+		VALUES(
+			${HOUSE_CODE},                
+			${PR_NO},                     
+			LPAD(${PR_SEQ}, 5, '0'),  
+			${STATUS},                   
+			${COMPANY_CODE},
+			
+			${PLANT_CODE},                
+			${ITEM_NO},                   
+			${PR_PROCEEDING_FLAG},    
+			${CTRL_CODE},                 
+			${UNIT_MEASURE},
+			
+			NVL(${PR_QTY},0),            
+			${CUR},                       
+			NVL(${UNIT_PRICE}, 0),   
+			NVL(${PR_AMT}, 0),           
+			${RD_DATE},
+			
+			${ATTACH_NO},                 
+			${REC_VENDOR_CODE},           
+			${DELY_TO_LOCATION},      
+			${REC_VENDOR_NAME},           
+			${DESCRIPTION_LOC},
+			
+			${SPECIFICATION},             
+			${MAKER_NAME},                
+			${MAKER_CODE},            
+			${REMARK},                    
+			'N',
+			
+			'N',                          
+			${PURCHASE_LOCATION},         
+			${PURCHASER_ID},          
+			GETUSERNAMELOC(${HOUSE_CODE}
+			,  ${PURCHASER_NAME}),            
+			${PURCHASE_DEPT},
+			
+			GETDEPTNAMELOC(${HOUSE_CODE}
+			, ${COMPANY_CODE}
+			, ${PURCHASE_DEPT_NAME}),        
+			${TECHNIQUE_GRADE},           
+			${TECHNIQUE_TYPE},        
+			${INPUT_FROM_DATE},           
+			${INPUT_TO_DATE},
+			
+			TO_CHAR(SYSDATE, 'YYYYMMDD'), 
+			TO_CHAR(SYSDATE, 'HH24MISS'), 
+			${ADD_USER_ID},           
+			TO_CHAR(SYSDATE, 'YYYYMMDD'), 
+			TO_CHAR(SYSDATE, 'HH24MISS'),
+			
+			${CHANGE_USER_ID},            
+			${KNTTP},                     
+			${ZEXKN},                 
+			${ORDER_NO},                  
+			${ORDER_SEQ},
+			
+			SUBSTR(${WBS_NO}, 1, 8),      
+			${WBS_SUB_NO},                
+			${WBS_TXT},               
+			${CONTRACT_DIV},              
+			${DELY_TO_ADDRESS},
+			
+			${WARRANTY},                  
+			${EXCHANGE_RATE},             
+			'D',                      
+			${WBS_NAME},                  
+			${ORDER_COUNT},
+			
+		    ${PRE_TYPE},                  
+		    ${PRE_PO_NO},                 
+		    ${PRE_PO_SEQ},            
+		    ${ACCOUNT_TYPE},              
+		    ${ASSET_TYPE},
+		    ${DELY_TO_ADDRESS_CD},
+		    ${P_ITEM_NO}
+		)
+	</method>
+	
+</service>

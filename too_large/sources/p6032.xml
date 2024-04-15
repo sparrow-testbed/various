@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+<service>
+	<method name="et_getCodeFlag">
+		SELECT FLAG, TEXT5
+		FROM SCODE
+		WHERE HOUSE_CODE = '#house_code#' AND TYPE = 'S000' AND CODE ='#code#'
+	</method>
+
+	<method name="et_getCodeFlagArr">
+		SELECT FLAG, TEXT5, CODE
+		FROM SCODE
+		WHERE HOUSE_CODE = '#house_code#'
+		AND TYPE = 'S000' AND CODE IN (#code#)
+	</method>
+
+	<method name="et_getCodeQuery">
+ 		SELECT TEXT4
+		FROM SCODE
+		WHERE HOUSE_CODE = '#house_code#' AND TYPE = 'S000' AND CODE ='#code#'
+	</method>
+
+	<method name="et_getCodeMaster">
+		SELECT CODE, NVL(text1, ' '), NVL(text2,' ')
+		FROM SCODE
+		WHERE HOUSE_CODE ='#house_code#' AND TYPE = 'S000' AND CODE ='#code#'
+	</method>
+
+	<method name="et_getCodeColumn">
+		SELECT TEXT3
+		FROM SCODE
+		WHERE HOUSE_CODE = '#house_code#' AND TYPE = 'S000' AND CODE ='#code#'
+	</method>
+
+	<method name="getMainternace">
+			 <![CDATA[
+			 select use_flag,code,text1,text2,text3,flag ,text4
+			   from scode
+			  where house_code = '#house_code#'
+			    and type = 'S000'
+			 <OPT=F,S> and code like ? </OPT>
+			 <OPT=F,S> and flag like ? </OPT>
+			 <OPT=F,S> and  ( text1 like ? </OPT>
+			 <OPT=F,S> or     text2 like ? </OPT>
+			 <OPT=F,S> or text3 like ? </OPT>
+			 <OPT=F,S> ) and text4 like ? </OPT>
+			  and code != 'ID' and code != 'REVIEW'
+			  order by code
+			   ]]>
+	</method>
+
+	<method name="et_setDelete">
+			delete from scode
+			where HOUSE_CODE = '#HOUSE_CODE#' and type = 'S000'
+			and  CODE = ?
+	</method>
+
+	<method name="et_getCode">
+	<![CDATA[
+			        SELECT '#args#' || NO FROM
+			        (select LPAD(TO_CHAR(ROW_NUMBER() OVER(ORDER BY CODE desc)),4,'0') NO
+			  		from scode
+					where house_code = '#house_code#' and type ='S000' ) A
+					WHERE NOT EXISTS (
+					select 1
+			 		from SCODE
+			 		where house_code = '#house_code#'
+			 		and rownum < 2
+			 		and type ='S000'
+			        <OPT=F,S> and flag = ? </OPT>
+			        AND (
+						SUBSTR(code,3,5) like '0%' OR
+						SUBSTR(code,3,5) like '1%' OR
+						SUBSTR(code,3,5) like '2%' OR
+						SUBSTR(code,3,5) like '3%' OR
+						SUBSTR(code,3,5) like '4%' OR
+						SUBSTR(code,3,5) like '5%' OR
+						SUBSTR(code,3,5) like '6%' OR
+						SUBSTR(code,3,5) like '7%' OR
+						SUBSTR(code,3,5) like '8%' OR
+						SUBSTR(code,3,5) like '9%'
+			        	)
+			        	AND SUBSTR(code,3,5) = A.NO
+			        )
+	]]>
+	</method>
+
+	<method name="et_setSave">
+			 INSERT INTO SCODE
+			 (
+			 HOUSE_CODE,
+			 TYPE,
+			 CODE,
+			 TEXT2,
+			 FLAG,
+			 TEXT1,
+			 TEXT3,
+			 TEXT4,
+			 ADD_DATE,
+			 ADD_TIME,
+			 ADD_USER_ID,
+			 CHANGE_DATE ,
+			 CHANGE_TIME ,
+			 CHANGE_USER_ID ,
+			 USE_FLAG,
+			 TEXT5
+			 )
+			 VALUES (
+			 '#HOUSE_CODE#',
+			 'S000' ,
+			 ?,
+			 ?,
+			 ?,
+			 ?,
+			 ?,
+			 ?,
+			 '#cur_date#',
+			 '#cur_time#',
+			 '#user_id#' ,
+			 '#cur_date#',
+			 '#cur_time#',
+			 '#user_id#' ,
+			 ?,
+			 ?
+			 )
+	</method>
+
+	<method name="getDisplay">
+			 <![CDATA[
+			 select text2,use_flag ,flag,text1,text3,text4,text5
+			 from SCODE
+			 where house_code = '#house_code#'
+			      and type = 'S000'
+			 <OPT=F,S> and code = ? </OPT>
+			 ]]>
+	</method>
+
+
+	<method name="et_setChange">
+			 <![CDATA[
+			UPDATE SCODE
+				SET TEXT2 = ?,
+					USE_FLAG =? ,
+					FLAG = ?,
+					TEXT1 = ?,
+					TEXT3 = ?,
+					TEXT4 = ?,
+					TEXT5 = ?,
+					ADD_DATE = '#cur_date#',
+					ADD_TIME = '#cur_time#',
+					ADD_USER_ID = '#user_id#',
+					CHANGE_DATE = '#cur_date#',
+					CHANGE_TIME = '#cur_time#',
+					CHANGE_USER_ID = '#user_id#',
+			WHERE HOUSE_CODE = '#HOUSE_CODE#' AND  TYPE = 'S000'
+			AND CODE = ?
+			 ]]>
+	</method>
+
+	<method name="et_getPOPUP_Search_1">
+		<![CDATA[
+		select TEXT2 from SCODE
+	     WHERE HOUSE_CODE = '#house_code#' AND TYPE = 'M040' AND USE_FLAG = 'Y'
+	           AND CODE  = '#item_type#'
+		]]>
+	</method>
+
+	<method name="et_getPOPUP_Search_2">
+		<![CDATA[
+		  select TEXT2 from SCODE
+	       WHERE HOUSE_CODE = '#house_code#' AND TYPE = 'M041' AND USE_FLAG = 'Y'
+	             AND CODE = '#item_control#'
+		]]>
+	</method>
+
+	<method name="et_getPOPUP_Search_3">
+		<![CDATA[
+	      select TEXT2 from SCODE
+	       WHERE HOUSE_CODE = '#house_code#' AND TYPE = 'M042' AND USE_FLAG = 'Y'
+	             AND CODE = '#item_class#'
+		]]>
+	</method>
+
+	<method name="et_getPOPUP_Search_4">
+		<![CDATA[
+	      select TEXT2 from SCODE
+	       WHERE HOUSE_CODE = '#house_code#' AND TYPE = 'M122' AND USE_FLAG = 'Y'
+	             AND CODE = '#item_class2#'
+		]]>
+	</method>
+
+	<method name="Check_Duplicate">
+		<![CDATA[
+	       SELECT COUNT(*)
+	         FROM SCODE
+	        WHERE HOUSE_CODE = '#house_code#'
+	          AND TYPE       = 'S000'
+	          <OPT=F,S> AND CODE = ? </OPT>
+		]]>
+	</method>
+
+		<method name="et_getMenuName">
+		<![CDATA[
+		SELECT     M.MENU_NAME
+		          ,U.MENU_LINK
+	      FROM ICOMMUHD H
+	          ,ICOMMUDT M JOIN ICOMMUID U
+	                        ON U.HOUSE_CODE = M.HOUSE_CODE
+	                       AND U.SCREEN_ID  = M.SCREEN_ID
+	                       AND U.USE_FLAG   = 'Y'
+	     WHERE H.HOUSE_CODE       = '#house_code#'
+	       AND H.USE_FLAG         = 'Y'
+	       AND M.HOUSE_CODE       = H.HOUSE_CODE
+	       AND M.MENU_OBJECT_CODE = H.MENU_OBJECT_CODE
+	       AND M.USE_FLAG         = 'Y'
+	       AND U.MENU_LINK = '#url#'
+	      GROUP BY M.MENU_NAME, U.MENU_LINK
+		]]>
+	</method>
+
+</service>

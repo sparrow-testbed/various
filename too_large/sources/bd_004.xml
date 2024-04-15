@@ -1,0 +1,443 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+<service>
+	<method name="getBdSellerList">
+	<![CDATA[
+SELECT																																									
+         GL.BD_NO   -- 공고 번호                                                                                                         
+		,GL.BD_COUNT    -- 공고차수                                                                                                     
+		,GL.CTRL_PERSON_ID  -- 담당자                                                                                                   
+		,(CASE WHEN GL.CTRL_PERSON_NAME_LOC IS NULL THEN GL.CHANGE_USER_NAME_LOC                                                         
+   	      ELSE GL.CTRL_PERSON_NAME_LOC                                                                                              
+			END) AS USER_NAME                                                                                                      			
+		,GL.BD_TYPE                  -- 경쟁방법R                                                                                        
+		,GL.BD_METHOD    -- 계약방법                                                                                                   
+		,GL.PUB_ITEM                                                                                                                    
+		,GL.REQ_BEGIN_DATE   -- 입찰신청시작일시                                                                                      
+		,GL.REQ_BEGIN_TIME                                                                                                              
+		,GL.REQ_END_DATE     -- 입찰신청마감일시                                                                                      	
+		,GL.REQ_END_TIME                                                                                                                
+		,DATEFORMAT(GL.REQ_BEGIN_DATE||GL.REQ_BEGIN_TIME, 'YYYYMMDDHH24MISS') AS REQ_BEGIN												
+		,DATEFORMAT(GL.REQ_END_DATE||GL.REQ_END_TIME, 'YYYYMMDDHH24MISS') AS REQ_END	      											
+		,DATEFORMAT(GL.REQ_BEGIN_DATE||GL.REQ_BEGIN_TIME, 'YYYY/MM/DD HH24:MI') AS REQ_BEGIN_DATE_VIEW  -- 입찰신청시작일시			
+		,DATEFORMAT(GL.REQ_END_DATE||GL.REQ_END_TIME, 'YYYY/MM/DD HH24:MI') AS REQ_END_DATE_VIEW  -- 입찰신청마감일시      			
+		,GL.ATTACH_NO  -- 첨부파일                                                                                                      
+		,GETFILECOUNT(GL.ATTACH_NO) AS ATTACH_CNT                                                       			
+        ,CASE WHEN GL.EXPLAIN_DATE IS NOT NULL THEN 'Y' ELSE 'N'  END EXPLAIN_YN                                                        
+		,GL.BD_STATUS																															
+		,GL.EXPLAIN_FLAG  AS ATTEND                                                                                                     				
+		,NVL(GL.OPEN_STATUS, 'PN') AS OPEN_STATUS      
+		,(SELECT COUNT(SELLER_CODE)  FROM SEBCR  WHERE BD_NO = GL.BD_NO AND BD_COUNT = GL.BD_COUNT AND SELLER_CODE = $S{company_code}) AS BID_YN	
+		,GETCODETEXT1('M163',GL.BD_TYPE ,${session.HOUSE_CODE}) AS BD_TYPE_TEXT	 		
+FROM SEBGL GL                                                                                                                                        				
+			 WHERE NVL(GL.DEL_FLAG, 'N') = 'N'								
+			   --AND GL.BD_STATUS IN ('C','P','PP')								 				
+			   AND GL.BD_COUNT = 1 	
+			   --AND GETPROTECTIONBID(GL.BD_NO, GL.BD_COUNT, GL.BD_TYPE, '"+info.getSession("COMPANY_CODE")+"') = '"+info.getSession("COMPANY_CODE")+"'	
+
+    AND GL.CHANGE_DATE BETWEEN $S{from_date}
+    AND $S{to_date}
+	]]>
+</method>
+
+	<method name="getBdSellerStatusList">
+	<![CDATA[
+ SELECT
+      GL.BD_NO
+    , GL.BD_COUNT
+    , GL.PUB_ITEM
+    , getDateFormat(GL.CHANGE_DATE) AS PUB_DATE
+    , GETCODETEXT1('M163', GL.BD_TYPE, ${language} ) AS BD_TYPE 
+    , DATEFORMAT(GL.REQ_BEGIN_DATE || GL.REQ_BEGIN_TIME, 'YYYY/MM/DD HH24:MI:SS') AS REQ_BEGIN_DATE_VIEW
+    , DATEFORMAT(GL.REQ_END_DATE || GL.REQ_END_TIME, 'YYYY/MM/DD HH24:MI:SS') AS REQ_END_DATE_VIEW
+    , DATEFORMAT(GL.REQ_BEGIN_DATE || GL.REQ_BEGIN_TIME, 'YYYY/MM/DD HH24:MI:SS') || '~' ||
+      DATEFORMAT(GL.REQ_END_DATE || GL.REQ_END_TIME, 'YYYY/MM/DD HH24:MI:SS') AS PROGRESS_DATE
+    , CASE WHEN GL.CTRL_PERSON_NAME_LOC IS NULL THEN GL.CHANGE_USER_NAME_LOC
+           ELSE GL.CTRL_PERSON_NAME_LOC
+       END CHANGE_USER_NAME_LOC
+    , GETCODETEXT1('M166', GL.BD_CATEGORY, ${language}) AS BD_CATEGORY
+    , getDateFormat(ES.PREPARE_CONFIRM_DATE) AS PREPARE_CONFIRM_DATE
+    , GETCODETEXT1('M168', GL.BD_SIGN_STATUS, ${language}) AS BD_SIGN_STATUS
+             , (CASE  WHEN  ES.BD_SIGN_STATUS='C' THEN '완료'
+                         ELSE '미완료' END) AS BD_SIGN_STATUS1
+    , GL.ATTACH_NO
+    , GETFILECOUNT(GL.ATTACH_NO) AS ATTACH_CNT
+             , GL.ATTACH_NO1
+--    , GETFILECOUNT(GL.ATTACH_NO1) AS ATTACH_CNT1
+    , GL.PREPARE_KIND
+--    , GETBDSTATUSVALUE(GL.BD_NO, GL.BD_COUNT) AS BD_STATUS
+--    , GETBDSTATUSVALUELOC(GL.BD_NO, GL.BD_COUNT) AS BD_STATUS_LOC
+    ,(SELECT COUNT(SELLER_CODE) FROM SEBVO WHERE BD_NO = GL.BD_NO AND BD_COUNT = GL.BD_COUNT ) AS BD_SELLER_CNT
+             ,(SELECT MIN(LN.PR_NUMBER) FROM SEBLN LN  WHERE GL.BD_NO = LN.BD_NO AND GL.BD_COUNT = LN.BD_COUNT AND LN.DEL_FLAG='N' GROUP BY LN.BD_NO) AS PR_NUMBER
+            ,GL.CTRL_PERSON_ID
+ FROM SEBGL GL
+ LEFT OUTER JOIN SEBES ES
+   ON GL.BD_NO = ES.BD_NO
+  AND GL.BD_COUNT = ES.BD_COUNT
+ WHERE NVL(GL.DEL_FLAG, 'N') = 'N'
+   AND GL.BD_COUNT = (SELECT MAX(BD_COUNT) FROM SEBGL WHERE BD_NO = GL.BD_NO)
+   AND GL.BD_STATUS != 'T' 
+   AND GL.REQ_END_DATE BETWEEN ${from_date}
+   AND ${to_date}           
+	]]>                                                             
+	     <choose> 
+              <when test="${bid_flag}" operator="eq" value="ALL">
+    			<![CDATA[	AND 1 = 1    	]]>  
+              </when>         
+              <otherwise>
+    			<![CDATA[	AND  GETBDSTATUSVALUE(GL.BD_NO, GL.BD_COUNT)  = $S{bid_flag}   	]]>  
+              </otherwise> 
+          </choose>                                                                
+      
+	<![CDATA[
+   AND GL.BD_NO = $S{bd_no}
+   AND UPPER(GL.PUB_ITEM) like '%' || UPPER( $S{pub_title} ) || '%'
+     ORDER BY GL.BD_NO DESC  
+	]]>
+	</method>
+	
+     <method name="getBdSellerStatusHD">
+	<![CDATA[
+SELECT     			    																										
+	 GL.BD_NO     -- 공고번호                                                                                                
+	,GL.BD_COUNT      -- 공고차수                                                                                             
+	,GL.CHANGE_USER_ID                                                                                                        
+	,GETUSERNAME(${session.HOUSE_CODE},GL.CHANGE_USER_ID, 'KO') AS CHANGE_USER_NAME  -- 담당자                     
+	,GL.CHANGE_USER_NAME_LOC                                                                                                  
+	,GL.BD_TYPE                -- 입찰 방법                                                                                   
+	, GETCODETEXT1('M163',GL.BD_TYPE, 'KO') AS BD_TYPE_TEXT   -- 입찰 방법                    
+	,GL.BD_METHOD         -- 입찰 형태                                                                                       
+	, GETCODETEXT1('M164',GL.BD_METHOD, 'KO') AS BD_METHOD_TEXT  -- 입찰 형태               
+	,GL.PUB_DATE      -- 공고일자                                                                                             
+	,(SUBSTR(GL.PUB_DATE,0,4) || '-' || SUBSTR(GL.PUB_DATE,5,2) || '-' || SUBSTR(GL.PUB_DATE,7,2)) AS PUB_DATE_VIEW			
+	,GL.PUB_ITEM        -- 입찰건명                                                                                           
+	,GL.PREPARE_KIND   -- 예정가격구분                                                                                        
+	, GETCODETEXT1('M165',GL.PREPARE_KIND, 'KO') AS PREPARE_KIND_TEXT  -- 입찰 형태                     
+	,VO.VOTE_NO   -- 입찰서번호                                                                                               
+	,VO.BD_AMT_ENC       -- 입찰금액                                                                                          
+	,'' KEYPWD           -- 대칭키 사용안함                                                                                         
+	,VO.ATTACH_NO          -- 첨부파일                                                                                        
+	,GETFILECOUNT(VO.ATTACH_NO) AS ATTACH_CNT                                                          
+	,GL.PREPARE_MAX  	--  예비가격 사용수                		
+	,GL.PREPARE_VOTE    --  추첨 예비가격 수                 	
+	,GL.BD_KIND    --  입찰구분                 				
+	,GETCODETEXT1('M169',GL.BD_KIND, 'KO') AS  BD_KIND_TEXT		
+	,NVL(SP.USER_NAME		, PI.USER_NAME) AS USER_NAME    -- 담당자 이름      	
+	,NVL(SP.USER_POSITION	, PI.POSITION) AS USER_POSITION   -- 직위           
+	,NVL(SP.USER_PHONE		, PI.PHONE_NO) AS USER_PHONE     -- 전화번호        
+	,NVL(SP.USER_MOBILE		, MOBILE_NO ) AS USER_MOBILE	-- 핸드폰			
+	,NVL(SP.USER_EMAIL		, PI.EMAIL) AS USER_EMAIL     -- EMAIL       
+	
+FROM SEBGL GL                                                                                                                  
+LEFT OUTER JOIN SEBVO VO                                                                                                       
+  ON GL.BD_NO = VO.BD_NO                                                                                                       
+ AND GL.BD_COUNT = VO.BD_COUNT      
+ LEFT OUTER JOIN SEBSP SP                                                                                                       
+  ON GL.BD_NO = SP.BD_NO                                                                                                       
+ AND GL.BD_COUNT = SP.BD_COUNT                                                             
+ AND VO.SELLER_CODE = SP.SELLER_CODE   
+      
+ LEFT OUTER JOIN SSUPI PI                                                                                                       
+  ON PI.SELLER_CODE = ${seller_code}                                                                                                       
+ AND PI.DEL_FLAG = 'N'
+ and PI.SEQ = '1'
+                                         
+ WHERE NVL(GL.DEL_FLAG, 'N') = 'N'		
+   AND GL.BD_NO		= ${bd_no}
+   AND GL.BD_COUNT	= ${bd_count}  
+  	]]>
+</method>
+<method name="getBdStatusSelectVO">
+	<![CDATA[
+	SELECT
+		ROWNUM NO
+		,VO.BD_NO   -- 공고번호
+		,VO.BD_COUNT  -- 공고 차수
+		,VL.MATERIAL_NO AS ITEM_NO     -- 품번
+		,VL.DESCRIPTION_LOC  -- 품목
+		,VL.SPECIFICATION  -- 스팩
+		,VL.UNIT_MEASURE   -- 단위
+		, GETCODETEXT1('M007',VL.UNIT_MEASURE, 'KO') AS UNIT_MEASURE_TEXT
+		,VL.ITEM_QTY  AS PR_QTY     -- 수량
+		,VL.UNIT_PRICE_ENC AS UNIT_PRICE  -- 단가
+		,VL.ITEM_AMT_ENC AS ITEM_AMT  -- 금액
+		,VL.ECO_ITEM    -- 친환경제품(Y/N)
+		,VL.MINOR_ITEM  -- 중소기업기술개발 제품(Y/N)
+		,VL.CERTI_ITEM  -- 인증 신 제품(Y/N)
+		,VL.PR_NUMBER  -- 구매요청번호
+		,VL.PR_SEQ     -- 항번
+		,VL.VOTE_SEQ    -- 입찰서 항번
+		,VO.STATUS   -- 입찰서 제출 확인
+		,VL.RD_DATE   -- 납기기한
+		,VL.DELY_TO_LOCATION   -- 납품처
+		,VL.ACCOUNTS_COURSES_CODE
+		,VL.ACCOUNTS_COURSES_LOC
+		,VL.ASSET_NUMBER
+		,VL.RD_DATE
+		,VL.DELY_TO_LOCATION
+		,VL.PR_USER_ID
+		,VL.DEMAND_DEPT
+		,VL.CTRL_PERSON_ID
+	FROM SEBVO VO
+	INNER JOIN SEBVL VL
+	ON VO.VOTE_NO = VL.VOTE_NO
+	WHERE 1=1
+	AND VO.VOTE_NO =${vote_no}
+	ORDER BY VO.VOTE_NO, VL.VOTE_SEQ
+ 	]]>
+</method> 
+<method name="getBdSellerStatusDT">
+	<![CDATA[
+	SELECT                                                      
+		 ROWNUM NO                                			   
+		,GL.BD_NO   -- 공고번호                                
+		,GL.BD_COUNT  -- 공고 차수                             
+		,LN.BD_SEQ    -- 공고 항번                             
+		,LN.BUYER_ITEM_NO AS ITEM_NO    -- 품번                
+		,LN.DESCRIPTION_LOC  -- 품목                           
+		,LN.SPECIFICATION  -- 스팩                             
+		,LN.UNIT_MEASURE   -- 단위                             
+		,GETCODETEXT1('M007',LN.UNIT_MEASURE, 'KO') AS UNIT_MEASURE_TEXT
+		,LN.PR_QTY      -- 수량                                
+		,'0' AS UNIT_PRICE  -- 단가                            
+		,'0' AS ITEM_AMT  -- 금액                              
+		,'N' AS ECO_ITEM    -- 친환경제품(Y/N)                 
+		,'N' AS MINOR_ITEM  -- 중소기업기술개발 제품(Y/N)      
+		,'N' AS CERTI_ITEM  -- 인증 신 제품(Y/N)               
+		,LN.PR_NUMBER  -- 구매요청번호                         
+		,LN.PR_SEQ     -- 항번                                 
+		,'' AS VOTE_SEQ     -- 입찰서 항번                     
+		,LN.DILIVER_PLACE  AS DELY_TO_LOCATION    -- 납품처		
+		--,GL.RD_DATE     -- 납기기한                     		
+		,LN.POR_DATE AS RD_DATE     -- 납기기한               	
+		,LN.PR_USER_ID         -- 구매요청담당자               	
+		,LN.CTRL_PERSON_ID   -- 계약담당자               		
+		,LN.DEMAND_DEPT    -- 구매요청부서               		
+		,LN.ACCOUNTS_COURSES_CODE         -- 계정과목			
+		,LN.ACCOUNTS_COURSES_LOC   -- 계정과목명         		
+		,LN.ASSET_NUMBER    -- 자산번호               			
+  FROM SEBGL GL                                             
+ INNER JOIN SEBLN LN                                        
+    ON GL.BD_NO = LN.BD_NO                                  
+   AND GL.BD_COUNT = LN.BD_COUNT                            
+ WHERE NVL(GL.DEL_FLAG, 'N') = 'N'            		       
+   AND NVL(LN.DEL_FLAG, 'N') = 'N'            		       
+AND GL.BD_NO		=  ${bd_no}						
+AND GL.BD_COUNT		=  ${bd_count}				
+ORDER BY LN.PR_NUMBER, LN.PR_SEQ         
+ 	]]>
+</method>
+
+<method name="getBdStatutsTime">
+	<![CDATA[    
+	SELECT COUNT(*) CNT   	 
+	  FROM SEBGL						 					                                                  
+	  WHERE 1=1						 					                                                  
+	  AND SIGN(REQ_END_DATE||REQ_END_TIME - TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')) = -1	 	                                                  
+	  AND BD_NO =  ${bd_no}	                                              
+	  AND BD_COUNT =  ${bd_count}
+ 	]]>
+</method>
+<method name="getBdStatutsCount">
+	<![CDATA[    
+SELECT                                       
+	COUNT(SELLER_CODE)         
+FROM SEBVL                                 
+WHERE 1=1            		     
+AND BD_NO =  ${bd_no}			
+AND BD_COUNT =  ${bd_count}		
+AND SELLER_CODE =  ${seller_code}
+ 	]]>
+</method>	
+<method name="et_setBDSP_delete">
+	<![CDATA[    
+DELETE FROM SEBSP              	                                                                        
+ WHERE BD_NO 		= ${bd_no}	                                                                           
+   AND BD_COUNT 	= ${bd_count}		                                                                            
+   AND VOTE_COUNT 	= '1'                                                                            
+   AND SELLER_CODE 	= ${seller_code}
+ 	]]>
+</method>		
+<method name="et_setBDSP">
+	<![CDATA[
+	INSERT INTO SEBSP 					              
+	(                                         
+		 BD_NO                                     
+		,BD_COUNT                                 
+		,VOTE_COUNT                               
+		,SELLER_CODE                              
+		,ADD_DATE                                 
+		,ADD_TIME                                 
+		,ADD_USER_ID                              
+		,CHANGE_DATE                              
+		,CHANGE_TIME                              
+		,CHANGE_USER_ID                           
+		,USER_NAME                                
+		,USER_POSITION                            
+		,USER_PHONE                               
+		,USER_MOBILE                              
+		,USER_EMAIL                               
+	)                                         
+	VALUES                                    
+	(                                         
+	                                          
+		 ${bd_no      		  }                   
+		,${bd_count           }                   
+		,${vote_count         }                   
+		,${seller_code        }                   
+		,${current.date           }                   
+		,${current.time       }                   
+		,${session.ID        }                   
+		,${current.date        }                   
+		,${current.time        }                   
+		,${session.ID     }                   
+		,$S{user_name          }                   
+		,$S{user_position      }                   
+		,$S{user_phone         }                   
+		,$S{user_mobile        }                   
+		,$S{user_email         }                   
+	)                                       
+      
+ 	]]>
+</method>
+
+<method name="et_setBDVO_delete">
+	<![CDATA[    
+DELETE FROM SEBVO              	                                                                        
+ WHERE BD_NO 		= ${bd_no}	                                                                           
+   AND BD_COUNT 	= ${bd_count}		                                                                            
+   AND VOTE_NO 		= ${vote_no}	                                                                          
+   AND SELLER_CODE 	= ${seller_code}
+ 	]]>
+</method>		
+<method name="et_setBDVO">
+	<![CDATA[
+	INSERT INTO SEBVO 					              
+	(                                         
+		 SELLER_CODE   
+		,VOTE_NO       
+		,BD_NO         
+		,BD_COUNT      
+		,STATUS        
+		,ADD_DATE      
+		,ADD_TIME      
+		,ADD_USER_ID   
+		,VOTE_DATE     
+		,VOTE_TIME     
+		,BD_AMT_ENC     
+		,ATTACH_NO     
+		,KEYPWD    
+                            
+	)                                         
+	VALUES                                    
+	(                                         
+	                                          
+		 ${seller_code } 
+		,${vote_no     } 
+		,${bd_no       } 
+		,${bd_count    } 
+		,${status      } 
+		,${current.date        }                   
+		,${current.time        }                   
+		,${session.ID     }         
+		,${vote_date   } 
+		,${vote_time   } 
+		,${bd_amt  } 
+		,${attach_no   } 
+		,${keypwd      } 
+                   
+	)                                       
+      
+ 	]]>
+</method>
+
+<method name="et_setBDVL_delete">
+	<![CDATA[    
+DELETE FROM SEBVL              	                                                                        
+ WHERE BD_NO 		= ${bd_no}	                                                                           
+   AND BD_COUNT 	= ${bd_count}		                                                                            
+   AND VOTE_NO 		= ${vote_no}	                                                                          
+   AND SELLER_CODE 	= ${seller_code}
+ 	]]>
+</method>		 
+<method name="et_setBDVL">
+	<![CDATA[
+	INSERT INTO SEBVL 					              
+	(                                         
+		 SELLER_CODE                  
+		,VOTE_NO                      
+		,VOTE_SEQ                     
+		,BD_NO                        
+		,BD_COUNT                     
+		,MATERIAL_NO                
+		,DESCRIPTION_LOC              
+		,SPECIFICATION                
+		,UNIT_MEASURE                 
+		,UNIT_PRICE_ENC               
+		,ITEM_QTY                     
+		,ADD_DATE                     
+		,ADD_TIME                     
+		,ADD_USER_ID                  
+		,CHANGE_DATE                  
+		,CHANGE_TIME                  
+		,CHANGE_USER_ID               
+		,DEL_FLAG                     
+		,ECO_ITEM                     
+		,MINOR_ITEM                   
+		,CERTI_ITEM                   
+		,PR_NUMBER                    
+		,PR_SEQ                       
+		,ITEM_AMT_ENC                 
+		,MAKER                      
+		,YEAR_OF_MANUFACTURE        
+		,ACCOUNTS_COURSES_CODE        
+		,ACCOUNTS_COURSES_LOC         
+		,ASSET_NUMBER                 
+		,RD_DATE        				      
+		,DELY_TO_LOCATION             
+		,PR_USER_ID                   
+		,DEMAND_DEPT        		      
+		,CTRL_PERSON_ID               
+   )                                         
+	VALUES                                    
+	(                                         
+	                                          
+		 ${seller_code				}                       
+		,${vote_no                  }                       
+		,${bd_count                 }                       
+		,${bd_no                    }                       
+		,${bd_count                 }                       
+		,${MATERIAL_NO              }                       
+		,${DESCRIPTION_LOC          }                       
+		,${SPECIFICATION            }                       
+		,${UNIT_MEASURE             }                       
+		,${UNIT_PRICE           }                       
+		,${PR_QTY                 }                       
+		,${current.date        }                   
+		,${current.time        }                   
+		,${session.ID     }                     
+		,${current.date        }                   
+		,${current.time        }                   
+		,${session.ID     }                          
+		,${DEL_FLAG                 }                       
+		,${ECO_ITEM                 }                       
+		,${MINOR_ITEM               }                       
+		,${CERTI_ITEM               }                       
+		,${PR_NUMBER                }                       
+		,${PR_SEQ                   }                       
+		,${ITEM_AMT             }                       
+		,${MAKER                    }                       
+		,${YEAR_OF_MANUFACTURE      }                       
+		,${ACCOUNTS_COURSES_CODE    }                       
+		,${ACCOUNTS_COURSES_LOC     }                       
+		,${ASSET_NUMBER             }                       
+		,${RD_DATE        			}                       
+		,${DELY_TO_LOCATION         }                       
+		,${PR_USER_ID               }                       
+		,${DEMAND_DEPT        		}                       
+		,${CTRL_PERSON_ID           }                       
+                
+	)                                       
+      
+ 	]]>
+</method>
+</service>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<service>
+	<method name="getSgList">		
+				select a.sg_pty_refitem, b.text2, a.change_date				
+				from icomsgmp a, icomcode b 									
+				where a.class_code = b.code and a.use_flag = 'Y' 				
+				and a.house_code = ${session.HOUSE_CODE} and b.type='M122' 	
+				and a.sg_refitem = ${sg_refitem}
+				and a.house_code = b.house_code
+				and b.text2 like '%' || $S{temp_name} || '%'				
+	</method>	
+	
+	<method name="setSgDelete">
+		<![CDATA[
+				update icomsgmp set use_flag = 'N', change_date = TO_CHAR(SYSDATE,'YYYYMMDD')
+				where house_code = ${session.HOUSE_CODE} 
+				and sg_pty_refitem IN ( ${T_ID} )			
+		]]>
+	</method>
+	
+</service>

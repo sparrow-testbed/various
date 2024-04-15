@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+<service>
+	 
+	<method name="bl_getPayOperateGiveList">
+	 
+		SELECT	GL.APP_STATUS_CD AS STATUS_CD
+--		,   	DECODE(APP_STATUS_CD, 'P', '결재요청', 'E', '결재완료', '반려') AS STATUS_NM
+--		,       SC.TEXT1 AS STATUS_NM
+		, 		CASE WHEN (GL.APP_STATUS_CD = 'M' AND GL.STATUS_CD = '30' ) THEN '책임자요청'  
+         			 WHEN (GL.APP_STATUS_CD = 'M' AND GL.STATUS_CD = '40') THEN '책임자승인'
+         			 ELSE SC.TEXT1
+                END AS STATUS_NM
+		,		GL.PAY_ACT_NO 
+		,		GL.PYDTM_APV_NO
+		,  		GETCODETEXT1('M810',GL.EXPENSECD,'KO') AS EXPENSECD  
+		,		GL.TOT_AMT
+		,		GL.TAX_NO
+--		,		GL.APPAPPAM AS BUDGET_CHK
+		,		GL.VENDOR_CODE
+		,		CONVERT_DATE(TXHD.TAX_DATE) AS TAX_DATE
+		,       CASE 
+		           WHEN TXHD.TAX_APP_NO IS NULL THEN 'RP'
+		           ELSE 'P'
+		          END AS TAX_GUBUN
+		,       TXHD.PROGRESS_CODE
+        ,       SB.PUBCODE		
+        ,       TXHD.PROC_DEPT
+        ,       GETDEPTNAMELOC (TXHD.HOUSE_CODE, 'WOORI', TXHD.PROC_DEPT) AS PROC_DEPT_NAME
+        ,		GETUSERINFO(TXHD.HOUSE_CODE,GL.EXECUTE_NO,'NAME') AS EXECUTE_NO
+        ,		GETUSERINFO(TXHD.HOUSE_CODE,GL.SIGNER1_NO,'NAME') AS SIGNER1_NO
+        ,		GETUSERINFO(TXHD.HOUSE_CODE,GL.SIGNER2_NO,'NAME') AS SIGNER2_NO
+        ,       CONVERT_DATE(GL.COMPLATE_DATE) AS COMPLATE_DATE
+		FROM	SPY2GL GL
+		      , (SELECT * FROM SCODE WHERE TYPE='M815' AND USE_FLAG = 'Y') SC
+		      , ICOYTXHD TXHD
+		      , (SELECT RESSEQ, PUBCODE, LOADSTATUS, NTS_ISSUEID FROM SALEEBILL WHERE LOADSTATUS  = 1) SB
+		WHERE   GL.HOUSE_CODE    = SC.HOUSE_CODE(+)
+		  AND   GL.APP_STATUS_CD = SC.CODE(+)   
+		  AND   TXHD.HOUSE_CODE = GL.HOUSE_CODE
+		  AND   TXHD.TAX_NO = GL.TAX_NO
+		  AND   TXHD.TAX_NO = SB.RESSEQ
+  		  AND   GL.APP_STATUS_CD = $S{p_app_status_cd}
+  		  AND   GL.STATUS_CD = $S{status_cd}
+  		  AND   GL.EXECUTE_NO = $S{purchaser_id}
+  		  AND   TXHD.PROC_DEPT = $S{user_dept}
+  		  AND   TXHD.TAX_NO = $S{tax_no}
+  		  AND 	TXHD.TAX_DATE BETWEEN $S{inv_start_date}
+		  AND 	$S{inv_end_date}   
+		ORDER BY SC.SORT_SEQ ,GL.PAY_ACT_NO DESC
+	
+	</method>
+	
+	<method name="setSpy2Delete_1">
+		DELETE FROM SPY2GL WHERE PAY_ACT_NO = ${pay_act_no}
+	</method>
+	
+	<method name="setSpy2Delete_2">
+		DELETE FROM SPY2LN WHERE PAY_ACT_NO = ${pay_act_no}
+	</method>
+</service>

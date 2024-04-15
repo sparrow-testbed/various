@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<service>
+	<method name="selectSinfhdList">
+	<![CDATA[
+		SELECT 
+			HOUSE_CODE,     INF_NO,       INF_TYPE,   INF_CODE,   CONVERT_DATE(INF_DATE) AS INF_DATE,
+			INF_START_TIME, INF_END_TIME, INF_STATUS, INF_REASON, INF_SEND
+		FROM
+			SINFHD
+		WHERE INF_DATE =  $S{inf_date}
+	 	AND INF_START_TIME BETWEEN  $S{inf_start_time}
+	 	AND $S{inf_end_time}     
+		ORDER BY
+			INF_NO DESC
+	]]>
+	</method>	
+	
+	<method name="selectUserlogList">
+	<![CDATA[
+		SELECT 
+			HOUSE_CODE,
+			NO,
+			PROCESS_ID,
+			PROGRAM_DESC,
+			METHOD_NAME,
+			CONVERT_DATE(JOB_DATE) AS JOB_DATE,
+			JOB_TIME,
+			USER_ID,
+			USER_NAME_LOC,
+			PROGRAM,
+			JOB_TYPE,
+			IP
+		FROM
+			USERLOG
+		WHERE JOB_DATE =  $S{job_date}
+	 	AND JOB_TIME BETWEEN  $S{start_job_time}
+	 	AND $S{end_job_time}
+	 	AND PROCESS_ID = $S{process_id}	 	 	   
+		ORDER BY
+	    NO DESC
+	]]>
+	</method>	
+</service>
+
+    
+	

@@ -1,0 +1,337 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<service> 
+	<method name="getBdAnnList">
+		<![CDATA[
+         SELECT  * FROM (
+         SELECT DECODE(SUBSTR(HD.ANN_NO,1,2),'BD',HD.BID_NO,HD.ANN_NO) AS ANN_NO 
+               ,HD.ANN_ITEM 
+               ,HD.LOC_CODE
+               ,HD.LOC_CNT
+               ,CONVERT_DATE(HD.ANN_DATE) AS ANN_DATE
+               ,TO_CHAR(TO_DATE(BID_BEGIN_DATE||BID_BEGIN_TIME, 'YYYYMMDDHH24MISS'),'YYYY/MM/DD HH24:MI') AS APP_BEGIN_DATE
+               ,TO_CHAR(TO_DATE(BID_END_DATE||BID_END_TIME, 'YYYYMMDDHH24MISS'),'YYYY/MM/DD HH24:MI') AS APP_END_DATE
+               ,HD.PR_NO
+               ,(SELECT REQ_TYPE FROM ICOYPRHD WHERE PR_NO = (SELECT MAX(PR_NO) FROM ICOYBDDT WHERE HOUSE_CODE = HD.HOUSE_CODE AND BID_NO = HD.BID_NO ) ) AS REQ_TYPE
+               , GETICOMCODE2(HD.HOUSE_CODE, 'M164',(SELECT REQ_TYPE FROM ICOYPRHD WHERE PR_NO = (SELECT MAX(PR_NO) FROM ICOYBDDT WHERE HOUSE_CODE = HD.HOUSE_CODE AND BID_NO = HD.BID_NO ) ) ) AS REQ_TYPE_TEXT
+               ,GETICOMCODE2( HD.HOUSE_CODE, 'M935'
+               ,DECODE(HD.BID_STATUS||HD.SIGN_STATUS, 'ART', 'RT',
+                                                        'URT', 'RT',
+                                                        'CRT', 'RT',
+                                                        'ARP', 'RP',
+                                                        'URP', 'RP',
+                                                        'CRP', 'RP',
+                                                        'AJP', 'RP',
+                                                        'UJP', 'RP',
+                                                        'CJP', 'RP',
+                                                        'ARC', 'RC',
+                                                        'URC', 'RC',
+                                                        'CRC', 'RC',
+                                                        'AJC', 'RC',
+										                 'ARR', 'RR',
+										                 'AJB', 'RR',
+										                 'UJB', 'RR',
+										                 'CJB', 'RR',
+										                 'AJT', 'RR',
+										                 'UJT', 'RR',
+										                 'CJT', 'RR',
+										                 'CCC', 'CX', 
+										                 
+										                 'ACJ', 'RJ',
+                                                         'UCJ', 'RJ',
+                                                         'CCJ', 'RJ',
+                                                        
+                                                      (CASE
+                                                           WHEN  TO_NUMBER(TO_CHAR(SYSDATE,'YYYYMMDD')) >= TO_NUMBER(HD.ANN_DATE)
+                                                            AND (TO_NUMBER(TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')) < TO_NUMBER(PG.BID_END_DATE||PG.BID_END_TIME)
+                                                             OR  PG.BID_END_DATE IS NULL)
+                                                           THEN 'XX'
+											               WHEN TO_NUMBER(TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')) > TO_NUMBER(PG.BID_END_DATE||PG.BID_END_TIME)
+											               THEN 'CE'
+                                                           ELSE 'CC'
+                                                       END)
+                ) ) AS STATUS_TEXT
+               ,HD.ATTACH_NO
+               ,(SELECT COUNT(*) FROM ICOMATCH
+                  WHERE DOC_NO = HD.ATTACH_NO) AS ATTACH_CNT
+               ,HD.SIGN_PERSON_ID
+               ,HD.SIGN_STATUS
+               ,HD.BID_STATUS
+               ,HD.BID_NO
+               ,HD.BID_COUNT
+               ,HD.CHANGE_USER_ID
+               ,(SELECT DECODE(COUNT(*), 0, 'Y', 'N') FROM ICOYBDAP
+                  WHERE HOUSE_CODE = HD.HOUSE_CODE
+                    AND BID_NO     = HD.BID_NO
+                    AND BID_COUNT  = HD.BID_COUNT
+                    AND BID_CANCEL = 'N'
+                    AND APP_DATE IS NOT NULL
+                    AND STATUS IN ('C', 'R')) AS BDAP_CNT
+               ,(CASE
+                     WHEN TO_NUMBER(TO_CHAR(SYSDATE,'YYYYMMDD')) >= TO_NUMBER(HD.ANN_DATE)
+                         AND TO_NUMBER(TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')) < TO_NUMBER(HD.APP_END_DATE||HD.APP_END_TIME)
+                     THEN 'Y'
+                     ELSE 'N'
+                 END) AS J_PERIOD_COND                           -- 정정공고 가능여부
+               ,(CASE
+                     WHEN TO_NUMBER(TO_CHAR(SYSDATE,'YYYYMMDDHH')) >= TO_NUMBER(HD.ANN_DATE)
+                         AND   ( TO_NUMBER(TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')) < TO_NUMBER(PG.BID_END_DATE||PG.BID_END_TIME)
+                               OR PG.BID_END_DATE IS NULL)
+                     THEN 'Y'
+                     ELSE 'N'
+                 END) AS C_PERIOD_COND                            -- 취소공고 가능여부
+               ,HD.CONT_TYPE1
+               ,HD.CONT_TYPE2
+               --,GETICOMCODE2(HD.HOUSE_CODE, 'M974', HD.CONT_TYPE1 ) AS CONT_TYPE1_TEXT
+               --,GETICOMCODE2(HD.HOUSE_CODE, 'M973', HD.CONT_TYPE2 ) AS CONT_TYPE2_TEXT
+               
+               ,GETICOMCODE2(HD.HOUSE_CODE, 'M974', HD.CONT_TYPE1 )||
+               ' / '||GETICOMCODE2(HD.HOUSE_CODE, 'M973', HD.CONT_TYPE2 )||
+               ' / '||GETICOMCODE2(HD.HOUSE_CODE, 'M930', HD.PROM_CRIT ) AS CONT_TYPE1_TEXT                
+               
+               
+               ,HD.CHANGE_USER_NAME_LOC AS CHANGE_USER_NAME
+               , (SELECT SUM(PR_AMT) FROM ICOYBDDT
+                   WHERE HOUSE_CODE = HD.HOUSE_CODE
+                     AND BID_NO     = HD.BID_NO
+                     AND BID_COUNT  = HD.BID_COUNT) AS SUM_AMT
+               , (SELECT CUR FROM ICOYBDDT
+                   WHERE HOUSE_CODE = HD.HOUSE_CODE
+                     AND BID_NO     = HD.BID_NO
+                     AND BID_COUNT  = HD.BID_COUNT
+                     AND ROWNUM < 2) AS CUR
+               ,HD.CTRL_CODE
+               ,PG.VOTE_COUNT
+               ,CASE WHEN HD.ANN_VERSION IS NULL THEN (SELECT CODE FROM SCODE WHERE TYPE = 'VR001')
+                ELSE HD.ANN_VERSION
+                END AS ANN_VERSION
+               ,HD.BID_TYPE
+               ,CASE WHEN HD.CNST_BATCH_GB IS NULL OR HD.CNST_BATCH_GB = '00' 
+                       THEN '해당없음'
+                       ELSE GETICOMCODE2(HD.HOUSE_CODE, 'M225', HD.CNST_BATCH_GB) 
+                 END AS CNST_BATCH_GB_TEXT
+           FROM ICOYBDHD HD, ICOYBDPG PG
+          WHERE HD.HOUSE_CODE  = ${HOUSE_CODE}
+            AND PG.HOUSE_CODE  = HD.HOUSE_CODE
+            AND PG.BID_NO      = HD.BID_NO
+            AND PG.BID_COUNT   = HD.BID_COUNT
+            AND HD.ANN_DATE BETWEEN ${START_CHANGE_DATE}
+            AND ${END_CHANGE_DATE} 
+		]]>
+	<if test="${STATUS}" operator="ne" value="">
+		<![CDATA[
+			AND DECODE(HD.BID_STATUS||HD.SIGN_STATUS, 
+													'ART',
+													'RT',  
+													'URT', 
+													'RT',
+			                                        'CRT', 'RT',
+			                                        'ARP', 'RP',
+			                                        'URP', 'RP',
+			                                        'CRP', 'RP',
+			                                        'AJP', 'RP',
+			                                        'UJP', 'RP',
+			                                        'CJP', 'RP',
+			                                        'ARC', 'RC',
+			                                        'URC', 'RC',
+			                                        'CRC', 'RC',
+								                    'AJB', 'RR',
+								                    'UJB', 'RR',
+								                    'CJB', 'RR',
+								                    'AJT', 'RR',
+								                    'UJT', 'RR',
+								                    'CJT', 'RR',
+								                    'CCC', 'CX', 
+								                    
+								                    'ACJ', 'RJ',
+                                                    'UCJ', 'RJ',
+                                                    'CCJ', 'RJ',
+                                                    
+													(CASE
+	                                                     	WHEN  TO_NUMBER(TO_CHAR(SYSDATE,'YYYYMMDD')) >= TO_NUMBER(HD.ANN_DATE)
+                                                      			AND (TO_NUMBER(TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')) < TO_NUMBER(PG.BID_END_DATE||PG.BID_END_TIME)
+                                                       			OR  PG.BID_END_DATE IS NULL)
+                                                     		THEN 'XX'
+					               							WHEN TO_NUMBER(TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')) > TO_NUMBER(PG.BID_END_DATE||PG.BID_END_TIME)
+					               							THEN 'CE'
+                                                     		ELSE 'CC'
+                                                 	END)) = $S{STATUS}
+		]]>
+		</if>
+		<![CDATA[ 
+            
+            /*
+            AND (SUBSTR(hd.BID_STATUS, 2, 1) = 'R'
+                 OR (( TO_NUMBER(TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')) < TO_NUMBER(PG.BID_END_DATE||PG.BID_END_TIME)
+                       OR PG.BID_END_DATE IS NULL))
+                 OR SUBSTR(hd.BID_STATUS, 2, 1) = 'C' ) 
+            */
+            
+            --AND HD.SIGN_STATUS  NOT IN ('J')
+            AND HD.BID_STATUS  NOT IN ('NB', 'SB')
+            AND   HD.ANN_NO    LIKE  '%'|| $S{ANN_NO} ||'%'
+            AND   HD.ANN_ITEM  LIKE  '%'|| $S{ANN_ITEM} ||'%' 
+            AND   HD.CHANGE_USER_ID  =  $S{CHANGE_USER}
+            AND HD.STATUS IN ('C' ,'R')
+            AND PG.STATUS IN ('C' ,'R')
+            AND HD.BID_TYPE = $S{BID_TYPE}
+            AND HD.ADD_USER_DEPT = ${session.DEPARTMENT}
+          ORDER BY HD.BID_NO DESC, HD.ANN_DATE DESC, HD.ANN_NO DESC, HD.BID_COUNT DESC, HD.ANN_NO DESC
+                )
+          WHERE 1=1 
+		]]>
+ 
+	</method>
+	<!-- 입찰공고조회 (Detail) -->
+	<method name="getBdItemDetail">
+		<![CDATA[
+         SELECT
+                BDDT.ITEM_SEQ
+               ,TO_NUMBER(BDDT.ITEM_SEQ) AS NO
+               ,BDDT.STATUS
+               ,BDDT.ADD_DATE
+               ,BDDT.ADD_TIME
+               ,BDDT.ADD_USER_ID
+               ,BDDT.ADD_USER_NAME_LOC
+               ,BDDT.ADD_USER_NAME_ENG
+               ,BDDT.ADD_USER_DEPT
+               ,BDDT.CHANGE_DATE
+               ,BDDT.CHANGE_TIME
+               ,BDDT.CHANGE_USER_ID
+               ,BDDT.CHANGE_USER_NAME_LOC
+               ,BDDT.CHANGE_USER_NAME_ENG
+               ,BDDT.CHANGE_USER_DEPT
+               ,BDDT.BUYER_ITEM_NO AS ITEM_NO
+               ,BDDT.DESCRIPTION_LOC
+               ,BDDT.UNIT_MEASURE
+               ,BDDT.PR_QTY AS QTY
+               ,BDDT.CUR
+               ,BDDT.UNIT_PRICE
+               ,BDDT.PR_AMT AS AMT
+               ,BDDT.SBID_PRICE
+               ,BDDT.SBID_AMT
+               ,BDDT.PR_NO
+               ,BDDT.PR_SEQ
+               ,BDDT.SPECIFICATION
+               ,getSelBDAP(BDDT.BID_NO,BDDT.BID_COUNT ) AS SELLER_SELECTED
+               ,(select COUNT(*) from ICOYBDAP WHERE  BID_NO=BDDT.BID_NO AND BID_COUNT = BDDT.BID_COUNT ) AS SELLER_SELECTED_CNT
+               ,CASE WHEN SUBSTR(BDHD.ANN_NO,1,2) = 'BD' THEN 'Y' ELSE 'N' END AS PR_NO_POPUP_FLAG
+         FROM ICOYBDDT BDDT
+         JOIN ICOYBDHD BDHD
+         ON BDDT.HOUSE_CODE = BDHD.HOUSE_CODE
+         AND BDDT.BID_NO = BDHD.BID_NO
+         AND BDDT.BID_COUNT = BDHD.BID_COUNT
+        WHERE BDDT.HOUSE_CODE = ${HOUSE_CODE}
+          AND BDDT.BID_NO     = ${bid_no}
+          AND BDDT.BID_COUNT  = ${bid_count}
+          AND BDDT.STATUS IN ('C', 'R')
+        ORDER BY BDDT.ITEM_SEQ  
+		]]>
+	</method>
+<!-- 입찰공고조회 (Detail) -->
+
+	<method name="et_setPRDT_1">
+		<![CDATA[
+		/*정정공고, 취소공고 확정되기 전에 삭제를 하는경우 진행되고 있는 공고건이 있으므로 PR_PROCEEDING_FLAG를 업데이트 하면 안된다. */
+				UPDATE ICOYPRDT SET                                                
+                        PR_PROCEEDING_FLAG  = 'P'                                 	
+                       --,BID_STATUS          = 'PR'                                 
+                  WHERE HOUSE_CODE          = ${HOUSE_CODE}
+                    AND (PR_NO, PR_SEQ) IN (
+                    							SELECT DISTINCT PR_NO, PR_SEQ                                      
+             									FROM ICOYBDDT                                             
+             									WHERE HOUSE_CODE= ${HOUSE_CODE}  
+               									  AND BID_NO 	= ${BID_NO}                              
+               									  AND BID_COUNT = ${BID_COUNT} 
+               									  AND BID_COUNT = '1' 
+                    						)            
+                    						
+		]]>
+	</method> 
+	<method name="et_setPRDT">
+		<![CDATA[
+		/*정정공고, 취소공고 확정되기 전에 삭제를 하는경우 진행되고 있는 공고건이 있으므로 PR_PROCEEDING_FLAG를 업데이트 하면 안된다. */
+				UPDATE ICOYPRDT SET                                                
+                        PR_PROCEEDING_FLAG  = 'C'                                 	
+                       --,BID_STATUS          = 'AC'                                 
+                  WHERE HOUSE_CODE          = ${HOUSE_CODE}
+                    AND (PR_NO, PR_SEQ) IN (
+                    							SELECT DISTINCT PR_NO, PR_SEQ                                      
+             									FROM ICOYBDDT                                             
+             									WHERE HOUSE_CODE= ${HOUSE_CODE}
+               									  AND BID_NO 	= ${BID_NO}                               
+               									  AND ( BID_COUNT = ${BID_COUNT} 
+               									        OR BID_COUNT = '1' )
+                    						)            
+                    						
+		]]>
+	</method> 
+	<method name="et_setBidDelete_1">
+	<![CDATA[	
+			UPDATE 	ICOYBDPG
+				SET	STATUS = 'D'    
+              WHERE HOUSE_CODE          = ${HOUSE_CODE}                                     
+                AND BID_NO              = ${BID_NO}                                      
+                AND BID_COUNT           = ${BID_COUNT}   
+	]]>
+	</method> 
+	<method name="et_setBidDelete_2">
+	<![CDATA[	
+			 UPDATE	ICOYBDAP
+			 	SET	STATUS = 'D'  
+              WHERE HOUSE_CODE          = ${HOUSE_CODE}                                    
+                AND BID_NO              = ${BID_NO}                                      
+                AND BID_COUNT           = ${BID_COUNT}    
+	]]>
+	</method> 
+	<method name="et_setBidDelete_3">
+	<![CDATA[	
+			  UPDATE ICOYBDDT
+			  	SET  STATUS = 'D'  
+              WHERE HOUSE_CODE          = ${HOUSE_CODE}                                    
+                AND BID_NO              = ${BID_NO}                                      
+                AND BID_COUNT           = ${BID_COUNT}     
+	]]>
+	</method> 
+	<method name="et_setBidDelete_4">
+	<![CDATA[	
+			 UPDATE ICOYBDHD
+			 	SET STATUS = 'D'   
+              WHERE HOUSE_CODE          = ${HOUSE_CODE}                                     
+                AND BID_NO              = ${BID_NO}                                      
+                AND BID_COUNT           = ${BID_COUNT}    
+	]]>
+	</method> 
+	<method name="et_setApprovalDelete_1">
+	<![CDATA[	
+		DELETE FROM  	ICOMSCTP
+		WHERE 1=1 
+  		  AND COMPANY_CODE	= ${COMPANY_CODE}
+  		  AND DOC_TYPE		= 'BID'
+  		  AND DOC_NO		= ${ANN_NO} -- 날라오는 PARAMETER는 BID_NO 그러나 결재시 문서번호는 ANN_NO
+  		  AND DOC_SEQ		= ${BID_COUNT}   
+		
+	]]>
+	</method> 
+	<method name="et_setApprovalDelete_2">
+	<![CDATA[	
+		DELETE FROM  	ICOMSCTM
+		WHERE 1=1 
+  		  AND COMPANY_CODE	= ${COMPANY_CODE}
+  		  AND DOC_TYPE		= 'BID'
+  		  AND DOC_NO		= ${ANN_NO} -- 날라오는 PARAMETER는 BID_NO 그러나 결재시 문서번호는 ANN_NO
+  		  AND DOC_SEQ		= ${BID_COUNT}   
+	]]>
+	</method>
+	<method name="getLocList">
+	<![CDATA[	
+		SELECT	CODE 	AS LOC_CODE
+		,		TEXT1	AS LOC_NAME
+		FROM 	SCODE
+		WHERE 	HOUSE_CODE = ${house_code}
+		AND		TYPE = ${type}
+		AND 	NVL(USE_FLAG, 'Y') = 'Y'
+		AND 	NVL(DEL_FLAG, 'N') = 'N'
+		ORDER BY TO_NUMBER(CODE)		
+	]]>
+	</method>
+</service>

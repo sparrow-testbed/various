@@ -1,0 +1,1340 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<service>
+
+	<method name="et_getVendorSgLst_00002">
+		SELECT 	VENDOR_CODE
+		,		VENDOR_NAME_LOC AS NAME_LOC
+		, 		ADD_DATE AS REQUEST_DATE
+		,		CASE
+					WHEN SIGN_STATUS IS NULL THEN '승인대기'
+					ELSE '승인'
+				END AS REGISTRY_FLAG_NAME
+		FROM 	ICOMVNGL 
+		WHERE 	SIGN_STATUS IS NULL
+		and 	vendor_name_loc like '%$S{vendor_name}%'
+	</method>
+	
+	<!-- ICT 사용 -->
+	<method name="et_getVendorSgLst">
+	<![CDATA[
+	    SELECT * 
+        FROM (
+			SELECT 	  NULL												as VENDOR_SG_REFITEM
+					, A.VENDOR_NAME_LOC									as NAME_LOC
+					, NULL												as SG_NAME
+					, CONVERT_DATE(A.ADD_DATE)							as REQUEST_DATE
+					, A.VENDOR_CODE										as VENDOR_CODE
+					, NULL												as SG_REFITEM
+					, A.IRS_NO											as IRS_NO
+					, NULL												as PROGRESS_STATUS
+					, NULL												as SCREENING_STATUS
+					, NULL												as CHECKLIST_STATUS
+					, case when JOB_STATUS = 'D' then '승인대기'
+					       when JOB_STATUS = 'R' then '반려'
+					       else ''
+					  end												as PROGRESS_STATUS_NAME
+					, ''												as SCREENING_STATUS_NAME
+					, NULL												as CHECKLIST_STATUS_NAME
+					, CREDIT_RATING										as CREDIT_RATING
+					, CASH_GRADE										as CASH_GRADE
+					, NULL												as REGISTRY_FLAG
+					, NULL												as REGISTRY_FLAG_NAME
+					, A.SIGN_STATUS										as SIGN_STATUS
+					, GETICOMCODE2(A.HOUSE_CODE, 'M100', A.SIGN_STATUS)	as SIGN_STATUS_NAME
+					, (select case when count(Z.VENDOR_CODE) > 0 then 'Y'
+					               else 'N'
+					          end
+					     from ICOMVNCP_ICT Z
+					    where A.HOUSE_CODE  = Z.HOUSE_CODE
+					      and A.VENDOR_CODE = Z.VENDOR_CODE
+					      and Z.BIZ_RPS_YN = 'Y'
+					      and Z.STATUS     != 'D')						as VNCP_CNT 
+					, DECODE(NVL(GB_GJ,'G'),'J','제조사','공급사')      as GB_GJ_NM
+		            , NVL(GB_GJ,'G')                                    as GB_GJ
+			  FROM ICOMVNGL_ICT A
+			 WHERE 1=1
+			   AND A.HOUSE_CODE  = ${session.HOUSE_CODE}
+			   AND A.ADD_USER_ID = 'IF'
+			   AND A.STATUS      = 'C'
+			   AND A.SIGN_STATUS = 'P'
+			   AND NVL(A.GB_GJ,'G') = $S{s_gb_gj}		
+	   ]]>
+		<if test="${vendor_name}" operator="ne" value="">
+			   AND A.VENDOR_NAME_LOC like '%' || $S{vendor_name} || '%'
+		</if>
+		<![CDATA[			   
+		      )
+			 WHERE VNCP_CNT <> 'N'		
+		ORDER BY NAME_LOC ASC																													
+		]]>
+	</method>
+	
+	<method name="et_getPrePjtCodeHeadLst">
+	<![CDATA[
+		SELECT
+			HD.PR_NO   PR_NO_HEADER,
+			HD.SUBJECT SUBJECT_HEADER
+		FROM
+			ICOYPRHD HD,
+			ICOYPRDT DT
+		WHERE HD.HOUSE_CODE         = DT.HOUSE_CODE 
+		AND   HD.PR_NO              = DT.PR_NO
+		AND   HD.HOUSE_CODE         = ${house_code}
+		AND   HD.REQ_TYPE           = 'B'
+		AND   HD.STATUS             != 'D'
+		AND   DT.PR_PROCEEDING_FLAG ='B'
+		AND   HD.WBS                = $S{PRE_PJT_CODE}
+	]]>
+		AND PR_NO like '%' || $S{PR_NO} || '%' 																											
+		AND SUBJECT like '%' || $S{SUBJECT} || '%'
+	GROUP BY
+		HD.PR_NO,
+		HD.SUBJECT																
+	ORDER BY
+		HD.PR_NO ASC 			
+	</method>
+	
+	<method name="et_getPrePjtCodeLst">
+		<![CDATA[
+			SELECT HD.PR_NO
+	            ,HD.SUBJECT
+	            ,DT.ITEM_NO
+	            ,DT.DESCRIPTION_LOC
+	            ,DT.SPECIFICATION
+	            ,DT.UNIT_MEASURE BASIC_UNIT
+	            ,DT.MAKER_NAME
+	            ,CNDT.SETTLE_QTY AS PR_QTY
+	            ,DT.CUR
+	            ,CNDT.UNIT_PRICE
+	            ,DT.EXCHANGE_RATE
+	            ,DT.PR_AMT
+	            ,DT.REC_VENDOR_NAME
+	            ,DT.CONTRACT_DIV
+	            ,DT.RD_DATE
+	            ,DT.DELY_TO_ADDRESS
+	            ,DT.WARRANTY
+	            ,DT.PR_PROCEEDING_FLAG
+	            ,HD.WBS
+	            ,DT.CTRL_CODE
+	            ,(SELECT KTGRM FROM ICOMMTGL WHERE ITEM_NO = DT.ITEM_NO AND HOUSE_CODE = DT.HOUSE_CODE AND ROWNUM = 1) AS KTGRM
+		   FROM ICOYPRHD HD,ICOYPRDT DT, ICOYCNDT CNDT
+		  WHERE HD.HOUSE_CODE = DT.HOUSE_CODE
+		    AND HD.PR_NO = DT.PR_NO
+		    AND DT.HOUSE_CODE = CNDT.HOUSE_CODE
+      		AND DT.PR_NO = CNDT.PR_NO
+      		AND DT.PR_SEQ = CNDT.PR_SEQ
+		    AND HD.HOUSE_CODE = ${house_code}
+		    AND HD.REQ_TYPE ='B'
+		    AND HD.STATUS != 'D'
+		    AND DT.PR_PROCEEDING_FLAG ='B'
+		 ]]>
+		 AND HD.PR_NO like '%' || $S{pr_no} || '%'
+		 AND HD.SUBJECT like '%' || $S{subject} || '%'
+		 ORDER BY HD.PR_NO ASC 			
+	</method>
+
+	<method name="SR_deleteProgVendor_sgvn">
+		<![CDATA[
+			 DELETE SSGVN
+			 WHERE HOUSE_CODE = ${session.HOUSE_CODE}
+			   AND VENDOR_CODE = ${vendor_code}
+
+		 ]]>
+	</method>
+
+	<!-- ICT 등록업체 승인 삭제 : 주소정보 -->
+	<method name="SR_deleteProgVendor_addr">
+		<![CDATA[
+			 DELETE ICOMADDR_ICT
+			  WHERE HOUSE_CODE = ${session.HOUSE_CODE}
+			    AND CODE_NO    = ${vendor_code}
+		 ]]>
+	</method>
+
+	<!-- ICT : 담당자 정보 삭제 -->
+	<method name="SR_deleteProgVendor_vncp">
+		<![CDATA[
+			 DELETE ICOMVNCP_ICT
+			  WHERE HOUSE_CODE  = ${session.HOUSE_CODE}
+			    AND VENDOR_CODE = ${vendor_code}
+		 ]]>
+	</method>
+
+	<!-- ICT : 수주실적 -->
+	<method name="SR_deleteProgVendor_vnpj">
+		<![CDATA[
+			DELETE ICOMVNPJ_ICT
+			 WHERE HOUSE_CODE  = ${session.HOUSE_CODE}
+			   AND VENDOR_CODE = ${vendor_code}
+		 ]]>
+	</method>
+
+	<!-- ICT : 업체 세부정보 -->
+	<method name="SR_deleteProgVendor_vnit">
+		<![CDATA[
+			DELETE ICOMVNIT_ICT
+			 WHERE HOUSE_CODE  = ${session.HOUSE_CODE}
+			   AND VENDOR_CODE = ${vendor_code}
+		 ]]>
+	</method>
+
+	<!-- ICT : 사용자ID -->
+	<method name="SR_deleteProgVendor_lusr">
+		<![CDATA[
+			DELETE ICOMLUSR_ICT
+			 WHERE HOUSE_CODE  = ${session.HOUSE_CODE}
+			   AND COMPANY_CODE = ${vendor_code}
+		 ]]>
+	</method>
+
+	<method name="SR_deleteProgVendor_vssi">
+		<![CDATA[
+			DELETE FROM ICOMVSSI
+			 WHERE VENDOR_SG_REFITEM = ${sg_refitem}
+			   AND HOUSE_CODE = ${session.HOUSE_CODE}
+		]]>
+	</method>
+
+	<method name="SR_deleteProgVendor_vcsi">
+		<![CDATA[
+			 DELETE FROM ICOMVCSI
+			  WHERE VENDOR_SG_REFITEM = ?
+				AND HOUSE_CODE = ${session.HOUSE_CODE}
+		]]>
+	</method>
+
+	<!-- 등록요청 업체 삭제 : 업체정보-->
+	<method name="SR_deleteProgVendor_vngl">
+  		  DELETE ICOMVNGL_ICT
+  		   WHERE HOUSE_CODE  = ${session.HOUSE_CODE}
+  		     AND VENDOR_CODE IN (${vendor_code})
+	</method>
+
+	<method name="SR_deleteProgVendor_vngl_back">
+		UPDATE  ICOMVNGL
+		   SET  JOB_STATUS 	= 'D'
+		       ,SIGN_STATUS = ''
+		 WHERE  HOUSE_CODE  = ${session.HOUSE_CODE}
+ 		   AND  VENDOR_CODE = (
+                           	SELECT VENDOR_CODE
+                           	FROM   SSGVN
+                           	WHERE  HOUSE_CODE =  VNGL.HOUSE_CODE
+                             	  AND  VENDOR_SG_REFITEM = ${sg_refitem}
+                       	      )
+ 		  AND   JOB_STATUS IN ('P', 'R')
+
+</method>
+
+
+	<!-- ICT 사용 -->
+	<method name="et_getVendorInfo">
+	<![CDATA[
+			SELECT
+					  A.CREDIT_RATING AS CREDIT_GRADE
+					, A.CASH_GRADE
+					, B.CHECK_START_DATE
+					, B.CHECK_END_DATE
+					, C.USER_NAME_LOC
+					, B.RECOMMEND_REASON
+					, B.RECOMMENDER
+					, B.APPROVAL_REASON
+					, (SELECT Z.DOC_NO
+					     FROM SFILE Z
+					    WHERE 1 = 1
+					      AND Z.DOC_NO = B.ATTACH_NO
+					      AND ROWNUM = 1
+					  )									AS ATTACH_NO
+					, (SELECT COUNT(Z.DOC_NO)
+					     FROM SFILE Z
+					    WHERE 1 = 1
+					      AND DOC_NO = B.ATTACH_NO
+					  )									AS ATTACH_CNT
+					, B.REJECT_REASON
+					, B.SCREENING_STATUS
+					, B.CHECKLIST_STATUS
+					, B.REGISTRY_FLAG
+					, A.STATUS
+					, A.SIGN_STATUS
+					, A.IRS_NO
+			  FROM					ICOMVNGL_ICT	A
+					left outer join SSGVN			B	on  A.HOUSE_CODE  = B.HOUSE_CODE
+														and A.VENDOR_CODE = B.VENDOR_CODE
+					left outer join ICOMLUSR_ICT	C	on  A.HOUSE_CODE  = C.HOUSE_CODE
+														and A.VENDOR_CODE = C.USER_ID
+			 WHERE 1=1
+			<OPT=F,S> AND A.HOUSE_CODE  = ? </OPT>
+			<OPT=S,S> AND A.VENDOR_CODE = ? </OPT>
+	]]>
+	</method>
+
+	<method name="et_getVenChk">
+	<![CDATA[
+
+				SELECT A.C_FACTOR_REFITEM,
+						A.FACTOR_NAME,
+						A.SCALE_COUNT,
+						A.ITEM_NAME,
+						A.ITEM_SCORE,
+						A.REQUIRE_SCORE,
+						A.SEQ,
+						B.SELECTED_SEQ
+				FROM (
+					SELECT  A.HOUSE_CODE,
+							A.VENDOR_SG_REFITEM,
+							D.C_FACTOR_REFITEM,
+							D.FACTOR_NAME,
+							D.SCALE_COUNT,
+							E.ITEM_NAME,
+							E.ITEM_SCORE,
+							B.REQUIRE_SCORE,
+							E.SEQ
+					  FROM 	SSGVN A, ICOMVCTH B, ICOMVCTD C,
+							ICOMVCFH D, ICOMVCFD E
+					 WHERE 	A.C_TEMPLATE_REFITEM = B.C_TEMPLATE_REFITEM
+					   AND 	B.C_TEMPLATE_REFITEM = C.C_TEMPLATE_REFITEM
+					   AND  C.C_FACTOR_REFITEM = D.C_FACTOR_REFITEM
+					   AND 	D.C_FACTOR_REFITEM = E.C_FACTOR_REFITEM
+					   AND 	B.USE_FLAG ='Y'
+					   AND 	D.USE_FLAG ='Y'
+					   AND 	E.USE_FLAG ='Y'
+					   AND 	A.HOUSE_CODE = B.HOUSE_CODE
+					   AND 	B.HOUSE_CODE = C.HOUSE_CODE
+					   AND  C.HOUSE_CODE = D.HOUSE_CODE
+					   AND 	D.HOUSE_CODE = E.HOUSE_CODE
+				 	<OPT=F,S> AND A.HOUSE_CODE  = ? </OPT>                                                                                          
+					<OPT=S,S> AND A.VENDOR_CODE = ? </OPT>     
+					<OPT=S,S> AND A.SG_REFITEM =  ? </OPT>     
+				) A LEFT OUTER JOIN
+				ICOMVCSI B
+				 ON 	A.VENDOR_SG_REFITEM = B.VENDOR_SG_REFITEM
+					AND A.C_FACTOR_REFITEM = B.C_FACTOR_REFITEM
+					AND	A.HOUSE_CODE = B.HOUSE_CODE
+				GROUP BY A.C_FACTOR_REFITEM, A.FACTOR_NAME, A.SCALE_COUNT, A.ITEM_NAME,
+						  A.ITEM_SCORE, A.REQUIRE_SCORE, A.SEQ, B.SELECTED_SEQ
+				ORDER BY A.C_FACTOR_REFITEM, A.SEQ ASC
+	]]>
+
+	</method>
+
+	<method name="et_getVenScrRst">
+	<![CDATA[
+	  SELECT B.S_FACTOR_REFITEM,
+		        		B.FACTOR_NAME,
+		        		D.ITEM_NAME,
+		        		C.SELECTED_SEQ,
+		        		B.SCALE_COUNT,
+		        		MAX(B.SCALE_COUNT) OVER() AS MAX_SCALE_COUNT,
+            			MAX(B.SCALE_COUNT) OVER() - B.SCALE_COUNT + 1 AS COLSPAN,
+            			A.S_TEMPLATE_REFITEM
+		   		  FROM SSGVN A, ICOMVSFH B, ICOMVSSI C, ICOMVSFD D
+		   		 WHERE A.SELLER_SG_REFITEM = C.VENDOR_SG_REFITEM
+		   		   AND C.S_FACTOR_REFITEM = B.S_FACTOR_REFITEM
+		   		   AND B.S_FACTOR_REFITEM = D.S_FACTOR_REFITEM
+		   		   AND A.HOUSE_CODE = B.HOUSE_CODE
+		   		   AND A.HOUSE_CODE = C.HOUSE_CODE
+		   		   AND A.HOUSE_CODE = D.HOUSE_CODE
+		   			<OPT=F,S> AND A.HOUSE_CODE  = ? </OPT>                                                                                          
+					<OPT=S,S> AND A.VENDOR_CODE = ? </OPT>     
+					<OPT=S,S> AND A.SG_REFITEM =  ? </OPT>     
+		   	    ORDER BY B.S_FACTOR_REFITEM,  D.SEQ   
+	]]>
+	</method>
+
+	<method name="SR_setApproval_1111">
+	 UPDATE SSGVN SET
+	    		   ADD_DATE = TO_CHAR(SYSDATE,'YYYYMMDD'),
+	    		   SIGN_DATE = TO_CHAR(SYSDATE,'YYYYMMDD'),
+	    		   ADD_USER_ID = '#user_id#',
+				   REGISTRY_FLAG = ?
+				 WHERE VENDOR_CODE = ?
+				 AND SG_REFITEM = ?
+				 	AND HOUSE_CODE = '#house_code#'
+				 	<if test="${is_registry}" operator="eq" value="R">
+						,REJECT_DATE = TO_CHAR(SYSDATE, 'YYYYMMDD')
+						</if>
+	</method>
+
+	<method name="SR_setApproval">
+	  	    	 UPDATE SSGVN SET
+				        CHECK_START_DATE = $S{fromdate},
+				        CHECK_END_DATE   = $S{todate},
+				        RECOMMENDER      = $S{recommender_id},
+				        RECOMMEND_REASON = $S{recom_reason},
+				        ADD_DATE         = TO_CHAR(SYSDATE,'YYYYMMDD'),
+	    		        ADD_USER_ID      = $S{user_id},
+	    		        APPROVAL_REASON  = $S{approval_reason},
+					    ATTACH_NO		 = $S{attach_no},
+						REJECT_REASON	 = $S{reject_reason}
+				 WHERE VENDOR_CODE = ${vendor_code}
+				   AND SG_REFITEM  = ${sg_refitem}
+				   AND HOUSE_CODE  = ${session.HOUSE_CODE}
+	</method>
+
+	
+	<method name="setSGVN_STATUS">
+	 UPDATE SSGVN SET
+	    		   SIGN_DATE = TO_CHAR(SYSDATE,'YYYYMMDD'),
+				   REGISTRY_FLAG = $S{registry_flag}
+				 WHERE VENDOR_CODE = ${vendor_code}
+				   --AND SG_REFITEM =
+				   AND HOUSE_CODE = ${session.HOUSE_CODE}
+				   AND ROWNUM = 1
+	</method>
+
+	<method name="setSGVN_REJECT">
+	  UPDATE SSGVN SET
+				   REJECT_DATE = TO_CHAR(SYSDATE, 'YYYYMMDD'),
+				   REGISTRY_FLAG = $S{registry_flag}
+				  WHERE VENDOR_CODE = ${vendor_code}
+				   AND SG_REFITEM = ${sg_refitem}
+				   AND HOUSE_CODE = ${session.HOUSE_CODE}
+	</method>
+
+	<method name="SR_setApproval_sign">
+	<![CDATA[
+		]]>
+		UPDATE ICOMVNGL  SET
+				SIGN_STATUS    = $S{sign_status}		
+		WHERE  HOUSE_CODE  = ${session.HOUSE_CODE}
+  		  AND  VENDOR_CODE = ${vendor_code}
+	</method>
+
+	<method name="SR_setRegister">
+	 UPDATE SSGVN SET
+	    		    ADD_DATE = TO_CHAR(SYSDATE,'YYYYMMDD'),
+	    		   SIGN_DATE = TO_CHAR(SYSDATE,'YYYYMMDD'),
+	    		   ADD_USER_ID = $S{user_id},
+				   REGISTRY_FLAG = $S{registry_flag}
+	 WHERE VENDOR_CODE = ${vendor_code}
+	   AND SG_REFITEM = ${sg_refitem}
+	   AND HOUSE_CODE = ${session.HOUSE_CODE}
+	</method>
+
+	<method name="SR_setRegister_lusr">
+	  	    	 UPDATE ICOMLUSR SET
+				        SIGN_STATUS = $S{sign_status}
+				 WHERE USER_ID = $S{user_id}
+	  			 AND   HOUSE_CODE = ${session.HOUSE_CODE}
+	</method>
+
+	<method name="SR_setRegister_vngl">
+	 	UPDATE ICOMVNGL SET
+			          VENDOR_COND = $S{vendor_cond}
+			        , STATUS = 'C'
+			 WHERE VENDOR_CODE = ${vendor_code}
+			 AND   HOUSE_CODE = ${session.HOUSE_CODE}
+
+	</method>
+
+	<method name="SR_setRegister_sgvn">
+	  	    	 UPDATE SSGVN SET 
+	  	    	 		CHECK_START_DATE = $S{fromdate},
+				        CHECK_END_DATE = $S{todate},
+				        RECOMMENDER = $S{recommender_id},
+				        RECOMMEND_REASON = $S{recom_reason},
+				        ADD_DATE = TO_CHAR(SYSDATE,'YYYYMMDD'),
+	    		        ADD_USER_ID = $S{user_id},
+	    		        APPROVAL_REASON 	= $S{approval_reason},
+					    ATTACH_NO			= $S{attach_no},
+						REJECT_REASON		= $S{reject_reason}
+						<if test="${is_registry}" operator="eq" value="R">
+						, REJECT_DATE = TO_CHAR(SYSDATE, 'YYYYMMDD')
+						</if>
+				 WHERE VENDOR_CODE = ${vendor_code}
+				   AND SG_REFITEM = ${sg_refitem}
+				   AND HOUSE_CODE = ${session.HOUSE_CODE}
+	</method>
+	
+	<!-- ICT 사용 : 반려 -->
+	<method name="SR_setRegister_job">
+  	    	UPDATE ICOMVNGL_ICT
+  	    	   SET CHANGE_DATE    = TO_CHAR(SYSDATE,'YYYYMMDD')
+  	    	     , CHANGE_USER_ID = $S{user_id}
+  	    	     , JOB_STATUS     = 'R'
+  	    	     , REJECT_REASON  = ${reject_reason}
+			 WHERE VENDOR_CODE = ${vendor_code}
+			   AND HOUSE_CODE  = ${session.HOUSE_CODE}
+	</method>
+	
+	<method name="SR_setRegister_VSSI_D">
+			DELETE  FROM ICOMVSSI 
+			WHERE HOUSE_CODE = ${session.HOUSE_CODE}
+			  AND VENDOR_SG_REFITEM IN ( SELECT VENDOR_SG_REFITEM FROM SSGVN 
+										 WHERE HOUSE_CODE = ${session.HOUSE_CODE}
+										   AND VENDOR_CODE = ${vendor_code} )
+
+	</method>
+	
+	<method name="SR_setRegister_SGVN_D">
+			 DELETE FROM SSGVN 
+			 WHERE HOUSE_CODE = ${session.HOUSE_CODE}
+			  AND VENDOR_CODE = ${vendor_code} 
+
+	</method>	
+
+	<method name="SR_updateInfo_sgvn">
+		 UPDATE SSGVN SET
+				        CHECK_START_DATE = $S{fromdate},
+				        CHECK_END_DATE = $S{todate},
+				        RECOMMENDER = $S{recommender_id},
+				        RECOMMEND_REASON = $S{recom_reason},
+				        ADD_DATE = TO_CHAR(SYSDATE,'YYYYMMDD'),
+	    		        ADD_USER_ID = $S{user_id},
+	    		        APPROVAL_REASON 	= $S{approval_reason},
+					    ATTACH_NO			= $S{attach_no}
+				 WHERE VENDOR_CODE	= ${vendor_code}
+				   AND SG_REFITEM 	= ${sg_refitem}
+				   AND HOUSE_CODE 	= ${session.HOUSE_CODE}
+
+
+	</method>
+	<method name="SR_updateInfo_vngl">
+	  	    	 UPDATE ICOMVNGL SET
+				        CREDIT_RATING = $S{credit_rating}
+				 WHERE VENDOR_CODE = ${vendor_code}
+				 	AND HOUSE_CODE = ${session.HOUSE_CODE}
+	</method>
+
+	<method name="SR_updateProgStatus_sgvn">
+			 UPDATE SSGVN SET
+			        PROGRESS_STATUS = ${status},
+			   ADD_DATE = TO_CHAR(SYSDATE,'YYYYMMDD'),
+   			   ADD_USER_ID = $S{user_id}
+			 WHERE VENDOR_CODE = ${vendor_code}
+			    AND SG_REFITEM = ${sg_refitem}
+				AND HOUSE_CODE = ${session.HOUSE_CODE}
+
+	</method>
+
+	<method name="SR_updateProgStatus_vngl">
+		<![CDATA[
+
+   	    	 UPDATE ICOMVNGL SET
+			        CREDIT_RATING = $S{credit_rating}
+			 WHERE VENDOR_CODE = ${vendor_code}
+			   AND HOUSE_CODE = ${session.HOUSE_CODE}
+		]]>
+	</method>
+	<method name="SR_updateProgStatus_sgvn_end">
+		<![CDATA[
+		 UPDATE SSGVN SET
+	    			        PROGRESS_STATUS		= $S{status},
+					        CHECK_START_DATE	= $S{fromdate},
+					        CHECK_END_DATE 		= $S{todate},
+					        RECOMMENDER 		= $S{recommender},
+					        RECOMMEND_REASON	= $S{recommend_reason},
+					        APPROVAL_REASON 	= $S{approval_reason},
+					        ATTACH_NO			= $S{attach_no},
+					   ADD_DATE = TO_CHAR(SYSDATE,'YYYYMMDD'),
+	    			   ADD_USER_ID = $S{user_id}
+					 WHERE VENDOR_CODE = ${vendor_code}
+					    AND SG_REFITEM = ${sg_refitem}
+						AND HOUSE_CODE = ${session.HOUSE_CODE}
+
+		]]>
+	</method>
+	<method name="SR_updateProgStatus_vngl_end">
+		<![CDATA[
+
+		 UPDATE ICOMVNGL SET
+					       CREDIT_RATING = $S{credit_rating}
+					  WHERE VENDOR_CODE = ${vendor_code}
+			            AND HOUSE_CODE = ${session.HOUSE_CODE}
+		]]>
+	</method>
+	<method name="et_getSgContentsList">
+		<if test="${sg_refitem}" operator = "ne" value="">
+		        	SELECT DISTINCT SG_REFITEM, SG_NAME
+		        	FROM SSGGL
+					WHERE PARENT_SG_REFITEM = '#sg_refitem#'
+					AND USE_FLAG = 'Y'
+					AND LEVEL_COUNT = 1 + (SELECT DISTINCT LEVEL_COUNT FROM SSGGL WHERE SG_REFITEM = '#sg_refitem#' AND HOUSE_CODE = '#house_code#')
+					 	AND HOUSE_CODE = '#house_code#'
+					AND NVL(DEL_FLAG, 'N') = 'N' 	
+					ORDER BY SG_REFITEM
+	    </if>
+		<if test="${sg_refitem}" operator = "eq" value="">
+	         		SELECT DISTINCT SG_REFITEM, SG_NAME
+	         		  FROM SSGGL
+					 WHERE LEVEL_COUNT = 1
+					   AND USE_FLAG = 'Y'
+						AND NVL(DEL_FLAG, 'N') = 'N' 						   
+					   AND HOUSE_CODE = '#house_code#'
+					ORDER BY SG_REFITEM
+		</if>
+	</method>
+
+	<!-- ICT 사용 -->
+	<method name="et_getRegVenLst">
+		<![CDATA[
+				select    B.VENDOR_NAME_LOC											as NAME_LOC
+						, B.VENDOR_CODE												as VENDOR_CODE
+						, B.CREDIT_RATING											as CREDIT_GRADE
+						, B.PURCHASE_BLOCK_FLAG										as PURCHASE_BLOCK_FLAG
+						, GETICOMCODE2(B.HOUSE_CODE, 'M213', B.PURCHASE_BLOCK_FLAG)	as PURCHASE_BLOCK_FLAG_NAME
+						, B.BUSINESS_TYPE											as BUSINESS_TYPE
+						, B.INDUSTRY_TYPE											as INDUSTRY_TYPE
+						, B.IRS_NO													as IRS_NO
+						, D.CEO_NAME_LOC											as CEO_NAME_LOC
+						, B.CLASS_GRADE												as CLASS_GRADE
+						, GETICOMCODE2(B.HOUSE_CODE, 'M634', B.CLASS_GRADE)			as CLASS_GRADE_NAME
+						, case when B.STATUS = 'D' then '삭제'
+						       else                     '정상'
+						  end														as STATUS_NAME
+						, DECODE(NVL(GB_GJ,'G'),'J','제조사','공급사')      as GB_GJ_NM
+		                , NVL(GB_GJ,'G')                                    as GB_GJ
+		                , NVL(PURCHASE_BLOCK_NOTE,'')                       as PURCHASE_BLOCK_NOTE
+				  from			ICOMVNGL_ICT	B
+					inner join	ICOMADDR_ICT	D	on  B.HOUSE_CODE  = D.HOUSE_CODE
+													and B.VENDOR_CODE = D.CODE_NO
+													and D.CODE_TYPE   = '2'
+				 where 1=1
+				   and B.HOUSE_CODE  = ${session.HOUSE_CODE}
+				   and B.CLASS_GRADE = $S{class_grade}
+				   and B.VENDOR_CODE         like '%' || $S{vendor_code}         || '%'
+				   and B.IRS_NO              like '%' || $S{irs_no}              || '%'
+				   and B.PURCHASE_BLOCK_FLAG like '%' || $S{purchase_block_flag} || '%' 			
+				   and NVL(B.GB_GJ,'G') = $S{s_gb_gj}		
+				   and B.SIGN_STATUS = 'E'				   				   							
+				order by B.CLASS_GRADE, B.VENDOR_NAME_LOC ASC
+		]]>
+	</method>
+
+	<!-- ICT 사용 -->
+	<method name="SR_setBlock">
+		<![CDATA[
+				update	ICOMVNGL_ICT
+				set
+						PURCHASE_BLOCK_FLAG = ${purchase_block_flag}
+		               ,PURCHASE_BLOCK_NOTE = ${purchase_block_note}
+				where	VENDOR_CODE = ${vendor_code}
+				and		HOUSE_CODE  = ${session.HOUSE_CODE}
+
+
+		]]>
+	</method>
+
+	<!-- ICT 사용 : 협력사현황 삭제 -->
+	<method name="SR_delete_approval">
+		<![CDATA[
+				update	ICOMVNGL_ICT
+				   set  PURCHASE_BLOCK_FLAG = 'Y'
+				      , STATUS              = 'D'
+				where	VENDOR_CODE = ${vendor_code}
+				and		HOUSE_CODE  = ${session.HOUSE_CODE}
+		]]>
+	</method>
+	
+	<!-- ICT 사용 : 협력사현황 복구 -->
+	<method name="SR_restore_approval">
+		<![CDATA[
+				update	ICOMVNGL_ICT
+				   set  PURCHASE_BLOCK_FLAG = 'N'
+				      , STATUS              = 'R'
+				where	VENDOR_CODE = ${vendor_code}
+				and		HOUSE_CODE  = ${session.HOUSE_CODE}
+		]]>
+	</method>
+
+	<method name="SR_updateCreditLevel">
+		<![CDATA[
+
+		 UPDATE ICOMVNGL SET
+				        CREDIT_RATING = ?
+				 WHERE VENDOR_CODE = ?
+				 	AND HOUSE_CODE = '#house_code#'
+		]]>
+	</method>
+	<method name="et_getVenbdlis2">
+		<![CDATA[
+			SELECT
+					A.VENDOR_CODE AS VENDOR_CODE,
+					B.VENDOR_NAME_LOC AS NAME_LOC,
+					GETSGNAME(A.PARENT1) AS S_TYPE1,
+					GETSGNAME(A.PARENT2) AS S_TYPE2,
+					GETSGNAME(A.SG) AS S_TYPE3,
+
+					C.TEMPLATE_NAME AS C_TEMPLATE,
+					C.REQUIRE_SCORE AS SCORE,
+					GETICOMCODE2('#house_code#','M121',A.CHECKLIST_STATUS) AS C_RESULT,
+					A.SG AS SG_REFITEM,
+					A.VENDOR_SG_REFITEM
+			FROM
+			(
+				SELECT
+					   (SELECT PARENT_SG_REFITEM
+						   FROM SSGGL
+						  WHERE SG_REFITEM = B.PARENT_SG_REFITEM) AS PARENT1,
+						B.PARENT_SG_REFITEM AS PARENT2,
+						A.SG_REFITEM AS SG,
+						A.VENDOR_SG_REFITEM,
+						A.VENDOR_CODE AS VENDOR_CODE,
+						A.CHECKLIST_STATUS AS CHECKLIST_STATUS,
+						A.C_TEMPLATE_REFITEM AS C_TEMPLATE_REFITEM
+				FROM 	SSGVN A, SSGGL B
+				WHERE   A.SG_REFITEM = B.SG_REFITEM
+				AND		A.HOUSE_CODE = '#house_code#'
+				AND		A.HOUSE_CODE = B.HOUSE_CODE
+				AND		B.LEVEL_COUNT = '3'
+				AND		A.C_TEMPLATE_REFITEM <> 0
+				AND		A.CHECKLIST_STATUS IS NOT NULL
+				--ORDER BY VENDOR_CODE
+			) A, ICOMVNGL B, ICOMVCTH C
+			WHERE	A.VENDOR_CODE = B.VENDOR_CODE
+			AND	B.HOUSE_CODE = '#house_code#'
+			AND	C.C_TEMPLATE_REFITEM = A.C_TEMPLATE_REFITEM
+			 <OPT=S,S>   AND  A.VENDOR_CODE  = ? </OPT>
+			 <OPT=S,S>   AND  B.VENDOR_NAME_LOC LIKE '%' || ? || '%' </OPT>
+
+		]]>
+	</method>
+	<method name="et_getVenbdlis1">
+		<![CDATA[
+			SELECT
+					A.VENDOR_CODE AS VENDOR_CODE,
+					B.VENDOR_NAME_LOC AS NAME_LOC,
+					GETSGNAME(A.PARENT1) AS S_TYPE1,
+					GETSGNAME(A.PARENT2) AS S_TYPE2,
+					GETSGNAME(A.SG) AS S_TYPE3,
+					GETSCREENNAME(A.S_TEMPLATE_REFITEM) AS S_TEMPLATE,
+					GETICOMCODE2('#house_code#','M121',A.SCREENING_STATUS) AS S_RESULT,
+					A.SG AS SG_REFITEM,
+					A.VENDOR_SG_REFITEM
+			FROM
+			(
+				SELECT
+					   (SELECT PARENT_SG_REFITEM
+						   FROM SSGGL
+						  WHERE HOUSE_CODE = B.HOUSE_CODE
+						    AND SG_REFITEM = B.PARENT_SG_REFITEM) AS PARENT1,
+						B.PARENT_SG_REFITEM AS PARENT2,
+						A.SG_REFITEM AS SG,
+						A.VENDOR_SG_REFITEM,
+						A.VENDOR_CODE AS VENDOR_CODE,
+						A.SCREENING_STATUS AS SCREENING_STATUS,
+						A.S_TEMPLATE_REFITEM AS S_TEMPLATE_REFITEM
+				FROM 	SSGVN A, SSGGL B
+				WHERE   A.SG_REFITEM = B.SG_REFITEM
+				AND		A.HOUSE_CODE = '#house_code#'
+				AND		A.HOUSE_CODE = B.HOUSE_CODE
+				AND		B.LEVEL_COUNT = '3'
+				AND		A.S_TEMPLATE_REFITEM <> 0
+				--ORDER BY VENDOR_CODE
+			) A, ICOMVNGL B
+			WHERE	A.VENDOR_CODE = B.VENDOR_CODE
+			AND	B.HOUSE_CODE = '#house_code#'
+			 <OPT=S,S>   AND  A.VENDOR_CODE  = ? </OPT>
+			 <OPT=S,S>   AND  B.VENDOR_NAME_LOC LIKE '%' || ? || '%' </OPT>
+
+		]]>
+	</method>
+	<method name="SR_getRecomenList">
+		<![CDATA[
+		SELECT USER_ID, USER_NAME_LOC FROM ICOMLUSR B
+		WHERE B.HOUSE_CODE = ${session.HOUSE_CODE}
+  		  AND   B.USER_TYPE = ${session.COMPANY_CODE}
+  		  AND   B.STATUS IN ('C','R')
+          AND USER_NAME_LOC LIKE '%' || $S{user_name} || '%'
+		ORDER BY USER_NAME_LOC ASC
+
+
+		]]>
+	</method>
+	<method name="SR_setCheckList_1">
+		<![CDATA[
+		UPDATE SSGVN SET
+       				 PROGRESS_STATUS = 5
+       				,CHECKLIST_STATUS = ''
+       				,ADD_DATE = TO_CHAR(SYSDATE, 'YYYYMMDD')
+  					,ADD_USER_ID = $S{user_id}
+		WHERE VENDOR_CODE = ${vendor_code}
+		  AND SG_REFITEM = ${sg_refitem}
+		  AND HOUSE_CODE = ${session.HOUSE_CODE}
+
+		]]>
+	</method>
+	<method name="SR_setCheckList_2">
+		<![CDATA[
+		INSERT INTO ICOMVCSI(HOUSE_CODE, C_SELECTED_ITEM_REFITEM, C_FACTOR_REFITEM, SELECTED_SEQ, VENDOR_SG_REFITEM)
+		VALUES(
+		${session.HOUSE_CODE},
+		getMaxICOMVCSIseq(),
+		'1',
+		'2',
+		$S{sg_refitem}
+		)
+		]]>
+	</method>
+
+	<!-- ICT 사용 -->
+	<method name="createUser">
+	<![CDATA[
+		INSERT INTO ICOMLUSR_ICT(
+									 HOUSE_CODE
+									,USER_ID
+									,STATUS
+									,ADD_DATE
+									,ADD_TIME
+									,ADD_USER_ID
+									,CHANGE_DATE
+									,CHANGE_TIME
+									,CHANGE_USER_ID
+									,PASSWORD
+									,COMPANY_CODE
+									,DEPT
+									,POSITION
+									,USER_NAME_LOC
+									,USER_NAME_ENG
+									,LINK_DEPT
+									,LANGUAGE
+									,MENU_TYPE
+									,TIME_ZONE
+									,EMAIL
+									,COUNTRY
+									,CITY_CODE
+									,STATE
+									,PR_LOCATION
+									,EMPLOYEE_NO
+									,RESIDENT_NO
+									,SIGN_STATUS
+									,WORK_TYPE
+									,MENU_PROFILE_CODE
+									,USER_TYPE
+									,MANAGER_POSITION
+									,CTRL_CODE
+									,PASS_CHECK_CNT
+									,PW_RESET_FLAG
+									,PW_RESET_DATE
+									,LOGIN_NCY
+								)
+		SELECT   VNGL.HOUSE_CODE
+				,DECODE (VNGL.VENDOR_ID, NULL, VNGL.VENDOR_CODE, VNGL.VENDOR_ID)
+				,'C'
+				,TO_CHAR(SYSDATE,'YYYYMMDD')
+				,SUBSTR(TO_CHAR(SYSDATE, 'HH24MISS'), 1, 6)
+				,${user_id}
+				,TO_CHAR(SYSDATE,'YYYYMMDD')
+				,SUBSTR(TO_CHAR(SYSDATE, 'HH24MISS'), 1, 6)
+				,${user_id}
+				,DECODE (VNGL.VENDOR_PASSWORD, NULL, ${passwd}, VNGL.VENDOR_PASSWORD)
+				,VNGL.VENDOR_CODE
+				,''
+				,''
+				,VNGL.VENDOR_NAME_LOC
+				,VNGL.VENDOR_NAME_ENG
+				,''
+				,VNGL.LANGUAGE
+				,'G'
+				,'G08'
+				,ADDR.EMAIL
+				,VNGL.COUNTRY
+				,VNGL.CITY_CODE
+				,''
+				,''
+				,''
+				,VNGL.RESIDENT_NO
+				,'A' --SIGN_STATUS
+				,'Z' --WORK_TYPE
+				,DECODE(NVL(GB_GJ,'G'),'J','MUP190600001','MUP150700002')   --MENU_PROFILE_CODE
+				,'S' --USER_TYPE
+				,''
+				,''
+				,'0'
+				,'N'
+				,TO_CHAR(SYSDATE + 15,'YYYYMMDD')
+				,${login_yn}
+		FROM ICOMVNGL_ICT VNGL
+		   , ICOMADDR_ICT ADDR
+		WHERE VNGL.HOUSE_CODE  = ADDR.HOUSE_CODE
+		  AND VNGL.VENDOR_CODE = ADDR.CODE_NO
+		  AND '2' 			   = ADDR.CODE_TYPE
+		  AND VNGL.VENDOR_CODE = ${vendor_code}
+		  AND rownum < 2
+		  AND VNGL.HOUSE_CODE  = ${house_code}
+	]]>
+	</method>
+
+	<method name="createUser_bak">
+	<![CDATA[
+		INSERT INTO ICOMLUSR(
+				 HOUSE_CODE
+				,USER_ID
+				,STATUS
+				,ADD_DATE
+				,ADD_TIME
+				,ADD_USER_ID
+				,CHANGE_DATE
+				,CHANGE_TIME
+				,CHANGE_USER_ID
+				,PASSWORD
+				,COMPANY_CODE
+				,DEPT
+				,POSITION
+				,USER_NAME_LOC
+				,USER_NAME_ENG
+				,LINK_DEPT
+				,LANGUAGE
+				,MENU_TYPE
+				,TIME_ZONE
+				,EMAIL
+				,COUNTRY
+				,CITY_CODE
+				,STATE
+				,PR_LOCATION
+				,EMPLOYEE_NO
+				,RESIDENT_NO
+				,SIGN_STATUS
+				,WORK_TYPE
+				,MENU_PROFILE_CODE
+				,USER_TYPE
+				,MANAGER_POSITION
+				,CTRL_CODE
+				,PASS_CHECK_CNT
+				,PW_RESET_FLAG
+				,PW_RESET_DATE
+				,LOGIN_NCY
+		)SELECT  VNGL.HOUSE_CODE
+				,DECODE (VNGL.VENDOR_ID, NULL, VNGL.VENDOR_CODE, VNGL.VENDOR_ID)
+				,'C'
+				,TO_CHAR(SYSDATE,'YYYYMMDD')
+				,SUBSTR(TO_CHAR(SYSDATE, 'HH24MISS'), 1, 6)
+				,'#user_id#'
+				,TO_CHAR(SYSDATE,'YYYYMMDD')
+				,SUBSTR(TO_CHAR(SYSDATE, 'HH24MISS'), 1, 6)
+				,'#user_id#'
+				,DECODE (VNGL.VENDOR_PASSWORD, NULL, '#passwd#', VNGL.VENDOR_PASSWORD)
+				,VNGL.VENDOR_CODE
+				,''
+				,''
+				,VNGL.VENDOR_NAME_LOC
+				,VNGL.VENDOR_NAME_ENG
+				,''
+				,VNGL.LANGUAGE
+				,'G'
+				,'G08'
+				,ADDR.EMAIL
+				,VNGL.COUNTRY
+				,VNGL.CITY_CODE
+				,''
+				,''
+				,''
+				,VNGL.RESIDENT_NO
+				,'A'
+				,'Z'
+				,'MUP100300001'
+				,'S'
+				,''
+				,''
+				,'0'
+				,'N'
+				,TO_CHAR(SYSDATE + 15,'YYYYMMDD')
+				,'#login_yn#'
+		FROM ICOMVNGL VNGL, ICOMADDR ADDR
+		WHERE VNGL.HOUSE_CODE  = ADDR.HOUSE_CODE
+		  AND VNGL.VENDOR_CODE = ADDR.CODE_NO
+		  AND '2' 			   = ADDR.CODE_TYPE
+		  AND VNGL.VENDOR_CODE = ?
+		  AND rownum < 2
+		  AND VNGL.HOUSE_CODE = '#house_code#'
+	]]>
+	</method>
+
+	<!-- ICT 사용 -->
+	<method name="createMaker">
+	<![CDATA[
+		INSERT INTO SCODE(
+							 HOUSE_CODE
+							,TYPE
+							,CODE
+							,LANGUAGE
+							,ADD_DATE
+							,ADD_TIME
+							,ADD_USER_ID
+							,CHANGE_DATE
+							,CHANGE_TIME
+							,CHANGE_USER_ID
+							,FLAG
+							,SORT_SEQ
+							,USE_FLAG
+							,IF_FLAG
+							,TEXT1
+							,TEXT2
+						)
+		SELECT  ${house_code}
+				,'M199_ICT'
+				,(SELECT LPAD(NVL(MAX(TO_NUMBER(CODE)),0)+ 1,5,'0')
+				   FROM SCODE
+				  WHERE HOUSE_CODE = ${house_code}
+				    AND TYPE	   = 'M199_ICT')
+				,${session.LANGUAGE}
+				,TO_CHAR(SYSDATE,'YYYYMMDD')
+				,SUBSTR(TO_CHAR(SYSDATE, 'HH24MISS'), 1, 6)
+				,${user_id}
+				,TO_CHAR(SYSDATE,'YYYYMMDD')
+				,SUBSTR(TO_CHAR(SYSDATE, 'HH24MISS'), 1, 6)
+				,${user_id}
+				,'Y'
+				,(SELECT NVL(MAX(TO_NUMBER(CODE)),1)+1
+				    FROM SCODE
+				   WHERE HOUSE_CODE = ${house_code}
+				     AND TYPE	   = 'M199_ICT')
+				,'Y'
+				,'N'
+				,VENDOR_NAME_LOC
+				,VENDOR_NAME_LOC
+		 FROM ICOMVNGL_ICT
+		 WHERE HOUSE_CODE 	= ${house_code}
+		   AND VENDOR_CODE  = ${vendor_code}
+   	]]>
+	</method>
+	
+	<method name="createMaker_bak">
+	<![CDATA[
+		INSERT INTO ICOMCODE(
+				HOUSE_CODE
+				,TYPE
+				,CODE
+				,STATUS
+				,ADD_DATE
+				,ADD_TIME
+				,ADD_USER_ID
+				,CHANGE_DATE
+				,CHANGE_TIME
+				,CHANGE_USER_ID
+				,FLAG
+				,SORT_SEQ
+				,USE_FLAG
+				,IF_FLAG
+				,TEXT1
+				,TEXT2
+		)SELECT  '#house_code#'
+				,'M199'
+				,(SELECT LPAD(NVL(MAX(TO_NUMBER(CODE)),0)+ 1,5,'0')
+				  FROM ICOMCODE
+				  WHERE HOUSE_CODE = '#house_code#'
+				    AND TYPE	   = 'M199')
+				,'C'
+				,TO_CHAR(SYSDATE,'YYYYMMDD')
+				,SUBSTR(TO_CHAR(SYSDATE, 'HH24MISS'), 1, 6)
+				,'#user_ide#'
+				,TO_CHAR(SYSDATE,'YYYYMMDD')
+				,SUBSTR(TO_CHAR(SYSDATE, 'HH24MISS'), 1, 6)
+				,'#user_ide#'
+				,'Y'
+				,(SELECT NVL(MAX(TO_NUMBER(CODE)),1)+1
+				  FROM ICOMCODE
+				  WHERE HOUSE_CODE = '#house_code#'
+				    AND TYPE	   = 'M199')
+				,'Y'
+				,'N'
+				,VENDOR_NAME_LOC
+				,VENDOR_NAME_LOC
+		 FROM ICOMVNGL
+		 WHERE HOUSE_CODE 	= '#house_code#'
+		   AND VENDOR_CODE  = ?
+   	]]>
+	</method>
+
+	<method name="insertFreeCP">
+	<![CDATA[
+		INSERT INTO ICOMVNCP(
+			 HOUSE_CODE
+			,COMPANY_CODE
+			,VENDOR_CODE
+			,SEQ
+			,STATUS
+			,ADD_DATE
+			,ADD_TIME
+			,ADD_USER_ID
+			,CHANGE_DATE
+			,CHANGE_TIME
+			,CHANGE_USER_ID
+			,PHONE_NO
+			,USER_NAME
+			,DIVISION
+			,FAX_NO
+			,MOBILE_NO
+			,EMAIL
+			,POSITION
+		) SELECT VG.HOUSE_CODE
+				,'#company_code#'
+				,VG.VENDOR_CODE
+				,'1'
+				,'C'
+				,TO_CHAR(SYSDATE,'YYYYMMDD')
+				,SUBSTR(TO_CHAR(SYSDATE, 'HH24MISS'), 1, 6)
+				,VG.ADD_USER_ID
+				,TO_CHAR(SYSDATE,'YYYYMMDD')
+				,SUBSTR(TO_CHAR(SYSDATE, 'HH24MISS'), 1, 6)
+				,VG.ADD_USER_ID
+				,AR.PHONE_NO1
+				,AR.CEO_NAME_LOC
+				,'영업'
+				,AR.FAX_NO
+				,AR.PHONE_NO1
+				,AR.EMAIL
+				,'01'
+		  FROM ICOMVNGL VG, ICOMADDR AR
+		  WHERE VG.HOUSE_CODE   = AR.HOUSE_CODE
+		    AND VG.VENDOR_CODE  = AR.CODE_NO
+		    AND '2'				= AR.CODE_TYPE
+		    AND VG.SOLE_PROPRIETOR_FLAG = 1
+		    AND VG.VENDOR_CODE  = ?
+		    AND rownum < 2
+	]]>
+	</method>
+	
+	<!-- ICT 사용 -->
+	<method name="setSIGN_STATUS">
+	<![CDATA[
+		]]>
+		UPDATE ICOMVNGL_ICT  SET
+			#addSql#
+  			VENDOR_COND    = 'R'
+		WHERE  HOUSE_CODE  = ${house_code}
+  		  AND  VENDOR_CODE = ${vendor_code}
+
+
+	</method>
+
+
+	<method name="setSIGN_STATUS_bak">
+	<![CDATA[
+		]]>
+		UPDATE ICOMVNGL  SET
+			<if test="${JOB_STATUS}" operator="eq" value="E">
+				-- 아이디 신청시 소싱 승인시
+				SIGN_STATUS    = 'E',
+				JOB_STATUS     = 'E',
+    			SIGN_DATE      = '#cur_date#',
+    			SIGN_PERSON_ID = '#user_id#',
+    			CLASS_GRADE    = 'D',
+			</if>
+			<if test="${JOB_STATUS}" operator="eq" value="R">
+				-- 아이디 신청시 소싱 반려시
+				JOB_STATUS     = 'R',
+				SIGN_STATUS    = 'R',
+			</if>
+			<if test="${JOB_STATUS}" operator="eq" value="D">
+				-- 아이디 신청시 소싱 반려시
+				JOB_STATUS     = 'P',
+				SIGN_STATUS    = '',
+			</if>
+    			VENDOR_COND    = 'R'
+		WHERE  HOUSE_CODE  = '#house_code#'
+  		  AND  VENDOR_CODE = ?
+
+
+	</method>
+
+
+	<method name="getVendorJobStatus">
+	<![CDATA[
+		SELECT JOB_STATUS
+		  FROM ICOMVNGL_ICT
+	<OPT=F,S> WHERE HOUSE_CODE  = ? </OPT>                                                                                          
+	<OPT=S,S>   AND VENDOR_CODE = ? </OPT>  
+	]]>  
+	</method>
+
+
+	<method name="getIrsNo_RegNo">
+	<![CDATA[
+		SELECT (CASE WHEN SOLE_PROPRIETOR_FLAG = 3 THEN SUBSTR(RESIDENT_NO,7,7) ELSE VNGL.IRS_NO END) REG_NO
+		FROM ICOMVNGL VNGL, ICOMADDR ADDR
+		WHERE VNGL.HOUSE_CODE  = ADDR.HOUSE_CODE
+		  AND VNGL.VENDOR_CODE = ADDR.CODE_NO
+		  AND '2' 			   = ADDR.CODE_TYPE
+		  AND VNGL.VENDOR_CODE = '#vendor_code#'
+		  AND rownum < 2
+		  AND VNGL.HOUSE_CODE = '#house_code#'
+		  	]]>
+
+	</method>
+
+	<method name="et_setVendorReg">
+		<![CDATA[
+			 UPDATE ICOMVNGL 
+			 SET CLASS_GRADE = ${CLASS_GRADE} 
+			 WHERE HOUSE_CODE = ${session.HOUSE_CODE}
+			 AND VENDOR_CODE = ${VENDOR_CODE}
+		 ]]>
+	</method>
+
+
+	<method name="getERPVendorList">
+		SELECT 
+		    VNGL.VENDOR_NAME_LOC
+		   ,VNGL.IRS_NO
+		   ,VNGL.INDUSTRY_TYPE
+		   ,VNGL.BUSINESS_TYPE
+		   ,ADDR.ZIP_CODE
+		   ,ADDR.ADDRESS_LOC
+		   ,ADDR.CEO_NAME_LOC
+		   ,ADDR.PHONE_NO1
+		   ,ADDR.FAX_NO
+		   ,VNGL.VENDOR_CODE
+		   ,GETUSERNAMELOC(LUSR.HOUSE_CODE ,LUSR.USER_ID) AS USER_NAME_LOC
+		   ,VNGL.BANK_CODE
+       ,VNGL.BANK_ACCT
+       ,VNGL.DEPOSITOR_NAME 
+		FROM ICOMVNGL VNGL, ICOMADDR ADDR, ICOMLUSR LUSR
+		WHERE VNGL.HOUSE_CODE = ADDR.HOUSE_CODE (+)
+		  AND VNGL.VENDOR_CODE = ADDR.CODE_NO (+)
+		  AND VNGL.HOUSE_CODE =  LUSR.HOUSE_CODE (+)
+		  AND VNGL.ADD_USER_ID = LUSR.USER_ID (+)
+		  AND VNGL.HOUSE_CODE = '#house_code#'
+		  AND VNGL.IRS_NO = '#vendor_code#'
+		
+	</method>
+
+
+	<!-- ICT 사용 -->
+	<method name="makeNewVendorCode">
+	<![CDATA[
+			select	  substr(max(A1.VENDOR_CODE),1,1)		as VENDOR_CODE1
+					, substr(max(A1.VENDOR_CODE),2,5)		as VENDOR_CODE2
+			  from ICOMVNGL_ICT A1
+			 where 1=1
+		       and A1.HOUSE_CODE  = ${house_code}
+			   and length(A1.VENDOR_CODE) = 5
+			   and NVL(A1.SIGN_STATUS,' ') = 'E'
+	]]>
+	</method>
+	
+	<!-- ICT 사용 -->
+	<method name="updateVendorCodeVNGL">
+	<![CDATA[
+	    UPDATE ICOMVNGL_ICT
+	       SET VENDOR_CODE = ${new_vendor_code}
+	         , APPROVAL_REASON = ${approval_reason}
+		 WHERE 1 = 1
+		   AND HOUSE_CODE  = ${house_code}
+		   AND VENDOR_CODE = ${vendor_code}
+	]]>
+	</method>
+	
+	<!-- ICT 사용 -->
+	<method name="updateVendorCodeLUSR">
+	<![CDATA[
+	    UPDATE ICOMLUSR_ICT
+	       SET COMPANY_CODE = ${new_vendor_code}
+		 WHERE 1 = 1
+		   AND HOUSE_CODE = ${house_code}
+		   AND USER_ID    = ${vendor_code}
+	]]>
+	</method>
+	
+	<!-- ICT 사용 -->
+	<method name="updateVendorCodeADDR">
+	<![CDATA[
+		    UPDATE ICOMADDR_ICT
+		       SET CODE_NO = ${new_vendor_code}
+			 WHERE 1 = 1
+			   AND HOUSE_CODE = ${house_code}
+			   AND CODE_NO    = ${vendor_code}
+			   AND CODE_TYPE  = '2'
+	]]>
+	</method>
+	
+	<!-- ICT 사용 -->
+	<method name="updateVendorCodeVNCP">
+	<![CDATA[
+	    UPDATE ICOMVNCP_ICT
+	       SET VENDOR_CODE = ${new_vendor_code}
+		 WHERE 1 = 1
+		   AND HOUSE_CODE  = ${house_code}
+		   AND VENDOR_CODE = ${vendor_code}
+	]]>
+	</method>
+	
+	<method name="updateVendorCodeSGVN">
+	<![CDATA[
+	    UPDATE SSGVN SET
+	     VENDOR_CODE = ${new_vendor_code}
+		WHERE 1 = 1
+		AND HOUSE_CODE = ${house_code}
+		AND VENDOR_CODE = ${vendor_code}
+	]]>
+	</method>
+
+	<!-- ICT 사용 -->
+	<method name="updateVendorCodeVNPJ">
+	<![CDATA[
+	    UPDATE ICOMVNPJ_ICT
+	       SET VENDOR_CODE = ${new_vendor_code}
+		 WHERE 1 = 1
+		   AND HOUSE_CODE  = ${house_code}
+		   AND VENDOR_CODE = ${vendor_code}
+	]]>
+	</method>
+	
+	<!-- ICT 사용 -->
+	<method name="updateVendorCodeVNIT">
+	<![CDATA[
+	    UPDATE ICOMVNIT_ICT
+	       SET VENDOR_CODE = ${new_vendor_code}
+		 WHERE 1 = 1
+		   AND HOUSE_CODE  = ${house_code}
+		   AND VENDOR_CODE = ${vendor_code}
+	]]>
+	</method>
+	
+	<!-- ICT 사용 -->
+	<method name="updateVendorCodeADDR_2">
+	<![CDATA[
+	    select count(*)as cnt
+		  FROM ICOMADDR_ICT
+		 where CODE_NO=${vendor_code}
+		   AND HOUSE_CODE=${house_code}
+		   AND CODE_TYPE='3'
+	]]>
+	</method>
+
+	<!-- ICT 사용 -->
+	<method name="updateVendorCodeADDR_1">
+	<![CDATA[
+	    INSERT INTO ICOMADDR_ICT(
+								HOUSE_CODE,
+								CODE_NO,
+								CODE_TYPE,
+								ZIP_CODE,
+								PHONE_NO1,
+								FAX_NO,
+								HOMEPAGE,
+								ADDRESS_LOC,
+								ADDRESS_ENG,
+								CEO_NAME_LOC,
+								CEO_NAME_ENG,
+								EMAIL,
+								ZIP_BOX_NO,
+								PHONE_NO2,
+								HOUSE_NUM1,
+								COMPANY_CODE
+								)
+		select
+				 HOUSE_CODE
+				,${vendor_code} as CODE_NO
+				,'3' as CODE_TYPE
+				,ZIP_CODE
+				,PHONE_NO1
+				,FAX_NO
+				,HOMEPAGE
+				,ADDRESS_LOC
+				,ADDRESS_ENG
+				,CEO_NAME_LOC
+				,CEO_NAME_ENG
+				,EMAIL
+				,ZIP_BOX_NO
+				,PHONE_NO2
+				,HOUSE_NUM1
+				,COMPANY_CODE
+		 FROM ICOMADDR_ICT
+		where CODE_NO    = ${vendor_code}
+		  AND HOUSE_CODE = ${house_code}
+		  AND CODE_TYPE  = '2'
+	]]>
+	</method>	
+
+
+</service>

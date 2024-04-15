@@ -1,0 +1,303 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<service>
+	<method name="et_mty_getMaintain">
+	<![CDATA[
+	    SELECT 
+			HOUSE_CODE,
+			GROUP_CODE,
+			GROUP_UCODE,
+			GROUP_LEVEL,
+			GROUP_NAME,
+			'Y' ADD_NCY 
+		FROM 
+			ICOMUGRP 
+		WHERE 
+		    HOUSE_CODE = ${house_code}
+		AND
+		    GROUP_UCODE = '0' 
+		AND 
+		    GROUP_LEVEL = 1
+	]]>
+	</method>
+	<method name="et_mct_getMaintain">
+	<![CDATA[
+		 SELECT 
+			HOUSE_CODE,
+			GROUP_CODE,
+			GROUP_UCODE,
+			GROUP_LEVEL,
+			GROUP_NAME,
+			'Y' ADD_NCY  
+		FROM 
+			ICOMUGRP 
+		WHERE 
+		    HOUSE_CODE = ${HOUSE_CODE}
+		AND
+		    GROUP_UCODE = ${CODE} 
+		AND 
+		    GROUP_LEVEL = 2
+	]]>
+	</method>
+	<method name="et_mty_checkItem">
+	<![CDATA[
+		SELECT 
+			COUNT(*) AS CNT
+		FROM 
+			ICOMUGRP 
+		WHERE 
+		    HOUSE_CODE = ${house_code}
+		AND
+		    GROUP_UCODE = ${type}
+		AND 
+		    GROUP_CODE = ${item_type}
+	]]>
+	</method>
+	<method name="et_mty_setInsert">
+	<![CDATA[
+		 INSERT INTO ICOMUGRP (
+		 	HOUSE_CODE, GROUP_CODE,        GROUP_UCODE,        GROUP_LEVEL,    GROUP_NAME, 
+		 	ADD_DT,   ADD_USER_ID
+		 )
+		 VALUES(
+         	${HOUSE_CODE},
+         	${CODE},
+         	${TYPE},
+         	DECODE(${TYPE},'0','1','2'),
+         	${GROUP_NAME},
+         	SYSDATE,
+         	${USER_ID}
+         )
+	]]>
+	</method>
+	<method name="et_mty_setUpdate">
+	<![CDATA[
+		UPDATE
+			ICOMUGRP
+		SET
+			CHANGE_USER_ID = ${USER_ID},
+			CHANGE_DT         = SYSDATE,
+			GROUP_NAME      = ${GROUP_NAME}
+		WHERE
+			GROUP_UCODE       = ${TYPE}
+		AND
+			GROUP_CODE       = ${CODE}
+		AND
+			HOUSE_CODE = ${HOUSE_CODE}
+	]]>
+	</method>
+	<method name="et_mty_setDelete">
+	<![CDATA[
+		DELETE FROM
+			ICOMUGRP
+		WHERE
+			GROUP_UCODE       = ${TYPE}
+		AND
+			GROUP_CODE       = ${CODE}
+		AND
+			HOUSE_CODE = ${HOUSE_CODE}
+	]]>
+	</method>
+	<method name="chkCodeCount">
+	<![CDATA[
+		SELECT 
+			TO_CHAR(COUNT(GROUP_CODE)) as cnt
+		FROM
+			ICOMUGRP
+		WHERE 
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			GROUP_UCODE LIKE '%' || ${CODE}
+		AND 
+			GROUP_LEVEL = 2
+	]]>
+	</method>	
+	<method name="et_getMaxClass">
+		SELECT 
+			DECODE(${TYPE},'0','',
+			                      ${TYPE}) || 'G' || LPAD(NVL(COUNT(0), 0) + 1, 4, '0') AS CLASS
+		FROM
+			ICOMUGRP
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			GROUP_UCODE = ${TYPE}
+	</method>
+	<method name="et_getPurArea">
+	<![CDATA[
+		SELECT 
+			A.HOUSE_CODE
+       		,A.GROUP_CODE
+       		,A.VENDOR_CODE
+       		,A.VENDOR_SEQ
+       		,B.VENDOR_NAME_LOC VENDOR_NAME
+       ,	'Y' ADD_NCY 
+		FROM 
+			ICOMUVEN A, ICOMVNGL B
+		WHERE 
+			A.VENDOR_CODE = B.VENDOR_CODE
+		AND 
+		    A.HOUSE_CODE = ${HOUSE_CODE}
+		AND 
+			A.GROUP_CODE = ${GROUP_CODE}
+	]]>
+	</method>
+	<method name="et_mct_setDelete">
+	<![CDATA[
+		DELETE FROM
+			ICOMUGRP
+		WHERE
+			GROUP_UCODE       = ${TYPE}
+		AND
+			GROUP_CODE       = ${CODE}
+		AND
+			HOUSE_CODE = ${HOUSE_CODE}
+	]]>
+	</method>
+	<method name="chkCodeCount2">
+	<![CDATA[
+		SELECT 
+			TO_CHAR(COUNT(VENDOR_CODE)) AS CNT 
+		FROM 
+			ICOMUVEN 
+		WHERE 
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND 
+			GROUP_CODE = ${CODE}
+	]]>
+	</method>	
+	<method name="et_mbb_getVendorList">
+	<![CDATA[	   
+		    SELECT B.HOUSE_CODE,
+		                B.VENDOR_NAME_LOC AS VENDOR_NAME,
+		        		B.VENDOR_CODE,
+		        		B.CREDIT_RATING AS CREDIT_GRADE,
+		        		B.PURCHASE_BLOCK_FLAG,
+		        		GETICOMCODE2(B.HOUSE_CODE, 'M213', B.PURCHASE_BLOCK_FLAG) PURCHASE_BLOCK_FLAG_NAME,
+		        		COUNT(A.VENDOR_CODE),
+		        		B.BUSINESS_TYPE,
+		        		B.INDUSTRY_TYPE,
+		        		B.IRS_NO,
+		        		D.CEO_NAME_LOC,
+		        		B.CLASS_GRADE,
+		        		GETICOMCODE2(B.HOUSE_CODE, 'M634', B.CLASS_GRADE) AS CLASS_GRADE_NAME
+		]]>
+		<if test="${slevel}" operator = "eq" value="1">
+					FROM SSGVN A, ICOMVNGL B, 																				
+					(SELECT	SG_REFITEM 
+					 FROM 	SSGGL 																		
+					 WHERE 	PARENT_SG_REFITEM IN 																				
+												(SELECT	SG_REFITEM 
+												 FROM 	SSGGL 
+												 WHERE 	PARENT_SG_REFITEM = $S{sg_refitem} 
+												)
+					) C
+					, ICOMADDR D 						
+					WHERE A.REGISTRY_FLAG = 'Y' 
+					  AND B.VENDOR_CODE = A.VENDOR_CODE  
+					  AND a.SG_REFITEM = c.sg_refitem 				
+					  AND A.HOUSE_CODE = B.HOUSE_CODE 
+					  AND A.HOUSE_CODE = ${session.HOUSE_CODE}
+					  AND B.HOUSE_CODE = D.HOUSE_CODE
+					  AND B.VENDOR_CODE= D.CODE_NO
+					  AND D.CODE_TYPE  = '2'
+					  AND A.STATUS !='D'
+		</if>
+		<if test="${slevel}" operator = "eq" value="2">
+					FROM SSGVN A, ICOMVNGL B,	 																			
+					(SELECT SG_REFITEM 
+					 FROM 	SSGGL 
+					 WHERE 	PARENT_SG_REFITEM =  $S{sg_refitem} 
+					 ) C 		
+					 , ICOMADDR D				
+					WHERE A.REGISTRY_FLAG = 'Y' 
+					AND B.VENDOR_CODE = A.VENDOR_CODE  
+					and a.SG_REFITEM = c.sg_refitem 				
+					AND A.HOUSE_CODE = B.HOUSE_CODE 
+					AND A.HOUSE_CODE = ${session.HOUSE_CODE}
+					AND B.HOUSE_CODE = D.HOUSE_CODE
+					AND B.VENDOR_CODE= D.CODE_NO
+					AND D.CODE_TYPE  = '2'
+					AND A.STATUS !='D'
+		</if>
+		<if test="${slevel}" operator = "eq" value="3">
+					FROM SSGVN A, ICOMVNGL B, ICOMADDR D 																				
+					WHERE A.REGISTRY_FLAG = 'Y' 
+					  AND B.VENDOR_CODE = A.VENDOR_CODE  
+					  AND a.SG_REFITEM =   $S{sg_refitem} 	
+					  AND A.HOUSE_CODE = B.HOUSE_CODE 
+					  AND A.HOUSE_CODE = ${session.HOUSE_CODE}
+					  AND B.HOUSE_CODE = D.HOUSE_CODE
+					  AND B.VENDOR_CODE= D.CODE_NO
+					  AND D.CODE_TYPE  = '2'
+					  AND A.STATUS !='D'
+		</if>
+		<if test="${slevel}" operator="eq" value="4"> 
+					FROM SSGVN A, ICOMVNGL B, ICOMADDR D, ICOMVNPJ E
+					WHERE A.REGISTRY_FLAG(+) = 'Y' 
+					AND B.VENDOR_CODE = A.VENDOR_CODE(+) 												
+					AND A.HOUSE_CODE(+) = B.HOUSE_CODE 
+					AND A.HOUSE_CODE(+) = ${session.HOUSE_CODE}
+					AND B.HOUSE_CODE = D.HOUSE_CODE
+					AND B.VENDOR_CODE = E.VENDOR_CODE(+)
+					AND B.VENDOR_CODE= D.CODE_NO
+					AND D.CODE_TYPE  = '2'
+					AND A.STATUS(+) !='D'
+		</if>
+					AND A.VENDOR_CODE = $S{vendor_code}
+					AND B.PURCHASE_BLOCK_FLAG IN ('N','K')
+		<if test="${vendor_name}" operator = "ne" value="">
+					AND upper(B.VENDOR_NAME_LOC) like '%' || upper($S{vendor_name}) || '%'
+		</if> 																													
+					AND B.JOB_STATUS = 'E' 							 										
+				GROUP BY B.HOUSE_CODE,B.VENDOR_NAME_LOC,B.VENDOR_CODE, B.CREDIT_RATING, B.PURCHASE_BLOCK_FLAG, 	
+						  B.BUSINESS_TYPE, B.INDUSTRY_TYPE, B.IRS_NO, B.RESIDENT_NO, D.CEO_NAME_LOC, GETICOMCODE2(B.HOUSE_CODE, 'M213', B.PURCHASE_BLOCK_FLAG),B.CLASS_GRADE, GETICOMCODE2(B.HOUSE_CODE, 'M634', B.CLASS_GRADE) 											
+				ORDER BY  B.CLASS_GRADE , B.VENDOR_NAME_LOC ASC
+	</method>
+	<method name="et_mbb_checkItem">
+	<![CDATA[
+		SELECT 
+			COUNT(*) AS CNT
+		FROM 
+			ICOMUVEN 
+		WHERE 
+		    HOUSE_CODE = ${house_code}
+		AND 
+		    GROUP_CODE = ${item_type}
+		AND
+		    VENDOR_CODE = ${code}
+		
+	]]>
+	</method>
+	<method name="et_mbb_setInsert">
+	<![CDATA[
+		 INSERT INTO ICOMUVEN (
+		 	HOUSE_CODE, GROUP_CODE,        VENDOR_SEQ,        VENDOR_CODE,  
+		 	ADD_DT,   ADD_USER_ID
+		 )
+		 SELECT ${HOUSE_CODE} HOUSE_CODE
+			         ,${TYPE}             GROUP_CODE
+			         ,NVL(MAX(VENDOR_SEQ),0)+1 VENDOR_SEQ
+				     ,${CODE}             VENDOR_CODE
+				     ,SYSDATE            ADD_DT
+				     ,${USER_ID}         ADD_USER_ID
+			FROM   ICOMUVEN
+			WHERE HOUSE_CODE = ${HOUSE_CODE}
+			AND     GROUP_CODE = ${TYPE}	
+	]]>
+	</method>
+	<method name="et_Area_setDelete">
+	<![CDATA[
+		DELETE FROM
+			ICOMUVEN
+		WHERE
+			HOUSE_CODE        = ${HOUSE_CODE}
+		AND
+			GROUP_CODE        = ${TYPE}	
+		AND
+			VENDOR_CODE      = ${CODE} 
+			
+	]]>
+	</method>
+	
+</service>
+

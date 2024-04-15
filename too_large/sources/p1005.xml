@@ -1,0 +1,613 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<service>
+	<method name="et_getRfqReceive">
+	<![CDATA[
+			 SELECT DISTINCT  RQHD.RFQ_NO,                                                              
+	               RQHD.RFQ_COUNT,                                                             
+	               RQHD.SUBJECT,                                                               
+	               RQSE.VENDOR_CODE,                                                           
+	               GETCOMPANYNAMELOC(RQSE.HOUSE_CODE,RQSE.VENDOR_CODE,'S') AS VENDOR_NAME,     
+	               CASE RQSE.BID_FLAG WHEN 'N' THEN '견적포기' ELSE QTHD.QTA_NO END AS QTA_NO,   
+	               QTHD.CHANGE_DATE,                                                          
+	               TO_CHAR(TO_DATE(RQHD.RFQ_CLOSE_DATE || RQHD.RFQ_CLOSE_TIME , 'YYYY/MM/DD HH24:MI'), 'YYYY/MM/DD HH24:MI') AS CLOSE_DATE, 
+	               RQHD.CHANGE_USER_ID,                                                        
+	               Getusernameloc(RQHD.HOUSE_CODE, RQHD.CHANGE_USER_ID) AS  CHANGE_USER_NAME,       
+	               RQSE.CONFIRM_DATE,                                                          
+	               RQHD.CTRL_CODE,                                                             
+	               RQHD.RFQ_CLOSE_DATE || RQHD.RFQ_CLOSE_TIME AS CLOSE_DATA                      
+	         FROM                                                                              
+	         	ICOYRQHD RQHD                                                                  
+	         	,ICOYRQSE RQSE LEFT OUTER JOIN                                                                
+	         	ICOYQTHD QTHD                                                                 
+	           ON  RQSE.HOUSE_CODE = QTHD.HOUSE_CODE                                        
+	           AND RQSE.VENDOR_CODE = QTHD.VENDOR_CODE                                      
+	           AND RQSE.RFQ_NO = QTHD.RFQ_NO                                                
+	           AND RQSE.RFQ_COUNT = QTHD.RFQ_COUNT                                         
+	        
+	           <OPT=F,S> WHERE RQHD.HOUSE_CODE = ?			</OPT>                            
+	           AND RQHD.HOUSE_CODE = RQSE.HOUSE_CODE                                           
+	           AND RQHD.RFQ_NO = RQSE.RFQ_NO                                                   
+	           AND RQHD.RFQ_COUNT = RQSE.RFQ_COUNT                                             
+	           <OPT=F,S> AND RQHD.RFQ_CLOSE_DATE BETWEEN ? 	</OPT>                             
+	           <OPT=F,S> AND ?								</OPT>                              	                             
+	           <OPT=S,S> AND RQHD.ADD_USER_ID LIKE ? 		</OPT>                             
+	           <OPT=S,S> AND QTHD.VENDOR_CODE LIKE ? 		</OPT>                             
+	           <OPT=S,S> AND RQHD.RFQ_NO LIKE ? 			</OPT>                             
+	           <OPT=S,S> AND RQHD.SUBJECT LIKE '%' || ? || '%'	</OPT>                         
+	           AND RQHD.RFQ_FLAG = 'P'                                                         
+	           AND RQHD.RFQ_TYPE <> 'MA'                                                       
+	           AND RQHD.BID_TYPE = 'RQ'                                                       
+	           AND RQHD.STATUS IN ('C','R')                                                    
+	           AND RQSE.STATUS IN ('C','R')    
+	           AND QTHD.SEND_FLAG = 'Y'                                                 
+	         ORDER BY RQHD.RFQ_NO DESC 														   
+	         		, RQHD.RFQ_COUNT DESC 													   
+	         		, RQSE.VENDOR_CODE 														   
+	]]>
+	</method>
+	
+	<method name="">
+		<if test="" operator="" value="">
+		
+		</if>
+	</method>
+	
+	<method name="et_ReturnToPR_DOC_ALL_1">
+			     UPDATE ICOYRQDT                    
+	             SET SETTLE_FLAG = 'D',             
+	                 RFQ_PROCEEDING_FLAG = 'D',    
+	                 STATUS              = 'D'  
+	             WHERE     HOUSE_CODE = ?           
+	             AND       RFQ_NO     = ?           
+	             AND       RFQ_COUNT  = ?           
+	</method>
+	
+	<method name="et_ReturnToPR_DOC_ALL_2">
+			 	 UPDATE ICOYRQHD SET RFQ_FLAG = 'C'   
+			 	 					,STATUS   = 'D'
+	             WHERE     HOUSE_CODE = ?             
+	             AND       RFQ_NO     = ?             
+	             AND       RFQ_COUNT  = ?             
+	</method>
+	
+	<method name="et_ReturnToPR_DOC_ALL_3">
+			     UPDATE ICOYPRDT SET PR_PROCEEDING_FLAG = 'P'  
+	             WHERE     HOUSE_CODE = ?                      
+	             AND       PR_NO      = ?                      
+	             AND       PR_SEQ     = ?        
+	             AND 	   STATUS    != 'D'              
+	            
+	</method>
+	
+	<method name="et_ReturnToPR_DOC_ALL_4">
+			 	 UPDATE ICOYRQHD 
+			 	 SET 	 SR_REASON 		= ? 
+			 	 		,SR_ATTACH_NO 	= ?
+	             WHERE     HOUSE_CODE = ?             
+	             AND       RFQ_NO     = ?             
+	             AND       RFQ_COUNT  = ?             
+	</method>
+	
+	
+	
+	<method name="et_getQuery_Max_RFQ_Count">
+	
+	<![CDATA[
+			    SELECT MAX(RFQ_COUNT)+1 AS RE_RFQ_COUNT   
+	            FROM ICOYRQDT                             
+	            <OPT=F,S> WHERE HOUSE_CODE = ? </OPT>     
+	            <OPT=S,S> AND   RFQ_NO     = ? </OPT>     
+	            
+	  ]]>
+	</method>
+	
+	<method name="et_re_setRfqHDCreate">
+		<![CDATA[
+		 INSERT INTO ICOYRQHD (                               
+			 		 HOUSE_CODE                                   
+			 		,RFQ_NO                                       
+			 		,RFQ_COUNT                                    
+			 		,STATUS                                       
+			 		,COMPANY_CODE                                 
+			 		,RFQ_DATE                                     
+			 		,RFQ_CLOSE_DATE                               
+			 		,RFQ_CLOSE_TIME                               
+			 		,RFQ_TYPE                                     
+			 		,SETTLE_TYPE                                  
+			 		,BID_TYPE                                     
+			 		,RFQ_FLAG                                     
+			 		,TERM_CHANGE_FLAG                             
+			 		,CREATE_TYPE                                  
+			 		,BID_COUNT                                    
+			 		,CTRL_CODE                                    
+			 		,ADD_USER_ID                                  
+			 		,ADD_DATE                                     
+			 		,ADD_TIME                                     
+			 		,CHANGE_DATE                                  
+			 		,CHANGE_TIME                                  
+			 		,CHANGE_USER_ID                               
+			 		,SUBJECT                                      
+			 		,REMARK                                       
+			 		,DOM_EXP_FLAG                                 
+			 		,ARRIVAL_PORT                                 
+			 		,USANCE_DAYS                                  
+			 		,SHIPPING_METHOD                              
+			 		,PAY_TERMS                                    
+			 		,ARRIVAL_PORT_NAME                            
+			 		,DELY_TERMS                                   
+			 		,PRICE_TYPE                                   
+			 		,SETTLE_COUNT                                 
+			 		,RESERVE_PRICE                                
+			 		,CURRENT_PRICE                                
+			 		,BID_DEC_AMT                                  
+			 		,TEL_NO                                       
+			 		,EMAIL                                        
+			 		,BD_TYPE                                      
+			 		,CUR                                          
+			 		,START_DATE            
+			 		,START_TIME                                   
+			 		,Z_SMS_SEND_FLAG       
+			 		,Z_RESULT_OPEN_FLAG    
+			 		,BID_REQ_TYPE		     
+			 		,BID_RFQ_TYPE		     
+					,ATTACH_NO
+					,SIGN_STATUS
+			 ) VALUES (                                           
+			 		 ?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,GETICOMCODE2(?, 'M005', ?)     
+			 		,?                          
+			 		,?                          
+			 		,?                          
+			 		,?                          
+			 		,?                          
+			 		,?                          
+			 		,?                          
+			 		,?                          
+			 		,?                          
+			 		,?                          
+			 		,?                          
+			 		,?                          
+			 		,?                          
+			 		,?                       
+			 		,?		    			
+			 		,?		    			
+			 		,?		  
+			 		,?  			
+			 )                                       
+		]]>
+	</method>
+	
+	<method name="et_re_setRfqANCreate">
+		<![CDATA[
+			 INSERT INTO ICOYRQAN (      
+			 		 HOUSE_CODE          
+			 		,RFQ_NO              
+			 		,RFQ_COUNT           
+			 		,STATUS              
+			 		,COMPANY_CODE        
+			 		,ANNOUNCE_DATE       
+			 		,ANNOUNCE_TIME_FROM  
+			 		,ANNOUNCE_TIME_TO    
+			 		,ANNOUNCE_HOST       
+			 		,ANNOUNCE_AREA       
+			 		,ANNOUNCE_PLACE      
+			 		,ANNOUNCE_NOTIFIER   
+			 		,ANNOUNCE_RESP       
+			 		,DOC_FRW_DATE        
+			 		,ADD_USER_ID         
+			 		,ADD_DATE            
+			 		,ADD_TIME            
+			 		,CHANGE_USER_ID      
+			 		,CHANGE_DATE         
+			 		,CHANGE_TIME         
+			 		,ANNOUNCE_COMMENT    
+			 ) VALUES (                  
+			 		 ?                     
+			 		,?                     
+			 		,?                     
+			 		,?                     
+			 		,?                     
+			 		,?                     
+			 		,?                     
+			 		,?                     
+			 		,?                    
+			 		,?                     
+			 		,?                     
+			 		,?                     
+			 		,?                     
+			 		,?                     
+			 		,?                     
+			 		,?                     
+			 		,?                     
+			 		,?                     
+			 		,?                    
+			 		,?                     
+			 		,?                     
+			 )                           
+		]]>
+	</method>
+	
+	<method name="et_re_setRfqDTCreate">
+		<![CDATA[
+			 INSERT INTO ICOYRQDT (         
+			 		 HOUSE_CODE             
+			 		,RFQ_NO                 
+			 		,RFQ_COUNT              
+			 		,RFQ_SEQ                
+			 		,STATUS                 
+			 		,COMPANY_CODE           
+			 		,PLANT_CODE             
+			 		,RFQ_PROCEEDING_FLAG    
+			 		,ADD_DATE               
+			 		,ADD_TIME               
+			 		,ADD_USER_ID            
+			 		,CHANGE_DATE            
+			 		,CHANGE_TIME            
+			 		,CHANGE_USER_ID         
+			 		,ITEM_NO                
+			 		,UNIT_MEASURE           
+			 		,RD_DATE                
+			 		,VALID_FROM_DATE        
+			 		,VALID_TO_DATE          
+			 		,PURCHASE_PRE_PRICE     
+			 		,RFQ_QTY                
+			 		,RFQ_AMT                
+			 		,BID_COUNT              
+			 		,CUR                    
+			 		,PR_NO                  
+			 		,PR_SEQ                 
+			 		,SETTLE_FLAG            
+			 		,SETTLE_QTY             
+			 		,TBE_FLAG               
+			 		,TBE_DEPT               
+			 		,PRICE_TYPE             
+			 		,TBE_PROCEEDING_FLAG    
+			 		,SAMPLE_FLAG            
+			 		,DELY_TO_LOCATION       
+			 		,ATTACH_NO              
+			 		,SHIPPER_TYPE           
+			 		,CONTRACT_FLAG          
+			 		,COST_COUNT             
+			 		,YEAR_QTY               
+			 		,DELY_TO_ADDRESS        
+			 		,MIN_PRICE              
+			 		,MAX_PRICE              
+			 		,STR_FLAG               
+			        ,Z_REMARK            	 	
+					, TECHNIQUE_GRADE		
+					, TECHNIQUE_TYPE 		
+					, INPUT_FROM_DATE		
+					, INPUT_TO_DATE 		 
+					, SPECIFICATION 		 
+					, MAKER_NAME 			 
+			 ) VALUES (                     
+			 		 ?                        
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,lpad(?, 5, '0')    
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+					,? 											
+					,? 											
+					,? 											
+					,? 											
+					,?  										
+					,?  										
+			 )              					                  
+		]]>
+	</method>
+	
+	<method name="et_re_setRfqSECreate">
+		<![CDATA[
+			 INSERT INTO ICOYRQSE (      
+			 		 HOUSE_CODE          
+			 		,VENDOR_CODE         
+			 		,RFQ_NO              
+			 		,RFQ_COUNT           
+			 		,RFQ_SEQ             
+			 		,STATUS              
+			 		,COMPANY_CODE        
+			 		,CONFIRM_FLAG        
+			 		,CONFIRM_DATE        
+			 		,CONFIRM_USER_ID     
+			 		,BID_FLAG            
+			 		,ADD_DATE            
+			 		,ADD_USER_ID         
+			 		,ADD_TIME            
+			 		,CHANGE_DATE         
+			 		,CHANGE_USER_ID      
+			 		,CHANGE_TIME         
+			 		,CONFIRM_TIME        
+			 ) VALUES (                  
+			 		 ?                     
+			 		,?                     
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                      
+			 		,?                     
+			 		,?                      
+			 		,?                     
+			 		,?                     
+			 		,?                      
+			 )                             
+		]]>
+	</method>
+	
+	<method name="et_re_setRfqEPCreate">
+		<![CDATA[
+			 INSERT INTO ICOYRQEP (    
+			 		 HOUSE_CODE        
+			 		,VENDOR_CODE       
+			 		,RFQ_NO            
+			 		,RFQ_COUNT         
+			 		,RFQ_SEQ           
+			 		,COST_SEQ          
+			 		,STATUS            
+			 		,COMPANY_CODE      
+			 		,COST_PRICE_NAME   
+			 		,COST_PRICE_VALUE  
+			 		,ADD_DATE          
+			 		,ADD_TIME          
+			 		,ADD_USER_ID       
+			 		,CHANGE_DATE       
+			 		,CHANGE_TIME       
+			 		,CHANGE_USER_ID    
+			 ) VALUES (                
+			 		 ?                    
+			 		,?                    
+			 		,?                    
+			 		,?                    
+			 		,?                    
+			 		,lpad(?, 6, '0')   
+			 		,?                    
+			 		,?                    
+			 		,?                    
+			 		,?                    
+			 		,?                    
+			 		,?                    
+			 		,?                   
+			 		,?                   
+			 		,?                    
+			 		,?                    
+			 )                         
+		]]>
+	</method>
+	
+		<method name="et_re_setRfqOPCreate">
+		<![CDATA[
+			 INSERT INTO ICOYRQOP (       
+			 		 HOUSE_CODE           
+			 		,RFQ_NO               
+			 		,RFQ_COUNT            
+			 		,RFQ_SEQ              
+			 		,PURCHASE_LOCATION    
+			 		,VENDOR_CODE          
+			 		,STATUS               
+			 		,ADD_USER_ID          
+			 		,ADD_DATE             
+			 		,ADD_TIME             
+			 		,CHANGE_DATE          
+			 		,CHANGE_TIME          
+			 		,CHANGE_USER_ID       
+			 ) VALUES (                   
+			 		 ?                          
+			 		,?                          
+			 		,?                         
+			 		,?                          
+			 		,?                        
+			 		,?                          
+			 		,?                          
+			 		,?                        
+			 		,?                          
+			 		,?                         
+			 		,?                          
+			 		,?                         
+			 		,?                         
+			 )                            
+		]]>
+	</method>
+	
+		<method name="et_re_complete_1">
+		<![CDATA[
+			 UPDATE  ICOYRQHD SET RFQ_FLAG = 'C' 
+		     WHERE HOUSE_CODE =     ?            
+			 AND   RFQ_NO     =     ?            
+			 AND   RFQ_COUNT  =     ?            
+		]]>
+	</method>
+	
+		<method name="et_re_complete_2">
+		<![CDATA[
+			 UPDATE  ICOYRQDT                  
+		     SET     SETTLE_FLAG     = 'D',    
+		             RFQ_PROCEEDING_FLAG = 'D' 
+		     WHERE HOUSE_CODE   =     ?        
+		     AND   RFQ_NO       =     ?        
+		     AND   RFQ_COUNT    =     ?        
+		     AND   SETTLE_FLAG <> 'Y'          
+		]]>
+	</method>
+	
+	<method name="temp_Approval">
+		<![CDATA[
+			 UPDATE	ICOYRQHD						
+			   SET  SIGN_STATUS		= ?							
+				   ,SIGN_PERSON_ID	= ?			    
+				   ,SIGN_DATE		= ?					
+	 		 WHERE HOUSE_CODE		= ?	            
+			   AND RFQ_NO			= ?							
+			   AND RFQ_COUNT		= ?						
+			   AND STATUS			IN ('C', 'R')	
+		]]>
+	</method>
+	
+	<method name="et_re_getVendorList_all">
+		<![CDATA[
+		         SELECT DISTINCT VENDOR_CODE,                      
+                 GETCOMPANYNAMELOC(S.HOUSE_CODE, S.VENDOR_CODE, 'S') AS VENDOR_NAME,  
+                 ' ' AS DIS,                       
+                 ' ' AS NO,                        
+                 ' ' AS NAME                       
+                 FROM   ICOYRQSE S                        
+                 WHERE  STATUS IN ('C','R')               
+                <OPT=F,S> AND    HOUSE_CODE  = ?  </OPT>  
+                <OPT=S,S> AND    RFQ_NO      = ?  </OPT>  
+                <OPT=S,S> AND    RFQ_COUNT   = ?  </OPT>  
+		]]>
+		
+		<if test="bid_flag" operator="eq" value="true">
+		<![CDATA[
+		AND NVL(BID_FLAG,'Y') <> 'N'
+		]]>
+		</if>
+		<if test="bid_flag" operator="eq" value="false">
+		GROUP BY VENDOR_CODE,GETCOMPANYNAMELOC(S.HOUSE_CODE, S.VENDOR_CODE, 'S')
+		</if>
+	</method>
+
+	<method name="et_ReturnToPR_ITEM_PR">
+		<![CDATA[
+			UPDATE ICOYPRDT
+			   SET PR_PROCEEDING_FLAG = 'P'
+			 WHERE HOUSE_CODE = ?
+			   AND PR_NO      = ?
+			   AND PR_SEQ     = ?
+			   AND STATUS    != 'D'
+		]]>
+	</method>
+
+	<method name="et_ReturnToPR_ITEM_RFQ">
+		<![CDATA[
+			UPDATE ICOYRQDT
+			   SET SETTLE_FLAG         = 'D'
+			      ,RFQ_PROCEEDING_FLAG = 'D'
+			      ,STATUS              = 'D'
+			 WHERE HOUSE_CODE = ?
+			   AND RFQ_NO     = ?
+			   AND RFQ_COUNT  = ?
+			   AND RFQ_SEQ    = ?
+		]]>
+	</method>
+
+	<method name="et_ReturnToPR_ITEM_ALL">
+		<![CDATA[
+			UPDATE ICOYRQHD
+			   SET RFQ_FLAG = 'C'
+			      ,STATUS   = 'D'
+			 WHERE HOUSE_CODE = ?
+			   AND RFQ_NO     = ?
+			   AND RFQ_COUNT  = ?
+			   AND (SELECT COUNT(*)
+                	  FROM ICOYRQDT
+               		 WHERE HOUSE_CODE   = ?
+                 	   AND RFQ_NO       = ?
+                 	   AND RFQ_COUNT    = ?
+                 	   AND SETTLE_FLAG NOT IN ('D')
+             		) = 0
+		]]>
+	</method>
+
+	<method name="et_ReturnToPR_ITEM_ALL_2">
+		<![CDATA[
+			UPDATE ICOYRQHD
+			   SET 	 SR_REASON		= ?
+					,SR_ATTACH_NO	= ?
+			 WHERE HOUSE_CODE = ?
+			   AND RFQ_NO     = ?
+			   AND RFQ_COUNT  = ?
+		]]>
+	</method>
+	
+	<method name="">
+		<![CDATA[
+		
+		]]>
+	</method>
+	
+	<method name="">
+		<![CDATA[
+		
+		]]>
+	</method>
+	
+	<method name="">
+		<![CDATA[
+		
+		]]>
+	</method>
+	
+</service>

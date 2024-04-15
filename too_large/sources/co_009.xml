@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+<service>
+	<method name="selectDeptList">
+		SELECT
+		  OGDP.DEPT DEPT
+		 ,OGDP.DEPT_NAME_LOC DEPT_NAME_LOC 
+		 ,'['||OGDP.ZIPCODE||'] '||OGDP.ADDR_LOC ADDR_LOC
+		 ,(SELECT ILGAE_CD FROM ICOMOGIL WHERE HOUSE_CODE = OGDP.HOUSE_CODE AND DEPT = OGDP.DEPT) IGJM_CD 
+		FROM ICOMOGDP OGDP 
+		WHERE 1 = 1
+		AND	OGDP.STATUS != 'D' 
+		AND OGDP.HOUSE_CODE = ${HOUSE_CODE} 
+		AND	OGDP.COMPANY_CODE = ${COMPANY_CODE} 
+		AND OGDP.DEPT LIKE UPPER('%' || $S{DEPT} ||'%') 
+		AND OGDP.DEPT_NAME_LOC LIKE '%' || $S{DEPT_NAME_LOC} ||'%' 
+		
+		UNION ALL
+		
+		SELECT
+		  CODE DEPT
+		 ,TEXT1 DEPT_NAME_LOC
+		 ,'' ADDR_LOC --임시부점은 주소가 없음
+		 ,'' IGJM_CD
+		FROM SCODE
+		WHERE 1 = 1
+		AND TYPE = 'X001'
+		AND DEL_FLAG = 'N'
+		AND CODE LIKE UPPER('%' || $S{DEPT} ||'%') 
+		AND TEXT1 LIKE '%' || $S{DEPT_NAME_LOC} ||'%' 
+	</method>
+</service>

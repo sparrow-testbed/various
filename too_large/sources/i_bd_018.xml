@@ -1,0 +1,297 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<service> 
+
+	<!-- ICT관련 추가 : 공고번호 조회 -->
+	<method name="getBdAnnVersion">
+		SELECT 	CODE 
+		FROM 	SCODE 
+		WHERE 	TYPE = 'VR002_ICT'
+		AND 	HOUSE_CODE = '#HOUSE_CODE#'
+		AND 	NVL(DEL_FLAG, 'N') = 'N'
+		AND 	USE_FLAG = 'Y'
+	</method>
+	 
+	<!-- ICT관련 사용 : 공고리스트 조회 -->
+	<method name="getBdAnnList">
+		<![CDATA[
+			SELECT *
+			FROM	(
+						SELECT	  HD.ANN_NO																					AS ANN_NO
+								, HD.ANN_COUNT																				AS ANN_COUNT
+								, HD.ANN_ITEM																				AS ANN_ITEM
+								, CONVERT_DATE(HD.ANN_DATE) AS ANN_DATE
+								, TO_CHAR(TO_DATE(HD.X_DOC_SUBMIT_DATE||HD.X_DOC_SUBMIT_TIME, 'YYYYMMDDHH24MISS'),'YYYY/MM/DD HH24:MI') AS X_DOC_SUBMIT_DATE_TIME 
+								, GETICOMCODE2( HD.HOUSE_CODE, 'M816_ICT', HD.ANN_STATUS)									AS STATUS_TEXT	-- 공고상태																
+								, HD.ATTACH_NO																				AS ATTACH_NO
+								, (	SELECT COUNT(*)
+									FROM   ICOMATCH
+									WHERE DOC_NO = HD.ATTACH_NO)															AS ATTACH_CNT
+								, HD.SIGN_PERSON_ID																			AS SIGN_PERSON_ID
+								, HD.SIGN_STATUS																			AS SIGN_STATUS
+								, HD.ANN_STATUS																				AS ANN_STATUS
+								, HD.ADD_USER_ID																			AS ADD_USER_ID
+								, HD.CHANGE_USER_ID																			AS CHANGE_USER_ID
+								, NVL(HD.CHANGE_USER_NAME_LOC,HD.ADD_USER_NAME_LOC)											AS CHANGE_USER_NAME
+								, CASE	WHEN HD.ANN_VERSION IS NULL THEN (SELECT CODE FROM SCODE WHERE TYPE = 'VR002_ICT')
+										ELSE HD.ANN_VERSION
+								  END																						AS ANN_VERSION
+								, (SELECT TEXT1 FROM SCODE WHERE TYPE = 'M966_ICT' AND CODE = HD.ES_FLAG) ES_FLAG_TEXT
+								, (SELECT COUNT(Z.VENDOR_CODE)
+				                     FROM ICOYBDAP2_ICT Z
+				                    WHERE Z.HOUSE_CODE = HD.HOUSE_CODE
+				                      AND Z.ANN_NO     = HD.ANN_NO
+				                      AND Z.ANN_COUNT  = HD.ANN_COUNT
+				                      AND Z.STATUS     IN  ('C','R') )	AS VENDOR_COUNT2	-- 참가업체수
+						FROM	  			ICOYBDHD2_ICT	HD
+						WHERE 	1=1
+						AND		HD.HOUSE_CODE  = ${HOUSE_CODE}
+						AND		HD.ANN_DATE BETWEEN ${START_CHANGE_DATE}
+						AND     ${END_CHANGE_DATE}
+			            AND		HD.ANN_NO      LIKE  '%'|| $S{ANN_NO}     ||'%'
+			            AND		HD.ANN_ITEM    LIKE  '%'|| $S{ANN_ITEM}   ||'%' 
+			            AND		HD.ADD_USER_ID  =  $S{ADD_USER}
+			            AND		HD.STATUS IN ('C' ,'R')
+            			AND		HD.ADD_USER_DEPT = ${session.DEPARTMENT}
+			            AND     HD.ES_FLAG = $S{ES_FLAG}
+			            AND		SUBSTR(HD.ANN_STATUS,2,1) = $S{STATUS}
+			            ORDER BY HD.ANN_NO DESC, HD.ANN_COUNT DESC, HD.ANN_DATE DESC
+                )
+			WHERE 1=1 
+		]]>
+ 
+	</method>
+
+	<!-- ICT사용 : dummy 입찰공고조회 (Detail) -->
+	<method name="getBdItemDetail">
+		<![CDATA[
+					SELECT
+							 '000001'						AS ITEM_SEQ
+							, TO_NUMBER('000001')			AS NO
+							, 'C'							AS STATUS
+							, TO_CHAR(SYSDATE ,'YYYYMMDD')	AS ADD_DATE
+							, TO_CHAR(SYSDATE ,'HH24MISS')	AS ADD_TIME
+							, 'DUMY'						AS ADD_USER_ID
+							, 'DUMY'						AS ADD_USER_NAME_LOC
+							, 'DUMY'						AS ADD_USER_NAME_ENG
+							, 'DUMY'						AS ADD_USER_DEPT
+							, TO_CHAR(SYSDATE ,'YYYYMMDD')	AS CHANGE_DATE
+							, TO_CHAR(SYSDATE ,'HH24MISS')	AS CHANGE_TIME
+							, 'DUMY'						AS CHANGE_USER_ID
+							, 'DUMY'						AS CHANGE_USER_NAME_LOC
+							, 'DUMY'						AS CHANGE_USER_NAME_ENG
+							, 'DUMY'						AS CHANGE_USER_DEPT
+							, 'DUMY'						AS ITEM_NO
+							, 'DUMY'						AS DESCRIPTION_LOC
+							, 'EA'  						AS UNIT_MEASURE
+							, '1'   						AS QTY
+							, 'KRW' 						AS CUR
+							, '1'   						AS UNIT_PRICE
+							, '1'   						AS AMT
+							, '1'   						AS SBID_PRICE
+							, '1'   						AS SBID_AMT
+							, '1'   						AS BID_PRICE
+							, NULL							AS PR_NO
+							, NULL							AS PR_SEQ
+							, NULL							AS SPECIFICATION
+							, NULL							AS SELLER_SELECTED
+							, '0'							AS SELLER_SELECTED_CNT
+							, 'N'							AS PR_NO_POPUP_FLAG
+					  FROM DUAL
+		]]>
+	</method>
+<!-- 입찰공고조회 (Detail) -->
+
+	<method name="et_setPRDT_1">
+		<![CDATA[
+		/*정정공고, 취소공고 확정되기 전에 삭제를 하는경우 진행되고 있는 공고건이 있으므로 PR_PROCEEDING_FLAG를 업데이트 하면 안된다. */
+				UPDATE ICOYPRDT SET                                                
+                        PR_PROCEEDING_FLAG  = 'P'                                 	
+                       --,ANN_STATUS          = 'PR'                                 
+                  WHERE HOUSE_CODE          = ${HOUSE_CODE}
+                    AND (PR_NO, PR_SEQ) IN (
+                    							SELECT DISTINCT PR_NO, PR_SEQ                                      
+             									FROM ICOYBDDT                                             
+             									WHERE HOUSE_CODE= ${HOUSE_CODE}  
+               									  AND ANN_NO 	= ${ANN_NO}                              
+               									  AND ANN_COUNT = ${ANN_COUNT} 
+               									  AND ANN_COUNT = '1' 
+                    						)            
+                    						
+		]]>
+	</method> 
+	<method name="et_setPRDT">
+		<![CDATA[
+		/*정정공고, 취소공고 확정되기 전에 삭제를 하는경우 진행되고 있는 공고건이 있으므로 PR_PROCEEDING_FLAG를 업데이트 하면 안된다. */
+				UPDATE ICOYPRDT SET                                                
+                        PR_PROCEEDING_FLAG  = 'C'                                 	
+                       --,ANN_STATUS          = 'AC'                                 
+                  WHERE HOUSE_CODE          = ${HOUSE_CODE}
+                    AND (PR_NO, PR_SEQ) IN (
+                    							SELECT DISTINCT PR_NO, PR_SEQ                                      
+             									FROM ICOYBDDT                                             
+             									WHERE HOUSE_CODE= ${HOUSE_CODE}
+               									  AND ANN_NO 	= ${ANN_NO}                               
+               									  AND ( ANN_COUNT = ${ANN_COUNT} 
+               									        OR ANN_COUNT = '1' )
+                    						)            
+                    						
+		]]>
+	</method>
+
+	<!-- ICT 사용 -->
+	<method name="et_setBidDelete_1_bak">
+	<![CDATA[	
+			UPDATE ICOYBDPG_ICT
+			   SET STATUS = 'D'    
+             WHERE HOUSE_CODE          = ${HOUSE_CODE}                                     
+               AND ANN_NO              = ${ANN_NO}                                      
+               AND ANN_COUNT           = ${ANN_COUNT}   
+	]]>
+	</method> 
+	
+	<method name="et_setBidDelete_1">
+	<![CDATA[	
+			DELETE FROM ICOYBDPG_ICT
+			 WHERE HOUSE_CODE          = ${HOUSE_CODE}                                     
+               AND ANN_NO              = ${ANN_NO}                                      
+               AND ANN_COUNT           = ${ANN_COUNT}   
+	]]>
+	</method> 
+	
+
+	<!-- ICT 사용 -->
+	<method name="et_setBidDelete_2_bak">
+	<![CDATA[	
+			 UPDATE	ICOYBDAP_ICT
+			 	SET	STATUS = 'D'  
+              WHERE HOUSE_CODE          = ${HOUSE_CODE}                                    
+                AND ANN_NO              = ${ANN_NO}                                      
+                AND ANN_COUNT           = ${ANN_COUNT}    
+	]]>
+	</method>
+	
+	<method name="et_setBidDelete_2">
+	<![CDATA[	
+			 DELETE FROM ICOYBDAP_ICT
+			  WHERE HOUSE_CODE          = ${HOUSE_CODE}                                    
+                AND ANN_NO              = ${ANN_NO}                                      
+                AND ANN_COUNT           = ${ANN_COUNT}    
+	]]>
+	</method>
+	
+	<!-- ICT 사용 -->
+	<method name="et_setBidDelete_3_bak">
+	<![CDATA[	
+			  UPDATE ICOYBDDT_ICT
+			     SET STATUS = 'D'  
+               WHERE HOUSE_CODE          = ${HOUSE_CODE}                                    
+                 AND ANN_NO              = ${ANN_NO}                                      
+                 AND ANN_COUNT           = ${ANN_COUNT}     
+	]]>
+	</method> 
+	
+	<method name="et_setBidDelete_3">
+	<![CDATA[	
+			  DELETE FROM ICOYBDDT_ICT
+			   WHERE HOUSE_CODE          = ${HOUSE_CODE}                                    
+                 AND ANN_NO              = ${ANN_NO}                                      
+                 AND ANN_COUNT           = ${ANN_COUNT}     
+	]]>
+	</method> 
+
+	<!-- ICT 사용 -->
+	<method name="et_setBidDelete_4_bak">
+	<![CDATA[	
+			 UPDATE ICOYBDHD2_ICT
+			 	SET STATUS = 'D'   
+              WHERE HOUSE_CODE          = ${HOUSE_CODE}                                     
+                AND ANN_NO              = ${ANN_NO}                                      
+                AND ANN_COUNT           = ${ANN_COUNT}    
+	]]>
+	</method> 
+	
+	<method name="et_setBidDelete_4">
+	<![CDATA[	
+			 DELETE FROM ICOYBDHD2_ICT
+			  WHERE HOUSE_CODE          = ${HOUSE_CODE}                                     
+                AND ANN_NO              = ${ANN_NO}                                      
+                AND ANN_COUNT           = ${ANN_COUNT}    
+	]]>
+	</method> 
+	
+	<!-- ICT 사용 -->
+	<method name="et_setBidDelete_5_bak">
+	<![CDATA[	
+			 UPDATE ICOYBDES_ICT
+			 	SET STATUS = 'D'   
+              WHERE HOUSE_CODE          = ${HOUSE_CODE}                                     
+                AND ANN_NO              = ${ANN_NO}                                      
+                AND ANN_COUNT           = ${ANN_COUNT}    
+	]]>
+	</method> 
+	
+	<method name="et_setBidDelete_5">
+	<![CDATA[	
+			 DELETE FROM ICOYBDES_ICT
+			  WHERE HOUSE_CODE          = ${HOUSE_CODE}                                     
+                AND ANN_NO              = ${ANN_NO}                                      
+                AND ANN_COUNT           = ${ANN_COUNT}    
+	]]>
+	</method> 
+	
+	<!-- ICT 사용 -->
+	<method name="et_setBidDelete_6">
+	<![CDATA[	
+			DELETE FROM ICOYBDPG_LOG_ICT
+			 WHERE HOUSE_CODE          = ${HOUSE_CODE}                                     
+               AND ANN_NO              = ${ANN_NO}                                      
+               AND ANN_COUNT           = ${ANN_COUNT}   
+	]]>
+	</method> 
+	
+	<method name="et_setApprovalDelete_1">
+	<![CDATA[	
+		DELETE FROM  	ICOMSCTP
+		WHERE 1=1 
+  		  AND COMPANY_CODE	= ${COMPANY_CODE}
+  		  AND DOC_TYPE		= 'BID_ICT'
+  		  AND DOC_NO		= ${ANN_NO} -- 날라오는 PARAMETER는 ANN_NO 그러나 결재시 문서번호는 ANN_NO
+  		  AND DOC_SEQ		= ${ANN_COUNT}   
+		
+	]]>
+	</method> 
+	<method name="et_setApprovalDelete_2">
+	<![CDATA[	
+		DELETE FROM  	ICOMSCTM
+		WHERE 1=1 
+  		  AND COMPANY_CODE	= ${COMPANY_CODE}
+  		  AND DOC_TYPE		= 'BID_ICT'
+  		  AND DOC_NO		= ${ANN_NO} -- 날라오는 PARAMETER는 ANN_NO 그러나 결재시 문서번호는 ANN_NO
+  		  AND DOC_SEQ		= ${ANN_COUNT}   
+	]]>
+	</method>
+	<method name="getLocList">
+	<![CDATA[	
+		SELECT	CODE 	AS LOC_CODE
+		,		TEXT1	AS LOC_NAME
+		FROM 	SCODE
+		WHERE 	HOUSE_CODE = ${house_code}
+		AND		TYPE = ${type}
+		AND 	NVL(USE_FLAG, 'Y') = 'Y'
+		AND 	NVL(DEL_FLAG, 'N') = 'N'
+		ORDER BY TO_NUMBER(CODE)		
+	]]>
+	</method>
+	<method name="getPrgBidCount">
+		<![CDATA[
+              	SELECT COUNT(1) CNT
+				FROM ICOYBDHD2_ICT
+				WHERE (ANN_NO,ANN_COUNT) IN (SELECT ANN_NO,MAX(ANN_COUNT) FROM ICOYBDHD2_ICT
+				                              WHERE HOUSE_CODE = ${HOUSE_CODE}            
+				                                AND ANN_NO = ${ANN_NO}   
+				                                AND STATUS IN ('C','R')
+				                              GROUP BY ANN_NO)
+				AND ANN_STATUS NOT IN ('AC','UC','RR','NB')
+		]]>
+	</method>
+</service>

@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+<service> 
+    <method name="getChannelList">
+	<![CDATA[			
+		SELECT RULM.SIGN_PATH_NO  
+		    , RULM.SIGN_PATH_NAME  
+		    , RULM.SIGN_REMARK  
+		    , RULM.ADD_DATE   
+		    , RULM.CHANGE_DATE
+		    , RULM.USER_ID
+		    , GETUSERNAMELOC(RULM.HOUSE_CODE,RULM.USER_ID) AS USER_NAME
+		    , TO_CHAR(COUNT(RULP.SIGN_PATH_NO)) AS SIGN_CNT  
+		   FROM ICOMRULM RULM, ICOMRULP RULP
+		   WHERE RULM.HOUSE_CODE = RULP.HOUSE_CODE (+)
+		     AND RULM.SIGN_PATH_NO = RULP.SIGN_PATH_NO (+)
+		 	 AND RULM.HOUSE_CODE = ${session.HOUSE_CODE} 				 		
+		 	 AND RULM.USER_ID = $S{session.ID}
+		 	 AND RULM.SIGN_PATH_NO = $S{SIGN_PATH_NO} 				 	
+		 	 AND RULM.SIGN_PATH_NAME LIKE '%' || $S{SIGN_PATH_NAME} || '%' 
+	   GROUP BY RULM.HOUSE_CODE
+	         , RULM.SIGN_PATH_NO  
+	         , RULM.SIGN_PATH_NAME  
+	         , RULM.SIGN_REMARK  
+	         , RULM.ADD_DATE   
+	         , RULM.CHANGE_DATE
+	         , RULM.USER_ID		 
+		 ORDER BY TO_NUMBER(RULM.SIGN_PATH_NO), USER_ID  		
+	]]>
+	</method>
+		
+	<method name="setChannelInsert_1">
+	<![CDATA[
+   SELECT                                      														 
+     	NVL( MAX( TO_NUMBER( NVL( NULLIF(SIGN_PATH_NO, ''), 0 ) ) ) + 1, 1) AS SIGN_PATH_NO  	 
+ 	FROM ICOMRULM       												   	 				 
+ 	WHERE HOUSE_CODE = ${session.HOUSE_CODE}												  	 
+ 	]]>
+	
+	</method>
+	
+	<method name="setChannelInsert_2">
+	<![CDATA[
+		 INSERT INTO ICOMRULM  													
+						 (  																		
+						 	HOUSE_CODE  															
+						 , USER_ID  																
+						 , SIGN_PATH_NO  															
+						 , SIGN_PATH_NAME  														
+						 , SIGN_REMARK  															
+						 , ADD_DATE  																
+						 , ADD_TIME  																 															
+						 ) VALUES (   																
+						   ${session.HOUSE_CODE}										  								
+						 , ${session.ID}  																		
+						 , ${sign_path_no}													
+						 , ${SIGN_PATH_NAME}  																		
+						 , ${SIGN_REMARK}  																		
+						 , ${current.DATE}  																		
+						 , ${current.TIME}   																		  																	
+						 )   																			
+	]]>
+	</method>
+	
+	<method name="setChannelUpdate">
+	<![CDATA[
+		 UPDATE ICOMRULM SET 		
+		 	SIGN_PATH_NAME  = ${SIGN_PATH_NAME} 	
+		 	,SIGN_REMARK  = ${SIGN_REMARK} 		
+		 	,CHANGE_DATE  = ${current.DATE} 		
+		 	,CHANGE_TIME  = ${current.TIME} 		
+		 WHERE 					
+		 	HOUSE_CODE = ${session.HOUSE_CODE} 			
+		 	AND USER_ID = ${session.ID} 		
+		 	AND SIGN_PATH_NO = ${SIGN_PATH_NO} 	
+	]]>
+	</method>
+	
+	<method name="setChannelDelete_2">
+	<![CDATA[
+		 DELETE FROM ICOMRULM 		 
+			 WHERE HOUSE_CODE = ${session.HOUSE_CODE} 		 
+			 	AND USER_ID = ${session.ID} 		 
+			 	AND SIGN_PATH_NO = ${SIGN_PATH_NO} 		
+	]]>
+	</method>
+	
+	<method name="setChannelDelete_1">
+	<![CDATA[
+		 DELETE FROM ICOMRULP 		 
+			 WHERE HOUSE_CODE = ${session.HOUSE_CODE}		 
+			 	AND USER_ID = ${session.ID}		 
+			 	AND SIGN_PATH_NO = ${SIGN_PATH_NO} 		
+	]]>
+	</method>
+</service>

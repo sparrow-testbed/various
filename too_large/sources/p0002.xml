@@ -1,0 +1,659 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<service>
+    <method name="et_getItemList">
+	<![CDATA[
+	/*로그기록 현행화테스트*/
+	SELECT
+	    CRUD,                 DEPT,                    DEPT_NAME_LOC,       CRE_GB_TXT,         CRE_GB,                         
+		DSTR_GB,              STK_USER_ID,             STK_USER_NAME_LOC,   STK_DATE,           STK_TIME,           
+		NTC_YN,               NTC_LOC,                 NTC_LOC_ETC,         NTC_USER_ID,        NTC_USER_NAME_LOC,  
+		NTC_DATE,             NTC_TIME,            	   ABOL_YN,             ABOL_USER_ID,       ABOL_USER_NAME_LOC, 
+        ABOL_DATE,            ABOL_TIME,	           DSTR_GB_TXT,         NTC_YN_TXT,         NTC_LOC_TXT,        
+        ABOL_YN_TXT,          STK_QTY,                 NTC_QTY,             ABOL_QTY,           ITEM_NO,                 
+        DESCRIPTION_LOC,      MATERIAL_TYPE,           MATERIAL_CTRL_TYPE,  MATERIAL_CLASS1,    MATERIAL_CLASS2,         
+        STATUS,               DELIVERY_LT,             QI_FLAG,             DO_FLAG,            Z_WORK_STAGE_FLAG,             
+        Z_DELIVERY_CONFIRM_FLAG, SPECIFICATION,        IMAGE_FILE_PATH,     ITEM_GROUP,         APP_TAX_CODE,            
+        MAKER_NAME,           MODEL_NO,                MAX_REQ_CNT,         MIN_REQ_CNT,        EFFECTIVE_START_DATE,            
+        EFFECTIVE_END_DATE,   PUB_NO,                  MINAMNT,             MLOBHOCD,           USEDFLAG,
+        SALES_UNIT,           INTEGRATED_BUY_FLAG,     ITEM_BLOCK_FLAG,     MAKE_AMT_CODE,        
+        MAKE_AMT_NAME,        WID,                     HGT,                 LG_ATT_NAME,        MD_ATT_NAME,             
+        SM_ATT_NAME,          ATTRIBUTE_NAME,          XNUM,                
+        _ABOL_RSN,            _ABOL_RSN_ETC,            _ABOL_DATE,         _ABOL_REQ_USER_ID,  _ABOL_RSN_NM,         
+       _ABOL_REQ_USER_NM,    IMAGE_FILE,				H_NTC_LOC			      
+	FROM
+		(
+			SELECT
+			    CRUD,                 DEPT,                    DEPT_NAME_LOC,       CRE_GB_TXT,         CRE_GB,                         
+			    DSTR_GB,              STK_USER_ID,             STK_USER_NAME_LOC,   STK_DATE,           STK_TIME,           
+			    NTC_YN,               NTC_LOC,                 NTC_LOC_ETC,         NTC_USER_ID,        NTC_USER_NAME_LOC,  
+			    NTC_DATE,             NTC_TIME,            	   ABOL_YN,             ABOL_USER_ID,       ABOL_USER_NAME_LOC, 
+                ABOL_DATE,            ABOL_TIME,	           DSTR_GB_TXT,         NTC_YN_TXT,         NTC_LOC_TXT,        
+                ABOL_YN_TXT,          STK_QTY,                 NTC_QTY,             ABOL_QTY,           ITEM_NO,                 
+                DESCRIPTION_LOC,      MATERIAL_TYPE,           MATERIAL_CTRL_TYPE,  MATERIAL_CLASS1,    MATERIAL_CLASS2,         
+                STATUS,               DELIVERY_LT,             QI_FLAG,             DO_FLAG,            Z_WORK_STAGE_FLAG,             
+                Z_DELIVERY_CONFIRM_FLAG, SPECIFICATION,        IMAGE_FILE_PATH,     ITEM_GROUP,         APP_TAX_CODE,            
+                MAKER_NAME,           MODEL_NO,                MAX_REQ_CNT,         MIN_REQ_CNT,        EFFECTIVE_START_DATE,            
+                EFFECTIVE_END_DATE,   PUB_NO,                  MINAMNT,             MLOBHOCD,           USEDFLAG,
+                SALES_UNIT,           INTEGRATED_BUY_FLAG,     ITEM_BLOCK_FLAG,     MAKE_AMT_CODE,        
+                MAKE_AMT_NAME,        WID,                     HGT,                 LG_ATT_NAME,        MD_ATT_NAME,             
+                SM_ATT_NAME,          ATTRIBUTE_NAME,          ROW_NUMBER() OVER(ORDER BY x.item_no ASC) AS XNUM,
+                _ABOL_RSN,            _ABOL_RSN_ETC,            _ABOL_DATE,         _ABOL_REQ_USER_ID,  _ABOL_RSN_NM,         
+                _ABOL_REQ_USER_NM,    IMAGE_FILE,              H_NTC_LOC					
+			FROM
+				(
+					SELECT
+					    'R' AS CRUD,
+					    A.DEPT,				              
+					    GETDEPTNAMELOC(${session.HOUSE_CODE}, 'WOORI', A.DEPT) DEPT_NAME_LOC,
+					    
+					    GETICOMCODE2(${session.HOUSE_CODE},'M985', A.CRE_GB) AS CRE_GB_TXT,
+					    A.CRE_GB,
+						
+					    
+					    A.DSTR_GB,
+					    
+					    A.STK_USER_ID,
+                        A.STK_USER_NAME_LOC,
+                        TO_CHAR(TO_DATE(A.STK_DATE,'YYYYMMDD'),'YYYY/MM/DD') AS STK_DATE,        
+						A.STK_TIME,
+                        
+                        A.NTC_YN,
+                        A.NTC_LOC,
+                        A.NTC_LOC_ETC,
+                        
+                        A.NTC_USER_ID,        
+						A.NTC_USER_NAME_LOC,  
+						TO_CHAR(TO_DATE(A.NTC_DATE,'YYYYMMDD'),'YYYY/MM/DD') AS NTC_DATE,            
+						A.NTC_TIME,            
+						
+						A.ABOL_YN,            
+						A.ABOL_USER_ID,       
+						A.ABOL_USER_NAME_LOC, 
+						TO_CHAR(TO_DATE(A.ABOL_DATE,'YYYYMMDD'),'YYYY/MM/DD') AS ABOL_DATE,        
+						A.ABOL_TIME,	
+                                                                 
+                        GETICOMCODE2(${session.HOUSE_CODE},'M986', A.DSTR_GB) AS DSTR_GB_TXT,
+					    GETICOMCODE2(${session.HOUSE_CODE},'M987', A.NTC_YN) AS NTC_YN_TXT,
+					    GETICOMCODE2(${session.HOUSE_CODE},'M988', A.NTC_LOC) AS NTC_LOC_TXT,
+					    GETICOMCODE2(${session.HOUSE_CODE},'M970', A.ABOL_YN) AS ABOL_YN_TXT,
+					    
+					    STK_QTY,                
+	                    NTC_QTY,                
+	                    ABOL_QTY,          
+					    					                          
+						B.ITEM_NO,           B.DESCRIPTION_LOC,         B.MATERIAL_TYPE, B.MATERIAL_CTRL_TYPE, B.MATERIAL_CLASS1,
+						B.MATERIAL_CLASS2,   B.STATUS,                  B.DELIVERY_LT,   B.QI_FLAG,            B.DO_FLAG,
+						B.Z_WORK_STAGE_FLAG, B.Z_DELIVERY_CONFIRM_FLAG, B.SPECIFICATION, B.IMAGE_FILE_PATH,    B.ITEM_GROUP,
+						B.APP_TAX_CODE,      B.MAKER_NAME,              B.MODEL_NO,      B.MAX_REQ_CNT,        B.MIN_REQ_CNT,
+						B.PUB_NO,            B.MINAMNT,                 B.USEDFLAG,
+						B.BASIC_UNIT                                                        AS SALES_UNIT, 
+						''                                                                AS INTEGRATED_BUY_FLAG,
+						NVL(B.ITEM_BLOCK_FLAG, 'N')                                         AS ITEM_BLOCK_FLAG,
+						CONVERT_DATE(B.EFFECTIVE_START_DATE)                                AS EFFECTIVE_START_DATE,
+						CONVERT_DATE(B.EFFECTIVE_END_DATE)                                  AS EFFECTIVE_END_DATE,
+						CONVERT_DATE(B.MLOBHOCD)                                            AS MLOBHOCD,
+						B.MAKE_AMT_CODE AS MAKE_AMT_CODE,
+						GETICOMCODE2(${session.HOUSE_CODE},'M799', B.MAKE_AMT_CODE) AS MAKE_AMT_NAME,
+						B.WID             AS WID,
+						B.HGT            AS HGT,
+						getIcomcode2(${session.HOUSE_CODE},'M040',B.MATERIAL_TYPE)          AS LG_ATT_NAME,
+						getIcomcode2(${session.HOUSE_CODE},'M041',B.MATERIAL_CTRL_TYPE)     AS MD_ATT_NAME,
+						getIcomcode2(${session.HOUSE_CODE},'M042',B.MATERIAL_CLASS1)        AS SM_ATT_NAME,
+						getIcomcode2(${session.HOUSE_CODE},'M122',B.MATERIAL_CLASS2)        AS ATTRIBUTE_NAME,
+						
+						B.ABOL_RSN AS _ABOL_RSN,            
+						B.ABOL_RSN_ETC AS _ABOL_RSN_ETC,           
+						CONVERT_DATE(B.ABOL_DATE) AS _ABOL_DATE,               
+						B.ABOL_REQ_USER_ID AS _ABOL_REQ_USER_ID,
+                        (SELECT TEXT1 FROM SCODE WHERE TYPE = 'M969' AND CODE = B.ABOL_RSN) AS _ABOL_RSN_NM,
+                        (SELECT USER_NAME_LOC FROM ICOMLUSR WHERE USER_ID = B.ABOL_REQ_USER_ID AND HOUSE_CODE = ${session.HOUSE_CODE}) AS _ABOL_REQ_USER_NM,
+                        B.IMAGE_FILE_PATH AS IMAGE_FILE,
+                        (SELECT TEXT1 FROM SCODE WHERE TYPE = 'M988' AND CODE = A.NTC_LOC) AS H_NTC_LOC													
+					FROM  
+						ICOYPBHD A,ICOMMTGL B
+					WHERE A.HOUSE_CODE = B.HOUSE_CODE
+					AND A.ITEM_NO = B.ITEM_NO 
+					AND B.HOUSE_CODE = ${session.HOUSE_CODE}
+					AND UPPER(B.ITEM_NO) LIKE UPPER('%' || $S{item_no} || '%') 
+					AND UPPER(B.DESCRIPTION_LOC) LIKE '%' || UPPER($S{description_loc}) || '%' 
+					AND B.MATERIAL_TYPE = $S{material_type}                             
+					AND B.MATERIAL_CTRL_TYPE = $S{material_ctrl_type}                        
+					AND B.MATERIAL_CLASS1 = $S{material_class1}                           
+					AND B.MATERIAL_CLASS2 = $S{material_class2}                           
+					AND UPPER(B.MAKER_CODE) = $S{maker_code}                         
+					AND UPPER(B.MODEL_NO) LIKE UPPER('%' || $S{model_no} || '%')   
+					AND B.SPECIFICATION LIKE UPPER('%' || $S{specification} || '%')     
+					AND A.STK_DATE >= $S{add_date_start}
+					AND A.STK_DATE <= $S{add_date_end}
+					]]>
+					<if test="${abol_yn1}" operator="eq" value="Y">
+					<![CDATA[								
+					AND NVL(B.ITEM_BLOCK_FLAG,'N') = 'Y'
+					AND NVL(B.USEDFLAG,'Y') =  'N'
+					AND B.ABOL_RSN IS NOT NULL
+					AND A.ABOL_YN <> 'Y'
+					]]>
+					</if>					
+					<if test="${abol_yn1}" operator="eq" value="N">
+					<![CDATA[								
+					AND B.ABOL_RSN IS NULL
+					]]>
+					</if>
+					
+					<if test="${ntc_yn}" operator="eq" value="Y">
+					<![CDATA[								
+					AND A.NTC_YN = 'Y' 
+					AND A.ABOL_YN <> 'Y'
+					]]>
+					</if>								
+					<if test="${ntc_yn}" operator="eq" value="N">
+					<![CDATA[								
+					AND A.NTC_YN = 'N' 
+					AND A.ABOL_YN <> 'Y' 
+					]]>
+					</if>			
+																											
+					<![CDATA[
+					AND A.ABOL_YN = $S{abol_yn2}                  	
+					AND A.DEPT = $S{DEPARTMENT}
+					
+					UNION ALL
+					-- 일괄배부건 중 ( 일괄배부 출고일자 < 홍보물현황의 보유일자 ) 면 제외
+					SELECT
+					    'C' AS CRUD,
+					    ${DEPARTMENT} AS DEPT,				              
+					    ${DEPARTMENT_NAME_LOC} AS DEPT_NAME_LOC,
+					    
+					    GETICOMCODE2(${session.HOUSE_CODE},'M985', '1') AS CRE_GB_TXT,
+					   	'1' AS CRE_GB,
+						
+					    
+					    '1' AS DSTR_GB,
+					    
+					    ${session.ID} STK_USER_ID,
+                        (SELECT USER_NAME_LOC FROM ICOMLUSR WHERE USER_ID = ${session.ID}) AS STK_USER_NAME_LOC,
+                        TO_CHAR(SYSDATE,'YYYYMMDD') AS STK_DATE,        
+						TO_CHAR(SYSDATE,'HH24MMSS') AS STK_TIME,
+                        
+                        'N' AS NTC_YN,
+                        '' AS NTC_LOC,
+                        '' AS NTC_LOC_ETC,
+                        
+                        '' AS NTC_USER_ID,        
+						'' AS NTC_USER_NAME_LOC,  
+						'' AS NTC_DATE,            
+						'' AS NTC_TIME,            
+						
+						'N' AS ABOL_YN,            
+						'' AS ABOL_USER_ID,       
+						'' AS ABOL_USER_NAME_LOC, 
+						'' AS ABOL_DATE,        
+						'' AS ABOL_TIME,	
+                                                                 
+                        GETICOMCODE2(${session.HOUSE_CODE},'M986', '1') AS DSTR_GB_TXT,
+					    GETICOMCODE2(${session.HOUSE_CODE},'M987', '') AS NTC_YN_TXT,
+					    GETICOMCODE2(${session.HOUSE_CODE},'M988', '') AS NTC_LOC_TXT,
+					    GETICOMCODE2(${session.HOUSE_CODE},'M970', '') AS ABOL_YN_TXT,
+					    
+					    0 AS STK_QTY,                
+	                    0 AS NTC_QTY,                
+	                    0 AS ABOL_QTY,          
+					    					                          
+						B.ITEM_NO,           B.DESCRIPTION_LOC,         B.MATERIAL_TYPE, B.MATERIAL_CTRL_TYPE, B.MATERIAL_CLASS1,
+						B.MATERIAL_CLASS2,   B.STATUS,                  B.DELIVERY_LT,   B.QI_FLAG,            B.DO_FLAG,
+						B.Z_WORK_STAGE_FLAG, B.Z_DELIVERY_CONFIRM_FLAG, B.SPECIFICATION, B.IMAGE_FILE_PATH,    B.ITEM_GROUP,
+						B.APP_TAX_CODE,      B.MAKER_NAME,              B.MODEL_NO,      B.MAX_REQ_CNT,        B.MIN_REQ_CNT,
+						B.PUB_NO,            B.MINAMNT,                 B.USEDFLAG,
+						B.BASIC_UNIT                                                        AS SALES_UNIT, 
+						''                                                                AS INTEGRATED_BUY_FLAG,
+						NVL(B.ITEM_BLOCK_FLAG, 'N')                                         AS ITEM_BLOCK_FLAG,
+						CONVERT_DATE(B.EFFECTIVE_START_DATE)                                AS EFFECTIVE_START_DATE,
+						CONVERT_DATE(B.EFFECTIVE_END_DATE)                                  AS EFFECTIVE_END_DATE,
+						CONVERT_DATE(B.MLOBHOCD)                                            AS MLOBHOCD,
+						B.MAKE_AMT_CODE AS MAKE_AMT_CODE,
+						GETICOMCODE2(${session.HOUSE_CODE},'M799', B.MAKE_AMT_CODE) AS MAKE_AMT_NAME,
+						B.WID             AS WID,
+						B.HGT            AS HGT,
+						getIcomcode2(${session.HOUSE_CODE},'M040',B.MATERIAL_TYPE)          AS LG_ATT_NAME,
+						getIcomcode2(${session.HOUSE_CODE},'M041',B.MATERIAL_CTRL_TYPE)     AS MD_ATT_NAME,
+						getIcomcode2(${session.HOUSE_CODE},'M042',B.MATERIAL_CLASS1)        AS SM_ATT_NAME,
+						getIcomcode2(${session.HOUSE_CODE},'M122',B.MATERIAL_CLASS2)        AS ATTRIBUTE_NAME,
+						
+						B.ABOL_RSN AS _ABOL_RSN,            
+						B.ABOL_RSN_ETC AS _ABOL_RSN_ETC,           
+						CONVERT_DATE(B.ABOL_DATE) AS _ABOL_DATE,               
+						B.ABOL_REQ_USER_ID AS _ABOL_REQ_USER_ID,
+                        (SELECT TEXT1 FROM SCODE WHERE TYPE = 'M969' AND CODE = B.ABOL_RSN) AS _ABOL_RSN_NM,
+                        (SELECT USER_NAME_LOC FROM ICOMLUSR WHERE USER_ID = B.ABOL_REQ_USER_ID AND HOUSE_CODE = ${session.HOUSE_CODE}) AS _ABOL_REQ_USER_NM,
+                        B.IMAGE_FILE_PATH AS IMAGE_FILE, --이미지(사용자에게 보임)
+                        '' AS H_NTC_LOC												
+					FROM  
+						TBAIF02 A,ICOMMTGL B
+					WHERE A.MLOBSMCD = B.ITEM_NO
+					AND B.HOUSE_CODE = ${session.HOUSE_CODE}
+					AND UPPER(B.ITEM_NO) LIKE UPPER('%' || $S{item_no} || '%') 
+					AND UPPER(B.DESCRIPTION_LOC) LIKE '%' || UPPER($S{description_loc}) || '%' 
+					AND B.MATERIAL_TYPE = $S{material_type}                             
+					AND B.MATERIAL_CTRL_TYPE = $S{material_ctrl_type}                        
+					AND B.MATERIAL_CLASS1 = $S{material_class1}                           
+					AND B.MATERIAL_CLASS2 = $S{material_class2}                           
+					AND UPPER(B.MAKER_CODE) = $S{maker_code}                         
+					AND UPPER(B.MODEL_NO) LIKE UPPER('%' || $S{model_no} || '%')   
+					AND B.SPECIFICATION LIKE UPPER('%' || $S{specification} || '%')     
+					AND A.OUTXDATE >= $S{add_date_start}
+					AND A.OUTXDATE <= $S{add_date_end}
+					]]>
+					<if test="${abol_yn1}" operator="eq" value="Y">								
+					<![CDATA[								
+					AND NVL(B.ITEM_BLOCK_FLAG,'N') = 'Y'
+					AND NVL(B.USEDFLAG,'Y') =  'N'
+					AND B.ABOL_RSN IS NOT NULL
+					]]>
+					</if>					
+					<if test="${abol_yn1}" operator="eq" value="N">
+					<![CDATA[								
+					AND B.ABOL_RSN IS NULL
+					]]>
+					</if>
+					
+					<if test="${abol_yn2}" operator="eq" value="Y">
+					<![CDATA[								
+					AND A.STATCODE = ''               
+					]]>
+					</if>
+					
+					<if test="${ntc_yn}" operator="eq" value="Y">
+					<![CDATA[								
+					AND A.STATCODE = ''               
+					]]>
+					</if>							
+																																								
+					<![CDATA[
+					
+					AND A.MLOBSMCD NOT IN (SELECT DISTINCT B.ITEM_NO 
+					                         FROM TBAIF02 A ,ICOYPBHD B 
+					                        WHERE A.MLOBSMCD = B.ITEM_NO 
+					                         AND B.HOUSE_CODE = ${session.HOUSE_CODE}
+					                         AND B.DEPT = $S{DEPARTMENT}
+					                         AND A.OUTXDATE||A.OUTXDATE < B.STK_DATE||B.STK_TIME
+					                      )
+					AND A.STATCODE = '2011'
+					
+					UNION ALL					
+					-- 일괄배부건 중 ( 일괄배부 출고일자 > 홍보물현황의 보유일자 ) 이고  (홍보물현황이 폐기) 이면 일괄배부건 표시
+					SELECT
+					    'C' AS CRUD,
+					    ${DEPARTMENT} AS DEPT,				              
+					    ${DEPARTMENT_NAME_LOC} AS DEPT_NAME_LOC,
+					    
+					    GETICOMCODE2(${session.HOUSE_CODE},'M985', '1') AS CRE_GB_TXT,
+					   	'1' AS CRE_GB,
+						
+					    
+					    '1' AS DSTR_GB,
+					    
+					    ${session.ID} STK_USER_ID,
+                        (SELECT USER_NAME_LOC FROM ICOMLUSR WHERE USER_ID = ${session.ID}) AS STK_USER_NAME_LOC,
+                        TO_CHAR(SYSDATE,'YYYYMMDD') AS STK_DATE,        
+						TO_CHAR(SYSDATE,'HH24MMSS') AS STK_TIME,
+                        
+                        'N' AS NTC_YN,
+                        '' AS NTC_LOC,
+                        '' AS NTC_LOC_ETC,
+                        
+                        '' AS NTC_USER_ID,        
+						'' AS NTC_USER_NAME_LOC,  
+						'' AS NTC_DATE,            
+						'' AS NTC_TIME,            
+						
+						'N' AS ABOL_YN,            
+						'' AS ABOL_USER_ID,       
+						'' AS ABOL_USER_NAME_LOC, 
+						'' AS ABOL_DATE,        
+						'' AS ABOL_TIME,	
+                                                                 
+                        GETICOMCODE2(${session.HOUSE_CODE},'M986', '1') AS DSTR_GB_TXT,
+					    GETICOMCODE2(${session.HOUSE_CODE},'M987', '') AS NTC_YN_TXT,
+					    GETICOMCODE2(${session.HOUSE_CODE},'M988', '') AS NTC_LOC_TXT,
+					    GETICOMCODE2(${session.HOUSE_CODE},'M970', '') AS ABOL_YN_TXT,
+					    
+					    0 AS STK_QTY,                
+	                    0 AS NTC_QTY,                
+	                    0 AS ABOL_QTY,          
+					    					                          
+						B.ITEM_NO,           B.DESCRIPTION_LOC,         B.MATERIAL_TYPE, B.MATERIAL_CTRL_TYPE, B.MATERIAL_CLASS1,
+						B.MATERIAL_CLASS2,   B.STATUS,                  B.DELIVERY_LT,   B.QI_FLAG,            B.DO_FLAG,
+						B.Z_WORK_STAGE_FLAG, B.Z_DELIVERY_CONFIRM_FLAG, B.SPECIFICATION, B.IMAGE_FILE_PATH,    B.ITEM_GROUP,
+						B.APP_TAX_CODE,      B.MAKER_NAME,              B.MODEL_NO,      B.MAX_REQ_CNT,        B.MIN_REQ_CNT,
+						B.PUB_NO,            B.MINAMNT,                 B.USEDFLAG,
+						B.BASIC_UNIT                                                        AS SALES_UNIT, 
+						''                                                                AS INTEGRATED_BUY_FLAG,
+						NVL(B.ITEM_BLOCK_FLAG, 'N')                                         AS ITEM_BLOCK_FLAG,
+						CONVERT_DATE(B.EFFECTIVE_START_DATE)                                AS EFFECTIVE_START_DATE,
+						CONVERT_DATE(B.EFFECTIVE_END_DATE)                                  AS EFFECTIVE_END_DATE,
+						CONVERT_DATE(B.MLOBHOCD)                                            AS MLOBHOCD,
+						B.MAKE_AMT_CODE AS MAKE_AMT_CODE,
+						GETICOMCODE2(${session.HOUSE_CODE},'M799', B.MAKE_AMT_CODE) AS MAKE_AMT_NAME,
+						B.WID             AS WID,
+						B.HGT            AS HGT,
+						getIcomcode2(${session.HOUSE_CODE},'M040',B.MATERIAL_TYPE)          AS LG_ATT_NAME,
+						getIcomcode2(${session.HOUSE_CODE},'M041',B.MATERIAL_CTRL_TYPE)     AS MD_ATT_NAME,
+						getIcomcode2(${session.HOUSE_CODE},'M042',B.MATERIAL_CLASS1)        AS SM_ATT_NAME,
+						getIcomcode2(${session.HOUSE_CODE},'M122',B.MATERIAL_CLASS2)        AS ATTRIBUTE_NAME,
+						
+						B.ABOL_RSN AS _ABOL_RSN,            
+						B.ABOL_RSN_ETC AS _ABOL_RSN_ETC,           
+						CONVERT_DATE(B.ABOL_DATE) AS _ABOL_DATE,               
+						B.ABOL_REQ_USER_ID AS _ABOL_REQ_USER_ID,
+                        (SELECT TEXT1 FROM SCODE WHERE TYPE = 'M969' AND CODE = B.ABOL_RSN) AS _ABOL_RSN_NM,
+                        (SELECT USER_NAME_LOC FROM ICOMLUSR WHERE USER_ID = B.ABOL_REQ_USER_ID AND HOUSE_CODE = ${session.HOUSE_CODE}) AS _ABOL_REQ_USER_NM,
+                        B.IMAGE_FILE_PATH AS IMAGE_FILE, --이미지(사용자에게 보임)
+                        '' AS H_NTC_LOC												
+					FROM  
+						TBAIF02 A,ICOMMTGL B
+					WHERE A.MLOBSMCD = B.ITEM_NO
+					AND B.HOUSE_CODE = ${session.HOUSE_CODE}
+					AND UPPER(B.ITEM_NO) LIKE UPPER('%' || $S{item_no} || '%') 
+					AND UPPER(B.DESCRIPTION_LOC) LIKE '%' || UPPER($S{description_loc}) || '%' 
+					AND B.MATERIAL_TYPE = $S{material_type}                             
+					AND B.MATERIAL_CTRL_TYPE = $S{material_ctrl_type}                        
+					AND B.MATERIAL_CLASS1 = $S{material_class1}                           
+					AND B.MATERIAL_CLASS2 = $S{material_class2}                           
+					AND UPPER(B.MAKER_CODE) = $S{maker_code}                         
+					AND UPPER(B.MODEL_NO) LIKE UPPER('%' || $S{model_no} || '%')   
+					AND B.SPECIFICATION LIKE UPPER('%' || $S{specification} || '%')     
+					AND A.OUTXDATE >= $S{add_date_start}
+					AND A.OUTXDATE <= $S{add_date_end}
+					]]>
+					<if test="${abol_yn1}" operator="eq" value="Y">								
+					<![CDATA[								
+					AND NVL(B.ITEM_BLOCK_FLAG,'N') = 'Y'
+					AND NVL(B.USEDFLAG,'Y') =  'N'
+					AND B.ABOL_RSN IS NOT NULL
+					]]>
+					</if>					
+					<if test="${abol_yn1}" operator="eq" value="N">
+					<![CDATA[								
+					AND B.ABOL_RSN IS NULL
+					]]>
+					</if>
+					
+					<if test="${abol_yn2}" operator="eq" value="Y">
+					<![CDATA[								
+					AND A.STATCODE = ''               
+					]]>
+					</if>
+					
+					<if test="${ntc_yn}" operator="eq" value="Y">
+					<![CDATA[								
+					AND A.STATCODE = ''               
+					]]>
+					</if>							
+																																								
+					<![CDATA[
+					
+					AND A.MLOBSMCD    IN (SELECT DISTINCT B.ITEM_NO 
+					                         FROM TBAIF02 A ,ICOYPBHD B 
+					                        WHERE A.MLOBSMCD = B.ITEM_NO 
+					                         AND B.HOUSE_CODE = ${session.HOUSE_CODE}
+					                         AND B.DEPT = $S{DEPARTMENT}
+					                         AND B.ABOL_YN = 'Y'
+					                         AND A.OUTXDATE||A.OUTXDATE > B.STK_DATE||B.STK_TIME
+					                      )
+					AND A.STATCODE = '2011'					
+					                      						             
+				) AS X
+		) AS Y
+		ORDER BY NTC_YN DESC,NTC_LOC,ATTRIBUTE_NAME
+    ]]>
+	</method>
+	
+	<method name="et_getItemList_20170412_bak">
+	<![CDATA[
+	SELECT
+	    CRUD,                 DEPT,                    DEPT_NAME_LOC,       CRE_GB_TXT,         CRE_GB,                         
+		DSTR_GB,              STK_USER_ID,             STK_USER_NAME_LOC,   STK_DATE,           STK_TIME,           
+		NTC_YN,               NTC_LOC,                 NTC_LOC_ETC,         NTC_USER_ID,        NTC_USER_NAME_LOC,  
+		NTC_DATE,             NTC_TIME,            	   ABOL_YN,             ABOL_USER_ID,       ABOL_USER_NAME_LOC, 
+        ABOL_DATE,            ABOL_TIME,	           DSTR_GB_TXT,         NTC_YN_TXT,         NTC_LOC_TXT,        
+        ABOL_YN_TXT,          STK_QTY,                 NTC_QTY,             ABOL_QTY,           ITEM_NO,                 
+        DESCRIPTION_LOC,      MATERIAL_TYPE,           MATERIAL_CTRL_TYPE,  MATERIAL_CLASS1,    MATERIAL_CLASS2,         
+        STATUS,               DELIVERY_LT,             QI_FLAG,             DO_FLAG,            Z_WORK_STAGE_FLAG,             
+        Z_DELIVERY_CONFIRM_FLAG, SPECIFICATION,        IMAGE_FILE_PATH,     ITEM_GROUP,         APP_TAX_CODE,            
+        MAKER_NAME,           MODEL_NO,                MAX_REQ_CNT,         MIN_REQ_CNT,        EFFECTIVE_START_DATE,            
+        EFFECTIVE_END_DATE,   PUB_NO,                  MINAMNT,             MLOBHOCD,           USEDFLAG,
+        SALES_UNIT,           INTEGRATED_BUY_FLAG,     ITEM_BLOCK_FLAG,     LG_ATT_NAME,        MD_ATT_NAME,             
+        SM_ATT_NAME,          ATTRIBUTE_NAME,          Z_PURCHASE_TYPE,     Z_COLOR,            MAKE_AMT_CODE,        
+        MAKE_AMT_NAME,        WID,                     HGT,                 XNUM
+	FROM
+		(
+			SELECT
+			    CRUD,                 DEPT,                    DEPT_NAME_LOC,       CRE_GB_TXT,         CRE_GB,                         
+			    DSTR_GB,              STK_USER_ID,             STK_USER_NAME_LOC,   STK_DATE,           STK_TIME,           
+			    NTC_YN,               NTC_LOC,                 NTC_LOC_ETC,         NTC_USER_ID,        NTC_USER_NAME_LOC,  
+			    NTC_DATE,             NTC_TIME,            	   ABOL_YN,             ABOL_USER_ID,       ABOL_USER_NAME_LOC, 
+                ABOL_DATE,            ABOL_TIME,	           DSTR_GB_TXT,         NTC_YN_TXT,         NTC_LOC_TXT,        
+                ABOL_YN_TXT,          STK_QTY,                 NTC_QTY,             ABOL_QTY,           ITEM_NO,                 
+                DESCRIPTION_LOC,      MATERIAL_TYPE,           MATERIAL_CTRL_TYPE,  MATERIAL_CLASS1,    MATERIAL_CLASS2,         
+                STATUS,               DELIVERY_LT,             QI_FLAG,             DO_FLAG,            Z_WORK_STAGE_FLAG,             
+                Z_DELIVERY_CONFIRM_FLAG, SPECIFICATION,        IMAGE_FILE_PATH,     ITEM_GROUP,         APP_TAX_CODE,            
+                MAKER_NAME,           MODEL_NO,                MAX_REQ_CNT,         MIN_REQ_CNT,        EFFECTIVE_START_DATE,            
+                EFFECTIVE_END_DATE,   PUB_NO,                  MINAMNT,             MLOBHOCD,           USEDFLAG,
+                SALES_UNIT,           INTEGRATED_BUY_FLAG,     ITEM_BLOCK_FLAG,     LG_ATT_NAME,        MD_ATT_NAME,             
+                SM_ATT_NAME,          ATTRIBUTE_NAME,          Z_PURCHASE_TYPE,     Z_COLOR,            MAKE_AMT_CODE,        
+                MAKE_AMT_NAME,        WID,                     HGT,                 ROW_NUMBER() OVER(ORDER BY x.item_no ASC) AS XNUM
+			FROM
+				(
+					SELECT
+					    'R' AS CRUD,
+					    A.DEPT,              
+					    GETDEPTNAMELOC(${session.HOUSE_CODE}, 'WOORI', A.DEPT) DEPT_NAME_LOC,
+					    
+					    GETICOMCODE2(${session.HOUSE_CODE},'M985', A.CRE_GB) AS CRE_GB_TXT,
+					    A.CRE_GB,
+						
+					    
+					    A.DSTR_GB,
+					    
+					    A.STK_USER_ID,
+                        A.STK_USER_NAME_LOC,
+                        TO_CHAR(TO_DATE(A.STK_DATE,'YYYYMMDD'),'YYYY/MM/DD') AS STK_DATE,        
+						A.STK_TIME,
+                        
+                        A.NTC_YN,
+                        A.NTC_LOC,
+                        A.NTC_LOC_ETC,
+                        
+                        A.NTC_USER_ID,        
+						A.NTC_USER_NAME_LOC,  
+						TO_CHAR(TO_DATE(A.NTC_DATE,'YYYYMMDD'),'YYYY/MM/DD') AS NTC_DATE,            
+						A.NTC_TIME,            
+						
+						A.ABOL_YN,            
+						A.ABOL_USER_ID,       
+						A.ABOL_USER_NAME_LOC, 
+						TO_CHAR(TO_DATE(A.ABOL_DATE,'YYYYMMDD'),'YYYY/MM/DD') AS ABOL_DATE,        
+						A.ABOL_TIME,	
+                                                                 
+                        GETICOMCODE2(${session.HOUSE_CODE},'M986', A.DSTR_GB) AS DSTR_GB_TXT,
+					    GETICOMCODE2(${session.HOUSE_CODE},'M987', A.NTC_YN) AS NTC_YN_TXT,
+					    GETICOMCODE2(${session.HOUSE_CODE},'M988', A.NTC_LOC) AS NTC_LOC_TXT,
+					    GETICOMCODE2(${session.HOUSE_CODE},'M970', A.ABOL_YN) AS ABOL_YN_TXT,
+					    
+					    STK_QTY,                
+	                    NTC_QTY,                
+	                    ABOL_QTY,          
+					    					                          
+						B.ITEM_NO,           B.DESCRIPTION_LOC,         B.MATERIAL_TYPE, B.MATERIAL_CTRL_TYPE, B.MATERIAL_CLASS1,
+						B.MATERIAL_CLASS2,   B.STATUS,                  B.DELIVERY_LT,   B.QI_FLAG,            B.DO_FLAG,
+						B.Z_WORK_STAGE_FLAG, B.Z_DELIVERY_CONFIRM_FLAG, B.SPECIFICATION, B.IMAGE_FILE_PATH,    B.ITEM_GROUP,
+						B.APP_TAX_CODE,      B.MAKER_NAME,              B.MODEL_NO,      B.MAX_REQ_CNT,        B.MIN_REQ_CNT,
+						B.PUB_NO,            B.MINAMNT,                 B.USEDFLAG,
+						BASIC_UNIT                                                        AS SALES_UNIT, 
+						''                                                                AS INTEGRATED_BUY_FLAG,
+						NVL(B.ITEM_BLOCK_FLAG, 'N')                                         AS ITEM_BLOCK_FLAG,
+						CONVERT_DATE(B.EFFECTIVE_START_DATE)                                AS EFFECTIVE_START_DATE,
+						CONVERT_DATE(B.EFFECTIVE_END_DATE)                                  AS EFFECTIVE_END_DATE,
+						CONVERT_DATE(B.MLOBHOCD)                                            AS MLOBHOCD,
+						getIcomcode2(${session.HOUSE_CODE},'M040',B.MATERIAL_TYPE)          AS LG_ATT_NAME,
+						getIcomcode2(${session.HOUSE_CODE},'M041',B.MATERIAL_CTRL_TYPE)     AS MD_ATT_NAME,
+						getIcomcode2(${session.HOUSE_CODE},'M042',B.MATERIAL_CLASS1)        AS SM_ATT_NAME,
+						getIcomcode2(${session.HOUSE_CODE},'M122',B.MATERIAL_CLASS2)        AS ATTRIBUTE_NAME,
+						getIcomcode2(${session.HOUSE_CODE},'M602',B.Z_PURCHASE_TYPE)        AS Z_PURCHASE_TYPE,
+						getIcomcode(${session.HOUSE_CODE},'M602',B.Z_PURCHASE_TYPE,'TEXT3') AS Z_COLOR,
+						B.MAKE_AMT_CODE AS MAKE_AMT_CODE,
+						GETICOMCODE2(${session.HOUSE_CODE},'M799', B.MAKE_AMT_CODE) AS MAKE_AMT_NAME,
+						B.WID             AS WID,
+						B.HGT            AS HGT
+					FROM  
+						ICOYPBHD A,ICOMMTGL B
+					WHERE A.HOUSE_CODE = B.HOUSE_CODE
+					AND A.ITEM_NO = B.ITEM_NO 
+					AND B.HOUSE_CODE = ${session.HOUSE_CODE}
+					AND UPPER(B.ITEM_NO) LIKE UPPER('%' || $S{item_no} || '%') 
+					AND UPPER(B.DESCRIPTION_LOC) LIKE '%' || UPPER($S{description_loc}) || '%' 
+					AND B.MATERIAL_TYPE = $S{material_type}                             
+					AND B.MATERIAL_CTRL_TYPE = $S{material_ctrl_type}                        
+					AND B.MATERIAL_CLASS1 = $S{material_class1}                           
+					AND B.MATERIAL_CLASS2 = $S{material_class2}                           
+					AND UPPER(B.MAKER_CODE) = $S{maker_code}                         
+					AND UPPER(B.MODEL_NO) LIKE UPPER('%' || $S{model_no} || '%')   
+					AND B.SPECIFICATION LIKE UPPER('%' || $S{specification} || '%')     
+					AND A.STK_DATE >= $S{add_date_start}
+					AND A.STK_TIME <= $S{add_date_end}
+					AND NVL(B.ITEM_BLOCK_FLAG,'N') =  $S{item_block_flag}                 
+				) AS X
+		) AS Y
+    ]]>
+	</method>
+	
+	<method name="et_insertItem_select">
+	<![CDATA[
+        SELECT COUNT(*) CNT 
+          FROM ICOYPBHD 
+		<OPT=F,S>         WHERE HOUSE_CODE = ?</OPT>
+		<OPT=F,S>           AND DEPT = ?</OPT>
+		<OPT=F,S>           AND ITEM_NO = ?</OPT>
+	]]>
+    </method>
+    
+    <method name="et_insertItem_select2">
+	<![CDATA[
+        SELECT COUNT(*) CNT 
+          FROM ICOYPBHD 
+         WHERE ABOL_YN = 'Y'
+		<OPT=F,S>           AND HOUSE_CODE = ?</OPT>
+		<OPT=F,S>           AND DEPT = ?</OPT>
+		<OPT=F,S>           AND ITEM_NO = ?</OPT>		 
+	]]>
+    </method>
+	
+	<method name="et_insertItem">
+	<![CDATA[
+	insert into ICOYPBHD 
+	( 
+	    HOUSE_CODE        ,
+		DEPT              ,  
+		ITEM_NO           ,  
+		
+		CRE_GB            ,  
+		DSTR_GB           ,  
+		
+		STK_USER_ID       ,  
+		STK_USER_NAME_LOC ,  
+		STK_DATE          ,  
+		STK_TIME          ,  
+		
+		NTC_YN            ,  
+		NTC_LOC           ,  
+		NTC_LOC_ETC       ,  
+		NTC_USER_ID       ,  
+		NTC_USER_NAME_LOC ,  
+		NTC_DATE          ,  
+		NTC_TIME          ,  
+		
+		ABOL_YN           ,  
+		ABOL_USER_ID      ,  
+		ABOL_USER_NAME_LOC,  
+		ABOL_DATE         ,  
+		ABOL_TIME         	    
+	) values ( 
+	    ?           ,
+		?              ,	 
+		?           ,	 
+		
+		?            ,	 
+		?           ,	 
+		
+		?       ,	 
+		? ,	 
+		?          ,	 
+	    ?          , 
+	    
+	    ?            , 
+	    ?           , 
+	    ?       , 
+	    ?       , 
+	    ? , 
+	    ?          , 
+	    ?          , 
+	    
+	    ?           , 
+		?      , 
+		?, 
+		?         , 
+		?         
+	)	 
+	]]>
+    </method>
+    
+    <method name="et_updateItem">
+	<![CDATA[
+        update ICOYPBHD set
+            DSTR_GB = ?,
+            
+            NTC_YN = ?,
+            NTC_LOC = ?, 
+            NTC_LOC_ETC = ?, 
+            NTC_USER_ID = ?, 
+            NTC_USER_NAME_LOC = ?, 
+            NTC_DATE = ?, 
+            NTC_TIME    = ?, 
+            
+            ABOL_YN  = ?, 
+            ABOL_USER_ID = ?, 
+            ABOL_USER_NAME_LOC     = ?, 
+            ABOL_DATE   = ?, 
+            ABOL_TIME   = ?
+        where HOUSE_CODE = ? 
+          and DEPT = ? 
+          and ITEM_NO = ? 
+	]]>
+    </method>
+    
+    <method name="et_updateItem2">
+	<![CDATA[
+        update ICOYPBHD set
+        	
+        	CRE_GB = ?,
+            DSTR_GB = ?,
+            
+            NTC_YN = ?,
+            NTC_LOC = ?, 
+            NTC_LOC_ETC = ?, 
+            NTC_USER_ID = ?, 
+            NTC_USER_NAME_LOC = ?, 
+            NTC_DATE = ?, 
+            NTC_TIME    = ?, 
+            
+            ABOL_YN  = ?, 
+            ABOL_USER_ID = ?, 
+            ABOL_USER_NAME_LOC     = ?, 
+            ABOL_DATE   = ?, 
+            ABOL_TIME   = ?
+        where HOUSE_CODE = ? 
+          and DEPT = ? 
+          and ITEM_NO = ? 
+	]]>
+    </method>
+</service>

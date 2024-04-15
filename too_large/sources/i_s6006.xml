@@ -1,0 +1,1223 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<service>
+	<method name="SR_checkDupResidentNo">
+	<![CDATA[
+  		SELECT RESIDENT_NO, JOB_STATUS, STATUS
+  		  FROM ICOMVNGL_ICT
+         WHERE HOUSE_CODE  = '#house_code#'
+           AND RESIDENT_NO = '#resident_no#'
+   		   AND STATUS <> 'D'
+	]]>
+	</method>
+
+	<!-- ICT 사용 -->
+	<method name="SR_checkDupIrsNo">
+	<![CDATA[
+	  SELECT IRS_NO, JOB_STATUS, STATUS
+	  	FROM ICOMVNGL_ICT
+       WHERE HOUSE_CODE = '#house_code#'
+         AND IRS_NO     = '#irs_no#'
+         AND STATUS <> 'D'
+	]]>
+
+	</method>
+	<method name="SR_checkSgType">
+	<![CDATA[
+	 	SELECT B.SG_TYPE
+	 	  FROM SSGVN A, SSGGL B
+ 	     WHERE A.SG_REFITEM = B.SG_REFITEM
+ 	       AND A.VENDOR_CODE = (select vendor_code from icomvngl where irs_no = '#irs_no#' and rownum = 1)
+		]]>
+
+	</method>
+
+	<method name="getVendorCode">
+	<![CDATA[
+	 	 SELECT VENDOR_CODE FROM ICOMVNGL
+          WHERE HOUSE_CODE = '#house_code#'
+                AND IRS_NO = '#vendor_code#'
+		]]>
+
+	</method>
+	
+	<!-- ICT 사용 -->
+	<method name="getVncp">
+	<![CDATA[
+			  SELECT A1.VENDOR_CODE
+			    FROM ICOMVNCP_ICT A1
+		       WHERE A1.HOUSE_CODE  = '#house_code#'
+		         AND A1.VENDOR_CODE = '#vendor_code#'
+	]]>
+	</method>
+	
+	<method name="et_chkVnglSign">
+		<![CDATA[
+			SELECT CASE WHEN COUNT(A1.VENDOR_CODE) > 0 THEN 'Y' ELSE 'N' END  AS IS_YN 
+			    FROM ICOMVNGL_ICT A1
+		       WHERE A1.HOUSE_CODE  = '#house_code#'
+		         AND A1.VENDOR_CODE = '#vendor_code#'		   		 
+		         AND A1.SIGN_STATUS = 'P'		          		   		  
+		]]>
+	</method>
+	
+	<method name="et_chkVngl">
+		<![CDATA[
+			SELECT CASE WHEN COUNT(A1.VENDOR_CODE) > 0 THEN 'Y' ELSE 'N' END  AS IS_YN 
+			    FROM ICOMVNGL_ICT A1
+		       WHERE A1.HOUSE_CODE  = '#house_code#'
+		         AND A1.VENDOR_CODE = '#vendor_code#'		   		   
+		]]>
+	</method>
+	
+	<method name="et_chkVncp">
+		<![CDATA[
+			SELECT CASE WHEN COUNT(A1.VENDOR_CODE) > 0 THEN 'Y' ELSE 'N' END  AS IS_YN 
+			    FROM ICOMVNCP_ICT A1
+		       WHERE A1.HOUSE_CODE  = '#house_code#'
+		         AND A1.VENDOR_CODE = '#vendor_code#'		   		   
+		]]>
+	</method>
+	
+	<method name="et_updVngl">
+		<![CDATA[
+			UPDATE ICOMVNGL_ICT
+			SET SIGN_STATUS = 'P'
+			WHERE HOUSE_CODE  = ${house_code   }
+		    AND VENDOR_CODE = ${vendor_code   } 		   		   
+		]]>
+	</method>
+	
+	
+	
+	
+	<method name="SR_insertScrItem_chk_status">
+	<![CDATA[
+		SELECT
+		 COUNT(*) CNT
+		FROM ICOMVNGL
+		WHERE 1 = 1
+		AND JOB_STATUS = 'E'
+		AND HOUSE_CODE = '#house_code#'
+		AND VENDOR_CODE = '#vendor_code#'
+	]]>
+	</method>
+	
+	<method name="SR_insertScrItem_doConfirm">
+	<![CDATA[
+	     /* 공급업체 소싱정보등록 저장시 자동으로 로그인아이디 신청 */
+		 UPDATE ICOMVNGL SET
+	    		   JOB_STATUS	 	 = 'P'
+	    		 , SIGN_STATUS      = ''
+	    		 , CHANGE_DATE      = TO_CHAR(SYSDATE,'YYYYMMDD')
+	    		 , CHANGE_TIME      = SUBSTR(TO_CHAR(SYSDATE, 'HH24MISS'), 1, 6)
+	    		 WHERE HOUSE_CODE   = '#house_code#'
+	    		 AND VENDOR_CODE    = '#vendor_code#'
+
+	]]>
+	</method>
+
+	<method name="SR_getHicoBdLis0">
+	<![CDATA[
+	 	 	SELECT
+        		V.VENDOR_CODE
+        		, GETICOMCODE2(V.HOUSE_CODE, 'M071',V.VENDOR_COND) AS VENDOR_COND
+        		,V.VENDOR_NAME_LOC,	V.VENDOR_NAME_ENG,
+        		(SELECT BANK_NAME_LOC FROM ICOMVNBK WHERE HOUSE_CODE = '#house_code#' AND VENDOR_CODE = '#vendor_code#') AS BANK_NAME_LOC
+        		,V.IRS_NO, V.BUSINESS_TYPE
+        		,V.INDUSTRY_TYPE, V.FOUNDATION_DATE
+        		,V.COMPANY_REG_NO, V.MAIN_PRODUCT
+        		,D.HOMEPAGE, D.ZIP_CODE
+        		,D.ADDRESS_LOC, D.CEO_NAME_LOC
+        		,SUBSTR(V.RESIDENT_NO,1,6) AS RESIDENT_NO, D.PHONE_NO1
+        		,D.FAX_NO, D.PHONE_NO2, D.EMAIL
+        		,V.EBIZ_FLAG,	V.CREDIT_RATING ,V.START_DATE
+        		,V.ATTACH_NO, V.ATTACH_NO2
+        		,(SELECT NVL(COUNT(*),0) FROM ICOMATCH WHERE DOC_NO = V.ATTACH_NO) AS ATTACH_COUNT
+        		,(SELECT NVL(COUNT(*),0) FROM ICOMATCH WHERE DOC_NO = V.ATTACH_NO2) AS ATTACH_COUNT2
+        		,GETICOMCODE1( V.HOUSE_CODE,'M086',MAIN_PRODUCT) AS TMAIN_PRODUCT
+        		,GETICOMBACP2( V.HOUSE_CODE,'CC','P',V.CTRL_CODE) CTRL_NAME
+        		,V.CTRL_CODE, V.VENDOR_COND AS VENDOR_COND_O
+        		,( SELECT NVL(F_CAPITAL1,0) / 100 FROM ICOMVNFC
+				WHERE HOUSE_CODE = V.HOUSE_CODE
+				AND VENDOR_CODE = V.VENDOR_CODE
+				AND YEAR = ( SELECT MAX(YEAR) FROM ICOMVNFC
+							WHERE HOUSE_CODE = V.HOUSE_CODE
+							AND VENDOR_CODE = V.VENDOR_CODE ) ) AS F_CAPITAL1
+        	FROM
+        		ICOMVNGL V, ICOMADDR D
+        	WHERE
+        		V.HOUSE_CODE = D.HOUSE_CODE
+        		AND V.VENDOR_CODE = D.CODE_NO
+        		AND V.HOUSE_CODE = '#house_code#'
+        		AND V.VENDOR_CODE = '#vendor_code#'
+        		AND D.CODE_TYPE = '2'
+		]]>
+
+	</method>
+
+	<method name="SR_getHicoBdLis_1">
+	<![CDATA[
+	 	  SELECT TEMP.SEQ, NVL(VNET.ETC_QTY,0) AS ETC_QTY,
+         	NVL(VNET.ETC_AMT,0) AS ETC_AMT,
+         	NVL(VNET.ETC_QTY,0) + NVL(VNET.ETC_AMT,0) AS ETC_SUM,
+         	NVL(VNET.ETC_PERCENT,0) AS ETC_PERCENT
+		 from (	select '01' seq from dual
+		 			union all
+		 		select '02' seq from dual
+		 			union all
+		 		select '03' seq from dual
+		 			union all
+		 		select '04' seq	from dual
+		 			union all
+		 		select '05' seq from dual
+		 			union all
+		 		select '06' seq from dual
+		 		) TEMP left outer join ICOMVNET VNET
+		 	on temp.seq = vnet.seq and vnet.house_code = '#house_code#' and vnet.vendor_code = '#vendor_code#' and vnet.etc_info = '01'
+		 ORDER BY TEMP.SEQ
+		]]>
+
+	</method>
+
+	<method name="SR_getHicoBdLis_2">
+	<![CDATA[
+	 	  SELECT '03' AS ETC_INFO, TEMP.SEQ, VNET.ETC_TEXT,
+         	NVL(VNET.ETC_AMT,0) AS ETC_AMT,
+         	NVL(VNET.ETC_PERCENT,0) AS ETC_PERCENT
+         from (	select '01' seq from dual
+         			union all
+         		select '02' seq from dual
+         			union all
+         		select '03' seq from dual
+         	  ) TEMP left outer join ICOMVNET VNET
+         	on temp.seq = vnet.seq and vnet.house_code = '#house_code#' and vnet.vendor_code = '#vendor_code#' and vnet.etc_info = '03'
+		 UNION ALL
+		 SELECT '04' AS ETC_INFO, TEMP.SEQ, VNET.ETC_TEXT,
+         	NVL(VNET.ETC_AMT,0) AS ETC_AMT,
+         	NVL(VNET.ETC_PERCENT,0) AS ETC_PERCENT
+         from (	select '01' seq from dual
+         			union all
+         		select '02' seq from dual
+         			union all
+         		select '03' seq from dual
+         	  ) TEMP left outer join ICOMVNET VNET
+         	on temp.seq = vnet.seq and vnet.house_code = '#house_code#' and vnet.vendor_code = '#vendor_code#' and vnet.etc_info = '04'
+		]]>
+
+	</method>
+
+	<method name="SR_getHicoBdLis_3">
+	<![CDATA[
+	 	  SELECT TEMP.SEQ, VNET.ETC_TEXT,
+         	NVL(VNET.ETC_QTY,0) AS ETC_QTY,
+         	NVL(VNET.ETC_AMT,0) AS ETC_AMT,
+         	NVL(VNET.ETC_PERCENT,0) AS ETC_PERCENT
+         from (	select '01' seq from dual
+         			union all
+         		select '02' seq from dual
+         			union all
+         		select '03' seq from dual
+         	  ) TEMP left outer join ICOMVNET VNET
+         	on temp.seq = vnet.seq and vnet.house_code = '#house_code#' and vnet.vendor_code = '#vendor_code#' and vnet.etc_info = '02'
+		]]>
+
+	</method>
+
+	<method name="SR_getHicoBdLis_4">
+	<![CDATA[
+	 	  select date1,   title, remark,
+         vendor_code, seq
+         from icomvnit
+         where house_code = '#house_code#'
+         and vendor_code = '#vendor_code#'
+         and info_type = 'CH'
+         and status in ('C', 'R')
+		]]>
+
+	</method>
+
+	<method name="SR_getHicoBdLis_5">
+	<![CDATA[
+	 	  select name_loc, zip_code,
+            address_loc, plant_area,
+            lease_flag, vendor_code, seq,
+            phone_no, fax_no
+         from icomvnpl
+         where house_code = '#house_code#'
+         and vendor_code = '#vendor_code#'
+         and status in ('C', 'R')
+		]]>
+
+	</method>
+
+	<method name="SR_getHicoBdLis_6">
+	<![CDATA[
+	 	  select title, desc1, qty, date2,
+            date1, vendor_code, seq,
+            vendor_name_loc, country_name_loc
+         from icomvnit
+         where house_code = '#house_code#'
+         and vendor_code = '#vendor_code#'
+         and info_type = 'FA'
+         and status in ('C', 'R')
+		]]>
+
+	</method>
+
+	<method name="SR_getHicoBdLis_7">
+	<![CDATA[
+	 	  select title, desc1, desc2, date1,
+		    date2, remark, vendor_code, seq
+		 from icomvnit
+		 where house_code = '#house_code#'
+		 and vendor_code = '#vendor_code#'
+		 and info_type = 'QR'
+		 and status in ('C', 'R')
+		]]>
+
+	</method>
+
+	<method name="SR_getHicoBdLis_8">
+	<![CDATA[
+	 	  select desc1, desc2, unit_measure,
+		    capa, title, vendor_code, seq
+		 from icomvnit
+		 where house_code = '#house_code#'
+		 and vendor_code = '#vendor_code#'
+		 and info_type = 'PI'
+		 and status in ('C', 'R')
+		]]>
+
+	</method>
+
+	<method name="SR_getHicoBdLis_9">
+	<![CDATA[
+	 	  SELECT
+ 					B.SG_NAME
+ 					,A.REQ_DATE
+ 					,A.SIGN_DATE
+		 	FROM 	SSGVN A, SSGGL B, ICOMLUSR C
+		 	WHERE   A.SG_REFITEM = B.SG_REFITEM
+		 	AND     A.HOUSE_CODE = B.HOUSE_CODE
+		 	AND     B.HOUSE_CODE = C.HOUSE_CODE(+)
+		 	AND		B.LEVEL_COUNT = '3'
+		    AND     B.SG_CHARGE = C.USER_ID(+)
+		    AND     A.VENDOR_CODE = '#vendor_code#'
+		]]>
+
+	</method>
+
+	<method name="SR_getHicoBdLis_10">
+	<![CDATA[
+	 	  select company_code, user_name,
+		     division, position,
+		     phone_no, email, mobile_no, fax_no,
+		     vendor_code, seq,
+		     geticomcode2('#house_code#','C002',position) as tposition,
+		     geticomcode2('#house_code#','M106',position) as tmanager_position
+		     from icomvncp
+		     where house_code = '#house_code#'
+		     and vendor_code = '#vendor_code#'
+		     and status in ('C', 'R')
+		]]>
+
+	</method>
+
+	<method name="SR_getHicoBdLis_11">
+	<![CDATA[
+	 	  select
+               getIcomcode2('#house_code#','M001',BANK_COUNTRY)AS BANK_COUNTRY
+              ,BANK_NAME_LOC
+              ,BRANCH_NAME_LOC
+              ,BANK_ACCT
+              ,DEPOSITOR_NAME
+          from icomvnbk
+          where house_code = '#house_code#'
+          and vendor_code = '#vendor_code#'
+		]]>
+
+	</method>
+
+	<method name="SR_getHicoBdLis_12">
+	<![CDATA[
+	 	  select year
+		 	,s_sale_amt
+		 	,s_profit1
+		 	,s_profit3
+		 	,s_profit4
+		 	,f_property11+f_property12 as f_property_1
+		 	,f_property11
+		 	,f_property12
+		 	,f_property21+f_property22+f_property23 as f_property_2
+		 	,f_property21
+		 	,f_property22
+		 	,f_property23
+		 	,f_property24
+		 	,f_property25
+		 	,f_property11+f_property12+f_property21+f_property22+f_property23 as f_property_12
+		 	,f_debt11
+		 	,f_debt21
+		 	,f_debt22
+		 	,f_debt23
+		 	,f_debt11+f_debt21 as f_debt_1
+		 	,f_capital1
+		 	,f_capital2
+		 	,f_capital3
+		 	,f_capital4
+		 	,f_capital5
+		 	,f_capital1+f_capital2+f_capital4 as f_capital124
+		 	,d_sale_amt
+		 	,d_sale_amt/s_sale_amt*100 as d_sale_rate
+		 	,i_sale_amt
+		 	,i_sale_amt/s_sale_amt*100 as i_sale_rate
+		 	,d_sale_amt+i_sale_amt as di_sale_amt
+		 	,(d_sale_amt+i_sale_amt)/s_sale_amt*100 as di_sale_rate
+		    ,vendor_code
+		 from icomvnfc
+		 where house_code = '#house_code#'
+		 and vendor_code = '#vendor_code#'
+		 and status in ('C', 'R')
+		 and year between '#year_c#'-2 and '#year_c#'
+		 order by year desc
+		]]>
+
+	</method>
+
+	<method name="SR_getAddrList">
+	<![CDATA[
+	select SERIALNUMBER, ZIPCODE, OLDZIPCODE, CITY, DISTRICT, STREET1,
+		STREET2, HOUSENUMBER1,HOUSENUMBER2
+		from ICOMZIPC where STREET1 like '%#street1#%' or STREET2 like '%#street2#%'
+		order by ZIPCODE
+	]]>
+	</method>
+
+	<!-- ICT 사용 -->
+	<method name="et_getScrItem">
+	<![CDATA[
+			select
+					  MAX(L_CODE)	as L_CODE
+					, MAX(L_NAME)	as L_NAME
+					, MAX(M_CODE)	as M_CODE
+					, MAX(M_NAME)	as M_NAME
+					, MAX(S_CODE)	as S_CODE
+					, MAX(S_NAME)	as S_NAME
+			  from	(select	  SG_REFITEM	as L_CODE
+			  				, SG_NAME		as L_NAME
+			  				, 0				as M_CODE
+			  				, ''			as M_NAME
+			  				, 0				as S_CODE
+			  				, ''			as S_NAME
+			  		  from SSGGL
+			  		 where HOUSE_CODE  = '#house_code#'
+			  		   and LEVEL_COUNT = '1'
+			  		   and USE_FLAG    = 'Y'
+			  		   and SG_REFITEM  = (select PARENT_SG_REFITEM
+			  		   					    from SSGGL
+			  		   					   where HOUSE_CODE  = '#house_code#'
+			  		   					     and USE_FLAG    = 'Y'
+			  		   					     and LEVEL_COUNT = '2'
+			  		   					     and SG_REFITEM  =	(select PARENT_SG_REFITEM
+			  		   					     					   from SSGGL
+			  		   					     					  where HOUSE_CODE = '#house_code#'
+			  		   					     					    and USE_FLAG   = 'Y'
+			  		   					     					    and LEVEL_COUNT= '3'
+			  		   					     					    and SG_REFITEM = (select max(sg_refitem)
+			  		   					     					    				   from SSGVN
+			  		   					     					    				  where HOUSE_CODE  = '#house_code#'
+			  		   					     					    				    and VENDOR_CODE = '#vendor_code#'
+			  		   					     					    				 )
+			  		   					     					)
+			  		   					 )
+			  		UNION ALL
+			  		select
+			  				  0				as L_CODE
+			  				, ''			as L_NAME
+			  				, SG_REFITEM	as M_CODE
+			  				, SG_NAME		as M_NAME
+			  				, 0				as S_CODE
+			  				, ''			as S_NAME
+			  		  from SSGGL
+			  		 where HOUSE_CODE        = '#house_code#'
+			  		   and USE_FLAG          = 'Y'
+			  		   and LEVEL_COUNT       = '2'
+			  		   and PARENT_SG_REFITEM =	(select PARENT_SG_REFITEM
+			  		   							   from SSGGL
+			  		   							  where HOUSE_CODE  = '#house_code#'
+			  		   							    and USE_FLAG    = 'Y'
+			  		   							    and LEVEL_COUNT = '2'
+			  		   							    and SG_REFITEM  =	(select PARENT_SG_REFITEM
+			  		   							    					   from SSGGL
+			  		   							    					  where HOUSE_CODE  = '#house_code#'
+			  		   							    					    and USE_FLAG    = 'Y'
+			  		   							    					    and LEVEL_COUNT = '3'
+			  		   							    					    and SG_REFITEM  =	(select max(sg_refitem)
+			  		   							    					    					   from SSGVN
+			  		   							    					    					  where HOUSE_CODE = '#house_code#'
+			  		   							    					    					    and VENDOR_CODE = '#vendor_code#'
+			  		   							    					    					)
+			  		   							    					)
+			  		   							)
+			  		  and SG_REFITEM =	(select PARENT_SG_REFITEM
+			  		  					   from SSGGL
+			  		  					  where HOUSE_CODE  = '#house_code#'
+			  		  					    and USE_FLAG    = 'Y'
+			  		  					    and LEVEL_COUNT = '3'
+			  		  					    and SG_REFITEM  =	(select max(sg_refitem)
+			  		  					    					   from SSGVN
+			  		  					    					  where HOUSE_CODE  = '#house_code#'
+			  		  					    					    and VENDOR_CODE = '#vendor_code#'
+			  		  					    					)
+			  		  					)
+			  		UNION ALL
+					select
+							  0				as L_CODE
+							, ''			as L_NAME
+							, 0				as M_CODE
+							, ''			as M_NAME
+							, SG_REFITEM	as S_CODE
+							, SG_NAME		as S_NAME
+					  from SSGGL
+					 where HOUSE_CODE  = '#house_code#'
+					   and USE_FLAG    = 'Y'
+					   and LEVEL_COUNT = '3'
+					   and SG_REFITEM  =	(select SG_REFITEM
+					   						   from SSGGL
+					   						  where HOUSE_CODE  = '#house_code#'
+					   						    and USE_FLAG    = 'Y'
+					   						    and LEVEL_COUNT = '3'
+					   						    and SG_REFITEM  =	(select max(sg_refitem)
+					   						    					   from SSGVN
+					   						    					  where HOUSE_CODE  = '#house_code#'
+					   						    					    and VENDOR_CODE = '#vendor_code#'
+					   						    					)
+					   						)
+					) AA
+		]]>
+
+	</method>
+
+
+	<!-- ICT 사용 -->
+	<method name="SR_getHicoBdLis3">
+	<![CDATA[
+				select
+						  title
+						, desc1
+						, desc2
+						, convert_date(date1) as date1
+						, convert_date(date2) as date2
+						, remark
+						, vendor_code
+						, seq
+				  from ICOMVNIT_ICT
+				 where house_code  = '#house_code#'
+				   and vendor_code = '#vendor_code#'
+				   and info_type   = 'QR'
+				   and status in ('C', 'R')
+		]]>
+
+	</method>
+
+
+	<!-- ICT 사용 -->
+	<method name="SR_insertHicoBdLis3">
+	<![CDATA[
+			insert into ICOMVNIT_ICT	(
+										  house_code
+										, vendor_code
+										, info_type
+										, seq
+										, title
+										, desc1
+										, desc2
+										, date1
+										, date2
+										, remark
+										, status
+										, add_date
+										, add_time
+										, add_user_id
+										, add_user_name_loc
+										, add_user_name_eng
+										, add_user_dept
+										)
+			
+			select
+					  '#house_code#'
+					, '#vendor_code#'
+					, 'QR'
+					, (select LPAD(NVL(max(seq), 0)+1, 6, '0')
+					     from ICOMVNIT_ICT
+					    where house_code  = '#house_code#'
+					      and info_type   ='QR'
+					      and vendor_code = '#vendor_code#')
+					, ${title}
+					, ${desc1}
+					, ${desc2}
+					, ${date1}
+					, ${date2}
+					, ${remark}
+					, 'C'
+					, TO_CHAR(SYSDATE, 'YYYYMMDD')
+					, TO_CHAR(SYSDATE, 'HH24MISS')
+					, '#user_id#'
+					, '#name_loc#'
+					, '#name_eng#'
+					, '#dept#'
+			from dual
+
+		]]>
+
+	</method>
+
+
+	<!-- ICT 사용 -->
+	<method name="SR_updateHicoBdLis3">
+	<![CDATA[
+			UPDATE ICOMVNIT_ICT
+			   SET TITLE           	= ${title}
+			     , DESC1            = ${desc1}
+			     , DESC2            = ${desc2}
+			     , DATE1            = ${date1}
+			     , DATE2            = ${date2}
+			     , REMARK           = ${remark}
+			     , STATUS           = 'R'
+			     , ADD_DATE         = '#add_date#'
+			     , ADD_TIME         = '#add_time#'
+			     , ADD_USER_ID      = '#user_id#'
+			     , CHANGE_DATE      = '#add_date#'
+			     , CHANGE_TIME      = '#add_time#'
+			     , CHANGE_USER_ID   = '#user_id#'
+    		 WHERE HOUSE_CODE   = ${house_code}
+    		   AND VENDOR_CODE  = ${vendor_code}
+    		   AND SEQ          = ${seq}
+               AND INFO_TYPE    = 'QR'
+		]]>
+
+	</method>
+
+	<!-- ICT 사용 -->
+	<method name="SR_deleteHicoBdLis3">
+	<![CDATA[
+	 	 update icomvnit_ict
+	 	    set status = 'D'
+          where house_code  = '#house_code#'
+            and vendor_code = '#vendor_code#'
+            and info_type   = '#mode2#'
+            and seq         = ${seq}
+		]]>
+
+	</method>
+
+	<method name="SR_getItemInfo">
+	<![CDATA[
+	 	 	SELECT	TITLE
+				  , DESC1
+				  , DESC2
+				  , GETICOMCODE1(HOUSE_CODE,'M040',DESC1) AS DESC1_TEXT
+				  , GETICOMCODE1(HOUSE_CODE,'M041',DESC2) AS DESC2_TEXT
+				  , MAKER_CODE
+				  , GETICOMCODE1(HOUSE_CODE,'M199',MAKER_CODE) AS MAKER_TEXT
+				  , UNIT_PRICE
+				  , SALES_USER_NAME
+				  , SALES_DEPT_NAME
+				  , REMARK
+				  , VENDOR_CODE
+				  , SEQ
+				  , POSITION
+       			  , PHONE_NO
+      			  , MOBILE_NO
+      			  , EMAIL
+	   		FROM ICOMVNIT
+	   		WHERE HOUSE_CODE  = '#house_code#'
+	    	  AND VENDOR_CODE = '#vendor_code#'
+	    	  AND INFO_TYPE   = '#mode#'
+	    	  AND STATUS IN ('C','R')
+		]]>
+
+	</method>
+
+	<method name="SR_setItemInfo_update">
+	<![CDATA[
+	 	  UPDATE ICOMVNIT
+				 SET   TITLE  		    = ?
+				     , DESC1  		    = ?
+				     , DESC2  		    = ?
+				     , MAKER_CODE  	    = ?
+				     , UNIT_PRICE  	    = ?
+				     , SALES_USER_NAME  = ?
+				     , SALES_DEPT_NAME  = ?
+				     , REMARK 		    = ?
+				     , POSITION			= ?
+                	 , EMAIL			= ?
+                	 , PHONE_NO			= ?
+                	 , MOBILE_NO		= ?
+			 		 , STATUS           = 'R'
+   		 		 , ADD_DATE         = '#add_date#'
+   		 		 , ADD_TIME         = '#add_time#'
+   		 		 , ADD_USER_ID      = '#user_id#'
+   		 		 , CHANGE_DATE      = '#add_date#'
+   		 		 , CHANGE_TIME      = '#add_time#'
+   		 		 , CHANGE_USER_ID   = '#user_id#'
+   		 WHERE HOUSE_CODE   = ?
+   		 AND VENDOR_CODE    = ?
+   		 AND SEQ            = ?
+   		 AND INFO_TYPE      = '#mode2#'
+		]]>
+
+	</method>
+
+	<method name="SR_setItemInfo_insert">
+	<![CDATA[
+	 	 	INSERT INTO ICOMVNIT(
+					 HOUSE_CODE
+					,VENDOR_CODE
+					,INFO_TYPE
+					,SEQ
+					,STATUS
+					,ADD_DATE
+					,ADD_TIME
+					,ADD_USER_ID
+					,TITLE
+					,DESC1
+					,DESC2
+					,MAKER_CODE
+					,UNIT_PRICE
+					,SALES_USER_NAME
+					,SALES_DEPT_NAME
+					,REMARK
+					,POSITION
+                	,EMAIL
+                	,PHONE_NO
+                	,MOBILE_NO
+	)
+	SELECT
+		      ? --HOUSE_CODE
+			, ? --VENDOR_CODE
+			, '#mode2#' --INFO_TYPE
+			, (SELECT NVL(MAX(TO_NUMBER(SEQ)),0) + 1      --NVL(MAX(SEQ),0) + 1
+			   FROM ICOMVNIT
+			   WHERE HOUSE_CODE = '#house_code#'
+			     AND VENDOR_CODE = '#vendor_code#'
+			     AND INFO_TYPE = '#mode2#')
+			, 'C'
+			, '#add_date#' --ADD_DATE
+			, '#add_time#' --ADD_TIME
+			, '#user_id#'  --ADD_USER_ID
+			, ? --TITLE
+			, ? --DESC1
+			, ? --DESC2
+			, ? --MAKER_CODE
+			, ? --UNIT_PRICE
+			, ? --SALES_USER_NAME
+			, ? --SALES_DEPT_NAME
+			, ? --REMARK
+			, ? --POSITION
+			, ? --EMAIL
+			, ? --PHONE_NO
+			, ? --MOBILE_NO
+	FROM DUAL
+		]]>
+
+	</method>
+
+	<method name="SR_getCodeList">
+	<![CDATA[
+	 	 		SELECT CODE, TEXT1
+			FROM ICOMCODE
+			WHERE TYPE='#type#'
+			  AND HOUSE_CODE = '#house_code#'
+			  AND CODE LIKE '%' || '#code#' || '%'
+			  AND UPPER(TEXT1) LIKE '%' || UPPER('#text#') ||'%'
+			  AND STATUS IN ('C','R')
+			  AND USE_FLAG = 'Y'
+		]]>
+
+	</method>
+
+	<method name="SR_isSgExist">
+	<![CDATA[
+       SELECT  			(SELECT COUNT(*)
+              			  FROM SSGVN
+                         WHERE HOUSE_CODE  = '#house_code#'
+                           AND VENDOR_CODE = '#vendor_code#'
+                           AND SG_REFITEM = '#sg_refitem#') AS COUNT
+             ,CASE WHEN (SELECT COUNT(*)
+                           FROM SSGVN
+                          WHERE HOUSE_CODE  = '#house_code#'
+                            AND VENDOR_CODE = '#vendor_code#') = 0 THEN 'N'
+              ELSE 'Y' END AS IS_EXIST
+         FROM DUAL
+		]]>
+
+	</method>
+	
+	<!-- ICT 사용 -->
+	<method name="SR_isSgExist2">
+	<![CDATA[
+		select    ROWNUM										as COUNT
+				, T1.SG_REFITEM									as SG_REFITEM
+				, T2.PARENT_SG_REFITEM							as LEV2
+				, (select Z.PARENT_SG_REFITEM
+				     from SSGGL Z
+				    where Z.SG_REFITEM = T2.PARENT_SG_REFITEM
+				      and ROWNUM = 1)							as LEV1
+				, 0												as EVAL_SCORE
+		  from SSGVN T1
+		     , SSGGL T2
+		 where T1.HOUSE_CODE  = '#house_code#'
+		   and VENDOR_CODE    = '#vendor_code#'
+		   and ROWNUM         = 1
+		   and T1.SG_REFITEM  = T2.SG_REFITEM
+		]]>
+
+	</method>
+
+	<method name="SR_getScreenItem">
+	<![CDATA[
+	 	 		select s_factor_item_refitem, item_name, seq from icomvsfd
+		where house_code = '#house_code#' and s_factor_refitem = '#s_factor_refitem#'
+			and use_flag = 'Y'  order by seq asc
+		]]>
+
+	</method>
+	
+	<method name="SR_getVendorSgNumber">
+	<![CDATA[
+	 	 		select max(seller_sg_refitem) vendor_sg_refitem from SSGVN
+				where house_code  = '#house_code#' 
+				  and vendor_code = '#s_vendor_code#'
+		]]>
+
+	</method>
+	
+	<method name="SR_getScreenSumValue">
+	<![CDATA[
+	 	 		SELECT ITEM_SCORE,WEIGHT,MAX_SCORE,ITEM_RATE,SUM_SCORE,VENDOR_SG_REFITEM FROM
+			   	(   
+			    SELECT FD.ITEM_SCORE 
+			          ,TD.WEIGHT
+		             ,(SELECT MAX(ITEM_SCORE) FROM ICOMVSFD WHERE S_FACTOR_REFITEM = SI.S_FACTOR_REFITEM) AS MAX_SCORE
+		             ,ROUND(FD.ITEM_SCORE/(SELECT MAX(ITEM_SCORE) FROM ICOMVSFD WHERE S_FACTOR_REFITEM = SI.S_FACTOR_REFITEM),2) AS ITEM_RATE
+		             ,ROUND(TD.WEIGHT*(FD.ITEM_SCORE/(SELECT MAX(ITEM_SCORE) FROM ICOMVSFD WHERE S_FACTOR_REFITEM = SI.S_FACTOR_REFITEM)),2) AS SUM_SCORE
+		             ,SI.VENDOR_SG_REFITEM AS VENDOR_SG_REFITEM
+			     FROM ICOMVSFH FH, ICOMVSFD FD,ICOMVSTH TH,ICOMVSTD TD,ICOMVSSI SI
+			     WHERE FH.HOUSE_CODE          = FD.HOUSE_CODE  
+			      AND  FD.HOUSE_CODE          = TH.HOUSE_CODE
+			      AND  TH.HOUSE_CODE          = TD.HOUSE_CODE
+			      AND  TD.HOUSE_CODE          = SI.HOUSE_CODE    
+			      AND  FH.S_FACTOR_REFITEM    = FD.S_FACTOR_REFITEM  
+			      AND  FD.S_FACTOR_REFITEM   = TD.S_FACTOR_REFITEM  
+			      AND  TD.S_FACTOR_REFITEM   = SI.S_FACTOR_REFITEM  
+			      AND  TH.S_TEMPLATE_REFITEM = TD.S_TEMPLATE_REFITEM
+			      AND  FD.SEQ                = SI.SELECTED_SEQ
+			      AND  FD.HOUSE_CODE         = #house_code# 
+			      --AND  FD.S_FACTOR_REFITEM   = #s_factor_refitem#
+			      AND  FD.USE_FLAG           = 'Y'
+			      --AND  TD.S_TEMPLATE_REFITEM = #s_template_refitem# 
+			      AND  SI.STATUS <> 'D'
+         		  AND  SI.VENDOR_SG_REFITEM = #sVendor_sg_refitem#
+			     ORDER BY VENDOR_SG_REFITEM DESC
+			     ) A
+			     --WHERE ROWNUM = '1'				
+		]]>
+
+	</method>
+	
+	<method name="SR_updateSgvn">
+	<![CDATA[
+	 	  update SSGVN set
+           eval_score = '#sum_score#'
+         where house_code = '#house_code#'
+           and vendor_sg_refitem = '#vendor_sg_refitem#'
+		]]>
+
+	</method>
+	
+	<method name="SR_updateVssi">
+	<![CDATA[
+	 	  update icomvssi set
+           status = 'D'
+         where house_code = '#house_code#'
+           and vendor_sg_refitem = '#sVendor_sg_refitem#'
+		]]>
+
+	</method>	
+	<method name="SR_updateSgvn1">
+	<![CDATA[
+	 	  update SSGVN set
+           status = 'D'
+         where house_code = '#house_code#'
+           and vendor_sg_refitem = '#vendor_sg_refitem#'
+		]]>
+
+	</method>	
+
+	<method name="SR_getScreenList">
+	<![CDATA[
+	 	 SELECT D.S_FACTOR_REFITEM, D.FACTOR_NAME, D.FACTOR_TYPE, D.SCALE_COUNT,
+   		D.REQUIRED_SEQ, B.S_TEMPLATE_REFITEM, B.S_TEMPLATE_REFITEM AS C_TEMPLATE_REFITEM,
+   		MAX(D.SCALE_COUNT) OVER() AS MAX_SCALE_COUNT,
+     	MAX(D.SCALE_COUNT) OVER() - D.SCALE_COUNT + 1 AS COLSPAN
+   		FROM SSGGL A, ICOMVSTH B, ICOMVSTD C, ICOMVSFH D
+   		WHERE A.SG_REFITEM = '#sg_refitem#'
+   			AND B.USE_FLAG = 'Y' AND B.S_TEMPLATE_REFITEM = C.S_TEMPLATE_REFITEM
+   			AND C.S_FACTOR_REFITEM = D.S_FACTOR_REFITEM
+   			AND D.USE_FLAG = 'Y'
+   			AND A.HOUSE_CODE = B.HOUSE_CODE AND B.HOUSE_CODE = C.HOUSE_CODE
+   			--AND A.S_TEMPLATE_REFITEM = B.S_TEMPLATE_REFITEM
+   			AND B.S_TEMPLATE_REFITEM = '5'
+   			AND A.HOUSE_CODE = '#house_code#'  ORDER BY D.S_FACTOR_REFITEM ASC
+		]]>
+
+	</method>
+
+	<method name="SR_getScreenList_bak">
+	<![CDATA[
+	 	 SELECT D.S_FACTOR_REFITEM, D.FACTOR_NAME, D.FACTOR_TYPE, D.SCALE_COUNT,
+   		D.REQUIRED_SEQ, A.S_TEMPLATE_REFITEM, A.C_TEMPLATE_REFITEM,
+   		MAX(D.SCALE_COUNT) OVER() AS MAX_SCALE_COUNT,
+     	MAX(D.SCALE_COUNT) OVER() - D.SCALE_COUNT + 1 AS COLSPAN
+   		FROM SSGGL A, ICOMVSTH B, ICOMVSTD C, ICOMVSFH D
+   		WHERE A.SG_REFITEM = '#sg_refitem#'
+   			AND B.USE_FLAG = 'Y' AND B.S_TEMPLATE_REFITEM = C.S_TEMPLATE_REFITEM
+   			AND C.S_FACTOR_REFITEM = D.S_FACTOR_REFITEM
+   			AND D.USE_FLAG = 'Y'
+   			AND A.HOUSE_CODE = B.HOUSE_CODE AND B.HOUSE_CODE = C.HOUSE_CODE
+   			AND A.S_TEMPLATE_REFITEM = B.S_TEMPLATE_REFITEM
+   			AND A.HOUSE_CODE = '#house_code#'  ORDER BY D.S_FACTOR_REFITEM ASC
+		]]>
+
+	</method>
+
+	<method name="SR_insertScrItem_sgvn">
+	<![CDATA[
+	 	  insert into SSGVN (
+            	   house_code
+            	   ,seller_sg_refitem
+            	   ,screening_status
+            	   ,progress_status
+            	   ,req_date
+            	   ,s_template_refitem
+            	   ,c_template_refitem
+            	   ,sg_refitem
+            	   ,vendor_code
+            	   ,add_date
+            	 ) values (
+            	   '#house_code#',
+            	   getMaxVendor_sg_refitem(),
+            	   ?, 1, TO_CHAR(SYSDATE, 'YYYYMMDD'),
+            	   ?, ?, ?,
+            	   ? ,
+            	   TO_CHAR(SYSDATE, 'YYYYMMDD'))
+		]]>
+
+	</method>
+
+	<method name="SR_insertScrItem_vssi">
+	<![CDATA[
+	 	  INSERT INTO ICOMVSSI (
+				 house_code
+				 ,s_selected_item_refitem
+				 ,s_factor_refitem
+				 ,selected_seq
+				 ,vendor_sg_refitem
+				 ) VALUES (
+				 '#house_code#'
+				 ,getMaxICOMVSSIseq(),
+				 ?, ?, getVendor_sg_refitem() )
+		]]>
+
+	</method>
+
+	<method name="SR_insertScrItem2">
+	<![CDATA[
+	 	  insert into SSGVN (
+            house_code
+            ,seller_sg_refitem
+            ,screening_status
+            ,progress_status
+            ,req_date
+            ,s_template_refitem
+            ,c_template_refitem
+            ,sg_refitem
+            ,vendor_code
+            ,add_date
+          ) select
+            '#house_code#',
+            NVL(max(seller_sg_refitem),0) + 1,
+            ?, 1, TO_CHAR(SYSDATE,'YYYYMMDD'),
+            ?, ?, ?,
+            ? , TO_CHAR(SYSDATE,'YYYYMMDD')
+            from SSGVN
+		]]>
+
+	</method>
+	
+	<method name="SR_modifyVssi">
+	<![CDATA[
+	 	  UPDATE ICOMVSSI
+	 	    SET SELECTED_SEQ = ?
+	 	  WHERE HOUSE_CODE = '#house_code#'
+	 	    AND S_FACTOR_REFITEM = ?
+	 	    AND VENDOR_SG_REFITEM = ?
+		]]>
+
+	</method>
+
+	<method name="et_getVendorEvalList">
+	<![CDATA[
+	  SELECT NICE.E_DATE
+            ,NICE.BIZ_NO
+            ,NICE.CORP_NO
+            ,NICE.CMP_NM
+            ,NICE.MGR_NM
+            ,NICE.ESTAB_YMD
+            ,NICE.UTEL
+            ,NICE.UFAX
+            ,NICE.UZIP_CD
+            ,NICE.UADDR
+            ,NICE.BANK_NM
+            ,NICE.LASTGRD2
+            ,NICE.CASH_GRADE
+            ,NICE.MON_GRADE
+            ,NICE.DNBGRD
+            ,NICE.BZ_TYP
+            ,NICE.BZ_CND
+            ,NICE.TYP
+       FROM ICOMVNGL VNGL
+           ,DBK_REPORT01 NICE
+      WHERE VNGL.HOUSE_CODE  = '#house_code#'
+        AND NICE.BIZ_NO      = VNGL.IRS_NO
+        AND NICE.E_DATE BETWEEN $S{FROM_DATE} 
+        AND $S{TO_DATE}
+        AND NICE.CMP_NM like '%'||$S{VENDOR_NAME_LOC}||'%'
+        AND VNGL.VENDOR_CODE  = $S{vendor_code}
+      ORDER BY E_DATE DESC
+	]]>
+	</method>
+	
+	<method name="SR_getEvalScore">
+	<![CDATA[
+		SELECT 0 AS EVAL_SCORE
+		  FROM SSGVN 
+		 WHERE HOUSE_CODE = '#house_code#'
+		   AND VENDOR_CODE = '#vendor_code#'
+		   AND SG_REFITEM = '#sg_refitem#'
+		]]>
+
+	</method>
+	
+	<method name="SR_getFISelectList">
+	<![CDATA[
+		SELECT
+		VENDOR_CODE
+		,YEAR
+		,QUICK_ASSETS
+		,INVENTORIES
+		,(QUICK_ASSETS + INVENTORIES) AS SUM1
+		,INVESTMENTS
+		,TANGIBLE_ASSETS
+		,INTANGIBLE_ASSETS
+		,NON_CURRENT_ASSETS
+		,(INVESTMENTS + TANGIBLE_ASSETS + INTANGIBLE_ASSETS + NON_CURRENT_ASSETS) AS SUM2
+		,(QUICK_ASSETS + INVENTORIES + INVESTMENTS + TANGIBLE_ASSETS + INTANGIBLE_ASSETS + NON_CURRENT_ASSETS) AS ASSET_TOTAL
+		,CURRENT_LIABILITIES
+		,LONG_TERM_LIABILITIES
+		,(CURRENT_LIABILITIES + LONG_TERM_LIABILITIES) AS SUM3
+		,CAPITAL_STOCK
+		,CAPITAL_STOCK AS SUM4
+		,LEGAL_RESERVE
+		,UNDIVIDED_PROFIT
+		,(LEGAL_RESERVE + UNDIVIDED_PROFIT) AS SUM5
+		,(CAPITAL_STOCK + LEGAL_RESERVE + UNDIVIDED_PROFIT) AS CAPITAL_TOTAL
+		,(CURRENT_LIABILITIES + LONG_TERM_LIABILITIES + CAPITAL_STOCK + LEGAL_RESERVE + UNDIVIDED_PROFIT) AS ALL_TOTAL
+		FROM ICOMVNFI
+		WHERE HOUSE_CODE = '#house_code#'
+		AND VENDOR_CODE = '#vendor_code#'
+		ORDER BY YEAR DESC
+		]]>
+	</method>
+	
+	<method name="SR_getISSelectList">
+	<![CDATA[
+		SELECT
+		VENDOR_CODE
+		,YEAR
+		,SALES
+		,COST_SALES
+		,GROSS_PROFIT
+		,SELLING_ADMIN
+		,OPERATING_INCOME
+		,NON_OPERATING_INCOME
+		,NON_OPERATING_EXPENSE
+		,INCOM_LOSE
+		,CORPORATION_TAX
+		,NET_INCOME
+		FROM ICOMVNIS
+		WHERE HOUSE_CODE = '#house_code#'
+		AND VENDOR_CODE = '#vendor_code#'
+		ORDER BY YEAR DESC
+		]]>
+	</method>
+	
+	<method name="SR_insertIF">
+	<![CDATA[
+		INSERT INTO ICOMVNFI
+		(
+		    HOUSE_CODE
+		    ,VENDOR_CODE
+		    ,YEAR
+		    ,STATUS
+		    ,ADD_USER_ID
+		    ,ADD_DATE
+		    ,ADD_TIME
+		    ,QUICK_ASSETS
+		    ,INVENTORIES
+		    ,INVESTMENTS
+		    ,TANGIBLE_ASSETS
+		    ,INTANGIBLE_ASSETS
+		    ,NON_CURRENT_ASSETS
+		    ,CURRENT_LIABILITIES
+		    ,LONG_TERM_LIABILITIES
+		    ,CAPITAL_STOCK
+		    ,LEGAL_RESERVE
+		    ,UNDIVIDED_PROFIT
+		) VALUES
+		(
+		    '#house_code#'
+		    ,'#vendor_code#'
+		    ,?
+		    ,'C'
+		    ,'#user_id#'
+		    ,TO_CHAR(SYSDATE, 'YYYYMMDD')
+            ,TO_CHAR(SYSDATE, 'HH24MISS')
+		    ,NVL(?,0)
+		    ,NVL(?,0)
+		    ,NVL(?,0)
+		    ,NVL(?,0)
+		    ,NVL(?,0)
+		    ,NVL(?,0)
+		    ,NVL(?,0)
+		    ,NVL(?,0)
+		    ,NVL(?,0)
+		    ,NVL(?,0)
+		    ,NVL(?,0)
+		)
+		]]>
+	</method>
+	
+	<method name="SR_updateIF">
+	<![CDATA[
+		UPDATE ICOMVNFI SET
+		QUICK_ASSETS = NVL(?,0)
+		,INVENTORIES = NVL(?,0)
+		,INVESTMENTS = NVL(?,0)
+		,TANGIBLE_ASSETS = NVL(?,0)
+		,INTANGIBLE_ASSETS = NVL(?,0)
+		,NON_CURRENT_ASSETS = NVL(?,0)
+		,CURRENT_LIABILITIES = NVL(?,0)
+		,LONG_TERM_LIABILITIES = NVL(?,0)
+		,CAPITAL_STOCK = NVL(?,0)
+		,LEGAL_RESERVE = NVL(?,0)
+		,UNDIVIDED_PROFIT = NVL(?,0)
+		,CHANGE_USER_ID = '#user_id#'
+		,CHANGE_DATE = TO_CHAR(SYSDATE, 'YYYYMMDD')
+		,CHANGE_TIME = TO_CHAR(SYSDATE, 'HH24MISS')
+		,STATUS = 'R'
+		WHERE HOUSE_CODE = ?
+		AND VENDOR_CODE = ?
+		AND YEAR = ?
+	]]>
+	</method>
+	
+	<method name="SR_deleteIF">
+	<![CDATA[
+	 	 DELETE ICOMVNFI 
+		 WHERE HOUSE_CODE = '#house_code#'
+		 AND VENDOR_CODE = '#vendor_code#'
+		 AND YEAR = '#year#'
+		]]>
+
+	</method>
+	
+	
+	<method name="SR_insertIS">
+	<![CDATA[
+		INSERT INTO ICOMVNIS
+		(
+		    HOUSE_CODE
+		    ,VENDOR_CODE
+		    ,YEAR
+		    ,STATUS
+		    ,ADD_USER_ID
+		    ,ADD_DATE
+		    ,ADD_TIME
+		    ,SALES
+			,COST_SALES
+			,GROSS_PROFIT
+			,SELLING_ADMIN
+			,OPERATING_INCOME
+			,NON_OPERATING_INCOME
+			,NON_OPERATING_EXPENSE
+			,INCOM_LOSE
+			,CORPORATION_TAX
+			,NET_INCOME
+		) VALUES
+		(
+		    '#house_code#'
+		    ,'#vendor_code#'
+		    ,?
+		    ,'C'
+		    ,'#user_id#'
+		    ,TO_CHAR(SYSDATE, 'YYYYMMDD')
+            ,TO_CHAR(SYSDATE, 'HH24MISS')
+		    ,NVL(?,0)
+		    ,NVL(?,0)
+		    ,NVL(?,0)
+		    ,NVL(?,0)
+		    ,NVL(?,0)
+		    ,NVL(?,0)
+		    ,NVL(?,0)
+		    ,NVL(?,0)
+		    ,NVL(?,0)
+		    ,NVL(?,0)
+		)
+		]]>
+	</method>
+	
+	<method name="SR_updateIS">
+	<![CDATA[
+		UPDATE ICOMVNIS SET
+		SALES = NVL(?,0)
+		,COST_SALES = NVL(?,0)
+		,GROSS_PROFIT = NVL(?,0)
+		,SELLING_ADMIN = NVL(?,0)
+		,OPERATING_INCOME = NVL(?,0)
+		,NON_OPERATING_INCOME = NVL(?,0)
+		,NON_OPERATING_EXPENSE = NVL(?,0)
+		,INCOM_LOSE = NVL(?,0)
+		,CORPORATION_TAX = NVL(?,0)
+		,NET_INCOME = NVL(?,0)
+		,CHANGE_USER_ID = '#user_id#'
+		,CHANGE_DATE = TO_CHAR(SYSDATE, 'YYYYMMDD')
+		,CHANGE_TIME = TO_CHAR(SYSDATE, 'HH24MISS')
+		,STATUS = 'R'
+		WHERE HOUSE_CODE = ?
+		AND VENDOR_CODE = ?
+		AND YEAR = ?
+	]]>
+	</method>
+	
+	<method name="SR_deleteIS">
+	<![CDATA[
+	 	 DELETE ICOMVNIS 
+		 WHERE HOUSE_CODE = '#house_code#'
+		 AND VENDOR_CODE = '#vendor_code#'
+		 AND YEAR = '#year#'
+		]]>
+
+	</method>
+
+</service>

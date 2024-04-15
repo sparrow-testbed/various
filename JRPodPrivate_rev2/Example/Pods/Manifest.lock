@@ -1,0 +1,240 @@
+PODS:
+  - AGGeometryKit (1.2.9):
+    - AGGeometryKit/CALayerProperties (= 1.2.9)
+    - AGGeometryKit/UIViewProperties (= 1.2.9)
+  - AGGeometryKit/CALayerProperties (1.2.9)
+  - AGGeometryKit/UIViewProperties (1.2.9)
+  - DateTools (2.0.0)
+  - Expecta (1.0.6)
+  - "Expecta+Snapshots (3.1.1)":
+    - Expecta (~> 1.0)
+    - FBSnapshotTestCase/Core (~> 2.0)
+    - Specta (~> 1.0)
+  - extobjc (0.0.1)
+  - FBSnapshotTestCase (2.1.4):
+    - FBSnapshotTestCase/SwiftSupport (= 2.1.4)
+  - FBSnapshotTestCase/Core (2.1.4)
+  - FBSnapshotTestCase/SwiftSupport (2.1.4):
+    - FBSnapshotTestCase/Core
+  - FrameAccessor (2.0)
+  - JKCategories (1.9.2):
+    - JKCategories/CoreData (= 1.9.2)
+    - JKCategories/CoreLocation (= 1.9.2)
+    - JKCategories/Foundation (= 1.9.2)
+    - JKCategories/MapKit (= 1.9.2)
+    - JKCategories/QuartzCore (= 1.9.2)
+    - JKCategories/UIKit (= 1.9.2)
+  - JKCategories/CoreData (1.9.2):
+    - JKCategories/CoreData/NSFetchRequest (= 1.9.2)
+    - JKCategories/CoreData/NSManagedObject (= 1.9.2)
+    - JKCategories/CoreData/NSManagedObjectContext (= 1.9.2)
+  - JKCategories/CoreData/NSFetchRequest (1.9.2)
+  - JKCategories/CoreData/NSManagedObject (1.9.2):
+    - JKCategories/CoreData/NSManagedObjectContext
+  - JKCategories/CoreData/NSManagedObjectContext (1.9.2):
+    - JKCategories/CoreData/NSFetchRequest
+  - JKCategories/CoreLocation (1.9.2):
+    - JKCategories/CoreLocation/CLLocation (= 1.9.2)
+  - JKCategories/CoreLocation/CLLocation (1.9.2)
+  - JKCategories/Foundation (1.9.2):
+    - JKCategories/Foundation/NSArray (= 1.9.2)
+    - JKCategories/Foundation/NSBundle (= 1.9.2)
+    - JKCategories/Foundation/NSData (= 1.9.2)
+    - JKCategories/Foundation/NSDate (= 1.9.2)
+    - JKCategories/Foundation/NSDateFormatter (= 1.9.2)
+    - JKCategories/Foundation/NSDictionary (= 1.9.2)
+    - JKCategories/Foundation/NSException (= 1.9.2)
+    - JKCategories/Foundation/NSFileHandle (= 1.9.2)
+    - JKCategories/Foundation/NSFileManager (= 1.9.2)
+    - JKCategories/Foundation/NSHTTPCookieStorage (= 1.9.2)
+    - JKCategories/Foundation/NSIndexPath (= 1.9.2)
+    - JKCategories/Foundation/NSInvocation (= 1.9.2)
+    - JKCategories/Foundation/NSNotificationCenter (= 1.9.2)
+    - JKCategories/Foundation/NSNumber (= 1.9.2)
+    - JKCategories/Foundation/NSObject (= 1.9.2)
+    - JKCategories/Foundation/NSRunLoop (= 1.9.2)
+    - JKCategories/Foundation/NSSet (= 1.9.2)
+    - JKCategories/Foundation/NSString (= 1.9.2)
+    - JKCategories/Foundation/NSTimer (= 1.9.2)
+    - JKCategories/Foundation/NSURL (= 1.9.2)
+    - JKCategories/Foundation/NSURLConnection (= 1.9.2)
+    - JKCategories/Foundation/NSURLRequest (= 1.9.2)
+    - JKCategories/Foundation/NSURLSession (= 1.9.2)
+    - JKCategories/Foundation/NSUserDefaults (= 1.9.2)
+  - JKCategories/Foundation/NSArray (1.9.2)
+  - JKCategories/Foundation/NSBundle (1.9.2)
+  - JKCategories/Foundation/NSData (1.9.2)
+  - JKCategories/Foundation/NSDate (1.9.2)
+  - JKCategories/Foundation/NSDateFormatter (1.9.2)
+  - JKCategories/Foundation/NSDictionary (1.9.2)
+  - JKCategories/Foundation/NSException (1.9.2)
+  - JKCategories/Foundation/NSFileHandle (1.9.2)
+  - JKCategories/Foundation/NSFileManager (1.9.2)
+  - JKCategories/Foundation/NSHTTPCookieStorage (1.9.2)
+  - JKCategories/Foundation/NSIndexPath (1.9.2)
+  - JKCategories/Foundation/NSInvocation (1.9.2)
+  - JKCategories/Foundation/NSNotificationCenter (1.9.2)
+  - JKCategories/Foundation/NSNumber (1.9.2)
+  - JKCategories/Foundation/NSObject (1.9.2)
+  - JKCategories/Foundation/NSRunLoop (1.9.2)
+  - JKCategories/Foundation/NSSet (1.9.2)
+  - JKCategories/Foundation/NSString (1.9.2):
+    - JKCategories/Foundation/NSData
+  - JKCategories/Foundation/NSTimer (1.9.2)
+  - JKCategories/Foundation/NSURL (1.9.2)
+  - JKCategories/Foundation/NSURLConnection (1.9.2)
+  - JKCategories/Foundation/NSURLRequest (1.9.2)
+  - JKCategories/Foundation/NSURLSession (1.9.2)
+  - JKCategories/Foundation/NSUserDefaults (1.9.2)
+  - JKCategories/MapKit (1.9.2):
+    - JKCategories/MapKit/MKMapView (= 1.9.2)
+  - JKCategories/MapKit/MKMapView (1.9.2)
+  - JKCategories/QuartzCore (1.9.2):
+    - JKCategories/QuartzCore/CAAnimation (= 1.9.2)
+    - JKCategories/QuartzCore/CALayer (= 1.9.2)
+    - JKCategories/QuartzCore/CAMediaTimingFunction (= 1.9.2)
+    - JKCategories/QuartzCore/CAShapeLayer (= 1.9.2)
+    - JKCategories/QuartzCore/CATransaction (= 1.9.2)
+  - JKCategories/QuartzCore/CAAnimation (1.9.2)
+  - JKCategories/QuartzCore/CALayer (1.9.2)
+  - JKCategories/QuartzCore/CAMediaTimingFunction (1.9.2)
+  - JKCategories/QuartzCore/CAShapeLayer (1.9.2)
+  - JKCategories/QuartzCore/CATransaction (1.9.2)
+  - JKCategories/UIKit (1.9.2):
+    - JKCategories/UIKit/UIApplication (= 1.9.2)
+    - JKCategories/UIKit/UIBarButtonItem (= 1.9.2)
+    - JKCategories/UIKit/UIBezierPath (= 1.9.2)
+    - JKCategories/UIKit/UIButton (= 1.9.2)
+    - JKCategories/UIKit/UIColor (= 1.9.2)
+    - JKCategories/UIKit/UIControl (= 1.9.2)
+    - JKCategories/UIKit/UIDevice (= 1.9.2)
+    - JKCategories/UIKit/UIFont (= 1.9.2)
+    - JKCategories/UIKit/UIImage (= 1.9.2)
+    - JKCategories/UIKit/UIImageView (= 1.9.2)
+    - JKCategories/UIKit/UILable (= 1.9.2)
+    - JKCategories/UIKit/UINavigationBar (= 1.9.2)
+    - JKCategories/UIKit/UINavigationController (= 1.9.2)
+    - JKCategories/UIKit/UINavigationItem (= 1.9.2)
+    - JKCategories/UIKit/UIPopoverController (= 1.9.2)
+    - JKCategories/UIKit/UIResponder (= 1.9.2)
+    - JKCategories/UIKit/UIScreen (= 1.9.2)
+    - JKCategories/UIKit/UIScrollView (= 1.9.2)
+    - JKCategories/UIKit/UISearchBar (= 1.9.2)
+    - JKCategories/UIKit/UISplitViewController (= 1.9.2)
+    - JKCategories/UIKit/UITableView (= 1.9.2)
+    - JKCategories/UIKit/UITableViewCell (= 1.9.2)
+    - JKCategories/UIKit/UITextField (= 1.9.2)
+    - JKCategories/UIKit/UITextView (= 1.9.2)
+    - JKCategories/UIKit/UIView (= 1.9.2)
+    - JKCategories/UIKit/UIViewController (= 1.9.2)
+    - JKCategories/UIKit/UIWindow (= 1.9.2)
+  - JKCategories/UIKit/UIApplication (1.9.2)
+  - JKCategories/UIKit/UIBarButtonItem (1.9.2)
+  - JKCategories/UIKit/UIBezierPath (1.9.2)
+  - JKCategories/UIKit/UIButton (1.9.2)
+  - JKCategories/UIKit/UIColor (1.9.2)
+  - JKCategories/UIKit/UIControl (1.9.2)
+  - JKCategories/UIKit/UIDevice (1.9.2)
+  - JKCategories/UIKit/UIFont (1.9.2)
+  - JKCategories/UIKit/UIImage (1.9.2)
+  - JKCategories/UIKit/UIImageView (1.9.2)
+  - JKCategories/UIKit/UILable (1.9.2)
+  - JKCategories/UIKit/UINavigationBar (1.9.2)
+  - JKCategories/UIKit/UINavigationController (1.9.2)
+  - JKCategories/UIKit/UINavigationItem (1.9.2)
+  - JKCategories/UIKit/UIPopoverController (1.9.2)
+  - JKCategories/UIKit/UIResponder (1.9.2)
+  - JKCategories/UIKit/UIScreen (1.9.2)
+  - JKCategories/UIKit/UIScrollView (1.9.2)
+  - JKCategories/UIKit/UISearchBar (1.9.2)
+  - JKCategories/UIKit/UISplitViewController (1.9.2)
+  - JKCategories/UIKit/UITableView (1.9.2)
+  - JKCategories/UIKit/UITableViewCell (1.9.2)
+  - JKCategories/UIKit/UITextField (1.9.2)
+  - JKCategories/UIKit/UITextView (1.9.2)
+  - JKCategories/UIKit/UIView (1.9.2)
+  - JKCategories/UIKit/UIViewController (1.9.2)
+  - JKCategories/UIKit/UIWindow (1.9.2)
+  - JRPodPrivate (1.5.8):
+    - AGGeometryKit
+    - DateTools (~> 2.0.0)
+    - extobjc
+    - FrameAccessor
+    - JKCategories (~> 1.9)
+    - Masonry
+    - MBProgressHUD (~> 1.2.0)
+    - TZImagePickerController (~> 3.7.0)
+    - XXNibBridge
+    - YBImageBrowser
+    - YBImageBrowser/Video
+  - Masonry (1.1.0)
+  - MBProgressHUD (1.2.0)
+  - SDWebImage (5.9.5):
+    - SDWebImage/Core (= 5.9.5)
+  - SDWebImage/Core (5.9.5)
+  - Specta (1.0.7)
+  - TZImagePickerController (3.7.0)
+  - XXNibBridge (2.3.1)
+  - YBImageBrowser (3.0.9):
+    - YBImageBrowser/Core (= 3.0.9)
+  - YBImageBrowser/Core (3.0.9):
+    - SDWebImage (>= 5.0.0)
+    - YYImage
+  - YBImageBrowser/Video (3.0.9):
+    - YBImageBrowser/Core
+  - YYImage (1.0.4):
+    - YYImage/Core (= 1.0.4)
+  - YYImage/Core (1.0.4)
+
+DEPENDENCIES:
+  - Expecta
+  - "Expecta+Snapshots"
+  - FBSnapshotTestCase
+  - JRPodPrivate (from `../`)
+  - Specta
+
+SPEC REPOS:
+  trunk:
+    - AGGeometryKit
+    - DateTools
+    - Expecta
+    - "Expecta+Snapshots"
+    - extobjc
+    - FBSnapshotTestCase
+    - FrameAccessor
+    - JKCategories
+    - Masonry
+    - MBProgressHUD
+    - SDWebImage
+    - Specta
+    - TZImagePickerController
+    - XXNibBridge
+    - YBImageBrowser
+    - YYImage
+
+EXTERNAL SOURCES:
+  JRPodPrivate:
+    :path: "../"
+
+SPEC CHECKSUMS:
+  AGGeometryKit: 5e820bd2a8290e3b1e3a1517a49c65ae42c239c9
+  DateTools: 933ac9c490f21f92127cf690ccd8c397e0126caf
+  Expecta: 3b6bd90a64b9a1dcb0b70aa0e10a7f8f631667d5
+  "Expecta+Snapshots": dcff217eef506dabd6dfdc7864ea2da321fafbb8
+  extobjc: a55d2f1212ce1cdac4c88bd19594a15c15bab5dc
+  FBSnapshotTestCase: 094f9f314decbabe373b87cc339bea235a63e07a
+  FrameAccessor: 443a13e58e23a10ff22180da0897b28c3f6abf66
+  JKCategories: 83d85cc7455e265fbdb2f4add3c77c643fad57f5
+  JRPodPrivate: a8360d4db7999cc885553539b527fa32fc39d246
+  Masonry: 678fab65091a9290e40e2832a55e7ab731aad201
+  MBProgressHUD: 3ee5efcc380f6a79a7cc9b363dd669c5e1ae7406
+  SDWebImage: 0b2ba0d56479bf6a45ecddbfd5558bea93150d25
+  Specta: 3e1bd89c3517421982dc4d1c992503e48bd5fe66
+  TZImagePickerController: d15a19998af7306f6ad18201c32a4788b0f9c54c
+  XXNibBridge: addb780e6db076eb2c61716aa60b176a6799b80f
+  YBImageBrowser: 7ecc8bf33ffa5f3b94c397c29b4f3638dd37f527
+  YYImage: 1e1b62a9997399593e4b9c4ecfbbabbf1d3f3b54
+
+PODFILE CHECKSUM: d7afdb8b40521145eecfb5e8a4e3b3832a94e84a
+
+COCOAPODS: 1.11.2

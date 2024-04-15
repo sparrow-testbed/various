@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<service>
+	
+	<!-- ICT 사용(업체 공고리스트 조회) -->
+	<method name="getBdAnnListSeller">
+	<![CDATA[
+           SELECT  
+           		   DECODE(SUBSTR(VW.ANN_NO,1,2),'BD',VW.BID_NO,VW.ANN_NO) AS ANN_NO
+                  ,VW.ANN_ITEM
+                  ,VW.ANN_VERSION
+                  ,VW.BID_TYPE
+				  ,VW.CONT_TYPE1
+				  ,VW.CONT_TYPE2
+				  ,            GETICOMCODE2(VW.HOUSE_CODE, 'M974_ICT', VW.CONT_TYPE1 )
+				   || ' / ' || GETICOMCODE2(VW.HOUSE_CODE, 'M973_ICT', VW.CONT_TYPE2 )
+				   || ' / ' || GETICOMCODE2(VW.HOUSE_CODE, 'M930_ICT', VW.PROM_CRIT )									AS CONT_TYPE1_TEXT
+                  ,TO_CHAR(TO_DATE(VW.APP_BEGIN_DATE || VW.APP_BEGIN_TIME, 'YYYYMMDDHH24MISS'),'YYYY/MM/DD HH24:MI')	AS APP_BEGIN_DATE_TIME
+                  ,TO_CHAR(TO_DATE(VW.APP_END_DATE   || VW.APP_END_TIME,   'YYYYMMDDHH24MISS'),'YYYY/MM/DD HH24:MI')	AS APP_END_DATE_TIME
+                  ,TO_CHAR(TO_DATE(VW.BID_BEGIN_DATE || VW.BID_BEGIN_TIME, 'YYYYMMDDHH24MISS'),'YYYY/MM/DD HH24:MI')	AS BID_BEGIN_DATE_TIME
+                  ,TO_CHAR(TO_DATE(VW.BID_END_DATE   || VW.BID_END_TIME,   'YYYYMMDDHH24MISS'),'YYYY/MM/DD HH24:MI')	AS BID_END_DATE_TIME
+                  ,DECODE (VW.ANNOUNCE_DATE, NULL, '', TO_CHAR (TO_DATE (VW.ANNOUNCE_DATE),'YYYY/MM/DD'))				AS ANNOUNCE_DATE
+                  ,DECODE (VW.ANNOUNCE_FLAG, 'Y', '필수참석', 'N', '선택', '없음')										AS ANNOUNCE_FLAG
+                  ,VW.ATTACH_NO
+                  ,NULL																									AS ATTACH_CNT
+                  ,GETICOMCODE2( VW.HOUSE_CODE, 'M935_ICT', VW.BID_STATUS)												AS STATUS_TEXT	-- 공고상태
+                  ,VW.BID_STATUS
+                  ,VW.BID_NO
+                  ,VW.BID_COUNT
+                  ,DECODE(NVL(AP.APP_DATE, ''), '', 'N', 'Y')				AS STATUS
+                  ,VW.VOTE_COUNT											AS VOTE_COUNT
+                  ,TO_CHAR(TO_DATE(VW.ANN_DATE),'YYYY/MM/DD')				AS ANN_DATE
+                  ,(SELECT TEXT1 FROM SCODE WHERE TYPE = 'M966_ICT' AND CODE = VW.ES_FLAG) ES_FLAG_TEXT
+            FROM (SELECT  HD.BID_TYPE
+                         ,HD.ANN_NO,          HD.ANN_ITEM,        HD.CONT_TYPE1,     HD.CONT_TYPE2
+                         ,HD.APP_BEGIN_DATE,  HD.APP_BEGIN_TIME,  HD.APP_END_DATE,   HD.APP_END_TIME
+                         ,HD.ANNOUNCE_DATE,   HD.ATTACH_NO,       HD.BID_STATUS,     HD.ANN_DATE
+                         ,PG.BID_BEGIN_DATE,  PG.BID_BEGIN_TIME,  PG.BID_END_DATE,   PG.BID_END_TIME
+                         ,HD.HOUSE_CODE,      HD.BID_NO,          HD.BID_COUNT,		 HD.ANNOUNCE_FLAG
+                         ,TO_DATE(HD.APP_BEGIN_DATE || HD.APP_BEGIN_TIME, 'YYYYMMDDHH24MISS')	AS APP_SDATE
+                         ,TO_DATE(HD.APP_END_DATE   || HD.APP_END_TIME,   'YYYYMMDDHH24MISS')	AS APP_EDATE
+                         ,TO_DATE(PG.BID_BEGIN_DATE || PG.BID_BEGIN_TIME, 'YYYYMMDDHH24MISS')	AS BID_SDATE
+                         ,TO_DATE(PG.BID_END_DATE   || PG.BID_END_TIME,   'YYYYMMDDHH24MISS')	AS BID_EDATE
+                         ,HD.X_DOC_SUBMIT_DATE
+                         ,HD.X_DOC_SUBMIT_TIME
+                         ,HD.PREFERRED_BIDDER
+                         ,VN.VENDOR_CODE														AS VENDOR_CODE
+                         ,PG.VOTE_COUNT
+         				 ,CASE WHEN CONT_TYPE1 = 'LC' AND TO_NUMBER(LOC_CNT) > 0
+         				 								THEN (CASE WHEN VN.CITY_CODE = '1' AND NVL(INSTR(NVL(HD.LOC_CODE, ''), VN.CITY_CODE), 0) <> 1 THEN 'N'
+												 				   WHEN NVL(INSTR(NVL(HD.LOC_CODE, ''), VN.CITY_CODE), 0) = 0                         THEN 'N'
+												 				   ELSE 'Y'
+												 			  END)
+						       ELSE 'Y'
+						  END																	AS DISP_YN	
+		                 ,CASE WHEN HD.ANN_VERSION IS NULL THEN (SELECT CODE FROM SCODE WHERE TYPE = 'VR001_ICT')
+		                       ELSE HD.ANN_VERSION
+		                  END																	AS ANN_VERSION
+		                 ,HD.ADD_DATE||HD.ADD_TIME												AS ADD_DATE_TIME
+		                 ,HD.PROM_CRIT
+		                 ,HD.ES_FLAG
+                     FROM 					ICOYBDHD_ICT	HD
+                     		LEFT OUTER JOIN	ICOYBDPG_ICT	PG	ON	HD.HOUSE_CODE 	= PG.HOUSE_CODE
+                     											AND	HD.BID_NO     	= PG.BID_NO
+                     											AND HD.BID_COUNT  	= PG.BID_COUNT
+                     		JOIN			ICOMVNGL_ICT	VN	ON	HD.HOUSE_CODE	= VN.HOUSE_CODE
+                     											AND VN.VENDOR_CODE 	= ${COMPANY_CODE}
+                     WHERE HD.STATUS 		 IN ('C' ,'R')
+                       AND PG.STATUS 		 IN ('C' ,'R')
+                       AND SYSDATE < TO_DATE(PG.BID_END_DATE || PG.BID_END_TIME, 'YYYYMMDDHH24MISS')			-- ICT는 입찰마감시간이 경과하면 공문 안보이기
+                       AND HD.BID_STATUS 	 IN ('AC','UC','CC','SR','QC','RC','SC','RR')
+                       AND HD.SIGN_STATUS    IN ('C')
+                	   AND HD.HOUSE_CODE      = ${HOUSE_CODE}
+                	   AND HD.ANN_DATE BETWEEN  $S{START_CHANGE_DATE} 
+                	                   AND      $S{END_CHANGE_DATE}
+                 	   AND HD.ANN_DATE <= TO_CHAR(SYSDATE, 'YYYYMMDD')	-- 공고일이 된 내용만 표시... 
+                 	   AND HD.ANN_NO    	  = $S{ANN_NO}
+                 	   AND HD.ANN_ITEM  LIKE  '%' || $S{ANN_ITEM} || '%'
+                 ) VW
+                 , ICOYBDAP_ICT AP
+            WHERE VW.HOUSE_CODE     = AP.HOUSE_CODE(+)
+              AND VW.BID_NO         = AP.BID_NO(+)
+              AND VW.BID_COUNT      = AP.BID_COUNT(+)
+       		  AND VW.VENDOR_CODE 	= AP.VENDOR_CODE(+) 
+              AND AP.BID_CANCEL(+)  = 'N'
+              AND ${COMPANY_CODE} IN (SELECT Z.VENDOR_CODE
+                                            FROM ICOYBDAP_ICT Z
+                                           WHERE Z.HOUSE_CODE = VW.HOUSE_CODE
+                                             AND Z.BID_NO     = VW.BID_NO
+                                             AND Z.BID_COUNT  = VW.BID_COUNT
+                                             AND Z.BID_CANCEL = 'N'
+                                             AND Z.STATUS IN ('C', 'R')
+                                     )
+              AND VW.DISP_YN = 'Y'                       
+              AND VW.BID_STATUS NOT IN ('AT', 'RR')		-- 작성중인 것은 제외
+              AND VW.ES_FLAG = $S{ES_FLAG}
+              ]]>
+              <if test="${BD_STATUS_TEXT}" operator="eq" value="ACUC">
+				<![CDATA[
+		          AND VW.BID_STATUS IN ('AC','UC')
+				]]>
+		      </if>
+		      <if test="${BD_STATUS_TEXT}" operator="eq" value="CC">
+				<![CDATA[
+		          AND VW.BID_STATUS IN ('CC')
+				]]>
+		      </if>		      
+       ORDER BY VW.BID_BEGIN_DATE DESC, VW.BID_BEGIN_TIME DESC, VW.ANN_ITEM
+       
+	
+	</method>
+	
+</service>

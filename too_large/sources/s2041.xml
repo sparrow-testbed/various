@@ -1,0 +1,959 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<service>
+
+	<method name="et_getOsqReqList">
+  <![CDATA[
+      SELECT 
+	 	OSGL.OSQ_NO
+	 	, OSGL.OSQ_COUNT
+	 	, OSGL.SUBJECT
+	 	, CONVERT_DATE (OSGL.OSQ_CLOSE_DATE) AS OSQ_DATE
+	 	, CASE 
+	 		WHEN OSGL.OSQ_FLAG = 'T' OR OSGL.SIGN_STATUS IN('T', 'C') THEN '작성중' 
+	 		WHEN OSGL.osq_flag = 'P' AND OSGL.SIGN_STATUS = 'E' THEN '실사요청' 
+	 		WHEN OSGL.osq_flag = 'D' AND OSGL.SIGN_STATUS = 'E' THEN '실사포기' 
+	 		WHEN OSGL.osq_flag = 'E' AND OSGL.SIGN_STATUS = 'E' THEN '실사진행' 
+	 		WHEN OSGL.osq_flag = 'C' AND OSGL.SIGN_STATUS = 'E' THEN '실사완료' 
+	 		WHEN OSGL.osq_flag = 'R' AND OSGL.SIGN_STATUS = 'E' THEN '실사반려' 
+	 	END AS STATUS
+	 	, GETUSERNAME (OSGL.HOUSE_CODE, OSGL.CHANGE_USER_ID, 'LOC') AS BUYER_USER_NAME
+	 	, OSGL.OSQ_FLAG
+	 	, CONVERT_DATE(OSGL.ADD_DATE) AS ADD_DATE
+	 	, ORGL.OR_NO
+	FROM SOSGL OSGL
+	LEFT OUTER JOIN SORGL ORGL 
+	ON OSGL.HOUSE_CODE = ORGL.HOUSE_CODE
+	AND OSGL.OSQ_NO = ORGL.OSQ_NO
+	AND OSGL.OSQ_COUNT = ORGL.OSQ_COUNT
+	WHERE OSGL.STATUS IN('C', 'R')
+		AND OSGL.HOUSE_CODE = ${session.HOUSE_CODE}
+		AND (SELECT VENDOR_CODE FROM SOSSE WHERE HOUSE_CODE = OSGL.HOUSE_CODE AND OSQ_NO = OSGL.OSQ_NO GROUP BY VENDOR_CODE) = ${session.COMPANY_CODE}
+	    AND OSGL.HOUSE_CODE = '000'
+	    AND OSGL.ADD_DATE BETWEEN $S{start_rfq_date} AND $S{end_rfq_date}
+	    
+]]>
+     <if test="${osq_flag}" operator="eq" value="T">
+			AND  (OSGL.OSQ_FLAG = 'T' OR OSGL.SIGN_STATUS IN ('T','C'))
+		</if>
+		<if test="${osq_flag}" operator="eq" value="P">
+			<![CDATA[
+			AND  OSGL.osq_flag    = 'P'
+			AND  OSGL.SIGN_STATUS = 'E'
+			]]>
+		</if>
+		<if test="${osq_flag}" operator="eq" value="D">
+			<![CDATA[
+			AND  OSGL.osq_flag    = 'D'
+			AND  OSGL.SIGN_STATUS = 'E'
+			]]>
+		</if>
+		<if test="${osq_flag}" operator="eq" value="E">
+			<![CDATA[
+			AND  OSGL.osq_flag    = 'E'
+			AND  OSGL.SIGN_STATUS = 'E'
+			]]>
+		</if>
+		<if test="${osq_flag}" operator="eq" value="C">
+			AND  OSGL.osq_flag    = 'C'
+			AND  OSGL.SIGN_STATUS = 'E'
+		</if>
+     ORDER BY OSGL.OSQ_NO DESC, OSGL.OSQ_COUNT DESC
+	</method>
+  <method name="et_getOsqReqHeader">
+   <![CDATA[
+
+     SELECT
+                REPLACE(H.SUBJECT,'\"','''') AS SUBJECT
+              ,( SUBSTR(H.OSQ_CLOSE_DATE || H.OSQ_CLOSE_TIME,0,4) || '/'  || SUBSTR(H.OSQ_CLOSE_DATE || H.OSQ_CLOSE_TIME,5,2)  || '/'  ||
+                    SUBSTR(H.OSQ_CLOSE_DATE || H.OSQ_CLOSE_TIME,7,2) || '  ' || SUBSTR(H.OSQ_CLOSE_DATE || H.OSQ_CLOSE_TIME,9,2)  || ':'
+                ||  SUBSTR(H.OSQ_CLOSE_DATE || H.OSQ_CLOSE_TIME,11,2) )  AS OSQ_CLOSE_DATE_VIEW
+              , H.OSQ_CLOSE_DATE
+              , H.OSQ_CLOSE_TIME
+              , H.TERM_CHANGE_FLAG
+              , H.DOM_EXP_FLAG
+              , GETICOMCODE2(H.HOUSE_CODE, 'M032', H.DOM_EXP_FLAG) AS DOM_EXP_FLAG_TEXT
+              , H.DELY_TERMS
+              , H.PAY_TERMS
+              , D.CUR
+              , H.OSQ_TYPE
+              , GETICOMCODE2(H.HOUSE_CODE, 'M112', H.OSQ_TYPE) AS OSQ_TYPE_TEXT
+              , H.SHIPPING_METHOD
+              , D.PRICE_TYPE
+              , H.USANCE_DAYS
+              , GETICOMCODE2(H.HOUSE_CODE, 'M033', H.USANCE_DAYS) AS USANCE_DAYS_TEXT
+              , H.ARRIVAL_PORT
+              , H.ARRIVAL_PORT_NAME
+              , H.REMARK AS OSQ_REMARK
+              , D.SHIPPER_TYPE
+              , GETICOMCODE2(H.HOUSE_CODE,'M025',D.SHIPPER_TYPE) AS SHIPPER_TYPE_TEXT
+              , GETICOMCODE2(H.HOUSE_CODE,'M009',H.DELY_TERMS) AS DELY_TERMS_TEXT
+              , GETICOMCODE2(H.HOUSE_CODE,'M010',H.PAY_TERMS) AS PAY_TERMS_TEXT
+              , D.COMPANY_CODE
+              , GETICOMCODE2(H.HOUSE_CODE,'M015',H.SHIPPING_METHOD) AS SHIPPING_METHOD_TEXT
+              , H.DEPART_PORT AS DEPART_PORT
+              , H.DEPART_PORT_NAME AS DEPART_PORT_NAME
+              , GETICOMCODE2(H.HOUSE_CODE,'M149',H.SETTLE_TYPE) AS SETTLE_TYPE_TEXT
+              , H.SETTLE_TYPE
+              , '' AS OR_VAL_DATE
+              , GETCOMPANYNAMELOC(S.HOUSE_CODE, S.VENDOR_CODE, 'S') AS VENDOR_NAME
+              , GETICOMCODE2(H.HOUSE_CODE,'M059', D.PRICE_TYPE) AS PRICE_TYPE_TEXT
+              , D.VALID_FROM_DATE
+              , D.VALID_TO_DATE
+              ,SUBSTR(D.VALID_FROM_DATE,0,4) || '/' || SUBSTR(D.VALID_FROM_DATE,5,2) || '/' || SUBSTR(D.VALID_FROM_DATE,7,2) AS VALID_FROM_DATE_VIEW
+            ,SUBSTR(D.VALID_TO_DATE,0,4) || '/' || SUBSTR(D.VALID_TO_DATE,5,2) || '/' || SUBSTR(D.VALID_TO_DATE,7,2) AS VALID_TO_DATE_VIEW
+              , H.BID_REQ_TYPE
+              , H.CREATE_TYPE
+              , Getusernameloc(H.HOUSE_CODE, H.CHANGE_USER_ID) AS ADD_USER_NAME
+              , H.ATTACH_NO AS OS_ATTACH_NO
+        , GETFILEATTCOUNT(H.ATTACH_NO) AS OS_ATT_COUNT
+        , (SELECT PURCHASE_BLOCK_FLAG FROM ICOMVNGL WHERE HOUSE_CODE = H.HOUSE_CODE AND VENDOR_CODE = '#VENDOR_CODE#') PURCHASE_BLOCK_FLAG
+        , SUBSTR(H.OSQ_DATE,0,4) || '/' || SUBSTR(H.OSQ_DATE,5,2) || '/' || SUBSTR(H.OSQ_DATE,7,2) AS OSQ_DATE
+        , SUBSTR(H.OSQ_TIME,0,2) || ':' || SUBSTR(H.OSQ_TIME,3,2) || ':' || SUBSTR(H.OSQ_TIME,3,2) AS OSQ_TIME
+        , O.REMARK    AS OR_REMARK
+        , O.ATTACH_NO AS OR_ATTACH_NO
+        , O.PR_NO AS REAL_PR_NO
+        , (SELECT MAX(PR_SEQ) 
+              FROM ICOYPRDT
+            WHERE HOUSE_CODE = D.HOUSE_CODE
+            AND PR_NO = D.PR_NO
+          ) MAX_PR_SEQ
+         FROM SOSGL H, SOSLN D, SOSSE S, SORGL O
+        WHERE H.HOUSE_CODE       = D.HOUSE_CODE
+        AND H.OSQ_NO       = D.OSQ_NO
+        AND H.OSQ_COUNT    = D.OSQ_COUNT
+        AND D.HOUSE_CODE   = S.HOUSE_CODE (+)
+        AND D.OSQ_NO       = S.OSQ_NO     (+)
+        AND D.OSQ_COUNT    = S.OSQ_COUNT  (+)
+        AND H.HOUSE_CODE   = O.HOUSE_CODE (+)
+        AND H.OSQ_NO       = O.OSQ_NO     (+)
+        AND H.OSQ_COUNT    = O.OSQ_COUNT  (+)
+	    AND S.VENDOR_CODE (+) = $S{vendor_code}
+	    AND H.HOUSE_CODE      = $S{session.HOUSE_CODE}
+	    AND H.OSQ_NO          = $S{osq_no}
+	    AND H.OSQ_COUNT       = $S{osq_count}
+            AND S.STATUS     (+) != 'D'
+            AND H.STATUS    IN ('C','R')
+            AND D.STATUS    IN ('C','R')
+            AND H.OSQ_FLAG  IN ('P', 'R')
+            AND ROWNUM =1
+        ]]>
+  </method>	
+ <method name="getSoslnList">
+    <if test="${group_yn}" operator="eq" value="Y">
+               SELECT
+                ITEM_NO
+               ,MAX(MATERIAL_CTRL_TYPE) AS MATERIAL_CTRL_TYPE 
+               ,ITEM_GBN
+               ,MAX(DESCRIPTION_LOC        )   DESCRIPTION_LOC
+               ,MAX(SPECIFICATION          )   SPECIFICATION
+               ,SUM(OSQ_QTY                )   OSQ_QTY
+               ,SUM(ITEM_QTY               )   ITEM_QTY
+               ,MAX(VENDOR_ITEM_NO         )   VENDOR_ITEM_NO
+               ,MAX(UNIT_MEASURE           )   UNIT_MEASURE
+               ,MAX(UNIT_PRICE             )   UNIT_PRICE
+               ,MAX(UNIT_PRICE_IMG         )   UNIT_PRICE_IMG
+               ,MAX(BEFORE_PRICE           )   BEFORE_PRICE
+               ,SUM(ITEM_AMT               )   ITEM_AMT
+               ,MAX(DELIVERY_LT            )   DELIVERY_LT
+               ,MAX(RD_DATE                )   RD_DATE
+               ,MAX(DELY_TO_LOCATION_NAME  )   DELY_TO_LOCATION_NAME
+               ,MAX(YEAR_QTY               )   YEAR_QTY
+               ,MAX(OR_ATTACH_NO          )   OR_ATTACH_NO
+               ,MAX(OSQ_ATTACH_NO          )   OSQ_ATTACH_NO
+               ,MAX(OSQ_ATTACH_CNT         )   OSQ_ATTACH_CNT
+               ,MAX(COST_COUNT             )   COST_COUNT
+               ,MAX(MOLDING_PROSPECTIVE_QTY)   MOLDING_PROSPECTIVE_QTY
+               ,MAX(MOLDING_CHARGE         )   MOLDING_CHARGE
+               ,MAX(PURCHASER              )   PURCHASER
+               ,MAX(PURCHASER_PHONE        )   PURCHASER_PHONE
+               ,MAX(OSQ_SEQ                )   OSQ_SEQ
+               ,MAX(MAKER_CODE             )   MAKER_CODE
+               ,MAX(MAKER_NAME             )   MAKER_NAME
+               ,MAX(EP_FROM_DATE           )   EP_FROM_DATE
+               ,MAX(EP_TO_DATE             )   EP_TO_DATE
+               ,MAX(EP_FROM_QTY            )   EP_FROM_QTY
+               ,MAX(EP_TO_QTY              )   EP_TO_QTY
+               ,MAX(EP_UNIT_PRICE          )   EP_UNIT_PRICE
+               ,MAX(DELY_TO_LOCATION       )   DELY_TO_LOCATION
+               ,MAX(DELY_TO_DEPT       )   DELY_TO_DEPT
+               ,MAX(SHIPPER_TYPE           )   SHIPPER_TYPE
+               ,MAX(MOLDING_FLAG           )   MOLDING_FLAG
+               ,MAX(CUR                    )   CUR
+               ,MAX(OSQ_AMT                )   OSQ_AMT
+               ,MAX(INPUT_FROM_DATE        )   INPUT_FROM_DATE
+               ,MAX(INPUT_TO_DATE          )   INPUT_TO_DATE
+               ,MAX(REMARK                 )   REMARK
+               ,MAX(HUMAN_NO               )   HUMAN_NO
+               ,MAX(CONTRACT_DIV           )   CONTRACT_DIV
+               ,MAX(MAKE_AMT_CODE          )   MAKE_AMT_CODE
+               ,MAX(MAKE_AMT_UNIT          )   MAKE_AMT_UNIT
+               ,MAX(OR_NO)                  AS OR_NO
+			   ,MAX(ITEM_AMT)               AS ITEM_AMT
+			   ,MAX(ATTACH_NO)              AS ATTACH_NO
+			   ,MAX(ITEM_WIDTH)             AS ITEM_WIDTH
+			   ,MAX(ITEM_HEIGHT)            AS ITEM_HEIGHT
+			   ,MAX(P_ITEM_NO)            AS P_ITEM_NO
+			   ,MAX(P_SEQ)                   AS P_SEQ
+			   ,MAX(P_DESCRIPTION_LOC)            AS P_DESCRIPTION_LOC
+			   ,MAX(P_BOM_NAME)            AS P_BOM_NAME
+			   ,MAX(PR_NO)            AS PR_NO
+			   ,MAX(PR_SEQ)            AS PR_SEQ
+			   ,MAX(WID)            AS WID
+			   ,MAX(HGT)            AS HGT
+			   ,SUM(ITEM_QTY               )   PR_ITEM_QTY
+			   FROM (
+       </if>
+        <![CDATA[
+             SELECT
+                         RD.ITEM_NO
+                        ,(SELECT MATERIAL_CTRL_TYPE FROM ICOMMTGL WHERE ITEM_NO = RD.ITEM_NO AND ROWNUM = 1) AS MATERIAL_CTRL_TYPE  
+                        ,MTGL.DESCRIPTION_LOC
+                        ,RD.SPECIFICATION
+                        ,RD.OSQ_QTY
+                        ,RD.OSQ_QTY                AS ITEM_QTY
+                        ,''                        AS VENDOR_ITEM_NO
+                        ,NVL(RD.UNIT_MEASURE,'MM') AS UNIT_MEASURE
+                        ,RD.OSQ_AMT                AS UNIT_PRICE
+                        ,NVL(RH.PRICE_TYPE,'N')    AS UNIT_PRICE_IMG
+                        ,''                        AS BEFORE_PRICE   --GETBEFOREQTADATA(RD.HOUSE_CODE, RD.OSQ_NO, RH.OSQ_COUNT, RD.OSQ_SEQ, RS.VENDOR_CODE, 'UNIT_PRICE')
+                        ,''                        AS ITEM_AMT
+                        ,DECODE(OD.DELIVERY_LT,'','',CONVERT_DATE(OD.DELIVERY_LT)) AS DELIVERY_LT    --GETBEFOREQTADATA(RD.HOUSE_CODE, RD.OSQ_NO, RH.OSQ_COUNT, RD.OSQ_SEQ, RS.VENDOR_CODE, 'DELIVERY_LT')
+                        ,RD.RD_DATE                AS RD_DATE
+                        ,NVL(OD.DELY_TO_LOCATION, RD.DELY_TO_ADDRESS) AS DELY_TO_LOCATION
+                        , RD.DELY_TO_DEPT
+                        ,RD.YEAR_QTY
+                        ,NVL(RD.ATTACH_NO,'N')     AS ATTACH_NO
+                        ,GETFILEATTCOUNT(RD.ATTACH_NO) AS ATTACH_CNT
+                        ,RD.COST_COUNT
+                        ,''                        AS MOLDING_PROSPECTIVE_QTY
+                        ,''                        AS MOLDING_CHARGE
+                        ,GETUSERNAME(RD.HOUSE_CODE, RD.CHANGE_USER_ID, 'LOC')            AS PURCHASER
+                        ,GETADDRATTR(RD.HOUSE_CODE, RD.CHANGE_USER_ID, '3', 'PHONE_NO1') AS PURCHASER_PHONE
+                        ,RD.OSQ_SEQ
+                        ,'' AS MAKER_CODE
+                        ,'' AS MAKER_NAME
+                        ,''                        AS EP_FROM_DATE
+                        ,''                        AS EP_TO_DATE
+                        ,''                        AS EP_FROM_QTY
+                        ,''                        AS EP_TO_QTY
+                        ,''                        AS EP_UNIT_PRICE
+                        ,RD.SHIPPER_TYPE
+                        ,''                        AS MOLDING_FLAG
+                        ,RD.CUR
+                        ,RD.OSQ_AMT                AS OSQ_AMT
+                        ,RD.INPUT_FROM_DATE        AS INPUT_FROM_DATE
+                        ,RD.INPUT_TO_DATE          AS INPUT_TO_DATE
+                        ,'' AS CONTRACT_DIV
+                        ,'' AS SEC_VENDOR_CODE
+                        ,'' AS SEC_VENDOR_CODE_TEXT
+                        ,'' AS RATE
+                        , MTGL.KTGRM
+                        , RD.MAKE_AMT_CODE
+                        , GETICOMCODE2(RD.HOUSE_CODE,'M799', RD.MAKE_AMT_CODE) AS MAKE_AMT_NAME
+                        , GETCODETEXT3('M799', RD.MAKE_AMT_CODE,'KO') AS MAKE_AMT_UNIT
+                        ,OD.OR_NO AS OR_NO
+			            ,OD.ITEM_AMT
+			            ,OD.ATTACH_NO
+			            ,OD.ITEM_WIDTH
+			            ,OD.ITEM_HEIGHT
+			            , RD.P_ITEM_NO
+			            , RD.P_SEQ
+						, OMGL.DESCRIPTION_LOC AS P_DESCRIPTION_LOC
+					    , OMGL.BOM_NAME AS P_BOM_NAME
+					    , RD.PR_NO
+           				, RD.PR_SEQ
+           				, RD.WID
+           				, RD.HGT
+           				, RD.OSQ_QTY                AS  PR_ITEM_QTY
+                 FROM SOSLN RD
+                     ,SOSGL RH
+                     --,SORGL OH
+                     ,SORLN OD
+                     --,ICOYPRDT PD
+                     --,ICOYPRHD PH
+                     ,ICOMMTGL MTGL
+           ]]>
+                     <if test="${vendor_code}" operator="ne" value="">
+                     , SOSSE RS
+                     </if>
+					 ,(
+						SELECT
+							A.HOUSE_CODE
+							, B.ITEM_NO
+							, A.SEQ
+							, B.DESCRIPTION_LOC
+							, A.BOM_NAME
+							, ( 
+								SELECT
+									COUNT(1)
+								FROM SBOMLN
+								WHERE HOUSE_CODE = A.HOUSE_CODE
+									AND P_ITEM_NO = A.P_ITEM_NO
+									AND SEQ = A.SEQ
+							) AS CNT
+						FROM SBOMGL A
+						INNER JOIN ICOMMTGL B 
+							ON A.P_ITEM_NO = B.ITEM_NO
+					 ) OMGL
+           <![CDATA[
+                 WHERE 1=1
+
+                     AND  RH.HOUSE_CODE   = RD.HOUSE_CODE
+                     AND  RH.OSQ_NO       = RD.OSQ_NO
+                     AND  RH.OSQ_COUNT    = RD.OSQ_COUNT
+                     --AND  RD.HOUSE_CODE   = PD.HOUSE_CODE
+                     --AND  RD.PR_NO        = PD.PR_NO
+                     --AND  RD.PR_SEQ       = PD.PR_SEQ
+                     AND  RD.HOUSE_CODE   = OD.HOUSE_CODE(+)  
+                     AND  RD.OSQ_NO       = OD.OSQ_NO(+)      
+                     AND  RD.OSQ_COUNT    = OD.OSQ_COUNT(+)
+                     AND  RD.OSQ_SEQ      = OD.OSQ_SEQ(+)
+                     --AND  PD.HOUSE_CODE   = PH.HOUSE_CODE
+                     --AND  PD.PR_NO        = PH.PR_NO
+                     AND  RD.HOUSE_CODE   = MTGL.HOUSE_CODE
+                     AND  RD.ITEM_NO      = MTGL.ITEM_NO
+                     AND  RH.HOUSE_CODE   = ${session.HOUSE_CODE}
+                     AND  RH.OSQ_NO       = ${osq_no}
+                     AND  RH.OSQ_COUNT    = ${osq_count}
+          ]]>
+
+          <if test="${vendor_code}" operator="ne" value="">
+                     AND  RD.HOUSE_CODE   = RS.HOUSE_CODE
+                     AND  RD.OSQ_NO       = RS.OSQ_NO
+                     AND  RD.OSQ_COUNT    = RS.OSQ_COUNT
+                     AND  RD.OSQ_SEQ      = RS.OSQ_SEQ
+          <![CDATA[
+                     AND  RS.STATUS  <> 'D'
+          ]]>
+          </if>
+
+         <![CDATA[
+         			 AND RD.HOUSE_CODE 	= OMGL.HOUSE_CODE(+)
+					 AND RD.P_ITEM_NO 	= OMGL.ITEM_NO(+) 
+                     AND  RH.OSQ_FLAG     IN ('P', 'R')
+                     AND  RD.STATUS       <> 'D'
+                     AND  RH.STATUS       <> 'D'
+                     AND  RS.VENDOR_CODE  = $S{vendor_code}
+            ]]>
+    <if test="${group_yn}" operator="eq" value="Y">
+               ) GROUP BY ITEM_NO
+     </if>
+     ORDER BY PR_NO,PR_SEQ,OSQ_SEQ
+  </method>
+
+  <method name="et_getYN">
+  <![CDATA[
+      SELECT COUNT(*)
+      FROM SOSGL RH
+      WHERE RH.HOUSE_CODE   = ${session.HOUSE_CODE}
+        AND OSQ_NO            = ${osq_no}
+        AND OSQ_COUNT         = ${osq_count}
+        AND OSQ_FLAG          = 'P'
+        AND STATUS IN ('C', 'R')
+        AND OSQ_CLOSE_DATE || OSQ_CLOSE_TIME >= TO_CHAR(SYSDATE, 'YYYYMMDD') || SUBSTR(TO_CHAR(SYSDATE, 'HH24MISS'), 1, 4)
+  ]]>
+  </method>
+
+
+  <method name="et_getCreateFlag">
+  <![CDATA[
+          SELECT COUNT(*)
+              FROM SORLN
+          WHERE HOUSE_CODE   = ${session.HOUSE_CODE}
+            AND OSQ_NO       = ${osq_no}
+            AND OSQ_SEQ      = ${osq_seq}
+            AND OSQ_COUNT    = ${osq_count}
+            AND VENDOR_CODE  = ${session.COMPANY_CODE}
+               UNION ALL
+               SELECT COUNT(*)
+                 FROM    SOSGL                
+          WHERE HOUSE_CODE       =  ${session.HOUSE_CODE} 
+                AND OSQ_NO       =  ${osq_no}
+                AND OSQ_COUNT    =  ${osq_count}
+                    AND SIGN_STATUS  = 'E'
+                    AND ( OSQ_FLAG   = 'C' OR OSQ_CLOSE_DATE || OSQ_CLOSE_TIME < TO_CHAR(SYSDATE, 'YYYYMMDD') || SUBSTR(TO_CHAR(SYSDATE, 'HH24MISS'), 1, 4) )
+   ]]>
+  </method>	
+  
+<!-- 	SOSLN 테이블 삭제 -->
+    <method name="OSLNDelete">
+    	<![CDATA[
+	    	DELETE FROM SOSLN
+	      	WHERE HOUSE_CODE = ${HOUSE_CODE}
+	        AND OSQ_NO = ${OSQ_NO}
+	        AND OSQ_COUNT = ${OSQ_COUNT}
+	  	]]>
+  	</method>
+  
+<!-- 	SOSSE 테이블 삭제 -->
+    <method name="OSSEDelete">
+    	<![CDATA[
+	    	DELETE FROM SOSSE
+	      	WHERE HOUSE_CODE = ${HOUSE_CODE}
+	        AND OSQ_NO = ${OSQ_NO}
+	        AND OSQ_COUNT = ${OSQ_COUNT}
+	  	]]>
+  	</method>
+  
+<!-- 	SORGL 테이블 삭제 -->
+    <method name="ORGLDelete">
+    	<![CDATA[
+	    	DELETE FROM SORGL
+	      	WHERE HOUSE_CODE = ${HOUSE_CODE}
+	        AND OR_NO = ${OR_NO}
+	        AND VENDOR_CODE = ${VENDOR_CODE}
+	  	]]>
+  	</method>
+  
+<!-- 	SORLN 테이블 삭제 -->
+    <method name="ORLNDelete">
+    	<![CDATA[
+	    	DELETE FROM SORLN
+	      	WHERE HOUSE_CODE = ${HOUSE_CODE}
+	        AND OR_NO = ${OR_NO}
+	        AND VENDOR_CODE = ${VENDOR_CODE}
+	  	]]>
+  	</method>
+  	
+<!-- 	SOSLN 테이블 입력 -->
+  	<method name="OSLNInsert">
+		INSERT INTO SOSLN(         
+			HOUSE_CODE,      OSQ_NO,              OSQ_COUNT,           OSQ_SEQ,          STATUS,
+			COMPANY_CODE,    PLANT_CODE,          OSQ_PROCEEDING_FLAG, ADD_DATE,         ADD_TIME,
+			ADD_USER_ID,     CHANGE_DATE,         CHANGE_TIME,         CHANGE_USER_ID,   ITEM_NO,
+			UNIT_MEASURE,    RD_DATE,             VALID_FROM_DATE,     VALID_TO_DATE,    PURCHASE_PRE_PRICE,
+			OSQ_QTY,         OSQ_AMT,             BID_COUNT,           CUR,              PR_NO,
+			PR_SEQ,          SETTLE_FLAG,         SETTLE_QTY,          TBE_FLAG,         TBE_DEPT,
+			PRICE_TYPE,      TBE_PROCEEDING_FLAG, SAMPLE_FLAG,         DELY_TO_LOCATION, ATTACH_NO,
+			SHIPPER_TYPE,    CONTRACT_FLAG,       COST_COUNT,          YEAR_QTY,         DELY_TO_ADDRESS,
+			MIN_PRICE,       MAX_PRICE,           STR_FLAG,            TBE_NO,           Z_REMARK,
+			TECHNIQUE_GRADE, TECHNIQUE_TYPE,      INPUT_FROM_DATE,     INPUT_TO_DATE,    TECHNIQUE_FLAG,
+			SPECIFICATION,   MAKER_NAME,          MAKE_AMT_CODE, P_ITEM_NO, DELY_TO_DEPT,
+			P_SEQ,                WID,                          HGT
+		)
+		VALUES (
+			${HOUSE_CODE},           
+			${OSQ_NO},              
+			${OSQ_COUNT},           
+			LPAD(${OSQ_SEQ}, 6, '0'), 
+			${STATUS},
+			
+			${COMPANY_CODE},         
+			${PLANT_CODE},          
+			${OSQ_PROCEEDING_FLAG}, 
+			${ADD_DATE},              
+			${ADD_TIME},
+			
+			${ADD_USER_ID},          
+			${CHANGE_DATE},         
+			${CHANGE_TIME},         
+			${CHANGE_USER_ID},        
+			${ITEM_NO},
+			
+			${UNIT_MEASURE},         
+			${RD_DATE},             
+			${VALID_FROM_DATE},     
+			${VALID_TO_DATE},         
+			${PURCHASE_PRE_PRICE},
+			
+			${OSQ_QTY},              
+			${OSQ_AMT},             
+			${BID_COUNT},           
+			${CUR},                   
+			${REAL_PR_NO},
+			
+			LPAD(${PR_SEQ}, 5, '0'), 
+			${SETTLE_FLAG},         
+			${SETTLE_QTY},          
+			${TBE_FLAG},              
+			${TBE_DEPT},
+			
+			${PRICE_TYPE},           
+			${TBE_PROCEEDING_FLAG}, 
+			${SAMPLE_FLAG},         
+			${DELY_TO_LOCATION},      
+			${ATTACH_NO},
+			
+			${SHIPPER_TYPE},         
+			${CONTRACT_FLAG},       
+			${COST_COUNT},          
+			${YEAR_QTY},              
+			${DELY_TO_ADDRESS},
+			
+			${MIN_PRICE},            
+			${MAX_PRICE},           
+			${STR_FLAG},            
+			${TBE_NO},                
+			${Z_REMARK},
+			
+			${TECHNIQUE_GRADE},      
+			${TECHNIQUE_TYPE},      
+			${INPUT_FROM_DATE},     
+			${INPUT_TO_DATE},         
+			${TECHNIQUE_FLAG},
+			
+			${SPECIFICATION},        
+			${MAKER_NAME},
+			${MAKE_AMT_CODE},
+			${P_ITEM_NO},
+			${DELY_TO_DEPT},
+			
+			${P_SEQ},
+			${WID},
+			${HGT}			
+		)
+	</method>
+	
+<!-- 	SOSSE 테이블 입력 -->  	
+	<method name="OSSEInsert">
+	<![CDATA[
+		INSERT INTO SOSSE (
+			HOUSE_CODE, OSQ_NO,       OSQ_COUNT,      OSQ_SEQ,    VENDOR_CODE,
+			STATUS,     COMPANY_CODE, CONFIRM_FLAG,   ADD_DATE,   ADD_USER_ID,
+			ADD_TIME,   CHANGE_DATE,  CHANGE_USER_ID, CHANGE_TIME
+		)
+		VALUES(
+			${HOUSE_CODE},
+			${OSQ_NO},
+			${OSQ_COUNT},
+			LPAD(${OSQ_SEQ}, 6, '0'), 
+			${VENDOR_CODE},
+			
+			${STATUS},
+			${COMPANY_CODE},
+			${CONFIRM_FLAG},
+			TO_CHAR(SYSDATE, 'YYYYMMDD'),
+			${ADD_USER_ID},
+			
+			TO_CHAR(SYSDATE, 'HH24MISS'),
+			TO_CHAR(SYSDATE, 'YYYYMMDD'),
+			${ADD_USER_ID},
+			TO_CHAR(SYSDATE, 'HH24MISS')
+		)                            
+	]]>
+	</method>
+
+  <method name="setInsert_orgl">
+  <![CDATA[
+     INSERT INTO SORGL (
+                            HOUSE_CODE
+                           ,VENDOR_CODE
+                           ,OR_NO
+                           ,STATUS
+                           ,COMPANY_CODE
+                           ,TTL_AMT
+                           ,ADD_DATE
+                           ,ADD_TIME
+                           ,ADD_USER_ID
+                           ,CHANGE_DATE
+                           ,CHANGE_TIME
+                           ,CHANGE_USER_ID
+                           ,REMARK
+                           ,ATTACH_NO
+                           ,OSQ_NO
+                           ,OSQ_COUNT
+                           ,SEND_FLAG
+                           ,PR_NO
+     ) VALUES (
+                            ${session.HOUSE_CODE}
+                           ,${VENDOR_CODE}
+                           ,$S{OR_NO}
+                           ,$S{STATUS}
+                           ,${session.COMPANY_CODE}
+                           ,$S{TTL_AMT}
+                           ,$S{ADD_DATE}
+                           ,$S{ADD_TIME}
+                           ,$S{ADD_USER_ID}
+                           ,$S{ADD_DATE}
+                           ,$S{ADD_TIME}
+                           ,$S{ADD_USER_ID}
+                           ,$S{REMARK}
+                           ,$S{ATTACH_NO}
+                           ,$S{OSQ_NO}
+                           ,$S{OSQ_COUNT}
+                           ,$S{SEND_FLAG}
+                           ,$S{REAL_PR_NO}
+     )
+  ]]>
+  </method>
+
+  <method name="setUpdate_orgl">
+  <![CDATA[
+     UPDATE SORGL 
+     SET  
+             STATUS             =  $S{STATUS}
+            ,COMPANY_CODE       =  $S{COMPANY_CODE }
+            ,TTL_AMT            =  $S{TTL_AMT}
+            ,CHANGE_DATE        =  $S{CHANGE_DATE}
+            ,CHANGE_TIME        =  $S{CHANGE_TIME}
+            ,CHANGE_USER_ID     =  $S{CHANGE_USER_ID}
+            ,REMARK             =  $S{REMARK}
+            ,ATTACH_NO          =  $S{ATTACH_NO}
+            ,OSQ_NO             =  $S{OSQ_NO}
+            ,OSQ_COUNT          =  $S{OSQ_COUNT}
+            ,SEND_FLAG          =  $S{SEND_FLAG}
+     WHERE  
+            HOUSE_CODE   = ${session.HOUSE_CODE}    
+       AND  VENDOR_CODE  = ${VENDOR_CODE}           
+       AND  OR_NO        = $S{OR_NO}                
+  ]]>
+  </method>
+  
+  <method name="setUpdate_rqhd_bid">
+  <![CDATA[
+     UPDATE SOSGL
+      SET BID_COUNT = (BID_COUNT + 1)
+        WHERE HOUSE_CODE   = ${session.HOUSE_CODE}      
+          AND OSQ_NO       = $S{OSQ_NO}                 
+          AND OSQ_COUNT    = $S{OSQ_COUNT}              
+          AND SIGN_STATUS  IN( 'T' , 'E')
+  ]]>
+  </method>  
+  
+  
+
+  <method name="setInsert_orln">
+  <![CDATA[
+     INSERT INTO SORLN
+     (
+              HOUSE_CODE
+             ,VENDOR_CODE
+             ,OR_NO
+             ,OR_SEQ
+             ,STATUS
+             ,COMPANY_CODE
+             ,OSQ_NO
+             ,OSQ_COUNT
+             ,OSQ_SEQ
+             ,ITEM_NO
+             ,UNIT_MEASURE
+             ,UNIT_PRICE
+             ,ITEM_QTY
+             ,ITEM_AMT
+             ,ATTACH_NO
+             ,ITEM_WIDTH
+             ,ITEM_HEIGHT
+             ,MAKE_AMT_CODE
+             ,DELIVERY_LT
+             ,DELY_TO_LOCATION
+             ,ADD_DATE
+             ,ADD_TIME
+             ,ADD_USER_ID
+             ,CHANGE_DATE
+             ,CHANGE_TIME
+             ,CHANGE_USER_ID
+     ) VALUES (
+              ${session.HOUSE_CODE}  
+             ,${VENDOR_CODE}  
+             ,${OR_NO}  
+             ,LPAD(${OR_SEQ}, 6, '0')
+             ,${STATUS}  
+             ,${session.COMPANY_CODE}  
+             ,${OSQ_NO}  
+             ,${OSQ_COUNT}  
+             ,LPAD(${OR_SEQ}, 6, '0') 
+             ,${ITEM_NO}  
+             ,${UNIT_MEASURE}  
+             ,${UNIT_PRICE}  
+             ,${ITEM_QTY}  
+             ,${ITEM_AMT}  
+             ,${ATTACH_NO}  
+             ,${ITEM_WIDTH}
+             ,${ITEM_HEIGHT}
+             ,${MAKE_AMT_CODE}
+             ,${DELIVERY_LT}
+             ,${DELY_TO_LOCATION}
+             ,${ADD_DATE}  
+             ,${ADD_TIME}  
+             ,${ADD_USER_ID}  
+             ,${ADD_DATE}  
+             ,${ADD_TIME}  
+             ,${ADD_USER_ID}  
+     )
+  ]]>
+  </method>  
+    <method name="setUpdate_orln">
+  <![CDATA[
+     UPDATE SORLN
+     SET    
+            STATUS             = $S{STATUS}                
+          , COMPANY_CODE       = ${session.COMPANY_CODE}          
+          , OSQ_NO             = $S{OSQ_NO}                
+          , OSQ_COUNT          = $S{OSQ_COUNT}             
+          , OSQ_SEQ            = $S{OSQ_SEQ}               
+          , ITEM_NO            = $S{ITEM_NO}               
+          , UNIT_MEASURE       = $S{UNIT_MEASURE}          
+          , UNIT_PRICE         = $S{UNIT_PRICE}            
+          , ITEM_QTY           = $S{ITEM_QTY}              
+          , ITEM_AMT           = $S{ITEM_AMT}              
+          , ATTACH_NO          = $S{ATTACH_NO}
+          , ITEM_WIDTH         = $S{ITEM_WIDTH}            
+          , ITEM_HEIGHT        = $S{ITEM_HEIGHT}
+          , MAKE_AMT_CODE      = $S{MAKE_AMT_CODE}         
+          , DELIVERY_LT        = $S{DELIVERY_LT}           
+          , DELY_TO_LOCATION   = $S{DELY_TO_LOCATION}      
+          , ADD_DATE           = $S{ADD_DATE}              
+          , ADD_TIME           = $S{ADD_TIME}              
+          , ADD_USER_ID        = $S{ADD_USER_ID}           
+          , CHANGE_DATE        = $S{CHANGE_DATE}           
+          , CHANGE_TIME        = $S{CHANGE_TIME}           
+          , CHANGE_USER_ID     = $S{CHANGE_USER_ID}        
+     WHERE 
+            HOUSE_CODE    = ${HOUSE_CODE}    
+       AND  VENDOR_CODE   = ${VENDOR_CODE}   
+       AND  OR_NO         = ${OR_NO}         
+       AND  OR_SEQ        = ${OR_SEQ}        
+  ]]>
+  </method>  
+  
+
+  <method name="setUpdate_osgl_bid">
+  <![CDATA[
+     UPDATE SOSGL
+     SET    BID_COUNT = (BID_COUNT + 1)
+          , OSQ_FLAG  = 'E'
+     WHERE HOUSE_CODE   = ${session.HOUSE_CODE}       
+       AND OSQ_NO       = ${osq_no}                  
+       AND OSQ_COUNT    = ${osq_count}               
+       AND SIGN_STATUS  IN( 'T' , 'E')
+  ]]>
+  </method>
+    
+  <method name="setUpdate_osln_bid">
+  <![CDATA[
+     UPDATE SOSLN
+     SET    BID_COUNT     = (BID_COUNT + 1)
+     WHERE  HOUSE_CODE      = ${session.HOUSE_CODE}
+       AND  OSQ_NO        = ${OSQ_NO}
+       AND  OSQ_COUNT     = ${OSQ_COUNT}
+       AND  OSQ_SEQ       = ${OSQ_SEQ}
+  ]]>
+  </method>
+
+  <method name="setDelOrln">
+  <![CDATA[
+     DELETE FROM SORLN
+      WHERE HOUSE_CODE   = ${session.HOUSE_CODE}
+        AND OR_NO       = ${OR_NO}
+        AND VENDOR_CODE  = ${session.COMPANY_CODE}
+  ]]>
+  </method>
+
+
+  <method name="et_getCompanyOsqList">
+  <![CDATA[
+       SELECT  H.OSQ_NO
+              ,H.OSQ_COUNT
+              ,H.SUBJECT
+	          ,CASE
+					WHEN
+						H.OSQ_FLAG = 'T' OR H.SIGN_STATUS IN ('T','C')
+					THEN
+						'작성중'
+					WHEN
+						H.osq_flag = 'P' AND  H.SIGN_STATUS = 'E'
+					THEN
+						'실사요청'
+					WHEN
+						H.osq_flag = 'D' AND  H.SIGN_STATUS = 'E'
+					THEN
+						'실사포기'
+					WHEN
+						H.osq_flag = 'E' AND  H.SIGN_STATUS = 'E'
+					THEN
+						'실사진행'
+					WHEN
+						H.osq_flag = 'C' AND  H.SIGN_STATUS = 'E'
+					THEN
+						'실사완료'
+				END AS STATUS
+              ,GETUSERNAME(H.HOUSE_CODE, H.CHANGE_USER_ID ,'LOC') AS CHANGE_USER_NAME_LOC
+              ,D.ITEM_NO
+              --,P.DESCRIPTION_LOC
+              ,MTGL.DESCRIPTION_LOC
+              ,D.OSQ_QTY
+              ,D.UNIT_MEASURE
+              ,D.CUR
+              ,D.RD_DATE
+              ,D.PR_NO
+              ,T.OR_NO
+              ,T.ITEM_AMT
+              ,T.SETTLE_FLAG
+              ,DECODE(T.SETTLE_DATE,'','',CONVERT_DATE(T.SETTLE_DATE)) AS SETTLE_DATE
+              --,(case when getSettleDate(P.HOUSE_CODE, P.PR_NO, P.PR_SEQ) is not null then NVL(T.SETTLE_FLAG,'N') else 'N' end) as SETTLE_FLAG
+              --,getSettleDate(P.HOUSE_CODE, P.PR_NO, P.PR_SEQ) as PO_CREATE_DATE
+              , '' AS PO_CREATE_DATE
+              ,T.VENDOR_CODE
+              ,GETCOMPANYNAMELOC(T.HOUSE_CODE, T.VENDOR_CODE, 'S')  AS VENDOR_NAME
+              ,T.UNIT_PRICE
+              ,T.ITEM_WIDTH 
+              ,T.ITEM_HEIGHT  
+              ,T.MAKE_AMT_CODE
+              ,T.ITEM_AMT
+              --,P.UNIT_PRICE AS PR_UNIT_PRICE
+              ,D.OSQ_AMT AS PR_UNIT_PRICE
+              --,P.PR_KRW_AMT
+              ,T.ITEM_AMT AS PR_KRW_AMT
+              , D.PR_NO
+		   	  , D.PR_SEQ
+		   	  , D.P_ITEM_NO
+			  , OMGL.DESCRIPTION_LOC AS P_DESCRIPTION_LOC
+		      , OMGL.BOM_NAME AS P_BOM_NAME
+		      , D.P_SEQ
+         FROM   SOSGL H
+               ,SOSLN D
+               ,SOSSE S
+               ,SORLN T
+               --,ICOYPRDT P
+               ,ICOMMTGL MTGL
+               , (
+						SELECT
+							A.HOUSE_CODE
+							, B.ITEM_NO
+							, A.SEQ
+							, B.DESCRIPTION_LOC
+							, A.BOM_NAME
+							, ( 
+								SELECT
+									COUNT(1)
+								FROM SBOMLN
+								WHERE HOUSE_CODE = A.HOUSE_CODE
+									AND P_ITEM_NO = A.P_ITEM_NO
+									AND SEQ = A.SEQ
+							) AS CNT
+						FROM SBOMGL A
+						INNER JOIN ICOMMTGL B 
+							ON  A.P_ITEM_NO = B.ITEM_NO
+				) OMGL
+        WHERE H.HOUSE_CODE    = ${session.HOUSE_CODE}
+       AND T.CHANGE_DATE  BETWEEN   $S{start_osq_date}  
+                          AND  $S{end_osq_date}
+       AND S.VENDOR_CODE = ${session.COMPANY_CODE}
+       AND H.OSQ_NO            =    $S{osq_no}
+       --AND (case when getSettleDate(P.HOUSE_CODE, P.PR_NO, P.PR_SEQ) is not null then NVL(T.SETTLE_FLAG,'N') else 'N' end) = $S{settle_flag}
+       --AND (case when getSettleDate(H.HOUSE_CODE, P.PR_NO, P.PR_SEQ) is not null then NVL(T.SETTLE_FLAG,'N') else 'N' end) = $S{settle_flag}
+       AND H.SUBJECT LIKE '%' || $S{subject} || '%'
+       AND H.BID_OSQ_TYPE =  $S{bid_rfq_type}
+       AND H.CREATE_TYPE = $S{create_type}
+            AND H.HOUSE_CODE  = D.HOUSE_CODE
+            AND H.OSQ_NO      = D.OSQ_NO
+            AND H.OSQ_COUNT   = D.OSQ_COUNT
+            AND D.HOUSE_CODE  = S.HOUSE_CODE
+            AND D.OSQ_NO      = S.OSQ_NO
+            AND D.OSQ_COUNT   = S.OSQ_COUNT
+            AND D.OSQ_SEQ     = S.OSQ_SEQ
+            AND S.HOUSE_CODE  = T.HOUSE_CODE
+            AND S.VENDOR_CODE = T.VENDOR_CODE
+            AND S.OSQ_NO      = T.OSQ_NO
+            AND S.OSQ_COUNT   = T.OSQ_COUNT
+            AND S.OSQ_SEQ     = T.OSQ_SEQ
+            --AND D.HOUSE_CODE  = P.HOUSE_CODE
+            --AND D.PR_NO       = P.PR_NO
+            --AND D.PR_SEQ      = P.PR_SEQ
+            AND  D.HOUSE_CODE   = MTGL.HOUSE_CODE(+)
+            AND  D.ITEM_NO      = MTGL.ITEM_NO(+)
+            
+            AND D.HOUSE_CODE = OMGL.HOUSE_CODE(+)
+			AND D.P_ITEM_NO = OMGL.ITEM_NO(+)
+			AND D.P_SEQ = OMGL.SEQ(+)
+				
+            AND H.STATUS != 'D'
+            AND D.STATUS != 'D'
+            AND S.STATUS != 'D'
+            AND T.STATUS != 'D'
+          --  AND P.STATUS != 'D'
+  		]]>
+        <if test="${osq_flag}" operator="eq" value="T">
+			AND  (H.OSQ_FLAG = 'T' OR H.SIGN_STATUS IN ('T','C'))
+		</if>
+		<if test="${osq_flag}" operator="eq" value="P">
+			<![CDATA[
+			AND  H.osq_flag    = 'P'
+			AND  H.SIGN_STATUS = 'E'
+			]]>
+		</if>
+		<if test="${osq_flag}" operator="eq" value="D">
+			<![CDATA[
+			AND  H.osq_flag    = 'D'
+			AND  H.SIGN_STATUS = 'E'
+			]]>
+		</if>
+		<if test="${osq_flag}" operator="eq" value="E">
+			<![CDATA[
+			AND  H.osq_flag    = 'E'
+			AND  H.SIGN_STATUS = 'E'
+			]]>
+		</if>
+		<if test="${osq_flag}" operator="eq" value="C">
+			AND  H.osq_flag    = 'C'
+			AND  H.SIGN_STATUS = 'E'
+		</if>
+      ORDER BY H.OSQ_NO DESC , H.OSQ_COUNT DESC, D.PR_NO, D.PR_SEQ, D.P_SEQ, S.VENDOR_CODE, D.ITEM_NO ASC      
+  </method>
+
+  <method name="et_getCompanyQtaListPopup">
+  <![CDATA[
+     SELECT
+         QT.ITEM_NO
+        ,GETITEMDESC(QT.HOUSE_CODE, QT.ITEM_NO) AS DESCRIPTION_LOC
+        ,GETITEMSPEC(QT.HOUSE_CODE, QT.ITEM_NO) AS SPECIFICATION
+        ,QT.UNIT_MEASURE
+        ,QT.SETTLE_QTY
+        ,QT.QUOTA_PERCENT
+        ,QT.UNIT_PRICE
+        ,QT.ITEM_AMT
+           FROM   SOSLN RQ, SORLN QT
+          WHERE  QT.HOUSE_CODE  = RQ.HOUSE_CODE
+               AND    QT.OSQ_NO      = RQ.OSQ_NO
+               AND    QT.OSQ_SEQ     = RQ.OSQ_SEQ
+               AND    QT.OSQ_COUNT   = RQ.OSQ_COUNT
+               AND    RQ.HOUSE_CODE  = ${session.HOUSE_CODE}
+               AND    RQ.OSQ_NO      = ${osq_no}
+               AND    RQ.OSQ_COUNT   = ${osq_count}
+               AND    QT.VENDOR_CODE = ${vendor_code}
+               AND    RQ.STATUS IN ('C', 'R')
+               AND    QT.STATUS IN ('C', 'R')
+               AND    QT.SETTLE_DATE IS NOT NULL
+
+  ]]>
+  </method>
+  <method name="et_setRejectOsq">
+	<![CDATA[
+			UPDATE SOSSE									                  
+			   SET BID_FLAG = 'N'								                
+			       ,CONFIRM_FLAG = 'R'                        					
+				   ,CONFIRM_DATE = TO_CHAR(SYSDATE, 'YYYYMMDD')	 
+ 				   ,CONFIRM_TIME = TO_CHAR(SYSDATE, 'HH24MISS')     
+ 			 WHERE HOUSE_CODE       = ${session.HOUSE_CODE}     		                  
+				   AND	VENDOR_CODE	= ${session.COMPANY_CODE}            		                  
+				   AND	OSQ_NO      = ${osq_no}                 				                  
+				   AND	OSQ_COUNT   = ${osq_count}      						                       																													
+	]]>
+	</method>
+	<method name="et_setRejectOsgl">
+	<![CDATA[
+			UPDATE SOSGL									                  
+			SET    OSQ_FLAG = 'D'								                
+				 , CHANGE_DATE = TO_CHAR(SYSDATE, 'YYYYMMDD')	 
+ 			     , CHANGE_TIME = TO_CHAR(SYSDATE, 'HH24MISS')     
+ 			WHERE  HOUSE_CODE  = ${session.HOUSE_CODE}     		                  
+			  AND  OSQ_NO      = ${osq_no}                 				                  
+			  AND  OSQ_COUNT   = ${osq_count}      						                       																													
+	]]>
+	</method>
+	
+	<method name="selectSosglInfo">
+	<![CDATA[
+		SELECT
+			ADD_USER_ID
+		FROM
+			SOSGL
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			OSQ_NO     = ${OSQ_NO}
+		AND
+			OSQ_COUNT  = ${OSQ_COUNT}
+	]]>
+	</method>
+</service>

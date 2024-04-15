@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<service>
+	<method name="et_getRestricLowest">
+	<![CDATA[    
+		SELECT  
+			(
+				SELECT 	TEXT1 
+				FROM 	SCODE 
+				WHERE 	HOUSE_CODE = HD.HOUSE_CODE 
+				AND 	TYPE = 'M410' 
+				AND 	CODE = HD.BID_TYPE
+			) AS BID_TYPE_TXT,
+			ANN_ITEM     AS ANN_ITEM,
+			BASIC_AMT    AS BASIC_AMT,
+			(                                                                                               
+				SELECT  ESTM_PRICE1                                                                             
+				FROM    ICOYBDES                                                                               
+				WHERE   HOUSE_CODE = HD.HOUSE_CODE                                                             
+				AND     BID_NO     = HD.BID_NO                                                                 
+				AND     BID_COUNT  = HD.BID_COUNT                                                              
+				AND     ROWNUM = 1                                                                             
+			) AS ESTM_PRICE,
+	        FINAL_ESTM_PRICE,                                                                            
+			TRUNC(GETAVERAGEPRICE(HD.HOUSE_CODE,HD.BID_NO, HD.BID_COUNT,FINAL_ESTM_PRICE),2)   AS AVERAGEPRICE,
+			(                                                                                               
+				SELECT  BID_AMT                                                                                
+				FROM    ICOYBDVO                                                                               
+				WHERE   HOUSE_CODE = HD.HOUSE_CODE                                                             
+				AND     BID_NO     = HD.BID_NO                                                                 
+				AND     BID_COUNT  = HD.BID_COUNT                                                              
+				AND     BID_STATUS = 'SB'                                                                      
+				AND     ROWNUM     = 1                                                                         
+			) AS BID_AMT,
+			GETSETTLEAVERAGEPRICE(HD.HOUSE_CODE,HD.BID_NO, HD.BID_COUNT,FINAL_ESTM_PRICE) AS SETTLEAVERAGEPRICE,
+			HD.CONT_TYPE2
+			FROM   	ICOYBDHD   HD,
+					ICOYBDES   ES,
+					iCOYBDPG   PG                                                                                    
+			WHERE  	HD.HOUSE_CODE = ES.HOUSE_CODE                                                                    
+			AND    	HD.BID_NO     = ES.BID_NO                                                                        
+			AND    	HD.BID_COUNT  = ES.BID_COUNT                                                                     
+			AND    	HD.HOUSE_CODE = PG.HOUSE_CODE                                                                    
+			AND    	HD.BID_NO     = PG.BID_NO                                                                        
+			AND    	HD.BID_COUNT  = PG.BID_COUNT                                                                     
+			AND    	HD.STATUS IN ('R', 'C')																			
+			AND    	ES.STATUS IN ('R', 'C')																			
+			AND    	PG.STATUS IN ('R', 'C')																			
+			AND    	HD.BID_STATUS ='SB'                                                                              
+			--AND    	HD.CONT_TYPE2 ='RL'                                                                              
+      		AND    	PG.BID_END_DATE BETWEEN  ${start_change_date}
+      		AND  	${end_change_date}
+      		AND		HD.BID_TYPE = $S{bid_type}
+		]]>	 
+	</method>
+</service>

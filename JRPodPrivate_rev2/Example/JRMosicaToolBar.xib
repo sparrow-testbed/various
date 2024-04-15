@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="17701" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina6_1" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <deployment version="2304" identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="17703"/>
+        <capability name="System colors in document resources" minToolsVersion="11.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view contentMode="scaleToFill" id="iN0-l3-epB" customClass="JRMosicaToolBar">
+            <rect key="frame" x="0.0" y="0.0" width="414" height="40"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <button opaque="NO" tag="991" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="z85-lz-8Ci" userLabel="Button2" customClass="JRMosicaButton">
+                    <rect key="frame" x="59" y="0.0" width="43" height="40"/>
+                    <constraints>
+                        <constraint firstAttribute="width" constant="43" id="M4J-m8-XGu"/>
+                        <constraint firstAttribute="height" constant="40" id="c6W-eg-SaS"/>
+                    </constraints>
+                    <connections>
+                        <action selector="setBrushSize:" destination="iN0-l3-epB" eventType="touchUpInside" id="kqU-cn-RsT"/>
+                    </connections>
+                </button>
+                <button opaque="NO" tag="992" contentMode="scaleToFill" verticalCompressionResistancePriority="751" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="vKp-TW-0HM" userLabel="Button3" customClass="JRMosicaButton">
+                    <rect key="frame" x="102" y="0.0" width="43" height="40"/>
+                    <constraints>
+                        <constraint firstAttribute="width" constant="43" id="EAe-fn-iJC"/>
+                        <constraint firstAttribute="height" constant="40" id="ZvZ-E4-P6t"/>
+                    </constraints>
+                    <connections>
+                        <action selector="setBrushSize:" destination="iN0-l3-epB" eventType="touchUpInside" id="RYv-W2-MeC"/>
+                    </connections>
+                </button>
+                <button opaque="NO" tag="993" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="pXh-br-hLi" userLabel="Button4" customClass="JRMosicaButton">
+                    <rect key="frame" x="145" y="0.0" width="43" height="40"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="40" id="iJC-8B-uuK"/>
+                        <constraint firstAttribute="width" constant="43" id="jLl-UM-xIB"/>
+                    </constraints>
+                    <connections>
+                        <action selector="setBrushSize:" destination="iN0-l3-epB" eventType="touchUpInside" id="BPm-38-acl"/>
+                    </connections>
+                </button>
+                <button opaque="NO" tag="994" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Xbx-He-Xae" userLabel="Button5" customClass="JRMosicaButton">
+                    <rect key="frame" x="196" y="0.0" width="43" height="40"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="40" id="Mnd-dE-g1z"/>
+                        <constraint firstAttribute="width" constant="43" id="pZG-XI-r1n"/>
+                    </constraints>
+                    <connections>
+                        <action selector="setBrushSize:" destination="iN0-l3-epB" eventType="touchUpInside" id="Mxa-9T-AdX"/>
+                    </connections>
+                </button>
+                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="xQO-8M-20s">
+                    <rect key="frame" x="356" y="0.0" width="43" height="40"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="40" id="A0v-ex-Rrf"/>
+                        <constraint firstAttribute="width" constant="43" id="b2a-D6-d6P"/>
+                    </constraints>
+                    <state key="normal" image="i_return_samll_nor"/>
+                    <connections>
+                        <action selector="backButtonEvent:" destination="iN0-l3-epB" eventType="touchUpInside" id="4KY-6z-3xv"/>
+                    </connections>
+                </button>
+                <button opaque="NO" tag="990" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="6ky-el-izZ" userLabel="Button1" customClass="JRMosicaButton">
+                    <rect key="frame" x="16" y="0.0" width="43" height="40"/>
+                    <constraints>
+                        <constraint firstAttribute="width" constant="43" id="Reu-Wm-9Yz"/>
+                        <constraint firstAttribute="height" constant="40" id="c1s-c7-Pxa"/>
+                    </constraints>
+                    <connections>
+                        <action selector="setBrushSize:" destination="iN0-l3-epB" eventType="touchUpInside" id="MMb-Xe-yEQ"/>
+                    </connections>
+                </button>
+            </subviews>
+            <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+            <constraints>
+                <constraint firstItem="z85-lz-8Ci" firstAttribute="centerY" secondItem="6ky-el-izZ" secondAttribute="centerY" id="3BA-oO-Nij"/>
+                <constraint firstItem="6ky-el-izZ" firstAttribute="centerY" secondItem="iN0-l3-epB" secondAttribute="centerY" id="5Lh-sL-Tlt"/>
+                <constraint firstItem="pXh-br-hLi" firstAttribute="centerY" secondItem="vKp-TW-0HM" secondAttribute="centerY" id="9Us-CF-Xhz"/>
+                <constraint firstItem="z85-lz-8Ci" firstAttribute="leading" secondItem="6ky-el-izZ" secondAttribute="trailing" id="Agc-IL-SCw"/>
+                <constraint firstItem="Xbx-He-Xae" firstAttribute="leading" secondItem="pXh-br-hLi" secondAttribute="trailing" constant="8" symbolic="YES" id="BH5-CD-H2I"/>
+                <constraint firstAttribute="trailing" secondItem="xQO-8M-20s" secondAttribute="trailing" constant="15" id="GLH-j3-3Ai"/>
+                <constraint firstItem="6ky-el-izZ" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" constant="16" id="MST-0v-5um"/>
+                <constraint firstItem="pXh-br-hLi" firstAttribute="baseline" secondItem="Xbx-He-Xae" secondAttribute="baseline" id="Nvg-Jo-z3m"/>
+                <constraint firstItem="Xbx-He-Xae" firstAttribute="centerY" secondItem="pXh-br-hLi" secondAttribute="centerY" id="WNB-Yg-dyj"/>
+                <constraint firstItem="pXh-br-hLi" firstAttribute="baseline" secondItem="vKp-TW-0HM" secondAttribute="firstBaseline" id="bso-R4-x8T"/>
+                <constraint firstItem="vKp-TW-0HM" firstAttribute="baseline" secondItem="z85-lz-8Ci" secondAttribute="firstBaseline" id="gSf-Dn-kQP"/>
+                <constraint firstItem="vKp-TW-0HM" firstAttribute="baseline" secondItem="pXh-br-hLi" secondAttribute="baseline" id="gnA-FE-QeO"/>
+                <constraint firstItem="pXh-br-hLi" firstAttribute="baseline" secondItem="Xbx-He-Xae" secondAttribute="firstBaseline" id="kEo-Ik-525"/>
+                <constraint firstItem="xQO-8M-20s" firstAttribute="centerY" secondItem="iN0-l3-epB" secondAttribute="centerY" id="mrz-TO-iVu"/>
+                <constraint firstItem="vKp-TW-0HM" firstAttribute="leading" secondItem="z85-lz-8Ci" secondAttribute="trailing" id="nAv-lZ-Gqm"/>
+                <constraint firstItem="vKp-TW-0HM" firstAttribute="centerY" secondItem="z85-lz-8Ci" secondAttribute="centerY" id="q15-9k-woQ"/>
+                <constraint firstItem="Xbx-He-Xae" firstAttribute="baseline" secondItem="xQO-8M-20s" secondAttribute="baseline" id="s9X-Ac-WvL"/>
+                <constraint firstItem="pXh-br-hLi" firstAttribute="leading" secondItem="vKp-TW-0HM" secondAttribute="trailing" id="tSg-8b-OFU"/>
+                <constraint firstItem="Xbx-He-Xae" firstAttribute="baseline" secondItem="pXh-br-hLi" secondAttribute="firstBaseline" id="ulF-Gf-akK"/>
+            </constraints>
+            <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
+            <connections>
+                <outlet property="backButton" destination="xQO-8M-20s" id="m2O-8w-rRP"/>
+                <outlet property="brush1" destination="6ky-el-izZ" id="1Xx-Vx-ATw"/>
+                <outlet property="brush2" destination="z85-lz-8Ci" id="CWb-1O-8hc"/>
+                <outlet property="brush3" destination="vKp-TW-0HM" id="8hS-GG-Vpr"/>
+                <outlet property="brush4" destination="pXh-br-hLi" id="Hf5-4d-SM7"/>
+                <outlet property="brush5" destination="Xbx-He-Xae" id="hUl-om-Zqn"/>
+                <outletCollection property="colorButtons" destination="z85-lz-8Ci" id="d1R-6A-LAQ"/>
+                <outletCollection property="colorButtons" destination="vKp-TW-0HM" id="rzK-NN-PdG"/>
+                <outletCollection property="colorButtons" destination="pXh-br-hLi" id="BCX-lg-Efg"/>
+                <outletCollection property="colorButtons" destination="Xbx-He-Xae" id="5QS-6X-hMB"/>
+                <outletCollection property="colorButtons" destination="6ky-el-izZ" id="iEP-LR-nTO"/>
+            </connections>
+            <point key="canvasLocation" x="-419" y="11"/>
+        </view>
+    </objects>
+    <resources>
+        <image name="i_return_samll_nor" width="22" height="22"/>
+        <systemColor name="systemBackgroundColor">
+            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </systemColor>
+    </resources>
+</document>

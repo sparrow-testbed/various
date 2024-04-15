@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu id="0">
+		<item text="전체선택"     id="AllCheckLock"/>
+		<item text="전체선택해제"  id="AllCheckUnLock"/>
+		<item text="현재상태저장"  id="SaveCookie"/>
+		<item text="현재상태해제"         id="ClearCookie"/>
+		<!--<item text="현재상태해제"  id="LoadCookie"/>-->
+		<!--<item text="컬럼고정"     id="ColFrozen"/>-->
+		<item text="복사"        id="CellCopy"/>
+		<item text="엑셀저장"     id="ExcelSave"/>
+		<item text="인쇄"        id="PrintView"/>
+		<item text="실행취소"       id="Undo"/>
+		<item text="다시실행"       id="Redo"/>
+		<!--<item text="찾기"           id="Filter"/>-->
+		<item text="셀데이타초기화"   id="CellDataInit"/>
+
+</menu>

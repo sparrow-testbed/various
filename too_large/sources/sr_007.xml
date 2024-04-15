@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+<service>
+	 <method name="getScrList">
+   <![CDATA[
+     select a.s_factor_refitem
+     , a.factor_name 
+     , a.scale_count
+     , a.change_date
+     , b.user_name_loc 		 
+     	from icomvsfh a, icomlusr b 			 
+	 where a.add_user_id = b.user_id and a.house_code=${session.HOUSE_CODE}
+	 								 and a.house_code = b.house_code		 
+  									 and a.use_flag = 'Y' 		
+  									 
+     and a.factor_name  LIKE '%' || $S{item_name}  || '%'
+	 and b.user_name_loc  LIKE '%' || $S{operator}  || '%'		 
+   	 order by a.change_date asc
+   ]]>
+   
+   
+      
+    </method>
+
+
+	 <method name = "setScrDelete_1">
+    <![CDATA[
+		update icomvsfh set use_flag = 'N'			
+			where s_factor_refitem in ( ${s_factor_refitem} ) 	
+			and house_code = ${session.HOUSE_CODE}
+	]]>
+	</method>
+	
+	<method name ="setScrDelete_2">
+	<![CDATA[
+		update icomvsfd set use_flag = 'N' 
+			where s_factor_refitem in ( ${s_factor_refitem}  ) 	
+    		and house_code = ${session.HOUSE_CODE}				
+    ]]>
+	</method>
+
+</service>

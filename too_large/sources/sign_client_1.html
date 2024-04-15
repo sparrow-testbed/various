@@ -1,0 +1,39 @@
+<OBJECT ID="XecureWeb" CLASSID="CLSID:7E9FDB80-5316-11D4-B02C-00C04F0CD404" >
+<COMMENT>
+        <EMBED type='application/x-SoftForum-XecSSL40' hidden=true name='XecureWeb'>
+        <NOEMBED>
+</COMMENT>
+           No XecureWeb 4.0 PlugIn
+        </NOEMBED>
+        </EMBED>
+</OBJECT> 
+
+<form name='xecure'><input type=hidden name='p'></form>
+<script language='javascript' src='/XecureObject/xecureweb.js'></script>
+
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ks_c_5601-1987">
+</head>
+<body>
+
+<script language='JavaScript'>
+</script>
+
+<h1>전자 서명 데모</h1>
+<form name=signform method=post action='/XecureDemo/servlet/XecureWeb.sign_result' onSubmit='return XecureSubmit(this);'>
+서명할 데이타<br>
+<textarea cols=90 rows=20 name='plain'>
+원문 메시지.....
+이 textarea 의 내용이 서명 됩니다.
+</textarea>
+<br>
+서명 메시지<br>
+<textarea cols=90 rows=20 name='signed_msg'>
+</textarea>
+<br>
+<input type=button value='전자서명' onClick='signform.signed_msg.value = Sign(signform.plain.value);'>
+<input type=submit value='서버로 전송' >
+</form>
+</body>
+</html>

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<service>
+	
+	<!-- ICT 사용(업체 공고리스트 조회) -->
+	<method name="getBdAnnListSeller">
+	<![CDATA[
+          SELECT	  HD.ANN_NO																					AS ANN_NO
+					, HD.ANN_COUNT																				AS ANN_COUNT
+					, HD.ANN_ITEM																				AS ANN_ITEM
+					, CONVERT_DATE(HD.ANN_DATE) AS ANN_DATE
+					, TO_CHAR(TO_DATE(HD.X_DOC_SUBMIT_DATE||HD.X_DOC_SUBMIT_TIME, 'YYYYMMDDHH24MISS'),'YYYY/MM/DD HH24:MI') AS X_DOC_SUBMIT_DATE_TIME  
+					, GETICOMCODE2( HD.HOUSE_CODE, 'M816_ICT', HD.ANN_STATUS)									AS STATUS_TEXT	-- 공고상태																
+					, HD.ATTACH_NO																				AS ATTACH_NO
+					, (	SELECT COUNT(*)
+						FROM   ICOMATCH
+						WHERE DOC_NO = HD.ATTACH_NO)															AS ATTACH_CNT
+					, HD.SIGN_PERSON_ID																			AS SIGN_PERSON_ID
+					, HD.SIGN_STATUS																			AS SIGN_STATUS
+					, HD.ANN_STATUS																				AS ANN_STATUS
+					, HD.ADD_USER_ID																			AS ADD_USER_ID
+					, HD.CHANGE_USER_ID																			AS CHANGE_USER_ID
+					, NVL(HD.CHANGE_USER_NAME_LOC,HD.ADD_USER_NAME_LOC)											AS CHANGE_USER_NAME
+					, CASE	WHEN HD.ANN_VERSION IS NULL THEN (SELECT CODE FROM SCODE WHERE TYPE = 'VR002_ICT')
+							ELSE HD.ANN_VERSION
+					  END																						AS ANN_VERSION
+					, (SELECT TEXT1 FROM SCODE WHERE TYPE = 'M966_ICT' AND CODE = HD.ES_FLAG) ES_FLAG_TEXT
+
+			FROM	ICOYBDHD2_ICT	HD
+			WHERE 	1=1
+			AND		HD.HOUSE_CODE  = ${HOUSE_CODE}
+			AND		HD.ANN_DATE BETWEEN ${START_CHANGE_DATE}
+			AND     ${END_CHANGE_DATE}
+			AND		HD.ANN_NO      LIKE  '%'|| $S{ANN_NO}     ||'%'
+			AND		HD.ANN_ITEM    LIKE  '%'|| $S{ANN_ITEM}   ||'%' 
+			AND		HD.STATUS IN ('C' ,'R')
+            AND     HD.ES_FLAG = $S{ES_FLAG}
+			]]>
+			<if test="${BD_STATUS_TEXT}" operator="eq" value="">
+			<![CDATA[
+		        AND  HD.ANN_STATUS IN ('AC','UC','CC')
+			]]>
+		    </if>
+            <if test="${BD_STATUS_TEXT}" operator="eq" value="ACUC">
+			<![CDATA[
+		        AND  HD.ANN_STATUS IN ('AC','UC')
+			]]>
+		    </if>
+		    <if test="${BD_STATUS_TEXT}" operator="eq" value="CC">
+			<![CDATA[
+		        AND  HD.ANN_STATUS IN ('CC')
+			]]>
+		    </if>		      
+       ORDER BY HD.ANN_NO DESC, HD.ANN_COUNT DESC, HD.ANN_DATE DESC
+			            
+       
+	
+	</method>
+	
+</service>

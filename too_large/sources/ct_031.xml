@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+	<service>
+		<method name="getStockHeaderList">
+		    <![CDATA[
+		    	 SELECT ADDR.CEO_NAME_LOC,
+				        SUBSTRING (REPLACE(CMGL.IRS_NO,'-',''),0,3) || '-' || 
+				        SUBSTRING (REPLACE(CMGL.IRS_NO,'-',''),4,2) || '-' || 
+				        SUBSTRING (REPLACE(CMGL.IRS_NO,'-',''),6,5) AS IRS_NO,
+				        CMGL.COMPANY_NAME_LOC,
+				        ADDR.ADDRESS_LOC,
+				        CMGL.INDUSTRY_TYPE || ' / ' ||
+				        CMGL.BUSINESS_TYPE AS IB_TYPE,
+				        ADDR.PHONE_NO1
+				   FROM ICOMCMGL CMGL,
+				        ICOMADDR ADDR
+				  WHERE CMGL.HOUSE_CODE = ADDR.HOUSE_CODE
+				    AND CMGL.COMPANY_CODE = ADDR.CODE_NO
+				    AND CMGL.COMPANY_CODE IN ( 
+				    SELECT COMPANY_CODE FROM ICOMLUSR WHERE USER_ID = $S{session_user_id}
+				    )
+				]]>
+		</method>
+		
+		<method name="getStockList">
+		    <![CDATA[
+					 SELECT TO_CHAR(TO_DATE(CPGL.CONT_DATE,
+				             'YYYYMMDD'),
+				             'YYYY/MM/DD') CONT_DATE,
+				             CPGL.CONT_NO AS CONT_NUMBER,
+				             CPGL.CONT_GL_SEQ,
+				             COTX.STAMP_TAX_NO,
+				             CPGL.SUBJECT,
+					         SUBSTRING (REPLACE(VNGL.IRS_NO,'-',''),0,3) || '-' || 
+					         SUBSTRING (REPLACE(VNGL.IRS_NO,'-',''),4,2) || '-' || 
+					         SUBSTRING (REPLACE(VNGL.IRS_NO,'-',''),6,5) AS SELLER_COMPANY_IRS_NO,
+				             VNGL.VENDOR_NAME_LOC AS SELLER_COMPANY_NAME,
+				             CPGL.CONT_AMT AS CONT_TTL_AMT,
+				             COTX.STAMP_TAX_AMT,
+				             VNGL.VENDOR_CODE AS SELLER_CODE
+				        FROM SCOTX COTX,
+				             SCPGL CPGL,
+				             ICOMVNGL VNGL
+				       WHERE COTX.CONT_NO = CPGL.CONT_NO
+				         AND TO_NUMBER(COTX.CONT_COUNT) = TO_NUMBER(CPGL.CONT_GL_SEQ)
+				         AND CPGL.SELLER_CODE = VNGL.VENDOR_CODE
+				         AND CPGL.CT_FLAG = 'CD'
+					     AND CPGL.CONT_DATE BETWEEN REPLACE($S{from_date},'/','')
+					     AND REPLACE($S{to_date},'/','')
+					     AND UPPER(CPGL.CONT_NO) LIKE '%' || UPPER($S{cont_no}) || '%'
+					     AND UPPER(VNGL.VENDOR_CODE) LIKE '%' || UPPER($S{seller_code}) || '%'
+					     AND UPPER(VNGL.VENDOR_NAME_LOC) LIKE '%' || UPPER($S{seller_name}) || '%'
+					     AND COTX.STAMP_TAX_NO IS NOT NULL
+						 ORDER BY CPGL.CONT_DATE DESC
+				]]>
+		</method>
+	</service>

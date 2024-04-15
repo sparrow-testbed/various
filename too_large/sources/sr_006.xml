@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+<service> 
+    <method name="getSgVnLinkList">
+	<![CDATA[
+			   SELECT                                                          		
+						GETSGNAME(A.PARENT1) AS S_TYPE1,                         		
+						GETSGNAME(A.PARENT2) AS S_TYPE2,                         		
+						GETSGNAME(A.SG) AS S_TYPE3,                              		
+						A.VENDOR_CODE AS VENDOR_CODE,  									
+						GETCOMPANYNAMELOC(B.HOUSE_CODE, B.VENDOR_CODE, 'S') AS NAME_LOC,
+						B.CREDIT_RATING AS CREDIT_GRADE,  								
+						B.PURCHASE_BLOCK_FLAG AS PURCHASE_BLOCK_FLAG,
+						B.IRS_NO  					
+				FROM                                                            		
+				(                                                               		
+					SELECT                                                       		
+						   (SELECT PARENT_SG_REFITEM                             		
+							   FROM SSGGL                                  			
+							  WHERE SG_REFITEM = B.PARENT_SG_REFITEM
+							    AND HOUSE_CODE = ${session.HOUSE_CODE}) AS PARENT1,		
+							B.PARENT_SG_REFITEM AS PARENT2,                      		
+							A.SG_REFITEM AS SG,                                  		
+							A.VENDOR_CODE, A.HOUSE_CODE                           		
+					FROM 	SSGVN A, SSGGL B          							
+					WHERE	A.HOUSE_CODE = B.HOUSE_CODE									
+					AND     A.SG_REFITEM = B.SG_REFITEM                          		
+					AND		A.HOUSE_CODE = ${session.HOUSE_CODE}								
+					AND		B.LEVEL_COUNT = '3'                                  		
+					AND		A.REGISTRY_FLAG = 'Y'                      					
+					AND		A.APPLY_FLAG = 'Y'                                      	        		
+				) A, ICOMVNGL B                                                   		
+				WHERE	A.HOUSE_CODE = B.HOUSE_CODE										
+				AND	A.VENDOR_CODE = B.VENDOR_CODE									
+				AND	A.HOUSE_CODE = ${session.HOUSE_CODE}									
+				 AND  A.PARENT1  = $S{s_type1}                              	
+				 AND  A.PARENT2  = $S{s_type2}                             	
+				 AND  A.SG  	  = $S{s_type3}                             	
+				 AND  A.VENDOR_CODE  = $S{vendor_code}          
+ 	]]>	     
+	</method>
+		
+</service>

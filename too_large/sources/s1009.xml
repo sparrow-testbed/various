@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<service>
+	<method name="et_getBidAvgRateList_bak20220119">
+	<![CDATA[
+		SELECT  A.ITEM_TYPE,  
+				GETCODETEXT2(decode(bid_type, 'C', 'M551','M750'),A.ITEM_TYPE,'KO') AS ITEM_TYPE_TEXT,                                                                                 
+				(
+					SELECT 	TEXT2 
+					FROM 	SCODE 
+					WHERE 	TYPE IN ('M150','M151') 
+					AND 	CODE = A.ITEM_TYPE
+				) ITEM_NAME,          
+				A.FINAL_ESTM_PRICE_ENC,                                                                        
+				A.BID_AMT,                                                                                     
+				A.AVG_RATE                                          					                                           
+		FROM                                                                                            
+		(                                                       								                                        
+			SELECT 	A.ITEM_TYPE,
+			        A.BID_TYPE,
+					ROUND(AVG(B.AMT),0) FINAL_ESTM_PRICE_ENC,                            
+					ROUND(AVG(C.BID_AMT),0) BID_AMT,                                                      
+					ROUND(AVG((C.BID_AMT/B.AMT)*100),2) AVG_RATE                         
+			FROM                                                                                         
+			(
+				SELECT 	HOUSE_CODE,
+						BID_NO,
+						BID_COUNT,
+						ITEM_TYPE,PR_NO,
+						BID_TYPE          	                                
+				FROM 	ICOYBDHD                                                                             
+				WHERE 	STATUS = 'R'                                                                         
+				AND 	BID_STATUS = 'SB'                                                                   	 
+				AND 	NVL(ITEM_TYPE, ' ') NOT IN ( 'D03','D05','D06','D08','D10','D11','D20')             	 
+				AND 	BID_TYPE = $S{bid_type}
+				AND 	PROM_CRIT = $S{PROM_CRIT} )A,                                                               
+			(
+				SELECT 	BID_NO,
+			 			BID_COUNT,
+			 			SUM(PR_AMT) AS AMT 
+			 	FROM 	ICOYBDDT 
+			 	GROUP BY BID_NO, BID_COUNT
+			) B,   
+			(
+				SELECT 	HOUSE_CODE,
+						BID_NO,
+						BID_COUNT,
+						VOTE_COUNT,
+						BID_AMT                                       
+				FROM 	ICOYBDVO                                                                             
+				WHERE 	STATUS = 'R'                                                                         
+				AND 	BID_STATUS = 'SB' 
+			)C,                                                                 
+			(
+				SELECT 	HOUSE_CODE,
+						BID_NO,
+						BID_COUNT,
+						VOTE_COUNT,
+						OPEN_DATE                                     
+				FROM 	ICOYBDPG                                                                             
+				WHERE 	STATUS = 'C'                                                                         
+				AND 	OPEN_DATE >= $S{from_date}
+				AND 	OPEN_DATE <= $S{to_date}
+				
+			)D  
+				
+			WHERE	A.BID_NO = B.BID_NO                                                            
+			AND 	A.BID_COUNT = B.BID_COUNT                                                                      
+			AND 	A.HOUSE_CODE = C.HOUSE_CODE                                                              
+			AND 	A.BID_NO = C.BID_NO                                                                      
+			AND 	A.BID_COUNT = C.BID_COUNT                                                                
+			AND 	C.HOUSE_CODE = D.HOUSE_CODE                                                              
+			AND 	C.BID_NO = D.BID_NO                                                                      
+			AND 	C.BID_COUNT = D.BID_COUNT                                                                
+			AND 	C.VOTE_COUNT = D.VOTE_COUNT       
+			AND     A.ITEM_TYPE = $S{item_type}                                                       
+			GROUP BY A.ITEM_TYPE, A.BID_TYPE                                                                      
+		)A                                                                                              
+		ORDER BY A.ITEM_TYPE                                                                            
+	]]>                                                             
+	</method>
+	<method name="et_getBidAvgRateList">
+	<![CDATA[
+		SELECT  A.ITEM_TYPE,  
+				GETCODETEXT2(decode(bid_type, 'C', 'M551','M750'),A.ITEM_TYPE,'KO') AS ITEM_TYPE_TEXT,                                                                                 
+				(
+					SELECT 	TEXT2 
+					FROM 	SCODE 
+					WHERE 	TYPE IN ('M150','M151') 
+					AND 	CODE = A.ITEM_TYPE
+				) ITEM_NAME,          
+				A.FINAL_ESTM_PRICE_ENC,                                                                        
+				A.BID_AMT,                                                                                     
+				A.AVG_RATE                                          					                                           
+		FROM                                                                                            
+		(                                                       								                                        
+			SELECT 	A.ITEM_TYPE,
+			        A.BID_TYPE,
+					ROUND(AVG(B.AMT),0) FINAL_ESTM_PRICE_ENC,                            
+					ROUND(AVG(C.BID_AMT),0) BID_AMT,                                                      
+					ROUND(AVG((C.BID_AMT/B.AMT)*100),2) AVG_RATE                         
+			FROM                                                                                         
+			(
+				SELECT 	HOUSE_CODE,
+						BID_NO,
+						BID_COUNT,
+						ITEM_TYPE,PR_NO,
+						BID_TYPE          	                                
+				FROM 	ICOYBDHD                                                                             
+				WHERE 	STATUS = 'R'                                                                         
+				AND 	BID_STATUS = 'SB'                                                                   	 
+				AND 	NVL(ITEM_TYPE, ' ') NOT IN ( 'D03','D05','D06','D08','D10','D11','D20')             	 
+				AND 	BID_TYPE = $S{bid_type}
+				AND 	PROM_CRIT = $S{PROM_CRIT} )A,                                                               
+			(
+				SELECT 	BID_NO,
+			 			BID_COUNT,
+			 			SUM(PR_AMT) AS AMT 
+			 	FROM 	ICOYBDDT 
+			 	GROUP BY BID_NO, BID_COUNT
+			) B,   
+			(
+				SELECT 	HOUSE_CODE,
+						BID_NO,
+						BID_COUNT,
+						VOTE_COUNT,
+						BID_AMT                                       
+				FROM 	ICOYBDVO                                                                             
+				WHERE 	STATUS = 'R'                                                                         
+				AND 	BID_STATUS = 'SB' 
+			)C,
+			(
+				SELECT 	HOUSE_CODE,
+						BID_NO,
+						BID_COUNT,
+						VOTE_COUNT,
+						OPEN_DATE                                     
+				FROM 	ICOYBDPG                                                                             
+				WHERE 	STATUS = 'C'                                                                         
+				AND 	OPEN_DATE >= $S{from_date}
+				AND 	OPEN_DATE <= $S{to_date}
+				
+			)D  
+				
+			WHERE	A.BID_NO = B.BID_NO                                                            
+			AND 	A.BID_COUNT = B.BID_COUNT                                                                      
+			AND 	A.HOUSE_CODE = C.HOUSE_CODE                                                              
+			AND 	A.BID_NO = C.BID_NO                                                                      
+			AND 	A.BID_COUNT = C.BID_COUNT                                                                
+			AND 	C.HOUSE_CODE = D.HOUSE_CODE                                                              
+			AND 	C.BID_NO = D.BID_NO                                                                      
+			AND 	C.BID_COUNT = D.BID_COUNT                                                                
+			AND 	C.VOTE_COUNT = D.VOTE_COUNT
+			]]>  
+			<if test="${item_type}" operator="ne" value="">     
+				<![CDATA[
+				AND     A.ITEM_TYPE IN ('#item_type#')
+				]]>
+			</if>
+			<![CDATA[                                                       
+			GROUP BY A.ITEM_TYPE, A.BID_TYPE                                                                      
+		)A                                                                                              
+		ORDER BY A.ITEM_TYPE                                                                            
+	]]>                                                             
+	</method>
+</service>

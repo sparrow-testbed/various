@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+<service>
+	 
+ <method name = "getChkDetail">
+    <![CDATA[
+              	SELECT A.C_FACTOR_REFITEM, A.FACTOR_NAME, B.ITEM_NAME, B.SEQ, B.ITEM_SCORE 									
+    			FROM ICOMVCFH A, ICOMVCFD B 																					
+    			WHERE A.C_FACTOR_REFITEM = B.C_FACTOR_REFITEM 
+    			AND A.C_FACTOR_REFITEM = ${c_factor_refitem}
+    			AND A.HOUSE_CODE = B.HOUSE_CODE 
+    			AND A.HOUSE_CODE = ${session.HOUSE_CODE}			
+    			ORDER BY B.SEQ ASC
+    	
+    ]]>
+    </method>
+  
+ 
+     <method name ="setChkInsert_1">
+    <![CDATA[
+		INSERT INTO ICOMVCFH ( 			
+   			   HOUSE_CODE, 					
+   			   STATUS, 						
+   			   C_FACTOR_REFITEM, 				
+   			   FACTOR_NAME,    				
+   			   FACTOR_TYPE,  					
+   			   SCALE_COUNT,  					
+   			   ADD_DATE,						
+   			   CHANGE_DATE,					
+   			   ADD_USER_ID)					
+		select  						
+			   ${session.HOUSE_CODE},				
+			   'C',							
+			   ${c_factor_refitem},   
+			   ${checkListItemName},								
+			   'C',							
+			   ${scale},								
+			   TO_CHAR(SYSDATE,'YYYYMMDD'), 
+			   TO_CHAR(SYSDATE,'YYYYMMDD'), 
+			   ${session.ID}
+		from dual				
+    ]]>
+    </method>
+    
+    <method name ="setChkInsert_2">
+    <![CDATA[
+		INSERT INTO ICOMVCFD ( 				
+        		   HOUSE_CODE, 						
+    			   STATUS, 							
+    			   C_FACTOR_ITEM_REFITEM, 				
+    			   ITEM_NAME,    						
+    			   ITEM_SCORE,    						
+    			   SEQ,  								
+    			   C_FACTOR_REFITEM) 					
+   		select  							
+   			   ${session.HOUSE_CODE},					
+   			   'C',								
+   			   NVL(max(C_FACTOR_ITEM_REFITEM),0) + 1,  
+   			   ${item_name},									
+   			   NVL(${item_score},0),									
+   			   ${seq},									
+       		   ${c_factor_refitem}
+       	from icomvcfd    
+    ]]>
+    </method>
+      
+       
+      
+    <method name ="setChkUpdate_1">
+    <![CDATA[
+		UPDATE ICOMVCFH SET							
+				FACTOR_NAME = ${checkListItemName},    							
+				CHANGE_DATE = TO_CHAR(SYSDATE,'YYYYMMDD'), 	
+				ADD_USER_ID = ${session.ID}				
+ 		WHERE C_FACTOR_REFITEM = ${c_factor_refitem} 				
+    	AND HOUSE_CODE = ${session.HOUSE_CODE}				
+    	
+    ]]>
+    </method>
+    
+        <method name ="setChkUpdate_2">
+    <![CDATA[
+		UPDATE ICOMVCFD SET 									
+		        ITEM_NAME = ${item_name}, 								
+		        ITEM_SCORE = ${item_score} 								
+		 WHERE  SEQ = ${seq} 
+		 AND C_FACTOR_REFITEM = ${c_factor_refitem} 	
+		 AND HOUSE_CODE = ${session.HOUSE_CODE}				
+    	
+    ]]>
+    </method>
+    
+    
+    <method name="currvalForMssql">
+    <![CDATA[
+		select NVL(max(c_factor_refitem),0) + 1 as currVal
+			from icomvcfh
+    ]]>
+    </method>
+    
+    <method name ="chkUpdateChkItem">
+    <![CDATA[
+    	 SELECT * FROM ICOMVCSI 	
+	     WHERE C_FACTOR_REFITEM = ${c_factor_refitem}
+	     AND HOUSE_CODE = ${session.HOUSE_CODE}			
+    ]]>
+    </method>
+    
+</service>

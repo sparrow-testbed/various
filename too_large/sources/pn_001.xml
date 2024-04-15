@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<service>
+	<method name="getCsBdPnList">
+		<![CDATA[
+		     SELECT
+		     	 A.PN_YY
+		     	,A.PN_UD_LOC
+		     	,A.HOUSE_CODE
+		     	,A.VENDOR_CODE
+		     	,A.VENDOR_SEQ
+		     	,A.VENDOR_NAME_LOC
+		     	,A.GROUP1_CODE
+		     	,A.GROUP1_NAME_LOC
+		     	,A.GROUP2_CODE
+		     	,A.GROUP2_NAME_LOC
+		     	,A.GROUP2_DATE
+		     	,A.DS_TCN
+		     	,A.BID_TCN
+		     	,(A.BID_TCN - A.NOT_PN_PRIC) NML_BID_TCN
+		     	,(A.DS_TCN - (A.BID_TCN - A.NOT_PN_PRIC)) NOT_NML_BID_TCN		     			     
+		     	,CASE WHEN A.DS_TCN > 7 AND (A.BID_TCN - A.NOT_PN_PRIC) >= 0 THEN ROUND(((A.BID_TCN - A.NOT_PN_PRIC)/A.DS_TCN)*100,2)
+		     	 ELSE NULL
+		 		 END AS BID_TPCP_RT
+		 		,CASE WHEN A.DS_TCN > 7 AND (A.BID_TCN - A.NOT_PN_PRIC) >= 0 THEN 
+		 			CASE WHEN ROUND(((A.BID_TCN - A.NOT_PN_PRIC)/A.DS_TCN)*100,2) < 30 THEN
+		 				'<font color="red">패널티 대상</font>'
+		 			ELSE
+		 				NULL
+		 			END 
+		     	 ELSE NULL
+		 		 END AS PN_TGT_YN
+		 		,A.PN_UD
+		 		,(SELECT PURCHASE_BLOCK_FLAG 
+		 		    FROM ICOMVNGL
+		 		   WHERE HOUSE_CODE = A.HOUSE_CODE
+					 AND VENDOR_CODE= A.VENDOR_CODE) AS PURCHASE_BLOCK_FLAG					
+			    ,(SELECT GETICOMCODE2(HOUSE_CODE, 'M213', PURCHASE_BLOCK_FLAG)
+		 		    FROM ICOMVNGL
+		 		   WHERE HOUSE_CODE = A.HOUSE_CODE
+					 AND VENDOR_CODE= A.VENDOR_CODE) AS PURCHASE_BLOCK_FLAG_NAME
+			    ,(SELECT TO_CHAR(TO_DATE(NVL(PURCHASE_BLOCK_DATE,ADD_DATE),'YYYYMMDD'),'YYYY/MM/DD')
+		 		    FROM ICOMVNGL
+		 		   WHERE HOUSE_CODE = A.HOUSE_CODE
+					 AND VENDOR_CODE= A.VENDOR_CODE) AS PURCHASE_BLOCK_DATE
+		     FROM
+		     (
+		      SELECT     
+                    ${bd_yy} AS PN_YY
+                   ,DECODE(${hy_ds},'0106','상반기','0712','하반기','전체') AS PN_UD_LOC
+                   ,F.HOUSE_CODE
+			       ,F.VENDOR_CODE
+			       ,F.VENDOR_SEQ
+			       ,GETVENDORNAME(F.HOUSE_CODE, F.VENDOR_CODE) AS VENDOR_NAME_LOC
+			       ,H.GROUP_UCODE GROUP1_CODE
+			       ,(SELECT GROUP_NAME FROM ICOMUGRP WHERE GROUP_UCODE = 0 AND GROUP_LEVEL = 1 AND GROUP_CODE = H.GROUP_UCODE AND ROWNUM =1)  GROUP1_NAME_LOC
+                   ,F.GROUP_CODE  GROUP2_CODE
+			       ,H.GROUP_NAME  GROUP2_NAME_LOC
+			       ,TO_CHAR(F.ADD_DT,'YYYY/MM/DD')      GROUP2_DATE
+			       ,(SELECT COUNT(AP.VENDOR_CODE) DS_TCN
+					 FROM ICOYBDHD HD, ICOYBDPG PG, ICOYBDAP AP
+					 WHERE HD.HOUSE_CODE  = PG.HOUSE_CODE
+					 AND   HD.BID_NO      = PG.BID_NO                                              
+					 AND   HD.BID_COUNT   = PG.BID_COUNT
+					 AND   HD.HOUSE_CODE  = AP.HOUSE_CODE
+					 AND   HD.BID_NO      = AP.BID_NO                                              
+					 AND   HD.BID_COUNT   = AP.BID_COUNT
+					 AND   HD.HOUSE_CODE  = ${HOUSE_CODE}
+					 AND   HD.BID_STATUS  IN ('SB', 'NB')                                     
+					 AND   HD.SIGN_STATUS  IN ('C')                                                
+					 AND   HD.STATUS IN ('C' ,'R')                                                 
+					 AND   PG.STATUS IN ('C' ,'R')                                              
+					 AND   AP.STATUS IN ('C' ,'R')                                              
+					 AND   HD.BID_TYPE = 'C'
+					 AND   HD.CONT_TYPE1 = 'NC'
+					 AND   HD.PROM_CRIT = 'B'
+					 AND   AP.VENDOR_CODE = F.VENDOR_CODE
+					 AND   PG.OPEN_DATE BETWEEN ${OPEN_DATE_START} 
+					 AND   ${OPEN_DATE_END}
+					 ) DS_TCN
+				   ,(SELECT COUNT(VO.VENDOR_CODE) NML_BID_TCN
+					 FROM ICOYBDHD HD, ICOYBDPG PG, ICOYBDVO VO
+					 WHERE HD.HOUSE_CODE  = PG.HOUSE_CODE
+					 AND   HD.BID_NO      = PG.BID_NO                                              
+					 AND   HD.BID_COUNT   = PG.BID_COUNT
+					 AND   PG.HOUSE_CODE  = VO.HOUSE_CODE
+					 AND   PG.BID_NO      = VO.BID_NO                                              
+					 AND   PG.BID_COUNT   = VO.BID_COUNT					 
+					 AND   VO.VOTE_COUNT  = 1					 					 
+					 AND   HD.HOUSE_CODE  = ${HOUSE_CODE}
+					 AND   HD.BID_STATUS  IN ('SB', 'NB')                                     
+					 AND   HD.SIGN_STATUS  IN ('C')                                                
+					 AND   HD.STATUS IN ('C' ,'R')                                                 
+					 AND   PG.STATUS IN ('C' ,'R')                                              
+					 AND   HD.BID_TYPE = 'C'
+					 AND   HD.CONT_TYPE1 = 'NC'
+					 AND   HD.PROM_CRIT = 'B'
+					 AND   VO.VENDOR_CODE = F.VENDOR_CODE
+					 AND   VO.BID_CANCEL = 'N'  
+					 AND   PG.OPEN_DATE BETWEEN ${OPEN_DATE_START} 
+					 AND   ${OPEN_DATE_END}
+					 ) BID_TCN --1차 투찰업체수		
+				   ,(SELECT COUNT(VO.VENDOR_CODE) NML_BID_TCN
+					 FROM ICOYBDHD HD, ICOYBDPG PG, ICOYBDVO VO, ICOYBDPN PN
+					 WHERE HD.HOUSE_CODE  = PG.HOUSE_CODE
+					 AND   HD.BID_NO      = PG.BID_NO                                              
+					 AND   HD.BID_COUNT   = PG.BID_COUNT
+					 AND   PG.HOUSE_CODE  = VO.HOUSE_CODE
+					 AND   PG.BID_NO      = VO.BID_NO                                              
+					 AND   PG.BID_COUNT   = VO.BID_COUNT					 
+					 AND   VO.VOTE_COUNT  = 1
+					 AND   VO.HOUSE_CODE  = PN.HOUSE_CODE
+					 AND   VO.BID_NO      = PN.BID_NO
+					 AND   VO.BID_COUNT   = PN.BID_COUNT					 				 					 
+					 AND   HD.HOUSE_CODE  = ${HOUSE_CODE}
+					 AND   HD.BID_STATUS  IN ('SB', 'NB')                                     
+					 AND   HD.SIGN_STATUS  IN ('C')                                                
+					 AND   HD.STATUS IN ('C' ,'R')                                                 
+					 AND   PG.STATUS IN ('C' ,'R')                                              
+					 AND   HD.BID_TYPE = 'C'
+					 AND   HD.CONT_TYPE1 = 'NC'
+					 AND   HD.PROM_CRIT = 'B'
+					 AND   VO.VENDOR_CODE = F.VENDOR_CODE
+					 AND   VO.BID_CANCEL = 'N'  
+					 AND   PG.OPEN_DATE BETWEEN ${OPEN_DATE_START} 
+					 AND   ${OPEN_DATE_END}
+					 AND   VO.BID_AMT_ENC NOT BETWEEN PN.PN_L_PRICE AND PN.PN_H_PRICE 
+					 ) NOT_PN_PRIC --평균입찰가15%상한, 평균입찰가15%하한 이탈수
+					,F.GROUP_CODE
+					,${hy_ds} AS PN_UD					 								      			     
+			  FROM ICOMUVEN F, ICOMUGRP H 
+			  WHERE H.GROUP_CODE = F.GROUP_CODE
+			  AND F.HOUSE_CODE = ${HOUSE_CODE}
+			  AND H.GROUP_LEVEL = 2
+			  AND H.GROUP_UCODE = $S{group1_code}	
+			  AND F.GROUP_CODE = $S{group2_code}
+			)A					  	
+			ORDER BY A.GROUP_CODE  	
+		]]>
+	</method>                                
+</service>
+

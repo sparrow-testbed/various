@@ -1,0 +1,282 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<service>
+
+	<!-- ICT사용 -->
+	<method name="getBdConfrimList">
+		<![CDATA[
+				    SELECT
+				               HD.ANN_NO
+				             , HD.ANN_ITEM
+				             , TO_CHAR(TO_DATE(HD.X_DOC_SUBMIT_DATE||HD.X_DOC_SUBMIT_TIME, 'YYYYMMDDHH24MISS'),'YYYY/MM/DD HH24:MI') AS X_DOC_SUBMIT_DATE_TIME	-- 사용하지 않음
+				             , CONVERT_DATE(HD.ANN_DATE ) AS ANN_DATE
+				             , HD.CHANGE_USER_NAME_LOC
+				             , GETICOMCODE2(HD.HOUSE_CODE, 'M816_ICT', HD.STATUS )				AS STATUS_TEXT	-- 사용의미없음
+				             , HD.SIGN_PERSON_ID
+				             , HD.SIGN_STATUS
+				             , HD.ANN_STATUS
+				             , HD.ANN_COUNT
+				             , HD.CHANGE_USER_ID
+				             , HD.STATUS		AS STATUS
+				             , '' AS CONT_TYPE1_TEXT
+				           , NULL	AS VENDOR_COUNT		-- 지정업체수
+				           , (SELECT COUNT(Z.VENDOR_CODE)
+				               FROM ICOYBDAP2_ICT Z
+				               WHERE Z.HOUSE_CODE = HD.HOUSE_CODE
+				                 AND Z.ANN_NO     = HD.ANN_NO
+				                 AND Z.ANN_COUNT  = HD.ANN_COUNT
+				                 AND Z.STATUS     IN  ('C','R') )	AS VENDOR_COUNT2	-- 참가업체수
+				           , (SELECT COUNT(Z.VENDOR_CODE)
+				                FROM ICOYBDAP2_ICT Z
+				               WHERE Z.HOUSE_CODE = HD.HOUSE_CODE
+				                 AND Z.ANN_NO     = HD.ANN_NO
+				                 AND Z.ANN_COUNT  = HD.ANN_COUNT
+				                 AND Z.STATUS     = 'R' 
+				                 AND Z.INP_CNF = 'Y' )			AS VENDOR_COUNT4	-- 서류제출업체수 : INP_CNF : 서류제출여부
+				           , (SELECT COUNT(Z.VENDOR_CODE)
+				                FROM ICOYBDAP2_ICT Z
+				               WHERE Z.HOUSE_CODE = HD.HOUSE_CODE
+				                 AND Z.ANN_NO     = HD.ANN_NO
+				                 AND Z.ANN_COUNT  = HD.ANN_COUNT
+				                 AND Z.STATUS     = 'R' 
+				                 AND Z.FINAL_FLAG = 'Y' )			AS VENDOR_COUNT3	-- 적격업체수 : FINAL_FLAG : 최종결과
+				           , NULL									AS SUM_AMT
+				           , NULL AS CUR
+				           , CASE WHEN HD.ANN_VERSION IS NULL THEN (SELECT CODE FROM SCODE WHERE TYPE = 'VR002_ICT')
+				                  ELSE HD.ANN_VERSION
+				             END AS ANN_VERSION				           
+				    FROM   ICOYBDHD2_ICT HD
+				   WHERE   HD.HOUSE_CODE  = ${HOUSE_CODE}
+				     AND   HD.ANN_NO      = $S{ANN_NO}
+				     AND   HD.ANN_ITEM  LIKE  '%'||$S{ANN_ITEM}||'%'
+				     AND   HD.SIGN_STATUS  IN ('C')
+				     AND   HD.ANN_STATUS   IN ('AC', 'UC', 'RR', 'NB', 'SB')			-- AC:공고중 UC:정정공고
+				     AND   HD.CHANGE_USER_NAME_LOC  LIKE  '%'|| $S{CHANGE_USER_NAME} ||'%'
+				     AND   HD.STATUS IN ('C' ,'R')
+				     AND   HD.ADD_USER_DEPT = ${session.DEPARTMENT}				     
+				   ORDER BY HD.ANN_DATE DESC, HD.ADD_DATE DESC, HD.ADD_TIME DESC, HD.ANN_NO DESC
+		]]>                                            
+ 
+	</method>
+
+	<!-- ICT 사용 -->
+	<method name="getAlarmData">
+		<![CDATA[  
+		SELECT to_char(sysdate, 'YYYYMMDDHH24MISS')   FROM dual
+		]]>
+	</method>
+
+
+	<!-- ICT 사용(적격업체 팝업에서 공고정보 가져오기) -->
+	<method name="getBdHeaderDetail">
+		<![CDATA[
+	         SELECT
+	                HD.CHANGE_USER_NAME_LOC
+	               ,HD.SIGN_PERSON_ID
+	               ,HD.SIGN_PERSON_NAME
+	               ,HD.SIGN_DATE
+	               ,HD.SIGN_STATUS
+	               ,HD.CHANGE_DATE
+	               ,NULL    AS CONT_TYPE1
+	               ,NULL    AS CONT_TYPE2
+		           ,NULL	AS CONT_TYPE1_TEXT_D
+		           ,NULL	AS CONT_TYPE2_TEXT_D
+	               ,NULL													AS CONT_TYPE1_TEXT_O
+	               ,NULL													AS CONT_TYPE2_TEXT_O
+	               ,HD.ANN_DATE
+	               ,HD.ANN_ITEM
+	               ,HD.APP_ETC
+	               ,HD.ATTACH_NO
+	               ,NULL		AS ATTACH_CNT
+	               ,HD.ANN_STATUS
+	               ,HD.BID_JOIN_TEXT
+	               ,HD.ANN_NO
+	               ,HD.ANN_COUNT
+	               ,GETUSERNAME_ICT(HD.HOUSE_CODE, HD.ADD_USER_ID,'LOC') AS ADD_USER_NAME       
+	               ,HD.X_DOC_SUBMIT_DATE
+	               ,HD.X_DOC_SUBMIT_TIME
+	           FROM ICOYBDHD2_ICT HD
+	          WHERE HD.HOUSE_CODE = ${HOUSE_CODE}
+	            AND HD.ANN_NO     = ${ANN_NO}
+	            AND HD.ANN_COUNT  = ${ANN_COUNT}
+	            AND HD.STATUS IN ('C', 'R')
+		]]>
+	</method>
+	
+	<!-- ICT사용 -->
+	<method name="getBdItemDetail">
+		<![CDATA[
+					SELECT
+							  ROWNUM      AS NO
+							, AP.ANN_NO
+							, AP.ANN_COUNT
+							, VN.VENDOR_NAME_LOC AS VENDOR_NAME
+							, AD.CEO_NAME_LOC
+							, TO_CHAR(TO_DATE(APP_DATE||APP_TIME, 'YYYYMMDDHH24MISS'), 'YYYY/MM/DD HH24:MI') AS APP_DATE_TIME
+							, AP.UNT_FLAG
+							, AP.ACHV_FLAG
+							, AP.INP_CNF
+							, (SELECT TEXT1 FROM SCODE WHERE TYPE = 'M984' AND CODE = AP.INP_CNF) AS INP_CNF_TXT
+							, AP.FINAL_FLAG
+							, AP.INCO_REASON
+							, AP.BID_CANCEL
+							, AP.VENDOR_CODE
+							--, NULL			AS ATTACH_CNT	-- 보증서 파일수
+							--, NULL			AS ATTACH_NO	-- 보증서 파일NO
+							--, NULL			AS ATTACH_NO_H							
+							,(SELECT COUNT(*) FROM sfile 
+							  WHERE DOC_NO = AP.ATTACH_NO) AS ATTACH_CNT     
+					        ,AP.ATTACH_NO AS ATTACH_NO
+					        ,AP.ATTACH_NO AS ATTACH_NO_H	
+					        , (SELECT TEXT1 FROM SCODE WHERE TYPE = 'M980' AND CODE = AP.FINAL_FLAG) AS FINAL_FLAG_TXT
+					        						
+					  FROM ICOYBDAP2_ICT AP
+					     , ICOMVNGL_ICT VN
+					     , ICOMADDR_ICT AD
+					 WHERE 1=1
+					   AND AP.HOUSE_CODE  = ${HOUSE_CODE}
+					   AND AP.ANN_NO      = ${ANN_NO}
+					   AND AP.ANN_COUNT   = ${ANN_COUNT}
+					   AND AP.HOUSE_CODE  = VN.HOUSE_CODE
+					   AND AP.VENDOR_CODE = VN.VENDOR_CODE
+					   AND AP.BID_CANCEL  = 'N'
+					   AND VN.HOUSE_CODE  = AD.HOUSE_CODE
+					   AND VN.VENDOR_CODE = AD.CODE_NO
+					   AND AD.CODE_TYPE   = '2'
+					   AND AP.STATUS IN ('C', 'R')					  			
+		]]>
+		             <if test="${PFLAG}" operator="eq" value="INP"> <!---->
+				        <![CDATA[
+				            AND AP.INP_CNF = 'N'
+				        ]]>
+				    </if>
+				
+				    <if test="${PFLAG}" operator="eq" value="FINAL"> <!---->
+				        <![CDATA[
+				            AND AP.INP_CNF = 'Y'
+				            AND 'Y' = NVL(AP.INP_CNF,'N')
+				            AND 'Y' <> NVL(AP.FINAL_FLAG,'N')
+				        ]]>
+				    </if>
+		             
+	</method>
+	
+	<method name="getBdItemDetail2">
+		<![CDATA[
+					SELECT
+							  ROWNUM      AS NO
+							, AP.ANN_NO
+							, AP.ANN_COUNT
+							, VN.VENDOR_NAME_LOC AS VENDOR_NAME
+							, AD.CEO_NAME_LOC
+							, TO_CHAR(TO_DATE(APP_DATE||APP_TIME, 'YYYYMMDDHH24MISS'), 'YYYY/MM/DD HH24:MI') AS APP_DATE_TIME
+							, AP.UNT_FLAG
+							, AP.ACHV_FLAG
+							, AP.INP_CNF
+							, AP.INP_CNF INP_CNF_ASIS
+							, (SELECT TEXT1 FROM SCODE WHERE TYPE = 'M984' AND CODE = AP.INP_CNF) AS INP_CNF_TXT
+							, AP.FINAL_FLAG
+							, AP.FINAL_FLAG FINAL_FLAG_ASIS
+							, AP.INCO_REASON
+							, AP.BID_CANCEL
+							, AP.VENDOR_CODE
+							--, NULL			AS ATTACH_CNT	-- 보증서 파일수
+							--, NULL			AS ATTACH_NO	-- 보증서 파일NO
+							--, NULL			AS ATTACH_NO_H							
+							,(SELECT COUNT(*) FROM sfile 
+							  WHERE DOC_NO = AP.ATTACH_NO) AS ATTACH_CNT     
+					        ,AP.ATTACH_NO AS ATTACH_NO
+					        ,AP.ATTACH_NO AS ATTACH_NO_H	
+					        , (SELECT TEXT1 FROM SCODE WHERE TYPE = 'M980' AND CODE = AP.FINAL_FLAG) AS FINAL_FLAG_TXT
+					        						
+					  FROM ICOYBDAP2_ICT AP
+					     , ICOMVNGL_ICT VN
+					     , ICOMADDR_ICT AD
+					 WHERE 1=1
+					   AND AP.HOUSE_CODE  = ${HOUSE_CODE}
+					   AND AP.ANN_NO      = ${ANN_NO}
+					   AND AP.ANN_COUNT   = ${ANN_COUNT}
+					   AND AP.HOUSE_CODE  = VN.HOUSE_CODE
+					   AND AP.VENDOR_CODE = VN.VENDOR_CODE
+					   AND AP.BID_CANCEL  = 'N'
+					   AND VN.HOUSE_CODE  = AD.HOUSE_CODE
+					   AND VN.VENDOR_CODE = AD.CODE_NO
+					   AND AD.CODE_TYPE   = '2'
+					   AND AP.STATUS IN ('C', 'R')					  			
+		]]>
+		             <if test="${PFLAG}" operator="eq" value="INP"> <!---->
+				        <![CDATA[
+				            AND AP.INP_CNF = 'N'
+				        ]]>
+				    </if>
+				
+				    <if test="${PFLAG}" operator="eq" value="FINAL"> <!---->
+				        <![CDATA[
+				            AND AP.INP_CNF = 'Y'
+				            AND 'Y' = NVL(AP.INP_CNF,'N')
+				            AND 'Y' <> NVL(AP.FINAL_FLAG,'N')
+				        ]]>
+				    </if>
+		             
+	</method>
+	
+	<method name="et_chkMagam_20170202bak">
+		<![CDATA[  
+				SELECT                                                                     
+				     (CASE WHEN HD.BID_STATUS IN (SELECT CODE FROM SCODE                
+				                                   WHERE HOUSE_CODE = ${HOUSE_CODE}   
+				                                     AND TEXT3 BETWEEN  '3' AND '5' )      
+				           THEN 'BT'  ELSE  'BC'     END) AS STATUS                        
+				 FROM  ICOYBDHD HD                                                         
+				 WHERE HD.HOUSE_CODE = ${HOUSE_CODE}                 
+				 AND HD.BID_NO       = ${BID_NO}                                        
+				 AND HD.BID_COUNT    = ${BID_COUNT}                                   
+				 AND HD.STATUS       IN ('C', 'R')
+		]]>   
+	</method>
+	
+	<method name="et_chkMagam">
+	<![CDATA[ 
+		SELECT
+				CASE WHEN substring(ANN_STATUS,2,1) = 'E' OR STATUS = 'D' THEN 'Y'
+			    	ELSE 'N'
+				END STATUS
+		FROM 	ICOYBDHD2_ICT HD		
+		WHERE 	HD.HOUSE_CODE = ${HOUSE_CODE}
+		AND 	HD.ANN_NO      = ${ANN_NO}
+		AND 	HD.ANN_COUNT   = ${ANN_COUNT}                                                      	
+		]]>
+	</method>     
+
+	<!-- ICT사용 : 적격업체 저장-->
+	<method name="et_setBDAP">
+		<![CDATA[  
+				UPDATE ICOYBDAP2_ICT
+				   SET                             
+				       STATUS               = 'R' 
+				     , UNT_FLAG             = ${UNT_FLAG     } 
+				     , ACHV_FLAG            = ${ACHV_FLAG    }
+				     , INP_CNF              = ${INP_CNF      } 
+				     , FINAL_FLAG           = ${FINAL_FLAG   } 
+				     , INCO_REASON          = ${INCO_REASON  } 
+				     , BID_CANCEL           = ${BID_CANCEL   }  
+				 WHERE HOUSE_CODE           = ${HOUSE_CODE   }  
+				   AND ANN_NO               = ${ANN_NO       }  
+				   AND ANN_COUNT            = ${ANN_COUNT    }  
+				   AND VENDOR_CODE          = ${VENDOR_CODE  }                                                		
+		]]>   
+	</method>  
+	
+	<method name="et_chkJoinEndDate">
+	<![CDATA[ 
+		SELECT
+				CASE WHEN TO_NUMBER(TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')) < TO_NUMBER(AP.APP_DATE||AP.APP_TIME) THEN 'Y'
+			    	ELSE 'N'
+				END STATUS
+		FROM 	ICOYBDAP2_ICT AP		
+		WHERE 	AP.HOUSE_CODE = ${HOUSE_CODE}
+		AND 	AP.ANN_NO      = ${ANN_NO}
+		AND 	AP.ANN_COUNT   = ${ANN_COUNT}                                                      	
+		]]>
+	</method>                 
+	 
+</service>

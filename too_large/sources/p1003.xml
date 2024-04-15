@@ -1,0 +1,1090 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<service>
+
+	<method name="setExcelUpload">
+	<![CDATA[
+		INSERT INTO epsuser.TEMP_EXCEL (
+			 TRANSACTION_ID
+			,ITEM_NO
+			,QTY
+			,VENDOR_CODE
+			,RD_DATE
+			,DELY_TO_ADDRESS_CD
+			,ADD_DATE
+			,ADD_TIME
+			,ADD_USER_ID
+		) VALUES (
+			 ${TRANSACTION_ID}
+			,${ITEM_NO}
+			,${QTY}
+			,${VENDOR_CODE}
+			,${RD_DATE}
+			,${DELY_TO_ADDRESS_CD}
+			,${ADD_DATE}
+			,${ADD_TIME}
+			,${ADD_USER_ID}
+		)
+	]]>
+	</method>
+	
+	<method name="doChectItemNo">
+	<![CDATA[
+		SELECT
+		 COUNT(*) CNT
+		FROM ICOMMTGL
+		WHERE 1 = 1
+		AND ITEM_NO = ${ITEM_NO}
+	]]>
+	</method>
+	
+	<method name="doChectVendorCode">
+	<![CDATA[
+		SELECT
+		 COUNT(*) CNT
+		FROM ICOMVNGL
+		WHERE 1 = 1
+		AND HOUSE_CODE = ${session.HOUSE_CODE}
+		AND VENDOR_CODE = ${VENDOR_CODE}
+	]]>
+	</method>
+	
+	
+	<method name="getExcelCatalog">
+		 SELECT
+               GETICOMCODE2(MTGL.HOUSE_CODE, 'M040',MTGL.MATERIAL_TYPE) AS MATERIAL_TYPE_TEXT
+             , GETICOMCODE2(MTGL.HOUSE_CODE, 'M041',MTGL.MATERIAL_CTRL_TYPE) AS MATERIAL_CTRL_TYPE_TEXT
+             , GETICOMCODE2(MTGL.HOUSE_CODE, 'M042',MTGL.MATERIAL_CLASS1) AS MATERIAL_CLASS1_TEXT
+             , GETICOMCODE2(MTGL.HOUSE_CODE, 'M122',MTGL.MATERIAL_CLASS2) AS MATERIAL_CLASS2_TEXT
+             , MTGL.MATERIAL_TYPE AS MATERIAL_TYPE
+             , MTGL.MATERIAL_CTRL_TYPE AS MATERIAL_CTRL_TYPE
+             , MTGL.MATERIAL_CLASS1 AS MATERIAL_CLASS1
+             , MTGL.MATERIAL_CLASS2 AS MATERIAL_CLASS2
+             , MTGL.ITEM_NO AS ITEM_NO
+             , MTGL.DESCRIPTION_LOC AS DESCRIPTION_LOC
+             , MTGL.DESCRIPTION_ENG  AS DESCRIPTION_ENG
+             , MTGL.SPECIFICATION AS SPECIFICATION
+             , (select  CTRL_PERSON_ID from icombacp
+             		where house_code = ${HOUSE_CODE}
+             		and   CTRL_CODE = ${CTRL_CODE}
+             		and   CTRL_TYPE = 'P'
+<![CDATA[			and   rownum < 2           					]]>
+             		) as  CTRL_PERSON_ID
+             , NVL(CTRL.CTRL_TYPE,'P')  AS CTRL_TYPE
+             , CTRL.PURCHASE_LOCATION
+             , MTGL.BASIC_UNIT  AS BASIC_UNIT
+             , NVL(CTRL.CTRL_CODE,${DEFAULT_CTRL_CODE})  AS CTRL_CODE
+             , CASE WHEN MTGL.ITEM_BLOCK_FLAG = 'Y' THEN 'Y' ELSE 'N' END AS ITEM_BLOCK_FLAG
+             , MTGL.HOUSE_CODE
+             , getDeptCodeByID(CTRL.HOUSE_CODE,${COMPANY_CODE},CTRL.CTRL_PERSON_ID) AS PURCHASE_DEPT
+             , CTRL.PR_LOCATION
+             , GETUSERNAME(${HOUSE_CODE}, (select  CTRL_PERSON_ID from icombacp
+														where house_code = ${HOUSE_CODE}
+														and   CTRL_CODE = ${CTRL_CODE}
+														and   CTRL_TYPE = 'P'
+									<![CDATA[			and   rownum < 2           					]]>
+														)
+														,'LOC') AS PURCHASER_NAME
+             , GETICOMCODE2(CTRL.HOUSE_CODE, 'M039', CTRL.PURCHASE_LOCATION) AS PURCHASE_LOCATION_NAME
+             , getDeptNameByID(CTRL.HOUSE_CODE, ${COMPANY_CODE}, CTRL.CTRL_PERSON_ID) AS PURCHASE_DEPT_NAME
+             , getCatalogListPrice(CTRL.HOUSE_CODE, CTRL.PURCHASE_LOCATION, MTGL.ITEM_NO, 0, ${add_date}) AS PREV_UNIT_PRICE
+             , TO_CHAR(SYSDATE + NVL(MTGL.DELIVERY_LT,0),'YYYYMMDD') AS DELIVERY_IT
+             , '1000' AS SG_REFITEM
+    	     , MTGL.MAKER_NAME
+   		     , MTGL.MAKER_CODE
+   		     , MTGL.ITEM_GROUP
+   		     , 'F' AS ITEMFLAG
+   		     , (SELECT replace('('||DELY_ZIP_CODE||') ', '() ', '')||DELY_ADDRESS_LOC FROM ICOMADDR
+   		        WHERE HOUSE_CODE = MTGL.HOUSE_CODE AND CODE_NO = ${USER_ID} AND CODE_TYPE = '3') AS DELY_TO_ADDRESS
+   		     ,KTGRM 
+   		     ,(SELECT INFO.UNIT_PRICE FROM ICOYINFO INFO WHERE INFO.HOUSE_CODE = MTGL.HOUSE_CODE AND INFO.ITEM_NO = MTGL.ITEM_NO AND ROWNUM = 1) AS C_UNIT_PRICE
+			 ,MTGL.MAKE_AMT_CODE
+			 ,GETICOMCODE2(MTGL.HOUSE_CODE,'M799', MTGL.MAKE_AMT_CODE) AS MAKE_AMT_NAME
+             ,GETCODETEXT3('M799', MTGL.MAKE_AMT_CODE,'KO') AS MAKE_AMT_UNIT  
+   			 , MTGL.IMAGE_FILE_PATH --이미지경로(히든)
+   			 , MTGL.IMAGE_FILE_PATH AS IMAGE_FILE --이미지(사용자에게 보임)             
+   			 , TE.TRANSACTION_ID EXCEL_TRANSACTION_ID
+   			 , TE.ITEM_NO EXCEL_ITEM_NO
+   			 , TE.QTY EXCEL_QTY
+   			 , TE.VENDOR_CODE EXCEL_VENDOR_CODE
+   			 , CONVERT_DATE(TE.RD_DATE) EXCEL_RD_DATE
+   			 , (SELECT DEPT_NAME_LOC FROM ICOMOGDP WHERE DEPT = TE.DELY_TO_ADDRESS_CD) EXCEL_DELY_TO_ADDRESS
+      		 , TE.DELY_TO_ADDRESS_CD EXCEL_DELY_TO_ADDRESS_CD
+         FROM ICOMMTGL MTGL,
+            ( SELECT
+                  DISTINCT  BACP.CTRL_PERSON_ID,
+                  MCPM.HOUSE_CODE,
+                  MCPM.MATERIAL_CLASS1,
+                  MCPM.CTRL_CODE,
+                  NVL(BAPR.PURCHASE_LOCATION,'00') AS PURCHASE_LOCATION,
+                  BAPR.PR_LOCATION,
+                  MCPM.CTRL_TYPE
+              FROM   ICOMMCPM MCPM,
+                     ICOMBACP BACP,
+                     ICOMBAPR BAPR,
+                     SCODE CODE
+              WHERE    BAPR.HOUSE_CODE        =  ${HOUSE_CODE}
+                  AND  BAPR.PR_LOCATION       =  ${PR_LOCATION}
+                  AND  MCPM.HOUSE_CODE        =  BAPR.HOUSE_CODE
+                  AND  MCPM.PURCHASE_LOCATION =  BAPR.PURCHASE_LOCATION
+                  AND  BACP.HOUSE_CODE        =  MCPM.HOUSE_CODE
+                  AND  MCPM.CTRL_CODE         =  BACP.CTRL_CODE
+                  AND  MCPM.CTRL_TYPE         =  BACP.CTRL_TYPE
+                  AND  BAPR.STATUS            IN ('C','R')
+                  AND  MCPM.STATUS            IN ('C','R')
+                  AND  BACP.STATUS            IN ('C','R')
+                  AND  CODE.HOUSE_CODE        =  ${HOUSE_CODE}
+                  AND  CODE.TYPE              =  'M122'
+                  AND  MCPM.MATERIAL_CLASS1   =  CODE.CODE
+                  AND ROWNUM = 1
+            ) CTRL,
+            TEMP_EXCEL TE
+         WHERE  MTGL.HOUSE_CODE       	= CTRL.HOUSE_CODE(+)
+		    AND MTGL.MATERIAL_CLASS2	= CTRL.MATERIAL_CLASS1(+)
+		    AND MTGL.ITEM_NO            = TE.ITEM_NO
+		    AND TE.TRANSACTION_ID       = ${transaction_id}
+			AND MTGL.HOUSE_CODE       	= ${HOUSE_CODE}
+			AND	(MTGL.ITEM_BLOCK_FLAG = 'N' OR MTGL.ITEM_BLOCK_FLAG IS NULL)
+			AND MTGL.MATERIAL_TYPE       	=  $S{MATERIAL_TYPE}
+			AND (MTGL.MATERIAL_CTRL_TYPE  	=  $S{MATERIAL_CTRL_TYPE} OR MTGL.MATERIAL_CTRL_TYPE = MTGL.MATERIAL_TYPE ||'000')
+			AND MTGL.MATERIAL_CLASS1     	=  $S{MATERIAL_CLASS1}
+			AND MTGL.MATERIAL_CLASS2     	=  $S{MATERIAL_CLASS2}
+			AND UPPER(MTGL.ITEM_NO)         =  $S{ITEM_NO}
+			AND ( UPPER(MTGL.DESCRIPTION_LOC) LIKE UPPER('%'  ||  $S{DESCRIPTION_LOC}  ||  '%')
+				OR UPPER(MTGL.ITEM_ABBREVIATION) LIKE UPPER('%'  ||  $S{DESCRIPTION_LOC}  ||  '%'))
+			AND UPPER(MTGL.DESCRIPTION_ENG) LIKE UPPER('%'  ||  $S{DESCRIPTION_ENG}  ||  '%')
+			AND UPPER(MTGL.SPECIFICATION)   LIKE UPPER('%'  ||  $S{SPECIFICATION}  ||  '%')
+			AND UPPER(MTGL.MAKER_NAME)      LIKE UPPER('%'  ||  $S{MAKER_NAME}  ||  '%')
+            AND MTGL.STATUS IN ('C','R')
+            AND MTGL.USEDFLAG = 'Y'
+        ORDER   BY   ITEM_NO, 
+        			 MATERIAL_TYPE,
+                  	 MATERIAL_CTRL_TYPE,
+                  	 MATERIAL_CLASS1
+	</method>
+	
+
+		<method name="et_getCatalog">
+		 SELECT
+               GETICOMCODE2(MTGL.HOUSE_CODE, 'M040',MTGL.MATERIAL_TYPE) AS MATERIAL_TYPE_TEXT
+             , GETICOMCODE2(MTGL.HOUSE_CODE, 'M041',MTGL.MATERIAL_CTRL_TYPE) AS MATERIAL_CTRL_TYPE_TEXT
+             , GETICOMCODE2(MTGL.HOUSE_CODE, 'M042',MTGL.MATERIAL_CLASS1) AS MATERIAL_CLASS1_TEXT
+             , GETICOMCODE2(MTGL.HOUSE_CODE, 'M122',MTGL.MATERIAL_CLASS2) AS MATERIAL_CLASS2_TEXT
+             , MTGL.MATERIAL_TYPE AS MATERIAL_TYPE
+             , MTGL.MATERIAL_CTRL_TYPE AS MATERIAL_CTRL_TYPE
+             , MTGL.MATERIAL_CLASS1 AS MATERIAL_CLASS1
+             , MTGL.MATERIAL_CLASS2 AS MATERIAL_CLASS2
+             , MTGL.ITEM_NO AS ITEM_NO
+             , MTGL.DESCRIPTION_LOC AS DESCRIPTION_LOC
+             , MTGL.DESCRIPTION_ENG  AS DESCRIPTION_ENG
+             , MTGL.SPECIFICATION AS SPECIFICATION
+             , (select  CTRL_PERSON_ID from icombacp
+             		where house_code = ${HOUSE_CODE}
+             		and   CTRL_CODE = ${CTRL_CODE}
+             		and   CTRL_TYPE = 'P'
+<![CDATA[			and   rownum < 2           					]]>
+             		) as  CTRL_PERSON_ID
+             , NVL(CTRL.CTRL_TYPE,'P')  AS CTRL_TYPE
+             , CTRL.PURCHASE_LOCATION
+             , MTGL.BASIC_UNIT  AS BASIC_UNIT
+             , NVL(CTRL.CTRL_CODE,${DEFAULT_CTRL_CODE})  AS CTRL_CODE
+             , CASE WHEN MTGL.ITEM_BLOCK_FLAG = 'Y' THEN 'Y' ELSE 'N' END AS ITEM_BLOCK_FLAG
+             , MTGL.HOUSE_CODE
+             , getDeptCodeByID(CTRL.HOUSE_CODE,${COMPANY_CODE},CTRL.CTRL_PERSON_ID) AS PURCHASE_DEPT
+             , CTRL.PR_LOCATION
+             , GETUSERNAME(${HOUSE_CODE}, (select  CTRL_PERSON_ID from icombacp
+														where house_code = ${HOUSE_CODE}
+														and   CTRL_CODE = ${CTRL_CODE}
+														and   CTRL_TYPE = 'P'
+									<![CDATA[			and   rownum < 2           					]]>
+														)
+														,'LOC') AS PURCHASER_NAME
+             , GETICOMCODE2(CTRL.HOUSE_CODE, 'M039', CTRL.PURCHASE_LOCATION) AS PURCHASE_LOCATION_NAME
+             , getDeptNameByID(CTRL.HOUSE_CODE, ${COMPANY_CODE}, CTRL.CTRL_PERSON_ID) AS PURCHASE_DEPT_NAME
+             , getCatalogListPrice(CTRL.HOUSE_CODE, CTRL.PURCHASE_LOCATION, MTGL.ITEM_NO, 0, ${add_date}) AS PREV_UNIT_PRICE
+             , TO_CHAR(SYSDATE + NVL(MTGL.DELIVERY_LT,0),'YYYYMMDD') AS DELIVERY_IT
+             , '1000' AS SG_REFITEM
+    	     , MTGL.MAKER_NAME
+   		     , MTGL.MAKER_CODE
+   		     , MTGL.ITEM_GROUP
+   		     , 'F' AS ITEMFLAG
+   		     , (SELECT replace('('||DELY_ZIP_CODE||') ', '() ', '')||DELY_ADDRESS_LOC FROM ICOMADDR
+   		        WHERE HOUSE_CODE = MTGL.HOUSE_CODE AND CODE_NO = ${USER_ID} AND CODE_TYPE = '3') AS DELY_TO_ADDRESS
+   		     ,KTGRM    		     
+   		     ,(SELECT INFO.UNIT_PRICE 
+   		         FROM (SELECT * FROM ICOYINFO ORDER BY CHANGE_DATE DESC) INFO 
+   		        WHERE INFO.HOUSE_CODE = MTGL.HOUSE_CODE 
+   		          AND INFO.ITEM_NO = MTGL.ITEM_NO 
+   		          <![CDATA[
+   		          AND INFO.VALID_FROM_DATE <= TO_CHAR(SYSDATE,'YYYYMMDD')
+   		          AND INFO.VALID_TO_DATE >= TO_CHAR(SYSDATE,'YYYYMMDD')
+   		          ]]>
+   		          AND ROWNUM = 1 ) AS C_UNIT_PRICE   		     
+			 ,MTGL.MAKE_AMT_CODE
+			 ,GETICOMCODE2(MTGL.HOUSE_CODE,'M799', MTGL.MAKE_AMT_CODE) AS MAKE_AMT_NAME
+             ,GETCODETEXT3('M799', MTGL.MAKE_AMT_CODE,'KO') AS MAKE_AMT_UNIT  
+   			 , MTGL.IMAGE_FILE_PATH --이미지경로(히든)
+   			 , MTGL.IMAGE_FILE_PATH AS IMAGE_FILE --이미지(사용자에게 보임)     
+   			 , MTGL.MODEL_NO        
+         FROM ICOMMTGL MTGL,
+            ( SELECT
+                  DISTINCT  BACP.CTRL_PERSON_ID,
+                  MCPM.HOUSE_CODE,
+                  MCPM.MATERIAL_CLASS1,
+                  MCPM.CTRL_CODE,
+                  NVL(BAPR.PURCHASE_LOCATION,'00') AS PURCHASE_LOCATION,
+                  BAPR.PR_LOCATION,
+                  MCPM.CTRL_TYPE
+              FROM   ICOMMCPM MCPM,
+                     ICOMBACP BACP,
+                     ICOMBAPR BAPR,
+                     SCODE CODE
+              WHERE    BAPR.HOUSE_CODE        =  ${HOUSE_CODE}
+                  AND  BAPR.PR_LOCATION       =  ${PR_LOCATION}
+                  AND  MCPM.HOUSE_CODE        =  BAPR.HOUSE_CODE
+                  AND  MCPM.PURCHASE_LOCATION =  BAPR.PURCHASE_LOCATION
+                  AND  BACP.HOUSE_CODE        =  MCPM.HOUSE_CODE
+                  AND  MCPM.CTRL_CODE         =  BACP.CTRL_CODE
+                  AND  MCPM.CTRL_TYPE         =  BACP.CTRL_TYPE
+                  AND  BAPR.STATUS            IN ('C','R')
+                  AND  MCPM.STATUS            IN ('C','R')
+                  AND  BACP.STATUS            IN ('C','R')
+                  AND  CODE.HOUSE_CODE        =  ${HOUSE_CODE}
+                  AND  CODE.TYPE              =  'M122'
+                  AND  MCPM.MATERIAL_CLASS1   =  CODE.CODE
+                  AND ROWNUM = 1
+            ) CTRL
+         WHERE  MTGL.HOUSE_CODE       	= CTRL.HOUSE_CODE(+)
+		    AND MTGL.MATERIAL_CLASS2	= CTRL.MATERIAL_CLASS1(+)
+			AND MTGL.HOUSE_CODE       	= ${HOUSE_CODE}
+			AND	(MTGL.ITEM_BLOCK_FLAG = 'N' OR MTGL.ITEM_BLOCK_FLAG IS NULL)
+			AND MTGL.MATERIAL_TYPE       	=  $S{MATERIAL_TYPE}
+			AND (MTGL.MATERIAL_CTRL_TYPE  	=  $S{MATERIAL_CTRL_TYPE} OR MTGL.MATERIAL_CTRL_TYPE = MTGL.MATERIAL_TYPE ||'000')
+			AND MTGL.MATERIAL_CLASS1     	=  $S{MATERIAL_CLASS1}
+			AND MTGL.MATERIAL_CLASS2     	=  $S{MATERIAL_CLASS2}
+			AND UPPER(MTGL.ITEM_NO)         =  $S{ITEM_NO}
+			AND ( UPPER(MTGL.DESCRIPTION_LOC) LIKE UPPER('%'  ||  $S{DESCRIPTION_LOC}  ||  '%')
+				OR UPPER(MTGL.ITEM_ABBREVIATION) LIKE UPPER('%'  ||  $S{DESCRIPTION_LOC}  ||  '%'))
+			AND UPPER(MTGL.DESCRIPTION_ENG) LIKE UPPER('%'  ||  $S{DESCRIPTION_ENG}  ||  '%')
+			AND UPPER(MTGL.SPECIFICATION)   LIKE UPPER('%'  ||  $S{SPECIFICATION}  ||  '%')
+			AND UPPER(MTGL.MAKER_NAME)      LIKE UPPER('%'  ||  $S{MAKER_NAME}  ||  '%')
+            AND MTGL.STATUS IN ('C','R')
+            AND MTGL.USEDFLAG = 'Y'
+        ORDER   BY   ITEM_NO, 
+        			 MATERIAL_TYPE,
+                  	 MATERIAL_CTRL_TYPE,
+                  	 MATERIAL_CLASS1
+	</method>
+	
+	<method name="et_getCatalogSo">
+		 SELECT
+               GETICOMCODE2(MTGL.HOUSE_CODE, 'M040',MTGL.MATERIAL_TYPE) AS MATERIAL_TYPE_TEXT
+             , GETICOMCODE2(MTGL.HOUSE_CODE, 'M041',MTGL.MATERIAL_CTRL_TYPE) AS MATERIAL_CTRL_TYPE_TEXT
+             , GETICOMCODE2(MTGL.HOUSE_CODE, 'M042',MTGL.MATERIAL_CLASS1) AS MATERIAL_CLASS1_TEXT
+             , GETICOMCODE2(MTGL.HOUSE_CODE, 'M122',MTGL.MATERIAL_CLASS2) AS MATERIAL_CLASS2_TEXT
+             , MTGL.MATERIAL_TYPE AS MATERIAL_TYPE
+             , MTGL.MATERIAL_CTRL_TYPE AS MATERIAL_CTRL_TYPE
+             , MTGL.MATERIAL_CLASS1 AS MATERIAL_CLASS1
+             , MTGL.MATERIAL_CLASS2 AS MATERIAL_CLASS2
+             , MTGL.ITEM_NO AS ITEM_NO
+             , MTGL.DESCRIPTION_LOC AS DESCRIPTION_LOC
+             , MTGL.DESCRIPTION_ENG  AS DESCRIPTION_ENG
+             , MTGL.SPECIFICATION AS SPECIFICATION
+             , (select  CTRL_PERSON_ID from icombacp
+             		where house_code = ${HOUSE_CODE}
+             		and   CTRL_CODE = ${CTRL_CODE}
+             		and   CTRL_TYPE = 'P'
+<![CDATA[			and   rownum < 2           					]]>
+             		) as  CTRL_PERSON_ID
+             , NVL(CTRL.CTRL_TYPE,'P')  AS CTRL_TYPE
+             , CTRL.PURCHASE_LOCATION
+             , MTGL.BASIC_UNIT  AS BASIC_UNIT
+             , NVL(CTRL.CTRL_CODE,${DEFAULT_CTRL_CODE})  AS CTRL_CODE
+             , CASE WHEN MTGL.ITEM_BLOCK_FLAG = 'Y' THEN 'Y' ELSE 'N' END AS ITEM_BLOCK_FLAG
+             , MTGL.HOUSE_CODE
+             , getDeptCodeByID(CTRL.HOUSE_CODE,${COMPANY_CODE},CTRL.CTRL_PERSON_ID) AS PURCHASE_DEPT
+             , CTRL.PR_LOCATION
+             , GETUSERNAME(${HOUSE_CODE}, (select  CTRL_PERSON_ID from icombacp
+														where house_code = ${HOUSE_CODE}
+														and   CTRL_CODE = ${CTRL_CODE}
+														and   CTRL_TYPE = 'P'
+									<![CDATA[			and   rownum < 2           					]]>
+														)
+														,'LOC') AS PURCHASER_NAME
+             , GETICOMCODE2(CTRL.HOUSE_CODE, 'M039', CTRL.PURCHASE_LOCATION) AS PURCHASE_LOCATION_NAME
+             , getDeptNameByID(CTRL.HOUSE_CODE, ${COMPANY_CODE}, CTRL.CTRL_PERSON_ID) AS PURCHASE_DEPT_NAME
+             , getCatalogListPrice(CTRL.HOUSE_CODE, CTRL.PURCHASE_LOCATION, MTGL.ITEM_NO, 0, ${add_date}) AS PREV_UNIT_PRICE
+             , TO_CHAR(SYSDATE + NVL(MTGL.DELIVERY_LT,0),'YYYYMMDD') AS DELIVERY_IT
+             , '1000' AS SG_REFITEM
+    	     , MTGL.MAKER_NAME
+   		     , MTGL.MAKER_CODE
+   		     , MTGL.ITEM_GROUP
+   		     , 'F' AS ITEMFLAG
+   		     , (SELECT replace('('||DELY_ZIP_CODE||') ', '() ', '')||DELY_ADDRESS_LOC FROM ICOMADDR
+   		        WHERE HOUSE_CODE = MTGL.HOUSE_CODE AND CODE_NO = ${USER_ID} AND CODE_TYPE = '3') AS DELY_TO_ADDRESS
+   		     ,KTGRM 
+   		     ,INFO.UNIT_PRICE AS C_UNIT_PRICE
+			 ,MTGL.MAKE_AMT_CODE
+			 ,GETICOMCODE2(MTGL.HOUSE_CODE,'M799', MTGL.MAKE_AMT_CODE) AS MAKE_AMT_NAME
+             ,GETCODETEXT3('M799', MTGL.MAKE_AMT_CODE,'KO') AS MAKE_AMT_UNIT  
+   			 , MTGL.IMAGE_FILE_PATH --이미지경로(히든)
+   			 , MTGL.IMAGE_FILE_PATH AS IMAGE_FILE --이미지(사용자에게 보임)
+   			 , MTGL.WID
+   			 , MTGL.HGT             
+         FROM ICOMMTGL MTGL,
+            ( SELECT
+                  DISTINCT  BACP.CTRL_PERSON_ID,
+                  MCPM.HOUSE_CODE,
+                  MCPM.MATERIAL_CLASS1,
+                  MCPM.CTRL_CODE,
+                  NVL(BAPR.PURCHASE_LOCATION,'00') AS PURCHASE_LOCATION,
+                  BAPR.PR_LOCATION,
+                  MCPM.CTRL_TYPE
+              FROM   ICOMMCPM MCPM,
+                     ICOMBACP BACP,
+                     ICOMBAPR BAPR,
+                     SCODE CODE
+              WHERE    BAPR.HOUSE_CODE        =  ${HOUSE_CODE}
+                  AND  BAPR.PR_LOCATION       =  ${PR_LOCATION}
+                  AND  MCPM.HOUSE_CODE        =  BAPR.HOUSE_CODE
+                  AND  MCPM.PURCHASE_LOCATION =  BAPR.PURCHASE_LOCATION
+                  AND  BACP.HOUSE_CODE        =  MCPM.HOUSE_CODE
+                  AND  MCPM.CTRL_CODE         =  BACP.CTRL_CODE
+                  AND  MCPM.CTRL_TYPE         =  BACP.CTRL_TYPE
+                  AND  BAPR.STATUS            IN ('C','R')
+                  AND  MCPM.STATUS            IN ('C','R')
+                  AND  BACP.STATUS            IN ('C','R')
+                  AND  CODE.HOUSE_CODE        =  ${HOUSE_CODE}
+                  AND  CODE.TYPE              =  'M122'
+                  AND  MCPM.MATERIAL_CLASS1   =  CODE.CODE
+                  AND ROWNUM = 1
+            ) CTRL
+            ,(
+		     SELECT
+		      HOUSE_CODE 
+		      ,ITEM_NO
+		      ,UNIT_PRICE 
+		     FROM ICOYINFO 
+			 WHERE VENDOR_CODE = ${VENDOR_CODE}
+			 AND STATUS = 'C' 
+			 <![CDATA[
+			 AND VALID_FROM_DATE <= TO_CHAR(SYSDATE,'YYYYMMDD')
+			 AND VALID_TO_DATE >= TO_CHAR(SYSDATE,'YYYYMMDD')			   
+			 ]]> 
+			 ) INFO
+         WHERE  MTGL.HOUSE_CODE       	= CTRL.HOUSE_CODE(+)
+		    AND MTGL.MATERIAL_CLASS2	= CTRL.MATERIAL_CLASS1(+)
+			AND MTGL.HOUSE_CODE       	= ${HOUSE_CODE}
+			AND	(MTGL.ITEM_BLOCK_FLAG = 'N' OR MTGL.ITEM_BLOCK_FLAG IS NULL)
+			AND MTGL.MATERIAL_TYPE       	=  $S{MATERIAL_TYPE}
+			AND (MTGL.MATERIAL_CTRL_TYPE  	=  $S{MATERIAL_CTRL_TYPE} OR MTGL.MATERIAL_CTRL_TYPE = MTGL.MATERIAL_TYPE ||'000')
+			AND MTGL.MATERIAL_CLASS1     	=  $S{MATERIAL_CLASS1}
+			AND MTGL.MATERIAL_CLASS2     	=  $S{MATERIAL_CLASS2}
+			AND UPPER(MTGL.ITEM_NO)         =  $S{ITEM_NO}
+			AND ( UPPER(MTGL.DESCRIPTION_LOC) LIKE UPPER('%'  ||  $S{DESCRIPTION_LOC}  ||  '%')
+				OR UPPER(MTGL.ITEM_ABBREVIATION) LIKE UPPER('%'  ||  $S{DESCRIPTION_LOC}  ||  '%'))
+			AND UPPER(MTGL.DESCRIPTION_ENG) LIKE UPPER('%'  ||  $S{DESCRIPTION_ENG}  ||  '%')
+			AND UPPER(MTGL.SPECIFICATION)   LIKE UPPER('%'  ||  $S{SPECIFICATION}  ||  '%')
+			AND UPPER(MTGL.MAKER_NAME)      LIKE UPPER('%'  ||  $S{MAKER_NAME}  ||  '%')
+            AND MTGL.STATUS IN ('C','R')
+            AND MTGL.USEDFLAG = 'Y'
+            
+            AND MTGL.HOUSE_CODE   =  INFO.HOUSE_CODE
+    		AND MTGL.ITEM_NO   =  INFO.ITEM_NO    	
+    	
+        ORDER   BY   ITEM_NO, 
+        			 MATERIAL_TYPE,
+                  	 MATERIAL_CTRL_TYPE,
+                  	 MATERIAL_CLASS1
+	</method>
+	
+	<method name="et_getCatalog2">
+		 SELECT
+               GETICOMCODE2(MTGL.HOUSE_CODE, 'M040',MTGL.MATERIAL_TYPE) AS MATERIAL_TYPE_TEXT
+             , GETICOMCODE2(MTGL.HOUSE_CODE, 'M041',MTGL.MATERIAL_CTRL_TYPE) AS MATERIAL_CTRL_TYPE_TEXT
+             , GETICOMCODE2(MTGL.HOUSE_CODE, 'M042',MTGL.MATERIAL_CLASS1) AS MATERIAL_CLASS1_TEXT
+             , GETICOMCODE2(MTGL.HOUSE_CODE, 'M122',MTGL.MATERIAL_CLASS2) AS MATERIAL_CLASS2_TEXT
+             , MTGL.MATERIAL_TYPE AS MATERIAL_TYPE
+             , MTGL.MATERIAL_CTRL_TYPE AS MATERIAL_CTRL_TYPE
+             , MTGL.MATERIAL_CLASS1 AS MATERIAL_CLASS1
+             , MTGL.MATERIAL_CLASS2 AS MATERIAL_CLASS2
+             , MTGL.ITEM_NO AS ITEM_NO
+             , MTGL.DESCRIPTION_LOC AS DESCRIPTION_LOC
+             , MTGL.DESCRIPTION_ENG  AS DESCRIPTION_ENG
+             , MTGL.SPECIFICATION AS SPECIFICATION
+             , (select  CTRL_PERSON_ID from icombacp
+             		where house_code = '#HOUSE_CODE#'
+             		and   CTRL_CODE = '#CTRL_CODE#'
+             		and   CTRL_TYPE = 'P'
+<![CDATA[			and   rownum < 2           					]]>
+             		) as  CTRL_PERSON_ID
+             , NVL(MCPM.CTRL_TYPE,'P')  AS CTRL_TYPE
+             , MCPM.PURCHASE_LOCATION
+             , MTGL.BASIC_UNIT  AS BASIC_UNIT
+             , NVL(MCPM.CTRL_CODE,'#DEFAULT_CTRL_CODE#')  AS CTRL_CODE
+             , CASE WHEN MTGL.ITEM_BLOCK_FLAG = 'Y' THEN 'Y' ELSE 'N' END AS ITEM_BLOCK_FLAG
+             , MTGL.HOUSE_CODE
+             , '' AS PURCHASE_DEPT
+             , '' AS PR_LOCATION
+             , GETUSERNAME('#HOUSE_CODE#', (select  CTRL_PERSON_ID from icombacp
+														where house_code = '#HOUSE_CODE#'
+														and   CTRL_CODE = '#CTRL_CODE#'
+														and   CTRL_TYPE = 'P'
+									<![CDATA[			and   rownum < 2           					]]>
+														)
+														,'LOC') AS PURCHASER_NAME
+             , GETICOMCODE2(MCPM.HOUSE_CODE, 'M039', MCPM.PURCHASE_LOCATION) AS PURCHASE_LOCATION_NAME
+             , '' AS PURCHASE_DEPT_NAME
+             , 0 AS PREV_UNIT_PRICE
+             , TO_CHAR(SYSDATE + NVL(MTGL.DELIVERY_LT,0),'YYYYMMDD') AS DELIVERY_IT
+             , '1000' AS SG_REFITEM							 -- 기술적인 어려움으로 GETSG_REFITEM 함수 컨버팅 못함.
+    	     , MTGL.MAKER_NAME
+   		     , MTGL.MAKER_CODE
+   		     , MTGL.ITEM_GROUP
+   		     , 'F' AS ITEMFLAG
+			 , INFO.UNIT_PRICE
+   		     , (SELECT '('||DELY_ZIP_CODE||') '||DELY_ADDRESS_LOC FROM ICOMADDR
+   		        WHERE HOUSE_CODE = MTGL.HOUSE_CODE AND CODE_NO = '#USER_ID#' AND CODE_TYPE = '3') AS DELY_TO_ADDRESS
+         FROM ICOMMTGL MTGL, ICOMMCPM MCPM, ICOYINFO INFO
+         WHERE MTGL.HOUSE_CODE       	= MCPM.HOUSE_CODE
+--			AND  	MTGL.MATERIAL_CLASS1= CTRL.MATERIAL_CLASS1(+)
+		    AND  	MTGL.MATERIAL_CLASS2= MCPM.MATERIAL_CLASS1
+			AND  	MTGL.HOUSE_CODE       = '#HOUSE_CODE#'
+			AND MCPM.CTRL_CODE = '#CTRL_CODE#'
+	<![CDATA[
+  <OPT=S,S> AND MTGL.MATERIAL_TYPE       	=  ? </OPT>
+  <OPT=S,S> AND (MTGL.MATERIAL_CTRL_TYPE  	=  ? OR MTGL.MATERIAL_CTRL_TYPE = MTGL.MATERIAL_TYPE ||'000') </OPT>
+  <OPT=S,S> AND MTGL.MATERIAL_CLASS1     	=  ? </OPT>
+  <OPT=S,S> AND MTGL.MATERIAL_CLASS2     	=  ? </OPT>
+  <OPT=S,S> AND UPPER(MTGL.ITEM_NO)         = ( ? ) </OPT>
+  <OPT=S,S> AND UPPER(MTGL.DESCRIPTION_LOC) LIKE UPPER('%'  ||  ?  ||  '%') </OPT>
+  <OPT=S,S> AND UPPER(MTGL.DESCRIPTION_ENG) LIKE UPPER('%'  ||  ?  ||  '%') </OPT>
+  <OPT=S,S> AND UPPER(MTGL.SPECIFICATION)   LIKE UPPER('%'  ||  ?  ||  '%') </OPT>
+  <OPT=S,S> AND UPPER(MTGL.MAKER_NAME)      LIKE UPPER('%'  ||  ?  ||  '%') </OPT>
+            AND MTGL.HOUSE_CODE = INFO.HOUSE_CODE
+			AND MTGL.ITEM_NO = INFO.ITEM_NO
+			AND TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN VALID_FROM_DATE AND VALID_TO_DATE
+  <OPT=S,S> AND INFO.VENDOR_CODE     =  ? </OPT>
+            AND    MTGL.STATUS IN ('C','R')
+        ORDER   BY   MTGL.MATERIAL_TYPE,
+                  	 MTGL.MATERIAL_CTRL_TYPE,
+                  	 MTGL.MATERIAL_CLASS1,
+                   	 MTGL.ITEM_NO
+	]]>
+	</method>
+
+<method name="et_getCatalog3">
+	SELECT A.*, GETVENDORNAME('#HOUSE_CODE#', A.vendor_code) as VENDOR_NAME
+	FROM (
+		 SELECT
+               GETICOMCODE2(MTGL.HOUSE_CODE, 'M040',MTGL.MATERIAL_TYPE) AS MATERIAL_TYPE_TEXT
+             , GETICOMCODE2(MTGL.HOUSE_CODE, 'M041',MTGL.MATERIAL_CTRL_TYPE) AS MATERIAL_CTRL_TYPE_TEXT
+             , GETICOMCODE2(MTGL.HOUSE_CODE, 'M042',MTGL.MATERIAL_CLASS1) AS MATERIAL_CLASS1_TEXT
+             , GETICOMCODE2(MTGL.HOUSE_CODE, 'M122',MTGL.MATERIAL_CLASS2) AS MATERIAL_CLASS2_TEXT
+             , MTGL.MATERIAL_TYPE AS MATERIAL_TYPE
+             , MTGL.MATERIAL_CTRL_TYPE AS MATERIAL_CTRL_TYPE
+             , MTGL.MATERIAL_CLASS1 AS MATERIAL_CLASS1
+             , MTGL.MATERIAL_CLASS2 AS MATERIAL_CLASS2
+             , MTGL.ITEM_NO AS ITEM_NO
+             , MTGL.DESCRIPTION_LOC AS DESCRIPTION_LOC
+             , MTGL.DESCRIPTION_ENG  AS DESCRIPTION_ENG
+             , MTGL.SPECIFICATION AS SPECIFICATION
+             , (select  CTRL_PERSON_ID from icombacp
+             		where house_code = '#HOUSE_CODE#'
+             		and   CTRL_CODE = '#CTRL_CODE#'
+             		and   CTRL_TYPE = 'P'
+<![CDATA[			and   rownum < 2           					]]>
+             		) as  CTRL_PERSON_ID
+             , NVL(MCPM.CTRL_TYPE,'P')  AS CTRL_TYPE
+             , MCPM.PURCHASE_LOCATION
+             , MTGL.BASIC_UNIT  AS BASIC_UNIT
+             , NVL(MCPM.CTRL_CODE,'#DEFAULT_CTRL_CODE#')  AS CTRL_CODE
+             , CASE WHEN MTGL.ITEM_BLOCK_FLAG = 'Y' THEN 'Y' ELSE 'N' END AS ITEM_BLOCK_FLAG
+             , MTGL.HOUSE_CODE
+             , '' AS PURCHASE_DEPT
+             , '' AS PR_LOCATION
+             , GETUSERNAME('#HOUSE_CODE#', (select  CTRL_PERSON_ID from icombacp
+														where house_code = '#HOUSE_CODE#'
+														and   CTRL_CODE = '#CTRL_CODE#'
+														and   CTRL_TYPE = 'P'
+									<![CDATA[			and   rownum < 2           					]]>
+														)
+														,'LOC') AS PURCHASER_NAME
+             , GETICOMCODE2(MCPM.HOUSE_CODE, 'M039', MCPM.PURCHASE_LOCATION) AS PURCHASE_LOCATION_NAME
+             , '' AS PURCHASE_DEPT_NAME
+             , 0 AS PREV_UNIT_PRICE
+             , TO_CHAR(SYSDATE + NVL(MTGL.DELIVERY_LT,0),'YYYYMMDD') AS DELIVERY_IT
+             , '1000' AS SG_REFITEM							 -- 기술적인 어려움으로 GETSG_REFITEM 함수 컨버팅 못함.
+    	     , MTGL.MAKER_NAME
+   		     , MTGL.MAKER_CODE
+   		     , MTGL.ITEM_GROUP
+   		     , 'F' AS ITEMFLAG
+			 , GETINFOPRICE3(MCPM.HOUSE_CODE, '#COMPANY_CODE#', MCPM.PURCHASE_LOCATION, MTGL.ITEM_NO) AS UNIT_PRICE
+			 , TO_CHAR(GETINFOVENDOR2(MCPM.HOUSE_CODE, '#COMPANY_CODE#', MCPM.PURCHASE_LOCATION, MTGL.ITEM_NO)) AS VENDOR_CODE
+         FROM ICOMMTGL MTGL, ICOMMCPM MCPM
+         WHERE MTGL.HOUSE_CODE       	= MCPM.HOUSE_CODE
+		    AND  	MTGL.MATERIAL_CLASS2= MCPM.MATERIAL_CLASS1
+			AND  	MTGL.HOUSE_CODE       = '#HOUSE_CODE#'
+			AND MCPM.CTRL_CODE = '#CTRL_CODE#'
+	<![CDATA[
+  <OPT=S,S> AND MTGL.MATERIAL_TYPE       =  ? </OPT>
+  <OPT=S,S> AND (MTGL.MATERIAL_CTRL_TYPE  =  ? OR MTGL.MATERIAL_CTRL_TYPE = MTGL.MATERIAL_TYPE ||'000') </OPT>
+  <OPT=S,S> AND MTGL.MATERIAL_CLASS1     =  ? </OPT>
+  <OPT=S,S> AND MTGL.MATERIAL_CLASS2     =  ? </OPT>
+  <OPT=S,S> AND UPPER(MTGL.ITEM_NO)             = ( ? ) </OPT>
+  <OPT=S,S> AND UPPER(MTGL.DESCRIPTION_LOC)     LIKE UPPER('%'  ||  ?  ||  '%') </OPT>
+  <OPT=S,S> AND UPPER(MTGL.DESCRIPTION_ENG)     LIKE UPPER('%'  ||  ?  ||  '%') </OPT>
+  <OPT=S,S> AND UPPER(MTGL.SPECIFICATION)       LIKE UPPER('%'  ||  ?  ||  '%') </OPT>
+  <OPT=S,S> AND UPPER(MTGL.MAKER_NAME)       LIKE UPPER('%'  ||  ?  ||  '%') </OPT>
+            AND    MTGL.STATUS IN ('C','R')
+        ORDER   BY   MTGL.MATERIAL_TYPE,
+                  	 MTGL.MATERIAL_CTRL_TYPE,
+                  	 MTGL.MATERIAL_CLASS1,
+                   	 MTGL.ITEM_NO ) A
+	]]>
+	 WHERE A.UNIT_PRICE > 0
+	</method>
+	
+	<method name="et_getCatalog4_1">
+	SELECT A.*, GETVENDORNAME('#HOUSE_CODE#', A.vendor_code) as VENDOR_NAME
+	FROM (
+		 SELECT
+               GETICOMCODE2(MTGL.HOUSE_CODE, 'M040',MTGL.MATERIAL_TYPE) AS MATERIAL_TYPE_TEXT
+             , GETICOMCODE2(MTGL.HOUSE_CODE, 'M041',MTGL.MATERIAL_CTRL_TYPE) AS MATERIAL_CTRL_TYPE_TEXT
+             , GETICOMCODE2(MTGL.HOUSE_CODE, 'M042',MTGL.MATERIAL_CLASS1) AS MATERIAL_CLASS1_TEXT
+             , GETICOMCODE2(MTGL.HOUSE_CODE, 'M122',MTGL.MATERIAL_CLASS2) AS MATERIAL_CLASS2_TEXT
+             , MTGL.MATERIAL_TYPE AS MATERIAL_TYPE
+             , MTGL.MATERIAL_CTRL_TYPE AS MATERIAL_CTRL_TYPE
+             , MTGL.MATERIAL_CLASS1 AS MATERIAL_CLASS1
+             , MTGL.MATERIAL_CLASS2 AS MATERIAL_CLASS2
+             , MTGL.ITEM_NO AS ITEM_NO
+             , MTGL.DESCRIPTION_LOC AS DESCRIPTION_LOC
+             , MTGL.DESCRIPTION_ENG  AS DESCRIPTION_ENG
+             , MTGL.SPECIFICATION AS SPECIFICATION
+             , (select  CTRL_PERSON_ID from icombacp
+             		where house_code = '#HOUSE_CODE#'
+             		and   CTRL_CODE = '#CTRL_CODE#'
+             		and   CTRL_TYPE = 'P'
+<![CDATA[			and   rownum < 2           					]]>
+             		) as  CTRL_PERSON_ID
+             , NVL(MCPM.CTRL_TYPE,'P')  AS CTRL_TYPE
+             , MCPM.PURCHASE_LOCATION
+             , MTGL.BASIC_UNIT  AS BASIC_UNIT
+             , NVL(MCPM.CTRL_CODE,'#DEFAULT_CTRL_CODE#')  AS CTRL_CODE
+             , CASE WHEN MTGL.ITEM_BLOCK_FLAG = 'Y' THEN 'Y' ELSE 'N' END AS ITEM_BLOCK_FLAG
+             , MTGL.HOUSE_CODE
+             , '' AS PURCHASE_DEPT
+             , '' AS PR_LOCATION
+             , GETUSERNAME('#HOUSE_CODE#', (select  CTRL_PERSON_ID from icombacp
+														where house_code = '#HOUSE_CODE#'
+														and   CTRL_CODE = '#CTRL_CODE#'
+														and   CTRL_TYPE = 'P'
+									<![CDATA[			and   rownum < 2           					]]>
+														)
+														,'LOC') AS PURCHASER_NAME
+             , GETICOMCODE2(MCPM.HOUSE_CODE, 'M039', MCPM.PURCHASE_LOCATION) AS PURCHASE_LOCATION_NAME
+             , '' AS PURCHASE_DEPT_NAME
+             , 0 AS PREV_UNIT_PRICE
+             , TO_CHAR(SYSDATE + NVL(MTGL.DELIVERY_LT,0),'YYYYMMDD') AS DELIVERY_IT
+             , '1000' AS SG_REFITEM							 -- 기술적인 어려움으로 GETSG_REFITEM 함수 컨버팅 못함.
+    	     , MTGL.MAKER_NAME
+   		     , MTGL.MAKER_CODE
+   		     , MTGL.ITEM_GROUP
+   		     , 'F' AS ITEMFLAG
+			 , GETINFOPRICE3(MCPM.HOUSE_CODE, '#COMPANY_CODE#', MCPM.PURCHASE_LOCATION, MTGL.ITEM_NO) AS UNIT_PRICE
+			 , TO_CHAR(GETINFOVENDOR2(MCPM.HOUSE_CODE, '#COMPANY_CODE#', MCPM.PURCHASE_LOCATION, MTGL.ITEM_NO)) AS VENDOR_CODE
+         FROM ICOMMTGL MTGL, ICOMMCPM MCPM
+         WHERE MTGL.HOUSE_CODE       	= MCPM.HOUSE_CODE
+		    AND  	MTGL.MATERIAL_CLASS2= MCPM.MATERIAL_CLASS1
+			AND  	MTGL.HOUSE_CODE       = '#HOUSE_CODE#'
+			AND MCPM.CTRL_CODE = '#CTRL_CODE#'
+			AND UPPER(MTGL.ITEM_NO)             = '#ITEM_NO#'
+            AND    MTGL.STATUS IN ('C','R')
+        ORDER   BY   MTGL.MATERIAL_TYPE,
+                  	 MTGL.MATERIAL_CTRL_TYPE,
+                  	 MTGL.MATERIAL_CLASS1,
+                   	 MTGL.ITEM_NO ) A
+	 WHERE A.UNIT_PRICE > 0
+	</method>
+	
+	<method name="et_getCatalog4_2">
+	SELECT A.*, GETVENDORNAME('#HOUSE_CODE#', to_char(A.vendor_code)) as VENDOR_NAME
+	FROM (
+		 SELECT
+               GETICOMCODE2(MTGL.HOUSE_CODE, 'M040',MTGL.MATERIAL_TYPE) AS MATERIAL_TYPE_TEXT
+             , GETICOMCODE2(MTGL.HOUSE_CODE, 'M041',MTGL.MATERIAL_CTRL_TYPE) AS MATERIAL_CTRL_TYPE_TEXT
+             , GETICOMCODE2(MTGL.HOUSE_CODE, 'M042',MTGL.MATERIAL_CLASS1) AS MATERIAL_CLASS1_TEXT
+             , GETICOMCODE2(MTGL.HOUSE_CODE, 'M122',MTGL.MATERIAL_CLASS2) AS MATERIAL_CLASS2_TEXT
+             , MTGL.MATERIAL_TYPE AS MATERIAL_TYPE
+             , MTGL.MATERIAL_CTRL_TYPE AS MATERIAL_CTRL_TYPE
+             , MTGL.MATERIAL_CLASS1 AS MATERIAL_CLASS1
+             , MTGL.MATERIAL_CLASS2 AS MATERIAL_CLASS2
+             , MTGL.ITEM_NO AS ITEM_NO
+             , MTGL.DESCRIPTION_LOC AS DESCRIPTION_LOC
+             , MTGL.DESCRIPTION_ENG  AS DESCRIPTION_ENG
+             , MTGL.SPECIFICATION AS SPECIFICATION
+             , (select  CTRL_PERSON_ID from icombacp
+             		where house_code = '#HOUSE_CODE#'
+             		and   CTRL_CODE = '#CTRL_CODE#'
+             		and   CTRL_TYPE = 'P'
+<![CDATA[			and   rownum < 2           					]]>
+             		) as  CTRL_PERSON_ID
+             , NVL(MCPM.CTRL_TYPE,'P')  AS CTRL_TYPE
+             , MCPM.PURCHASE_LOCATION
+             , MTGL.BASIC_UNIT  AS BASIC_UNIT
+             , NVL(MCPM.CTRL_CODE,'#DEFAULT_CTRL_CODE#')  AS CTRL_CODE
+             , CASE WHEN MTGL.ITEM_BLOCK_FLAG = 'Y' THEN 'Y' ELSE 'N' END AS ITEM_BLOCK_FLAG
+             , MTGL.HOUSE_CODE
+             , '' AS PURCHASE_DEPT
+             , '' AS PR_LOCATION
+             , GETUSERNAME('#HOUSE_CODE#', (select  CTRL_PERSON_ID from icombacp
+														where house_code = '#HOUSE_CODE#'
+														and   CTRL_CODE = '#CTRL_CODE#'
+														and   CTRL_TYPE = 'P'
+									<![CDATA[			and   rownum < 2           					]]>
+														)
+														,'LOC') AS PURCHASER_NAME
+             , GETICOMCODE2(MCPM.HOUSE_CODE, 'M039', MCPM.PURCHASE_LOCATION) AS PURCHASE_LOCATION_NAME
+             , '' AS PURCHASE_DEPT_NAME
+             , 0 AS PREV_UNIT_PRICE
+             , TO_CHAR(SYSDATE + NVL(MTGL.DELIVERY_LT,0),'YYYYMMDD') AS DELIVERY_IT
+             , '1000' AS SG_REFITEM							 -- 기술적인 어려움으로 GETSG_REFITEM 함수 컨버팅 못함.
+    	     , MTGL.MAKER_NAME
+   		     , MTGL.MAKER_CODE
+   		     , MTGL.ITEM_GROUP
+   		     , 'F' AS ITEMFLAG
+			 , INFO.UNIT_PRICE AS UNIT_PRICE
+			 , '#VENDOR_CODE#' AS VENDOR_CODE
+         FROM ICOMMTGL MTGL, ICOMMCPM MCPM, ICOYINFO INFO
+         WHERE MTGL.HOUSE_CODE       	= MCPM.HOUSE_CODE
+		    AND MTGL.MATERIAL_CLASS2= MCPM.MATERIAL_CLASS1
+			AND MTGL.HOUSE_CODE       = '#HOUSE_CODE#'
+			AND MCPM.CTRL_CODE = '#CTRL_CODE#'
+			AND MCPM.HOUSE_CODE = INFO.HOUSE_CODE
+			AND MCPM.PURCHASE_LOCATION     = INFO.PURCHASE_LOCATION
+			AND INFO.ITEM_NO               = MTGL.ITEM_NO
+			AND UPPER(MTGL.ITEM_NO)    = '#ITEM_NO#'
+			AND INFO.COMPANY_CODE      = '#COMPANY_CODE#'
+			AND INFO.VENDOR_CODE       = '#VENDOR_CODE#'
+			AND TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN INFO.VALID_FROM_DATE AND INFO.VALID_TO_DATE
+            AND MTGL.STATUS IN ('C','R')
+        ORDER   BY   MTGL.MATERIAL_TYPE,
+                  	 MTGL.MATERIAL_CTRL_TYPE,
+                  	 MTGL.MATERIAL_CLASS1,
+                   	 MTGL.ITEM_NO ) A
+	</method>	
+	
+	<method name="et_getCatalogMaster">
+
+		<![CDATA[
+	SELECT
+         A.TEXT3 AS MATERIAL_TYPE,
+         A.TEXT4 AS MATERIAL_CTRL_TYPE,
+         A.TEXT5 AS MATERIAL_CLASS1,
+         A.CODE  AS MATERIAL_CLASS2,
+         (SELECT TEXT2 FROM SCODE WHERE HOUSE_CODE='#HOUSE_CODE#' AND TYPE = 'M040' AND CODE = A.TEXT3) AS MATERIAL_TYPE_TEXT,
+         (SELECT TEXT2 FROM SCODE WHERE HOUSE_CODE='#HOUSE_CODE#' AND TYPE = 'M041' AND CODE = A.TEXT4) AS MATERIAL_CTRL_TYPE_TEXT,
+		 (SELECT TEXT2 FROM SCODE WHERE HOUSE_CODE='#HOUSE_CODE#' AND TYPE = 'M042' AND CODE = A.TEXT5) AS MATERIAL_CLASS1_TEXT,
+         (SELECT TEXT2 FROM SCODE WHERE HOUSE_CODE='#HOUSE_CODE#' AND TYPE = 'M122' AND CODE = A.CODE)  AS MATERIAL_CLASS2_TEXT,
+         A.USE_FLAG,
+         A.SORT_SEQ,
+         M.ITEM_NO,
+         M.DESCRIPTION_LOC,
+         M.DESCRIPTION_ENG,
+         M.SPECIFICATION,
+         M.BASIC_UNIT,
+         M.MAKER_NAME,
+         M.MAKER_CODE,
+         M.ITEM_GROUP
+   FROM SCODE A , ICOMMTGL M
+  WHERE 1=1
+    AND A.HOUSE_CODE = M.HOUSE_CODE(+)
+    AND A.TEXT3 = M.MATERIAL_TYPE(+)
+    AND A.TEXT4 = M.MATERIAL_CTRL_TYPE(+)
+    AND A.TEXT5 = M.MATERIAL_CLASS1(+)
+    AND A.CODE  = M.MATERIAL_CLASS2(+)
+    AND A.HOUSE_CODE = '#HOUSE_CODE#'
+    AND A.TYPE = 'M122'
+    AND A.STATUS <> 'D'
+    <OPT=S,S>AND A.TEXT3  = ?								</OPT>
+    <OPT=S,S>AND A.TEXT4  = ?								</OPT>
+
+    <OPT=S,S>AND A.TEXT5  = ?								</OPT>
+
+    <OPT=S,S>AND A.CODE   = ?    							</OPT>
+    <OPT=S,S>AND M.ITEM_NO = ?								</OPT>
+    <OPT=S,S>AND M.DESCRIPTION_LOC 	LIKE '%' || ? || '%'    </OPT>
+    <OPT=S,S>AND M.DESCRIPTION_ENG 	LIKE '%' || ? || '%'   	</OPT>
+    <OPT=S,S>AND M.SPECIFICATION 	LIKE '%' || ? || '%'   	</OPT>
+    <OPT=S,S>AND M.MAKER_NAME 		LIKE '%' || ? || '%'   	</OPT>
+   ORDER BY A.CODE
+		]]>
+	</method>
+
+	<method name="et_setPRCopy">
+		INSERT INTO ICOYPRHD (
+			HOUSE_CODE,       PR_NO,               STATUS,              ADD_DATE,          ADD_TIME,
+			ADD_USER_ID,      CHANGE_DATE,         CHANGE_TIME,         CHANGE_USER_ID,    COMPANY_CODE,
+			PLANT_CODE,       PR_TOT_AMT,          PR_TYPE,             DEMAND_DEPT,       SIGN_STATUS,
+			SIGN_DATE,        SIGN_PERSON_ID,      DEMAND_DEPT_NAME,    SIGN_PERSON_NAME,  TEL_NO,
+			REMARK,           SUBJECT,             PR_LOCATION,         CTRL_DEPT,         CTRL_FLAG,
+			CTRL_DATE,        CTRL_PERSON_ID,      CTRL_REASON,         CTRL_DEPT_NAME,    CTRL_PERSON_NAME,
+			RECEIVE_TERM,     ORDER_NO,            SALES_USER_DEPT,     SALES_USER_ID,     CONTRACT_HOPE_DAY,
+			TAKE_USER_NAME,   TAKE_TEL,            REC_REASON,          AHEAD_FLAG,        CONTRACT_FROM_DATE,
+			CONTRACT_TO_DATE, SHIPPER_TYPE,        MAINTENANCE_TERM,    DELY_TO_CONDITION, COMPUTE_REASON,
+			CUST_CODE,        SALES_AMT,           SALES_TYPE,          ORDER_NAME,        REQ_TYPE,
+			RETURN_HOPE_DAY,  HARD_MAINTANCE_TERM, SOFT_MAINTANCE_TERM, ATTACH_NO,         CREATE_TYPE,
+			EXPECT_AMT,       BID_PR_NO,           CUST_NAME,           PROJECT_FLAG,      ORDER_POSSIBLE_AMT,
+			USAGE,            DELIVERY_PLACE,      DELIVERY_PLACE_INFO, PROJECT_DEPT,      PROJECT_PM,
+			BSART,            CUST_TYPE,           VATYN,               REGDATE,           CTRL_SIGN_STATUS,
+			INTROMTHD,        REGPAYNM,            REQDEPT,             IF_FLAG,           ORDER_COUNT,
+			WBS,              WBS_NAME,            DELY_TO_LOCATION,    DELY_TO_ADDRESS,   DELY_TO_USER,
+			DELY_TO_PHONE,    PC_FLAG,             PC_REASON
+		)
+		SELECT
+			HOUSE_CODE, 
+			
+			${NEW_PR_NO} AS PR_NO,
+			
+			'C' AS STATUS, TO_CHAR (SYSDATE, 'YYYYMMDD') AS ADD_DATE, TO_CHAR (SYSDATE, 'HH24MISS') AS ADD_TIME,
+			
+			${USER_ID} AS ADD_USER_ID,
+			
+			TO_CHAR (SYSDATE, 'YYYYMMDD') AS CHANGE_DATE, TO_CHAR (SYSDATE, 'HH24MISS') AS CHANGE_TIME,
+			
+			${USER_ID} AS CHANGE_USER_ID,
+			
+			COMPANY_CODE,
+			PLANT_CODE, PR_TOT_AMT, PR_TYPE,
+			
+			${DEPT_CODE} AS DEMAND_DEPT,
+			
+			'T' AS SIGN_STATUS,
+			'' AS SIGN_DATE, '' AS SIGN_PERSON_ID,
+			
+			${DEPT_NAME} AS DEMAND_DEPT_NAME,
+			
+			'' AS SIGN_PERSON_NAME, TEL_NO,
+			REMARK,                 SUBJECT,             PR_LOCATION,         CTRL_DEPT,         CTRL_FLAG,
+			CTRL_DATE,              CTRL_PERSON_ID,      CTRL_REASON,         CTRL_DEPT_NAME,    CTRL_PERSON_NAME,
+			RECEIVE_TERM,           ORDER_NO,            SALES_USER_DEPT,     SALES_USER_ID,     CONTRACT_HOPE_DAY,
+			TAKE_USER_NAME,         TAKE_TEL,            REC_REASON,          AHEAD_FLAG,        CONTRACT_FROM_DATE,
+			CONTRACT_TO_DATE,       SHIPPER_TYPE,        MAINTENANCE_TERM,    DELY_TO_CONDITION, COMPUTE_REASON,
+			CUST_CODE,              SALES_AMT,           SALES_TYPE,          ORDER_NAME,        REQ_TYPE,
+			RETURN_HOPE_DAY,        HARD_MAINTANCE_TERM, SOFT_MAINTANCE_TERM, ATTACH_NO,         CREATE_TYPE,
+			EXPECT_AMT,             BID_PR_NO,           CUST_NAME,           PROJECT_FLAG,      ORDER_POSSIBLE_AMT,
+			USAGE,                  DELIVERY_PLACE,      DELIVERY_PLACE_INFO, PROJECT_DEPT,      PROJECT_PM,
+			BSART,                  CUST_TYPE,           VATYN,               REGDATE,           CTRL_SIGN_STATUS,
+			INTROMTHD,              REGPAYNM,            REQDEPT,             IF_FLAG,           ORDER_COUNT,
+			WBS,                    WBS_NAME,            DELY_TO_LOCATION,    DELY_TO_ADDRESS,   DELY_TO_USER,
+			DELY_TO_PHONE,          PC_FLAG,             PC_REASON
+		FROM
+			ICOYPRHD
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			PR_NO = ${PR_NO}
+	</method>
+
+	<method name="et_setPRDTCopy">
+		INSERT INTO ICOYPRDT (
+			HOUSE_CODE,        PR_NO,              PR_SEQ,            STATUS,             ADD_DATE,
+			ADD_TIME,          ADD_USER_ID,        CHANGE_DATE,       CHANGE_TIME,        CHANGE_USER_ID,
+			COMPANY_CODE,      PLANT_CODE,         ITEM_NO,           SHIPPER_TYPE,       PR_PROCEEDING_FLAG,
+			PURCHASE_LOCATION, CTRL_CODE,          UNIT_MEASURE,      PR_QTY,             CONFIRM_QTY,
+			CUR,               LIST_PRICE,         UNIT_PRICE,        PR_AMT,             ACCOUNT_CODE,
+			RD_DATE,           PURCHASER_ID,       PURCHASER_NAME,    ATTACH_NO,          YEAR_QTY,
+			REC_VENDOR_CODE,   DELY_TO_LOCATION,   SAMPLE_FLAG,       TBE_FLAG,           PURCHASE_DEPT,
+			REC_VENDOR_NAME,   PURCHASE_DEPT_NAME, RETURN_DATE,       RETURN_REASON_CODE, BEFORE_USER_ID,
+			BEFORE_USER_NAME,  BEFORE_CTRL_CODE,   INVEST_NO,         DELY_TO_ADDRESS,    DESCRIPTION_ENG,
+			DESCRIPTION_LOC,   SPECIFICATION,      RETURN_REASON,     REMARK,             DEMAND_DEPT,
+			STR_FLAG,          PREV_UNIT_PRICE,    PO_VENDOR_CODE,    PO_UNIT_PRICE,      AUTO_PO_FLAG,
+			Z_CODE1,           Z_CODE2,            Z_CODE3,           Z_CODE4,            CONFIRM_DATE,
+			CONFIRM_TIME,      CONFIRM_USER_ID,    DO_FLAG,           Z_WORK_STAGE_FLAG,  Z_DELIVERY_CONFIRM_FLAG,
+			PR_KRW_AMT,        EXCHANGE_RATE,      SOURCING_TYPE,     TECHNIQUE_GRADE,    TECHNIQUE_FLAG,
+			TECHNIQUE_TYPE,    INPUT_FROM_DATE,    INPUT_TO_DATE,     MAKER_CODE,         MAKER_NAME,
+			IT_WORK_PERIOD,    TECHNIQUE_DEPT,     RUN_SCHEDULE,      RUN_SCHEDULE_SEQ,   PURCHASER_ASSIGN_DATE,
+			PE_CLOSE_FLAG,     ON_PR_FLAG,         KNTTP,             ZEXKN,              ORDER_NO,
+			ORDER_SEQ,         WBS_NO,             WBS_SUB_NO,        WBS_TXT,            INVEST_SUB_NO,
+			PRCRT,             KTEXT,              ORDER_COUNT,       WBS_TYPE,           WBS_NAME,
+			MATERIAL_TYPE,     BID_STATUS,         DET,               ASUMTNUSAMT,        RMK,
+			ASUMTNPRC,         QTY,                CCY,               UNIT,               MDLNM,
+			GDSNM,             ARGENT_FLAG,        ASUMTNAMT,         CONPRNNO,           USAGE,
+			CONTRACT_DIV,      WARRANTY,           PREFERRED_BIDDER,  PO_NO,              PO_SEQ,
+			ACCOUNT_TYPE,      ASSET_TYPE,         DELY_TO_ADDRESS_CD
+		)
+		SELECT
+			HOUSE_CODE,
+			
+			${NEW_PR_NO} AS PR_NO,
+			
+			PR_SEQ, 'C' AS STATUS, TO_CHAR (SYSDATE, 'YYYYMMDD') AS ADD_DATE,
+			
+			TO_CHAR (SYSDATE, 'HH24MISS') AS ADD_TIME,
+			
+			${USER_ID} AS ADD_USER_ID,
+			
+			TO_CHAR (SYSDATE, 'YYYYMMDD') AS CHANGE_DATE, TO_CHAR (SYSDATE, 'HH24MISS') AS CHANGE_TIME,
+			
+			${USER_ID} AS CHANGE_USER_ID,
+			
+			COMPANY_CODE,      PLANT_CODE,         ITEM_NO,              SHIPPER_TYPE,       'P' AS PR_PROCEEDING_FLAG,
+			PURCHASE_LOCATION, CTRL_CODE,          UNIT_MEASURE,         PR_QTY,             CONFIRM_QTY,
+			CUR,               LIST_PRICE,         UNIT_PRICE,           PR_AMT,             ACCOUNT_CODE,
+			RD_DATE,           '' AS PURCHASER_ID, '' AS PURCHASER_NAME, ATTACH_NO,          YEAR_QTY,
+			REC_VENDOR_CODE,   DELY_TO_LOCATION,   SAMPLE_FLAG,          TBE_FLAG,           PURCHASE_DEPT,
+			REC_VENDOR_NAME,   PURCHASE_DEPT_NAME, RETURN_DATE,          RETURN_REASON_CODE, BEFORE_USER_ID,
+			BEFORE_USER_NAME,  BEFORE_CTRL_CODE,   INVEST_NO,            DELY_TO_ADDRESS,    DESCRIPTION_ENG,
+			DESCRIPTION_LOC,   SPECIFICATION,      RETURN_REASON,        REMARK,             DEMAND_DEPT,
+			STR_FLAG,          PREV_UNIT_PRICE,    PO_VENDOR_CODE,       PO_UNIT_PRICE,      AUTO_PO_FLAG,
+			Z_CODE1,           Z_CODE2,            Z_CODE3,              Z_CODE4,            CONFIRM_DATE,
+			CONFIRM_TIME,      CONFIRM_USER_ID,    DO_FLAG,              Z_WORK_STAGE_FLAG,  Z_DELIVERY_CONFIRM_FLAG,
+			PR_KRW_AMT,        EXCHANGE_RATE,      SOURCING_TYPE,        TECHNIQUE_GRADE,    TECHNIQUE_FLAG,
+			TECHNIQUE_TYPE,    INPUT_FROM_DATE,    INPUT_TO_DATE,        MAKER_CODE,         MAKER_NAME,
+			IT_WORK_PERIOD,    TECHNIQUE_DEPT,     RUN_SCHEDULE,         RUN_SCHEDULE_SEQ,   PURCHASER_ASSIGN_DATE,
+			PE_CLOSE_FLAG,     ON_PR_FLAG,         KNTTP,                ZEXKN,              ORDER_NO,
+			ORDER_SEQ,         WBS_NO,             WBS_SUB_NO,           WBS_TXT,            INVEST_SUB_NO,
+			PRCRT,             KTEXT,              ORDER_COUNT,          WBS_TYPE,           WBS_NAME,
+			MATERIAL_TYPE,     'PR' AS BID_STATUS, DET,                  ASUMTNUSAMT,        RMK,
+			ASUMTNPRC,         QTY,                CCY,                  UNIT,               MDLNM,
+			GDSNM,             ARGENT_FLAG,        ASUMTNAMT,            CONPRNNO,           USAGE,
+			CONTRACT_DIV,      WARRANTY,           PREFERRED_BIDDER,     PO_NO,              PO_SEQ,
+			ACCOUNT_TYPE,      ASSET_TYPE,         DELY_TO_ADDRESS_CD
+		FROM
+			ICOYPRDT
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			PR_NO = ${PR_NO}
+		AND
+			STATUS IN ('C','R')
+	</method>
+	<method name="et_setPRBRCopy">
+		INSERT INTO ICOYPRBR (
+			HOUSE_CODE, PR_NO,       BR_NO,      STATUS, ADD_DATE,
+			ADD_TIME,   CHANGE_DATE, CHANGE_TIME
+		)
+		SELECT
+			HOUSE_CODE,
+			
+			${NEW_PR_NO} AS PR_NO,
+			
+			BR_NO,    STATUS,      ADD_DATE,
+			ADD_TIME, CHANGE_DATE, CHANGE_TIME
+		FROM
+			ICOYPRBR
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			PR_NO = ${PR_NO}
+		AND
+			STATUS IN ('C','R')
+	</method>
+
+	<method name="PRHDDelete">
+	<![CDATA[
+				 DELETE FROM ICOYPRHD
+	             WHERE HOUSE_CODE = ${HOUSE_CODE}
+	             AND PR_NO  = ${PR_NO}
+			]]>
+	</method>
+	<method name="PRDTDelete">
+	<![CDATA[
+				 DELETE FROM ICOYPRDT
+	             WHERE HOUSE_CODE = ${HOUSE_CODE}
+	             AND PR_NO  = ${PR_NO}
+			]]>
+	</method>
+	<method name="SCTMDelete">
+	<![CDATA[
+				 DELETE FROM ICOMSCTM
+	             WHERE HOUSE_CODE = ${HOUSE_CODE}
+	             AND DOC_NO  = ${PR_NO}
+			]]>
+	</method>
+	<method name="SCTPDelete">
+	<![CDATA[
+				 DELETE FROM ICOMSCTP
+	             WHERE HOUSE_CODE = ${HOUSE_CODE}
+	             AND DOC_NO  = ${PR_NO}
+			]]>
+	</method>
+	<method name="selectPrInfo">
+		SELECT 
+			PRDT.ITEM_NO
+			, PRDT.PR_QTY
+			, PRDT.RD_DATE
+		FROM ICOYPRDT PRDT
+		WHERE 1=1
+		AND PRDT.HOUSE_CODE = ${HOUSE_CODE} 
+		AND PRDT.PR_NO = ${PR_NO}
+		ORDER BY PRDT.PR_SEQ;
+    </method>
+	<method name="selectSprCartInfo">
+    	SELECT
+    		COUNT(1) AS CNT
+    	FROM
+    		SPRCART
+    	WHERE
+    		HOUSE_CODE = ${HOUSE_CODE}
+    	AND
+    		USER_ID    = ${USER_ID}
+    	AND
+    		ITEM_NO    = ${ITEM_NO}
+    </method>
+    
+    <method name="insertSprcartInfo">
+    	INSERT INTO SPRCART(
+    		HOUSE_CODE, USER_ID,     ITEM_NO,     QTY,         ADD_DATE,      
+    		ADD_TIME,   ADD_USER_ID, CHANGE_DATE, CHANGE_TIME, CHANGE_USER_ID,
+    		RD_DATE
+    	)
+    	VALUES(
+    		${HOUSE_CODE},
+    		${USER_ID},
+    		${ITEM_NO},
+    		${PR_QTY},
+			TO_CHAR(SYSDATE, 'YYYYMMDD'),
+			TO_CHAR(SYSDATE, 'HH24MISS'),
+			${ADD_USER_ID},
+			TO_CHAR(SYSDATE, 'YYYYMMDD'),
+			TO_CHAR(SYSDATE, 'HH24MISS'),
+			${ADD_USER_ID},
+			REPLACE(${RD_DATE}, '/', '')
+    	)
+    </method>
+    
+    <method name="updateSprcartInfo">
+    	UPDATE
+    		SPRCART
+    	SET
+    		QTY            = ${PR_QTY},
+    		RD_DATE        = REPLACE(${RD_DATE}, '/', ''),
+    		CHANGE_DATE    = TO_CHAR(SYSDATE, 'YYYYMMDD'),
+    		CHANGE_TIME    = TO_CHAR(SYSDATE, 'HH24MISS'),
+    		CHANGE_USER_ID = ${ADD_USER_ID} 
+    	WHERE
+    		HOUSE_CODE = ${HOUSE_CODE}
+    	AND
+    		USER_ID    = ${USER_ID}
+    	AND
+    		ITEM_NO    = ${ITEM_NO}
+    </method>
+    
+    <method name="et_getCatalog5">
+		 SELECT
+               GETICOMCODE2(MTGL.HOUSE_CODE, 'M040',MTGL.MATERIAL_TYPE) AS MATERIAL_TYPE_TEXT
+             , GETICOMCODE2(MTGL.HOUSE_CODE, 'M041',MTGL.MATERIAL_CTRL_TYPE) AS MATERIAL_CTRL_TYPE_TEXT
+             , GETICOMCODE2(MTGL.HOUSE_CODE, 'M042',MTGL.MATERIAL_CLASS1) AS MATERIAL_CLASS1_TEXT
+             , GETICOMCODE2(MTGL.HOUSE_CODE, 'M122',MTGL.MATERIAL_CLASS2) AS MATERIAL_CLASS2_TEXT
+             , MTGL.MATERIAL_TYPE AS MATERIAL_TYPE
+             , MTGL.MATERIAL_CTRL_TYPE AS MATERIAL_CTRL_TYPE
+             , MTGL.MATERIAL_CLASS1 AS MATERIAL_CLASS1
+             , MTGL.MATERIAL_CLASS2 AS MATERIAL_CLASS2
+             , MTGL.ITEM_NO AS ITEM_NO
+             , MTGL.DESCRIPTION_LOC AS DESCRIPTION_LOC
+             , MTGL.DESCRIPTION_ENG  AS DESCRIPTION_ENG
+             , MTGL.SPECIFICATION AS SPECIFICATION
+             , (select  CTRL_PERSON_ID from icombacp
+             		where house_code = ${HOUSE_CODE}
+             		and   CTRL_CODE = ${CTRL_CODE}
+             		and   CTRL_TYPE = 'P'
+<![CDATA[			and   rownum < 2           					]]>
+             		) as  CTRL_PERSON_ID
+             , NVL(CTRL.CTRL_TYPE,'P')  AS CTRL_TYPE
+             , CTRL.PURCHASE_LOCATION
+             , MTGL.BASIC_UNIT  AS BASIC_UNIT
+             , NVL(CTRL.CTRL_CODE,${DEFAULT_CTRL_CODE})  AS CTRL_CODE
+             , CASE WHEN MTGL.ITEM_BLOCK_FLAG = 'Y' THEN 'Y' ELSE 'N' END AS ITEM_BLOCK_FLAG
+             , MTGL.HOUSE_CODE
+             , getDeptCodeByID(CTRL.HOUSE_CODE,${COMPANY_CODE},CTRL.CTRL_PERSON_ID) AS PURCHASE_DEPT
+             , CTRL.PR_LOCATION
+             , GETUSERNAME(${HOUSE_CODE}, (select  CTRL_PERSON_ID from icombacp
+														where house_code = ${HOUSE_CODE}
+														and   CTRL_CODE = ${CTRL_CODE}
+														and   CTRL_TYPE = 'P'
+									<![CDATA[			and   rownum < 2           					]]>
+														)
+														,'LOC') AS PURCHASER_NAME
+             , GETICOMCODE2(CTRL.HOUSE_CODE, 'M039', CTRL.PURCHASE_LOCATION) AS PURCHASE_LOCATION_NAME
+             , getDeptNameByID(CTRL.HOUSE_CODE, ${COMPANY_CODE}, CTRL.CTRL_PERSON_ID) AS PURCHASE_DEPT_NAME
+             , getCatalogListPrice(CTRL.HOUSE_CODE, CTRL.PURCHASE_LOCATION, MTGL.ITEM_NO, 0, ${add_date}) AS PREV_UNIT_PRICE
+             , TO_CHAR(SYSDATE + NVL(MTGL.DELIVERY_LT,0),'YYYYMMDD') AS DELIVERY_IT
+             , '1000' AS SG_REFITEM
+    	     , MTGL.MAKER_NAME
+   		     , MTGL.MAKER_CODE
+   		     , MTGL.ITEM_GROUP
+   		     , 'F' AS ITEMFLAG
+   		     , (SELECT replace('('||DELY_ZIP_CODE||') ', '() ', '')||DELY_ADDRESS_LOC FROM ICOMADDR
+   		        WHERE HOUSE_CODE = MTGL.HOUSE_CODE AND CODE_NO = ${USER_ID} AND CODE_TYPE = '3') AS DELY_TO_ADDRESS
+   		     ,KTGRM    		     
+   		     ,(SELECT INFO.UNIT_PRICE 
+   		         FROM ICOYINFO INFO 
+   		        WHERE INFO.HOUSE_CODE = MTGL.HOUSE_CODE 
+   		          AND INFO.ITEM_NO = MTGL.ITEM_NO 
+   		          <![CDATA[
+   		          AND INFO.VALID_FROM_DATE <= TO_CHAR(SYSDATE,'YYYYMMDD')
+   		          AND INFO.VALID_TO_DATE >= TO_CHAR(SYSDATE,'YYYYMMDD')
+   		          ]]>
+   		          AND ROWNUM = 1 ) AS C_UNIT_PRICE   		     
+			 ,MTGL.MAKE_AMT_CODE
+			 ,GETICOMCODE2(MTGL.HOUSE_CODE,'M799', MTGL.MAKE_AMT_CODE) AS MAKE_AMT_NAME
+             ,GETCODETEXT3('M799', MTGL.MAKE_AMT_CODE,'KO') AS MAKE_AMT_UNIT  
+   			 , MTGL.IMAGE_FILE_PATH --이미지경로(히든)
+   			 , MTGL.IMAGE_FILE_PATH AS IMAGE_FILE --이미지(사용자에게 보임)             
+         FROM ICOMMTGL MTGL
+              ,SCODE CODE
+              ,(SELECT
+                  DISTINCT  BACP.CTRL_PERSON_ID,
+                  MCPM.HOUSE_CODE,
+                  MCPM.MATERIAL_CLASS1,
+                  MCPM.CTRL_CODE,
+                  NVL(BAPR.PURCHASE_LOCATION,'00') AS PURCHASE_LOCATION,
+                  BAPR.PR_LOCATION,
+                  MCPM.CTRL_TYPE
+              FROM   ICOMMCPM MCPM,
+                     ICOMBACP BACP,
+                     ICOMBAPR BAPR,
+                     SCODE CODE
+              WHERE    BAPR.HOUSE_CODE        =  ${HOUSE_CODE}
+                  AND  BAPR.PR_LOCATION       =  ${PR_LOCATION}
+                  AND  MCPM.HOUSE_CODE        =  BAPR.HOUSE_CODE
+                  AND  MCPM.PURCHASE_LOCATION =  BAPR.PURCHASE_LOCATION
+                  AND  BACP.HOUSE_CODE        =  MCPM.HOUSE_CODE
+                  AND  MCPM.CTRL_CODE         =  BACP.CTRL_CODE
+                  AND  MCPM.CTRL_TYPE         =  BACP.CTRL_TYPE
+                  AND  BAPR.STATUS            IN ('C','R')
+                  AND  MCPM.STATUS            IN ('C','R')
+                  AND  BACP.STATUS            IN ('C','R')
+                  AND  CODE.HOUSE_CODE        =  ${HOUSE_CODE}
+                  AND  CODE.TYPE              =  'M122'
+                  AND  MCPM.MATERIAL_CLASS1   =  CODE.CODE
+                  AND ROWNUM = 1
+            ) CTRL
+         WHERE  MTGL.HOUSE_CODE       	= CTRL.HOUSE_CODE(+)
+		    AND MTGL.MATERIAL_CLASS2	= CTRL.MATERIAL_CLASS1(+)
+		    
+		    AND MTGL.MATERIAL_CLASS2   =  CODE.CODE
+            AND CODE.HOUSE_CODE        =  ${HOUSE_CODE}
+            AND CODE.TYPE              =  'M122'
+            AND CODE.TEXT8             =  'Y'
+            
+			AND MTGL.HOUSE_CODE       	= ${HOUSE_CODE}
+			AND	(MTGL.ITEM_BLOCK_FLAG = 'N' OR MTGL.ITEM_BLOCK_FLAG IS NULL)
+			AND MTGL.MATERIAL_TYPE       	=  $S{MATERIAL_TYPE}
+			AND (MTGL.MATERIAL_CTRL_TYPE  	=  $S{MATERIAL_CTRL_TYPE} OR MTGL.MATERIAL_CTRL_TYPE = MTGL.MATERIAL_TYPE ||'000')
+			AND MTGL.MATERIAL_CLASS1     	=  $S{MATERIAL_CLASS1}
+			AND MTGL.MATERIAL_CLASS2     	=  $S{MATERIAL_CLASS2}
+			AND UPPER(MTGL.ITEM_NO)         =  $S{ITEM_NO}
+			AND ( UPPER(MTGL.DESCRIPTION_LOC) LIKE UPPER('%'  ||  $S{DESCRIPTION_LOC}  ||  '%')
+				OR UPPER(MTGL.ITEM_ABBREVIATION) LIKE UPPER('%'  ||  $S{DESCRIPTION_LOC}  ||  '%'))
+			AND UPPER(MTGL.DESCRIPTION_ENG) LIKE UPPER('%'  ||  $S{DESCRIPTION_ENG}  ||  '%')
+			AND UPPER(MTGL.SPECIFICATION)   LIKE UPPER('%'  ||  $S{SPECIFICATION}  ||  '%')
+			AND UPPER(MTGL.MAKER_NAME)      LIKE UPPER('%'  ||  $S{MAKER_NAME}  ||  '%')
+            AND MTGL.STATUS IN ('C','R')
+            AND MTGL.USEDFLAG = 'Y'
+        ORDER   BY   ITEM_NO, 
+        			 MATERIAL_TYPE,
+                  	 MATERIAL_CTRL_TYPE,
+                  	 MATERIAL_CLASS1
+	</method>
+</service>

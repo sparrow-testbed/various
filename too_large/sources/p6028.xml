@@ -1,0 +1,328 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+<service>
+	<method name="et_CheckSign_Type">
+	<![CDATA[
+		SELECT SIGN_TYPE                      
+		FROM ICOMRLCM                         
+		WHERE STATUS != 'D'                   
+		AND HOUSE_CODE = ${HOUSE_CODE}   
+		AND COMPANY_CODE = ${COMPANY_CODE} 
+		AND DOC_TYPE = ${DOC_TYPE}     
+	]]>
+	</method>
+	
+	<method name="et_getMaintain">
+	<![CDATA[			
+		SELECT RULM.SIGN_PATH_NO  
+		    , RULM.SIGN_PATH_NAME  
+		    , RULM.SIGN_REMARK  
+		    , CONVERT_DATE(RULM.ADD_DATE) AS    ADD_DATE
+		    , DECODE(CONVERT_DATE(RULM.CHANGE_DATE),'//','',CONVERT_DATE(RULM.CHANGE_DATE)) AS CHANGE_DATE
+		    , RULM.USER_ID
+		    , GETUSERNAMELOC(RULM.HOUSE_CODE,RULM.USER_ID) AS USER_NAME
+		    , TO_CHAR(COUNT(RULP.SIGN_PATH_NO)) AS SIGN_CNT  
+		   FROM ICOMRULM RULM, ICOMRULP RULP
+		   WHERE RULM.HOUSE_CODE = RULP.HOUSE_CODE (+)
+		     AND RULM.SIGN_PATH_NO = RULP.SIGN_PATH_NO (+)
+		     AND RULM.HOUSE_CODE = ${session.HOUSE_CODE} 				 		
+		     AND RULM.USER_ID = ${session.ID} 				 		
+		     AND RULM.SIGN_PATH_NO = $S{sign_path_no} 				 	
+		     AND RULM.SIGN_PATH_NAME LIKE '%' || $S{sign_path_name} || '%' 
+	   GROUP BY RULM.HOUSE_CODE
+	         , RULM.SIGN_PATH_NO  
+	         , RULM.SIGN_PATH_NAME  
+	         , RULM.SIGN_REMARK  
+	         , RULM.ADD_DATE   
+	         , RULM.CHANGE_DATE
+	         , RULM.USER_ID		 
+		 ORDER BY TO_NUMBER(RULM.SIGN_PATH_NO), USER_ID  		
+	]]>
+	</method>
+	
+	<method name="et_getMaintainSignPath">
+	<![CDATA[	
+		SELECT                                                                                             											 
+		    A.SIGN_PATH_SEQ, B.USER_NAME_LOC, D.DEPT_NAME_LOC AS DEPT_NAME                                 
+           ,( CASE B.USER_TYPE                                                                                      
+              WHEN 'S' THEN GETICOMCODE2(B.HOUSE_CODE,'M106',B.POSITION)                        
+              WHEN 'IBKS' THEN GETICORCODE2(B.HOUSE_CODE, B.COMPANY_CODE, 'C002', B.POSITION)                        
+              ELSE GETICOMCODE1(B.HOUSE_CODE,'C002',B.POSITION)                
+        	END )   AS  POSITION_NAME                                                                                   
+           ,( CASE B.USER_TYPE                                                                                      
+              WHEN 'S' THEN GETICOMCODE2(B.HOUSE_CODE,'M107',B.MANAGER_POSITION)               
+              WHEN 'IBKS' THEN GETICOMCODE2(B.HOUSE_CODE,'M107',B.MANAGER_POSITION)               
+              ELSE GETICOMCODE1(B.HOUSE_CODE,'C001',B.MANAGER_POSITION)        
+        	END)   as  MANAGER_POSITION_NAME
+		    ,A.PROCEEDING_FLAG, A.SIGN_USER_ID, A.SIGN_PATH_NO, B.POSITION, B.MANAGER_POSITION 
+		    ,A.USER_ID
+		    ,GETUSERNAMELOC(A.HOUSE_CODE,A.USER_ID) AS USER_NAME          											 
+		FROM ICOMRULP A                                                                                    											 
+			, ICOMLUSR B                                                                                    											 
+		  LEFT OUTER JOIN ICOMOGDP D                                                                                    											
+		    ON  B.HOUSE_CODE = D.HOUSE_CODE        																								 
+		    AND B.COMPANY_CODE = D.COMPANY_CODE     																								 
+		    AND B.DEPT = D.DEPT   																													 
+		WHERE                                                                                              											 
+		    A.HOUSE_CODE = B.HOUSE_CODE                                  																			 
+		    AND A.SIGN_USER_ID = B.USER_ID                                																			 
+		    AND A.HOUSE_CODE   = ${session.HOUSE_CODE}                                                    											                                                       											 
+		    AND A.SIGN_PATH_NO = ${sign_path_no}                                                      											 
+		ORDER BY TO_NUMBER( A.SIGN_PATH_SEQ)
+	]]>
+	</method>
+	
+	<method name="et_getUserInfo">
+	<![CDATA[
+		 select company_code, user_name_loc, user_id, position,  
+		 		dept, name_loc, phone_no  
+		 	from user_popup_vw  
+		 where house_code = '#house_code#'  
+		 	and user_id != '#user_id#' 
+	]]>
+	<if test="name_loc" operator="gt" value="0">
+		and company_code = '#company_code#'
+	</if>
+	<if test="id" operator="gt" value="0">
+		and user_id = '#id#'	
+	</if>
+	<if test="name_loc" operator="gt" value="0">
+		and user_name_loc = '#name_loc#'
+	</if>
+	<if test="dept" operator="gt" value="0">
+		and dept = '#dept#'
+	</if>
+	</method>
+	
+	<method name="et_setInsert_1">
+	<![CDATA[
+   SELECT                                      														 
+     	NVL( MAX( TO_NUMBER( NVL( NULLIF(SIGN_PATH_NO, ''), 0 ) ) ) + 1, 1) AS SIGN_PATH_NO  	 
+ 	FROM ICOMRULM       												   	 				 
+ 	WHERE HOUSE_CODE = '#house_code#'												  	 
+ 	/* AND  USER_ID = '#user_id#' */
+ 	]]>
+	
+	</method>
+	
+	<method name="et_setInsert_2">
+	<![CDATA[
+		 INSERT INTO ICOMRULM  													
+						 (  																		
+						 	HOUSE_CODE  															
+						 , USER_ID  																
+						 , SIGN_PATH_NO  															
+						 , SIGN_PATH_NAME  														
+						 , SIGN_REMARK  															
+						 , ADD_DATE  																
+						 , ADD_TIME  																
+						 , CHANGE_DATE  															
+						 , CHANGE_TIME  															
+						 ) VALUES (   																
+						   ?										  								
+						 , ?  																		
+						 , '#sign_path_no#'													
+						 , ?  																		
+						 , ?  																		
+						 , ?  																		
+						 , ?  																		
+						 , ?  																		
+						 , ?   																	
+						 )   																			
+	]]>
+	</method>
+	
+	<method name="et_setUpdate">
+	<![CDATA[
+		 UPDATE ICOMRULM SET 		
+		 	SIGN_PATH_NAME  = ? 	
+		 	,SIGN_REMARK  = ? 		
+		 	,CHANGE_DATE  = ? 		
+		 	,CHANGE_TIME  = ? 		
+		 WHERE 					
+		 	HOUSE_CODE = ? 			
+		 	AND USER_ID = ? 		
+		 	AND SIGN_PATH_NO = ? 	
+	]]>
+	</method>
+	
+	<method name="et_setDelete_2">
+	<![CDATA[
+		 DELETE FROM ICOMRULM 		 
+			 WHERE HOUSE_CODE = ? 		 
+			 	AND USER_ID = ? 		 
+			 	AND SIGN_PATH_NO = ? 		
+	]]>
+	</method>
+	
+	<method name="et_setDelete_1">
+	<![CDATA[
+		 DELETE FROM ICOMRULP 		 
+			 WHERE HOUSE_CODE = ? 		 
+			 	AND USER_ID = ? 		 
+			 	AND SIGN_PATH_NO = ? 		
+	]]>
+	</method>
+	
+	<method name="et_setInsertSignPath">
+		 INSERT INTO ICOMRULP  						
+						 (  											
+						 	HOUSE_CODE  								
+						 , USER_ID  									
+						 , SIGN_PATH_NO  								
+						 , SIGN_PATH_SEQ  								
+						 , SIGN_USER_ID  								
+						 , PROCEEDING_FLAG  							
+						 , ADD_DATE  									
+						 , ADD_TIME  									
+						 )    											
+						 SELECT    									
+						   ?  											
+						 , ?  											
+						 , ?  											
+						 , (                                            
+						     SELECT                                     
+						     	NVL(MAX(SIGN_PATH_SEQ), 0) + 1 AS SIGN_PATH_SEQ   
+						 	  	FROM ICOMRULP                             			 
+						 	  	WHERE HOUSE_CODE = ?       							    							 
+						   		AND SIGN_PATH_NO = ?                    		 
+						   )  											
+						 , ?  											
+						 , ?  											
+						 , ?  											
+						 , ?
+						 FROM DUAL  											
+    												
+	</method>
+	
+	<method name="et_setUpdateSignPath">
+	<![CDATA[
+		 UPDATE ICOMRULP SET 		 
+		 	  SIGN_USER_ID  = ? 	 
+		 	, PROCEEDING_FLAG  = ? 	 
+		 WHERE 					 
+		 	HOUSE_CODE = ? 			 
+		 	AND USER_ID = ? 		 
+		 	AND SIGN_PATH_NO = ? 	 
+		 	AND SIGN_PATH_SEQ = ? 	 	
+	]]>
+	</method>
+	
+	<method name="et_setDeleteSignPath_1">
+	<![CDATA[
+		 DELETE FROM ICOMRULP 		 
+			 WHERE HOUSE_CODE = ? 		 
+			 	AND USER_ID = ? 		 
+			 	AND SIGN_PATH_NO = ? 	 
+			 	AND SIGN_PATH_SEQ = ? 	 	
+	]]>
+	</method>
+	
+	<method name="et_setDeleteSignPath_2">
+	<![CDATA[
+		 UPDATE ICOMRULP SET 							 
+		 		SIGN_PATH_SEQ = '#i#'  			 
+		 WHERE  										 
+		 		HOUSE_CODE = '#args0#' 			 
+		 	AND USER_ID = '#args1#'  			 
+		 	AND SIGN_PATH_NO = '#args2#'   		 
+		 	AND SIGN_PATH_SEQ = '#sign_path_seq#' 	 	
+	]]>
+	</method>
+	
+	<method name="getsign_path_seq">
+	<![CDATA[
+		 SELECT  									 
+		 	SIGN_PATH_SEQ 							 
+		 FROM ICOMRULP 								 
+		 WHERE 										 
+		 	HOUSE_CODE = '#house_code#'  			 
+		 	AND USER_ID = '#user_id#' 			 
+		 	AND SIGN_PATH_NO = '#sign_path_no#' 	 
+		 ORDER BY SIGN_PATH_SEQ 					 	
+	]]>
+	</method>
+	
+	<method name="et_getDecision">
+	<![CDATA[
+		 SELECT B.DOC_TYPE, B.DOC_KIND, B.DOC_KIND_NAME AS DOC_KIND_NAME_HD,
+	 			B.DOC_KIND_NAME, B.DEPT,
+				 (CASE
+				     WHEN A.USER_TYPE = 'S'
+				        THEN GETICOMCODE2(B.HOUSE_CODE, 'M105', B.DEPT)
+				     ELSE GETDEPTNAMELOC(B.HOUSE_CODE, B.COMPANY_CODE, B.DEPT)
+				  END
+				 ) AS DEPT_NAME, B.APP_TYPE, B.APP_TYPE_NAME, B.SIGN_PATH_SEQ,
+		 		B.SIGN_USER_ID, A.USER_NAME_LOC AS SIGN_USER_NAME,
+				 GETICOMCODE2(B.HOUSE_CODE,'M106',A.POSITION) AS SIGN_USER_POS,
+				 B.PROCEEDING_FLAG, B.SIGN_REMARK
+			 FROM ICOMLUSR A, ICOMSCAL B
+		 WHERE B.HOUSE_CODE = '#house_code#'
+			 AND A.HOUSE_CODE = B.HOUSE_CODE
+			 AND A.COMPANY_CODE = B.COMPANY_CODE
+			 AND A.USER_ID = B.SIGN_USER_ID							 	 							 	
+	]]>
+	<if test="${doc_type}" operator="ne" value="">
+			AND B.DOC_TYPE = '#doc_type#'
+	</if>
+	<if test="${doc_kind}" operator="ne" value="">
+			AND B.DOC_KIND = '#doc_kind#'
+	</if>
+	<if test="${dept}" operator="ne" value="">
+			AND B.DEPT = '#dept#'	
+	</if>
+	<![CDATA[
+			 AND B.STATUS != 'D'
+	]]>
+	</method>
+	
+	<method name="et_insertDecision">
+	<![CDATA[
+	 INSERT INTO ICOMSCAL (
+					 HOUSE_CODE            
+					 , COMPANY_CODE        
+					 , DOC_TYPE            
+					 , DOC_KIND
+					 , DOC_KIND_NAME       
+					 , DEPT       
+					 , APP_TYPE     
+					 , APP_TYPE_NAME    
+					 , SIGN_PATH_SEQ    
+					 , SIGN_USER_ID     
+					 , PROCEEDING_FLAG 
+					 , STATUS         
+					 , SIGN_REMARK )
+					 values( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ' ', ?) 	
+	]]>
+	</method>
+	<method name ="et_updateDecision">
+	<![CDATA[
+		 UPDATE ICOMSCAL SET 
+			   SIGN_USER_ID  = ? 
+			 , PROCEEDING_FLAG  = ? 
+			 , SIGN_REMARK  = ?
+		 WHERE 
+			 HOUSE_CODE = ? 
+			 AND COMPANY_CODE = ?
+			 AND DOC_TYPE = ? 
+			 AND DOC_KIND = ? 
+			 AND DEPT = ?
+			 AND APP_TYPE = ?
+			 AND SIGN_PATH_SEQ = ? 
+	]]>
+	</method>
+	
+	<method name="et_deleteDecision">
+	<![CDATA[
+		 UPDATE ICOMSCAL SET STATUS  = 'D' 
+		 WHERE
+			 HOUSE_CODE = ? 
+			 AND COMPANY_CODE = ?
+			 AND DOC_TYPE = ?
+			 AND DOC_KIND = ?
+			 AND DEPT = ?
+			 AND APP_TYPE = ?
+			 AND SIGN_PATH_SEQ = ?
+	]]>
+	</method>
+	
+</service>

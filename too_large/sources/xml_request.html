@@ -1,0 +1,156 @@
+<html>
+<head>
+<title>XecureWeb Demo</title>
+<meta http-equiv="Content-Type" content="text/html; charset=euc-kr"><style type="text/css">
+<!--
+.font1 { font-size: 9pt;color:#666666;}
+td {  font-size: 9pt;color:#333333}
+A:link    {font-size:9pt;color:#010824;text-decoration:none; }
+A:active  {font-size:9pt;color:#010824;text-decoration:none; }
+A:visited {font-size:9pt;color:#010824;text-decoration:none; }
+A:hover   {font-size:9pt;color:#0066cc;text-decoration:none; }
+-->
+</style>
+</head><body bgcolor="#FFFFFF" text="#000000" leftmargin="0" topmargin="0" marginwidth="0" marginheight="0">
+
+<form name='xecure'><input type=hidden name='p'></form>
+<script language='javascript' src='/XecureObject/xecureweb.js'></script>
+<script language='javascript'>
+PrintObjectTag();
+</script>
+
+
+<table width="100%" border="0" cellspacing="0" cellpadding="0" height="100%">
+  <tr> 
+    <td colspan="2" valign="top"> 
+      <p>&nbsp;</p>
+      <p>&nbsp;</p>
+      <table width="92%" border="0" cellspacing="0" cellpadding="0" align="center">
+        <tr> 
+          <td rowspan="2" valign="top" width="106"> 
+            <table width="106" border="0" cellspacing="0" cellpadding="0">
+              <tr> 
+                <td width="91"><img src="../img/img_main_web05.gif" width="91" height="110"></td>
+                <td width="14"></td>
+                <td width="1"><img src="../img/dot_gray01.gif" width="1" height="110"></td>
+              </tr>
+              <tr> 
+                <td width="91">&nbsp;</td>
+                <td width="11">&nbsp;</td>
+                <td width="1"><img src="../img/line_gray.gif" width="1" height="129"></td>
+              </tr>
+            </table>
+          </td>
+          <td valign="top" width="*%"> 
+            <table width="100%" border="0" cellspacing="0" cellpadding="0">
+              <tr> 
+                <td width="2%" height="30"></td>
+                <td height="34"><img src="../img/img_main_web04.gif" width="240" height="15"></td>
+              </tr>
+              <tr> 
+                <td colspan="2"><img src="../img/dot_gray01.gif" width="100%" height="1"></td>
+              </tr>
+              <tr> 
+                <td>&nbsp;</td>
+                <td align="right">
+                  <table width="25%" height=20 border="0" cellpadding="0" cellspacing="0">
+                    <tr>
+                      <td width="50%">
+                        <div align="center"><a href="../index.html">TOP 메뉴</a></div>
+                      </td>
+                      <td width="50%">
+                        <div align="center"><a href="index.html">이전메뉴</a></div>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        <tr> 
+          <td valign="top"> 
+            <table width="85%" border="0" cellspacing="0" cellpadding="0">
+              <tr> 
+                <td height="100" width="8%">&nbsp;</td>
+                <td height="120" valign="middle"> 
+                  <p align="center"><font size="3"><font size="6" face="Times New Roman, Times, serif">XML 
+                    문서 암호 데모</font></font></p>
+                </td>
+              </tr>
+              <tr> 
+                <td>&nbsp;</td>
+                <td> 
+                  <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                    <tr> 
+                      <td width="2%" height="24" bgcolor="#DEDBCB">&nbsp;</td>
+                      <td colspan="2" height="24" bgcolor="#DEDBCB"><br><b>데모 XML 
+                        파일을 보기 위해서는 먼저 서버의 XML 파일의 URL을 수정해 주어야 한다.<br>
+                        데모 XML 은 card.xml , card.xsl 로 구성되어 있다.</b><br>&nbsp;</td>
+                    </tr>
+                    <tr> 
+                      <td colspan="3" height="24"> 
+                        <blockquote> </blockquote>
+                      </td>
+                    </tr>
+                    <tr> 
+                      <td width="2%">&nbsp;</td>
+                      <td width="2%" valign="top">&nbsp;</td>
+                      <td> 
+                        <p>&nbsp;</p>
+                      </td>
+                    </tr>
+                    <tr> 
+                      <td width="2%" height="24" bgcolor="#DEDBCB">&nbsp;</td>
+                      <td width="2%" height="24" bgcolor="#DEDBCB"><b>1.</b></td>
+                      <td height="24" bgcolor="#DEDBCB"><b>서버 XML 파일과 XSL 파일에 
+                        http:// 부분을 해당서버로 수정한다.</b></td>
+                    </tr>
+                    <tr> 
+                      <td colspan="3" height="24"> 
+                        <blockquote> </blockquote>
+                      </td>
+                    </tr>
+                    <tr> 
+                      <td width="2%">&nbsp;</td>
+                      <td width="2%" valign="top">&nbsp; </td>
+                      <td> 
+                        <p>&nbsp;</p>
+                      </td>
+                    </tr>
+                    <tr> 
+                      <td height="24" bgcolor="#DEDBCB">&nbsp;</td>
+                      <td height="24" bgcolor="#DEDBCB"><b>2.</b></td>
+                      <td height="24" bgcolor="#DEDBCB"><b>아래 파일 위치에 XML 파일의 패스 
+                        정보를 입력한다. </b></td>
+                    </tr>
+                    <tr> 
+                      <td height="24" colspan="3"> 
+                        <form action='xml_response.jsp' method=post onSubmit='return XecureSubmit(this);'>
+XML 파일위치 <input type=text name='xmlfilepath' size=64><br>
+<input type=submit value='XML 문서 보기'>
+</form>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              <tr> 
+                <td height="40">&nbsp;</td>
+                <td height="40">&nbsp;</td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr> 
+    <td height="24" bgcolor="#345B87"> 
+      <div align="right"><font color="#FFFFFF"><b><font color="#CED2DB"><a href="http://www.softforum.com"><font color="#FFFFFF">www.softforum.com</font></a></font></b></font></div>
+    </td>
+    <td height="24" bgcolor="#345B87" width="3%">&nbsp;</td>
+  </tr>
+</table>
+</body>
+</html>

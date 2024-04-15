@@ -1,0 +1,739 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+<service>
+	<!-- (공급사 세금계산서 발행 대상 목록 조회) -->
+	<method name="bl_getTrList">
+		<![CDATA[
+			SELECT
+			    TXHD.PROGRESS_CODE AS JOB_STATUS,
+			    GETICOMCODE3(TRHD.HOUSE_CODE, 'M401', TXHD.PROGRESS_CODE) AS JOB_STATUS_TXT, 
+			    TRHD.PAY_NO,
+			    TRHD.ADD_DATE AS PAY_DATE,
+			    GETUSERNAMELOC (TRHD.HOUSE_CODE, TRHD.ADD_USER_ID) AS ADD_USER_NAME,
+			    TRHD.VENDOR_CODE,
+			    GETCOMPANYNAMELOC(TRHD.HOUSE_CODE,TRHD.VENDOR_CODE,'S') AS VENDOR_NAME,
+			    COUNT(TRDT.PAY_NO) AS ITEM_COUNT,
+			    SUM(TRDT.ITEM_QTY) AS ITEM_QTY,
+			    TRHD.PAY_AMT,
+			    IVHD.PURCHASE_ID,
+			    GETUSERNAMELOC(IVHD.HOUSE_CODE,IVHD.PURCHASE_ID) AS PURCHASE_NAME,
+			    DECODE(TXHD.BUYER_REJECT_REMARK,'','N','Y') AS REJECT_REASON_FLAG,
+			    TXHD.BUYER_REJECT_REMARK AS REJECT_REASON,
+			    TXHD.TAX_NO,
+			    WBSINF.WBS,
+			    WBSINF.WBS_NAME
+			FROM ICOYTRHD TRHD, ICOYTRDT TRDT, ICOYIVHD IVHD ,ICOYTXHD TXHD,
+				 (SELECT DISTINCT PO.HOUSE_CODE,
+			                  PO.PO_NO,
+			                  PJTH.PJT_SEQ AS WBS,
+			                  PJTH.PJT_CODE AS WBS_CODE, 
+			                  PJTH.PJT_NAME AS WBS_NAME
+			           FROM ICOYPODT PO, ICOYPRHD PR, ICOYPJTH PJTH
+			           WHERE PO.HOUSE_CODE = PR.HOUSE_CODE
+			             AND PO.PR_NO = PR.PR_NO 
+			          	 AND PR.HOUSE_CODE = PJTH.HOUSE_CODE (+)
+			          	 AND PR.WBS = PJTH.PJT_SEQ (+)  
+			      )WBSINF			
+			
+			WHERE TRHD.HOUSE_CODE = TRDT.HOUSE_CODE
+			  AND TRHD.PAY_NO = TRDT.PAY_NO
+			  AND TRDT.HOUSE_CODE = IVHD.HOUSE_CODE
+			  AND TRDT.INV_NO = IVHD.INV_NO
+			  AND TRDT.HOUSE_CODE = TXHD.HOUSE_CODE
+     		  AND TRDT.TAX_NO = TXHD.TAX_NO
+     		  AND TRDT.HOUSE_CODE = WBSINF.HOUSE_CODE
+     		  AND TRDT.PO_NO = WBSINF.PO_NO
+     		  
+			  <OPT=F,S>  AND TRHD.HOUSE_CODE  = ? 			                                      		  </OPT>
+			  <OPT=S,S>  AND TRHD.ADD_DATE 	BETWEEN ? </OPT><OPT=S,S>AND ?                                </OPT>
+			  <OPT=S,S>  AND TRHD.VENDOR_CODE = ?														  </OPT>
+			  <OPT=S,S>  AND TRHD.PAY_NO = ?														  	  </OPT>
+			  /* AND TRHD.JOB_STATUS = 'V'	 */
+			  AND TXHD.PROGRESS_CODE = 'V'			 
+			GROUP BY TRHD.HOUSE_CODE,
+			         TRHD.PAY_NO,
+			         TRHD.ADD_DATE,
+			         TRHD.ADD_USER_ID,
+			         TRHD.VENDOR_CODE,
+			         TRHD.COM_PERSON_FLAG,
+			         TRHD.PAY_AMT,
+			         TXHD.PROGRESS_CODE,
+			         TXHD.BUYER_REJECT_REMARK,
+			         IVHD.HOUSE_CODE,
+			         IVHD.PURCHASE_ID,
+			         TXHD.HOUSE_CODE,
+            		 TXHD.TAX_NO,
+            		 WBSINF.WBS,
+            		 WBSINF.WBS_NAME
+		]]>			
+	</method>
+	
+	<!-- 거래명세서 반려 사유 조회 -->
+	<method name="bl_getTxViewReject_reason">
+		SELECT
+			TXHD.TAX_NO, 
+			TXHD.BUYER_REJECT_REMARK
+		FROM ICOYTXHD TXHD
+		WHERE TXHD.HOUSE_CODE = '#house_code#'
+		  AND TXHD.TAX_NO = '#tax_no#'
+	</method>
+	
+	<!-- 세금계산서 진행상태 변경 -->
+	<method name="et_setProgressCode">
+		UPDATE ICOYTXHD SET CHANGE_DATE = TO_CHAR(SYSDATE,'YYYYMMDD'),
+							CHANGE_TIME = TO_CHAR(SYSDATE,'HH24MISS'),
+							CHANGE_USER_ID = '#user_id#',
+							PROGRESS_CODE = '#progress_code#' 
+						<if test="${progress_code}" operator="eq" value="P">
+							,PAY_DEMAND_DATE = TO_CHAR(SYSDATE,'YYYYMMDD')
+							,PAY_DEMAND_FLAG = 'Y'
+						</if>
+						<if test="${progress_code}" operator="eq" value="O">
+							,SIGN_STATUS = 'T'
+							,PAY_DEMAND_DATE = ''
+							,PAY_END_DATE = ''
+						</if>
+		WHERE HOUSE_CODE = '#house_code#'
+		  AND TAX_NO = '#tax_no#'
+			
+	</method>
+	
+	<method name="et_setProgressCodes">	
+		UPDATE ICOYTXHD SET CHANGE_DATE = TO_CHAR(SYSDATE,'YYYYMMDD'),
+							CHANGE_TIME = TO_CHAR(SYSDATE,'HH24MISS'),
+							CHANGE_USER_ID = ?,  
+							PROGRESS_CODE =  ?	
+						<if test="${progress_code}" operator="eq" value="P">
+							,PAY_DEMAND_DATE = TO_CHAR(SYSDATE,'YYYYMMDD')
+							,PAY_DEMAND_FLAG = 'Y'
+						</if>	  
+				WHERE HOUSE_CODE = ?   
+		  			  AND TAX_NO = ?	  		
+	</method>
+	
+	<!-- 세금계산서 운영사 반려사유 등록  -->
+	<method name="et_setBuyerRejectRemark">
+
+		UPDATE ICOYTXHD SET CHANGE_DATE = TO_CHAR(SYSDATE,'YYYYMMDD'),
+							CHANGE_TIME = TO_CHAR(SYSDATE,'HH24MISS'),
+							CHANGE_USER_ID = ${session.ID},
+				<if test="${buyerRejectRemark}" operator="ne" value="">		
+							BUYER_REJECT_REMARK = ${buyer_reject_Remark}
+				</if>
+		WHERE HOUSE_CODE = ${session.HOUSE_CODE}
+		  AND TAX_NO = ${tax_no}
+
+	</method>
+	
+	<!-- 세금계산서 결재요청 -->
+	<method name="et_setApproval">
+		UPDATE ICOYTXHD SET CHANGE_DATE = TO_CHAR(SYSDATE,'YYYYMMDD'),
+							CHANGE_TIME = TO_CHAR(SYSDATE,'HH24MISS'),
+							CHANGE_USER_ID = '#user_id#',
+							PAY_END_DATE = '#pay_end_date_list#',	
+							SIGN_STATUS = '#sign_status#'
+		WHERE HOUSE_CODE = '#house_code#'
+		  AND TAX_NO = '#tax_no#'		
+	</method>
+	
+	<!-- 세금계산서 결재결과 -->
+	<method name="setSignStatusUpdate_1">
+		<![CDATA[
+			UPDATE ICOYTXHD          
+			   SET SIGN_STATUS    = ?  
+			      ,SIGN_DATE      = ?
+			WHERE HOUSE_CODE 	  = ?         
+			  AND TAX_NO		  = ?         
+		]]>
+	</method>
+	
+	<method name="setSignStatusUpdate_2">
+		<![CDATA[
+			UPDATE ICOYTXHD          
+			   SET PROGRESS_CODE  = ?
+			WHERE HOUSE_CODE 	  = ?         
+			  AND TAX_NO		  = ?         
+		]]>
+	</method>
+	<!-- 세금계산서 결재결과 -->
+	
+	<!--  세금계산서 발행 헤더 조회 -->
+	<method name="bl_getTxHD">
+		/* 세금계산서 헤더 */
+		SELECT DISTINCT 
+		    TXHD.TAX_NO,                                                                /* 세금계산서 번호       */
+		    TO_CHAR(TO_DATE(TXHD.TAX_DATE),'YYYY-MM-DD') AS TAX_DATE ,                  /* 발행일자              */
+		    TXHD.TAX_APP_NO,															/* 승인번호			  */
+		    TXHD.SUP_IRS_NO,                                                            /* 공급자 사업자등록번호 */
+		    TXHD.SUP_COM_CODE,                                                          /* 공급자 회사코드       */
+		    TXHD.SUP_COM_NAME,															/* 공급자 회사명         */
+		    /* GETVENDORNAME(TXHD.HOUSE_CODE,TXHD.SUP_COM_CODE) AS  SUP_COM_NAME,          공급자 회사명         */
+		    TXHD.SUP_CEO_USER_NAME,                                                     /* 공급자 대표자         */
+		    TXHD.SUP_BUSINESS_TYPE,                                                     /* 공급자 업태           */
+		    TXHD.SUP_INDUSTRY_TYPE,                                                     /* 공급자 업종           */
+		    TXHD.SUP_ADDRESS,                                                           /* 공급자 주소           */
+		    '' AS SUP_USER_ID,                                                          /* 공급자 담당자         */                     
+		    TRHD.S_PHONE_NO,                                                            /* 공급자 연락처         */
+		    TRHD.S_EMAIL,                                                               /* 공급자 E-MAIL        */
+		    TXHD.BUYER_IRS_NO,                                                          /* 공급받는자 사업자등록번호 */
+		    TXHD.BUYER_COM_NAME,                                                        /* 공급받는자 회사명     */
+		    TXHD.BUYER_CEO_USER_NAME,                                                   /* 공급받는자 대표자     */
+		    TXHD.BUYER_BUSINESS_TYPE,                                                   /* 공급받는자 업태       */
+		    TXHD.BUYER_INDUSTRY_TYPE,                                                   /* 공급받는자 업종       */
+		    TXHD.BUYER_ADDRESS,                                                         /* 공급받는자 주소       */
+		    '' AS BUYER_USER_ID,                                                        /* 공급받는자 담당자     */
+		    TRHD.B_PHONE_NO,                                                            /* 공급받는자 연락처     */
+		    TRHD.B_EMAIL,                                                               /* 공급받는자 E-MAIL    */
+		    TO_CHAR(TO_DATE(TXHD.ADD_DATE),'YYYY-MM-DD') AS ADD_DATE,                   /* 작성일자              */
+		    TRHD.TAX_DIV,                                                               /* 과세구분              */
+		    GETICOMCODE1(TRHD.HOUSE_CODE,'M400',TRHD.TAX_DIV) AS TAX_DIV_TXT,           /* 과세구분              */ 
+		    '' AS REMARK,														        /* 비고                  */                             
+		    TXHD.SUP_AMT,                                                               /* 공급가액              */
+		    DECODE(TRHD.TAX_DIV,'1',TRUNC(SUM(TRDT.TAX_AMT)),0) AS TAX_AMT,					/* 세액                  */
+		    DECODE(TRHD.TAX_DIV,'1',(TXHD.SUP_AMT + TRUNC(SUM(TRDT.TAX_AMT))),TXHD.SUP_AMT) AS TOT_AMT,	/* 합계금액              */
+		    TXHD.ATTACH_NO,																/* 첨부파일              */
+		    (SELECT USER_NAME_LOC FROM ICOMLUSR WHERE HOUSE_CODE = TXHD.HOUSE_CODE AND USER_ID = TXHD.ADD_USER_ID) AS ADD_USER_NAME    
+		    
+		FROM ICOYTXHD TXHD, ICOYTRHD TRHD, ICOYTRDT TRDT
+		WHERE TXHD.HOUSE_CODE = TRHD.HOUSE_CODE
+		  AND TRHD.HOUSE_CODE = TRDT.HOUSE_CODE
+		  AND TRHD.PAY_NO = TRDT.PAY_NO
+		  AND TXHD.TAX_NO = TRDT.TAX_NO
+		  AND TXHD.HOUSE_CODE = '#house_code#'
+		  AND TXHD.TAX_NO = '#tax_no#'
+		
+		GROUP BY    TXHD.HOUSE_CODE,    
+		            TXHD.TAX_NO,                                                                /* 세금계산서 번호       */
+		            TXHD.TAX_DATE,                                                              /* 발행일자              */
+		            TXHD.SUP_IRS_NO,                                                            /* 공급자 사업자등록번호 */
+		            TXHD.TAX_APP_NO,															/* 승인번호			  */
+		            TXHD.SUP_COM_CODE,                                                          /* 공급자 회사코드       */
+		           	TXHD.SUP_COM_NAME,															/* 공급자 회사명         */
+		            TXHD.SUP_CEO_USER_NAME,                                                     /* 공급자 대표자         */
+		            TXHD.SUP_BUSINESS_TYPE,                                                     /* 공급자 업태           */
+		            TXHD.SUP_INDUSTRY_TYPE,                                                     /* 공급자 업종           */
+		            TXHD.SUP_ADDRESS,                                                           /* 공급자 주소           */
+		            TRHD.S_PHONE_NO,                                                            /* 공급자 연락처         */
+		            TRHD.S_EMAIL,                                                               /* 공급자 E-MAIL        */
+		            TXHD.BUYER_IRS_NO,                                                          /* 공급받는자 사업자등록번호 */
+		            TXHD.BUYER_COM_NAME,                                                        /* 공급받는자 회사명     */
+		            TXHD.BUYER_CEO_USER_NAME,                                                   /* 공급받는자 대표자     */
+		            TXHD.BUYER_BUSINESS_TYPE,                                                   /* 공급받는자 업태       */
+		            TXHD.BUYER_INDUSTRY_TYPE,                                                   /* 공급받는자 업종       */
+		            TXHD.BUYER_ADDRESS,                                                         /* 공급받는자 주소       */
+		            TRHD.B_PHONE_NO,                                                            /* 공급받는자 연락처     */
+		            TRHD.B_EMAIL,                                                               /* 공급받는자 E-MAIL     */
+		            TXHD.ADD_DATE,                                                              /* 작성일자              */
+		            TRHD.HOUSE_CODE,
+		            TRHD.TAX_DIV,                                                               /* 과세구분              */
+		            TXHD.SUP_AMT,                                                               /* 공급가액              */
+		            TXHD.ATTACH_NO,																/* 첨부파일              */
+		            TXHD.ADD_USER_ID
+	</method>
+	<!--  세금계산서 발행 상세 조회 -->
+	<method name="bl_getTxDT">
+			SELECT 
+			      TXDT.BUY_DATE,
+			      TXDT.ITEM_CODE,                                                         
+			      TXDT.ITEM_DESC,                                                          
+			      TXDT.ITEM_SPEC,                                                           
+			      TXDT.ITEM_QTY,
+			      TXDT.UNIT_PRICE,
+			      TXDT.SUP_AMT,
+			     (SELECT DECODE(TAX_DIV,'1',TXDT.VAT_AMT,0) 
+		          FROM ICOYTRHD
+		          WHERE HOUSE_CODE = TRDT.HOUSE_CODE
+		            AND PAY_NO = TRDT.PAY_NO
+		            AND ROWNUM = 1) AS VAT_AMT,
+			      PRDT.ACCOUNT_TYPE,
+			      TXDT.REMARK
+			  FROM ICOYTXDT TXDT, ICOYTRDT TRDT, 
+			       ICOYPODT PODT, ICOYPRDT PRDT
+			  WHERE TXDT.HOUSE_CODE = TRDT.HOUSE_CODE
+			    AND TXDT.TAX_NO = TRDT.TAX_NO
+			    AND TXDT.TAX_SEQ = TRDT.TAX_SEQ
+			    AND TRDT.HOUSE_CODE = PODT.HOUSE_CODE
+			    AND TRDT.PO_NO = PODT.PO_NO
+			    AND TRDT.PO_SEQ = PODT.PO_SEQ
+			    AND PODT.HOUSE_CODE = PRDT.HOUSE_CODE
+			    AND PODT.PR_NO = PRDT.PR_NO
+			    AND PODT.PR_SEQ = PRDT.PR_SEQ
+				AND TXDT.HOUSE_CODE = '#house_code#'
+				AND TXDT.TAX_NO = '#tax_no#'
+			 ORDER BY TXDT.TAX_SEQ
+	</method>
+	
+	<!-- 세금계산서 발행 정보 저장  -->
+	<method name="et_setTxTaxAppNo">
+		UPDATE ICOYTXHD SET CHANGE_DATE = TO_CHAR(SYSDATE,'YYYYMMDD'),
+							CHANGE_TIME = TO_CHAR(SYSDATE,'HH24MISS'),
+							CHANGE_USER_ID = '#user_id#',
+							TAX_APP_NO 	= '#tax_app_no#',
+		                    TAX_DATE 	= '#tax_date#',
+		                    ATTACH_NO 	= '#attach_no#'
+		WHERE HOUSE_CODE = '#house_code#'
+		  AND TAX_NO = '#tax_no#'           
+	
+	</method>
+	
+	<!-- 세금계산서 현황 -->
+	<method name="bl_getTxList2">
+		<![CDATA[
+			SELECT DISTINCT 
+			    TXHD.TAX_NO,                                                                /* 세금계산서 번호       */
+			    TXHD.TAX_APP_NO,                                                            /* 승인번호              */
+			    TXHD.TAX_DATE,                                                              /* 발행일자              */
+			    TXHD.ADD_DATE,                                                              /* 작성일자              */
+			    TRHD.TAX_DIV,                                                               /* 과세구분              */
+			    GETICOMCODE1(TRHD.HOUSE_CODE,'M400',TRHD.TAX_DIV) AS TAX_DIV_TXT,           /* 과세구분              */                                      
+			    TXHD.SUP_AMT,                                                               /* 공급가액              */
+		        DECODE(TRHD.TAX_DIV,1,SUM(TRDT.TAX_AMT),0) AS TAX_AMT,
+		        TXHD.SUP_AMT + DECODE(TRHD.TAX_DIV,1,SUM(TRDT.TAX_AMT),0) AS TOT_AMT,
+			    TRHD.PAY_NO,
+			    TXHD.PROGRESS_CODE,
+			    GETICOMCODE3(TXHD.HOUSE_CODE,'M401',TXHD.PROGRESS_CODE) AS PROGRESS_CODE_TXT,
+			    DECODE(TXHD.BUYER_REJECT_REMARK,'','N','Y') AS REJECT_REASON_FLAG,
+       			TXHD.BUYER_REJECT_REMARK AS REJECT_REASON,
+			    WBSINF.WBS,
+			    WBSINF.WBS_NAME  
+			FROM ICOYTXHD TXHD, ICOYTRHD TRHD, ICOYTRDT TRDT,
+				 (SELECT DISTINCT PO.HOUSE_CODE,
+			                  PO.PO_NO,
+			                  PJTH.PJT_SEQ AS WBS,
+			                  PJTH.PJT_CODE AS WBS_CODE, 
+			                  PJTH.PJT_NAME AS WBS_NAME
+			           FROM ICOYPODT PO, ICOYPRHD PR, ICOYPJTH PJTH
+			           WHERE PO.HOUSE_CODE = PR.HOUSE_CODE
+			             AND PO.PR_NO = PR.PR_NO 
+			          	 AND PR.HOUSE_CODE = PJTH.HOUSE_CODE (+)
+			          	 AND PR.WBS = PJTH.PJT_SEQ (+)  
+			      )WBSINF
+			
+			WHERE TXHD.HOUSE_CODE = TRHD.HOUSE_CODE
+			  AND TRHD.HOUSE_CODE = TRDT.HOUSE_CODE
+			  AND TRHD.PAY_NO = TRDT.PAY_NO
+			  AND TXHD.TAX_NO = TRDT.TAX_NO
+			  AND TRDT.HOUSE_CODE = WBSINF.HOUSE_CODE
+			  AND TRDT.PO_NO = WBSINF.PO_NO
+			  AND TXHD.HOUSE_CODE = '#house_code#'
+			  AND TXHD.COMPANY_CODE = '#company_code#'
+			  AND TXHD.PROGRESS_CODE IN ('D','I','C','R','B','O','E','P')
+			  <OPT=S,S>  AND TXHD.TAX_DATE 	BETWEEN ? </OPT><OPT=S,S>AND ?              </OPT>
+			  <OPT=S,S>  AND TXHD.TAX_APP_NO = ?										</OPT>
+			  <OPT=S,S>  AND TXHD.PROGRESS_CODE = ?										</OPT>
+			  <OPT=S,S>  AND TRHD.TAX_DIV = ?											</OPT>
+			  
+			GROUP BY TXHD.HOUSE_CODE,    
+			         TXHD.TAX_NO,                                                                /* 세금계산서 번호       */
+			         TXHD.TAX_APP_NO,                                                            /* 승인번호              */
+			         TXHD.TAX_DATE,                                                              /* 발행일자              */
+			         TXHD.ADD_DATE,                                                              /* 작성일자              */
+			         TRHD.HOUSE_CODE,
+			         TRHD.TAX_DIV,                                                               /* 과세구분              */
+			         TXHD.SUP_AMT,                                                               /* 공급가액              */
+			         TRHD.PAY_NO,
+			         TXHD.PROGRESS_CODE,
+			         TXHD.BUYER_REJECT_REMARK,
+			         WBSINF.WBS,
+			         WBSINF.WBS_NAME 
+			         
+			ORDER BY TXHD.ADD_DATE DESC, TXHD.TAX_NO DESC      			         
+		]]> 	
+	</method>
+	<!--  세금계산서 현황 -->
+	<method name="bl_getTaxList">
+		SELECT
+			    TRDT.PO_NO,
+			    TRDT.INV_NO,
+		        TRHD.ADD_DATE,
+		        TXHD.TAX_NO,
+		        TRHD.PAY_NO,
+		        TRHD.VENDOR_CODE,
+		        GETCOMPANYNAMELOC(TRHD.HOUSE_CODE,TRHD.VENDOR_CODE,'S') AS VENDOR_NAME,
+		        TXHD.SUP_IRS_NO,
+		        TXHD.TAX_DATE,
+		        CASE 
+		        	WHEN TXHD.TAX_APP_NO IS NULL THEN BILL.NTS_ISSUEID
+		        	ELSE TXHD.TAX_APP_NO
+		        END AS TAX_APP_NO,
+		        CASE 
+		        	WHEN TXHD.TAX_APP_NO IS NULL THEN 'RP'
+		        	ELSE 'P'
+		        END AS TAX_GUBUN,
+		        TRHD.TAX_DIV,                                                    
+		        GETICOMCODE1(TRHD.HOUSE_CODE,'M400',TRHD.TAX_DIV) AS TAX_DIV_TXT, 
+		        TXHD.SUP_AMT,
+				TXHD.VAT_AMT AS TAX_AMT,
+		        TXHD.SUP_AMT + TXHD.VAT_AMT AS TOT_AMT,
+		        TXHD.PAY_DEMAND_DATE,
+		        TXHD.PAY_END_DATE,
+          		CASE 
+          			WHEN TXHD.TAX_APP_NO IS NOT NULL THEN '-1'
+          			ELSE BILL.STATUS
+          		END	AS PROGRESS_CODE,          		
+          		CASE 
+          			WHEN TXHD.TAX_APP_NO IS NOT NULL THEN '승인'
+          			ELSE DECODE(BILL.STATUS_TXT, NULL, '전송대기' ,BILL.STATUS_TXT) 
+          		END	AS PROGRESS_CODE_TXT,	 
+		        --TXHD.PROGRESS_CODE,
+		        --GETICOMCODE1(TXHD.HOUSE_CODE,'M401',TXHD.PROGRESS_CODE) AS PROGRESS_CODE_TXT,
+		        TXHD.SIGN_STATUS,
+		        TXHD.ADD_USER_ID AS PURCHARSE_ID,
+		        GETUSERNAMELOC(TXHD.HOUSE_CODE, TXHD.ADD_USER_ID) AS PURCHARSE_NAME ,
+		        BILL.PUBCODE,
+		        BILL.NTS_ISSUEID,
+          		TXHD.BUYER_COM_NAME,
+          		TXHD.BUYER_IRS_NO
+		    FROM ICOYTXHD TXHD
+		    LEFT OUTER JOIN ICOYTRDT TRDT
+		    ON 	TXHD.HOUSE_CODE = TRDT.HOUSE_CODE 
+		    AND TXHD.TAX_NO = TRDT.TAX_NO 
+		    LEFT OUTER JOIN ICOYTRHD TRHD 
+		     ON TRHD.HOUSE_CODE = TRDT.HOUSE_CODE      
+		     AND TRHD.PAY_NO = TRDT.PAY_NO
+	    	LEFT OUTER JOIN
+	    		( SELECT 	PUBCODE
+					,		RESSEQ
+					,		STATUS
+					,		NTS_ISSUEID
+     				,		CASE 
+     							WHEN LOADSTATUS = '0' THEN '전송대기'
+     							WHEN LOADSTATUS = '1' THEN (CASE
+	        													WHEN STATUS = '30' THEN '미확인'
+	        													WHEN STATUS = '35' THEN '미승인'
+	        													WHEN STATUS = '50' THEN '승인'
+	        													WHEN STATUS = '60' THEN '거부(반려)'
+	        													WHEN STATUS = '65' THEN '수신 취소요청'
+	        													WHEN STATUS = '66' THEN '발신 취소요청'
+	        													WHEN STATUS = '99' THEN '발급취소'     	
+	        												END)
+   	   							ELSE '전송오류 ' || '[' || LOADSTATUS ||  ']' 
+       						END AS STATUS_TXT 		
+					FROM 
+					(
+					SELECT 	SB.RESSEQ
+					,		EH.STATUS
+					,		SB.PUBCODE
+					,		SB.LOADSTATUS
+					,		SB.NTS_ISSUEID
+					FROM 	SALEEBILL SB
+					,		(
+						 		SELECT	ORDER_SEQ
+								,		PUBCODE
+								,		STATUS
+								FROM	(
+										SELECT 	RANK() OVER( PARTITION BY PUBCODE ORDER BY STATUSDATE DESC) AS ORDER_SEQ
+										,		PUBCODE
+										,		STATUSDATE
+										,		STATUS
+										FROM 	EB_HISTORY
+								)WHERE ORDER_SEQ = 1								
+							)EH
+					WHERE	SB.PUBCODE = EH.PUBCODE(+) 
+					)
+			)BILL
+			ON	TXHD.TAX_NO = BILL.RESSEQ		     
+		     
+		     
+			WHERE TXHD.HOUSE_CODE  = ${session.HOUSE_CODE}
+				<![CDATA[  
+					    AND TXHD.COMPANY_CODE = ${vendor_code}		
+						AND (TXHD.TAX_APP_NO LIKE '%' || $S{tax_app_no} || '%' 
+					    OR	BILL.NTS_ISSUEID LIKE '%' || $S{tax_app_no} || '%')							    
+					    AND TXHD.ADD_DATE 	BETWEEN $S{from_date} 
+					 	AND $S{to_date}
+					    AND TXHD.TAX_DATE 	BETWEEN $S{tax_from_date}
+					    AND $S{tax_to_date}          
+					]]>   			  			 
+			ORDER BY TRHD.ADD_DATE DESC, TXHD.TAX_NO DESC
+	
+	</method>
+	<method name="bl_getTaxList_bak">
+		
+			SELECT
+				    TRHD.ADD_DATE,
+				    TXHD.TAX_NO,
+				    TRHD.PAY_NO,
+				    IVHD.INV_NO,
+				    IVHD.IV_NO,
+				    TRHD.VENDOR_CODE,
+				    GETCOMPANYNAMELOC(TRHD.HOUSE_CODE,TRHD.VENDOR_CODE,'S') AS VENDOR_NAME,
+				    TXHD.SUP_IRS_NO,
+				    TXHD.TAX_DATE,
+				    TXHD.TAX_APP_NO,
+				    TRHD.TAX_DIV,                                                    
+	                GETICOMCODE1(TRHD.HOUSE_CODE,'M400',TRHD.TAX_DIV) AS TAX_DIV_TXT, 
+				    TXHD.SUP_AMT,
+			        DECODE(TRHD.TAX_DIV,1,TRUNC(SUM(TRDT.TAX_AMT)),0) AS TAX_AMT,
+			        TXHD.SUP_AMT + DECODE(TRHD.TAX_DIV,1,TRUNC(SUM(TRDT.TAX_AMT)),0) AS TOT_AMT,
+				    TXHD.PAY_DEMAND_DATE,
+				    TXHD.PAY_END_DATE,
+				    TXHD.PROGRESS_CODE,
+	                GETICOMCODE1(TXHD.HOUSE_CODE,'M401',TXHD.PROGRESS_CODE) AS PROGRESS_CODE_TXT,
+	                TRDT.PO_NO,
+	                TXHD.SIGN_STATUS,
+                	TXHD.ADD_USER_ID AS PURCHARSE_ID,
+        			GETUSERNAMELOC(TXHD.HOUSE_CODE, TXHD.ADD_USER_ID) AS PURCHARSE_NAME ,
+        			GETICOMCODE1(TXHD.HOUSE_CODE,'M010',(SELECT PAY_TERMS 
+		                                                 FROM ICOYPOHD
+		                                                 WHERE HOUSE_CODE = TRDT.HOUSE_CODE 
+		                                                   AND PO_NO = TRDT.PO_NO
+		                                                 ) 
+		                         ) AS PAY_TERMS_DESC 			    
+				    
+				FROM ICOYTXHD TXHD
+				LEFT OUTER JOIN  ICOYTRDT TRDT 
+					ON TXHD.HOUSE_CODE = TRDT.HOUSE_CODE 
+					AND TXHD.TAX_NO = TRDT.TAX_NO
+				LEFT OUTER JOIN ICOYTRHD TRHD 
+					ON TRHD.HOUSE_CODE = TRDT.HOUSE_CODE      
+					AND TRHD.PAY_NO = TRDT.PAY_NO
+				LEFT OUTER JOIN ICOYIVHD IVHD 
+					ON TRDT.HOUSE_CODE = IVHD.HOUSE_CODE      
+					AND TRDT.INV_NO = IVHD.INV_NO
+				 WHERE TXHD.HOUSE_CODE  = ${session.HOUSE_CODE}
+<!-- 				<if test="${progress_code}" operator="eq" value="PE"> -->
+<!-- 				   AND TXHD.PROGRESS_CODE IN ('P','E','B') -->
+<!-- 				</if>  -->
+				  
+				<![CDATA[  
+					    AND TXHD.COMPANY_CODE = ${vendor_code}										
+					    AND TXHD.ADD_DATE 	BETWEEN $S{from_date} 
+					 	AND $S{to_date}
+					    AND TXHD.TAX_DATE 	BETWEEN $S{tax_from_date}
+					    AND $S{tax_to_date}          
+					]]>   			  			 
+				GROUP BY TXHD.HOUSE_CODE,
+				         TRHD.HOUSE_CODE,
+				         TRDT.HOUSE_CODE,
+				         IVHD.HOUSE_CODE,
+				         TXHD.TAX_NO,
+				         TRHD.PAY_NO,
+				         IVHD.INV_NO,
+				         IVHD.IV_NO,
+				         TRHD.ADD_DATE,
+				         TRHD.VENDOR_CODE,
+				         TXHD.SUP_IRS_NO,
+				         TXHD.TAX_DATE,
+				         TXHD.TAX_APP_NO,
+				         TXHD.ADD_USER_ID,
+				         TRHD.TAX_DIV,
+				         TXHD.SUP_AMT,
+				         TXHD.PAY_DEMAND_DATE,
+				         TXHD.PAY_END_DATE,
+				         TXHD.PROGRESS_CODE,
+				         TRDT.PO_NO,
+				         TXHD.SIGN_STATUS
+			ORDER BY TRHD.ADD_DATE DESC, TXHD.TAX_NO DESC
+	
+	</method>
+	<!-- 세금계산서 승인 -->
+	<method name="setTxApp">
+		UPDATE ICOYTXHD SET CHANGE_DATE = TO_CHAR(SYSDATE,'YYYYMMDD'),
+							CHANGE_TIME = TO_CHAR(SYSDATE,'HH24MISS'),
+							CHANGE_USER_ID = ${session.ID},
+							PROGRESS_CODE = ${approval_str},
+							SIGN_STATUS = ${sign_status}
+		WHERE HOUSE_CODE = ${session.HOUSE_CODE}
+		  AND TAX_NO = ${tax_no}
+			
+	</method>
+<!-- 	세금계산서 반려 TRDT TX넘버 수정 -->
+	<method name="setTrRetrun">
+		UPDATE ICOYTRDT SET TAX_NO = '', 
+                 			TAX_SEQ = ''
+		WHERE HOUSE_CODE = ${session.HOUSE_CODE}
+		  AND TAX_NO = ${tax_no}
+	</method>
+	
+	<!-- 구매요청상태 변경 -->
+	<method name="setPr_progress_flag_1">
+		    SELECT COUNT(TRHD.PAY_NO) AS TR_CNT
+			        FROM  ICOYTRDT TRDT1, ICOYTRDT TRDT2, ICOYTRHD TRHD 
+			        WHERE TRDT1.HOUSE_CODE = TRDT2.HOUSE_CODE
+			          AND TRDT1.PO_NO = TRDT2.PO_NO
+			          AND TRDT1.HOUSE_CODE = TRHD.HOUSE_CODE
+			          AND TRDT1.PAY_NO = TRHD.PAY_NO
+			          AND TRDT2.HOUSE_CODE = '#house_code#'
+			          AND TRDT2.TAX_NO = '#doc_no#'
+			          AND TRHD.STATUS <![CDATA[ <> ]]> 'D' 
+			          AND TRHD.JOB_STATUS = 'V'
+	
+	</method>
+	
+	<method name="setPr_progress_flag_2">	
+			SELECT COUNT(TXHD.TAX_NO) AS TX_CNT
+			        FROM  ICOYTRDT TRDT1, ICOYTRDT TRDT2, ICOYTXHD TXHD
+			        WHERE TRDT1.HOUSE_CODE = TRDT2.HOUSE_CODE
+			          AND TRDT1.PO_NO = TRDT2.PO_NO
+			          AND TRDT1.HOUSE_CODE = TXHD.HOUSE_CODE
+			          AND TRDT1.TAX_NO = TXHD.TAX_NO
+			          AND TRDT2.HOUSE_CODE = '#house_code#'
+			          AND TRDT2.TAX_NO = '#doc_no#'
+			          AND TXHD.SIGN_STATUS = 'E'
+			          AND TXHD.PROGRESS_CODE = 'C'
+			          AND TXHD.STATUS  <![CDATA[ <> ]]> 'D'	   
+	</method>
+	
+	<method name="setPr_progress_flag_3">
+			UPDATE ICOYPRDT SET PR_PROCEEDING_FLAG = '#pr_progress_flag#'
+			                    ,CHANGE_DATE = TO_CHAR(SYSDATE,'YYYYMMDD')
+			                    ,CHANGE_TIME = TO_CHAR(SYSDATE,'HH24MISS')
+			                    ,CHANGE_USER_ID = '#user_id#'
+			WHERE PR_NO = (SELECT DISTINCT PRDT.PR_NO
+		                   FROM ICOYTRDT TRDT, ICOYIVDT IVDT, ICOYPODT PODT, ICOYPRDT PRDT
+		                   WHERE TRDT.HOUSE_CODE = TRDT.HOUSE_CODE
+		                     AND TRDT.INV_NO = IVDT.INV_NO
+		                     AND TRDT.INV_SEQ = IVDT.INV_SEQ
+		                     AND IVDT.HOUSE_CODE = PODT.HOUSE_CODE
+		                     AND IVDT.PO_NO = PODT.PO_NO
+		                     AND IVDT.PO_SEQ = PODT.PO_SEQ
+		                     AND PODT.HOUSE_CODE = PRDT.HOUSE_CODE
+		                     AND PODT.PR_NO = PRDT.PR_NO
+		                     AND PODT.PR_SEQ = PRDT.PR_SEQ
+		                     AND TRDT.HOUSE_CODE = '#house_code#'
+		                     AND TRDT.TAX_NO = '#doc_no#' ) 
+			AND PR_PROCEEDING_FLAG = '#prev_pr_progress_flag#'		
+		
+	</method>
+	
+	<!--  인터페이스 불러오기  -->
+	<method name="getERPTaxList">
+			SELECT 
+			    TXHD.TAX_DATE AS RD_DATE
+			    ,(SELECT IRS_NO
+			      FROM ICOMVNGL
+			      WHERE HOUSE_CODE = IVHD.HOUSE_CODE
+			        AND VENDOR_CODE = IVHD.VENDOR_CODE
+			        AND ROWNUM = 1
+			      ) AS VENDOR_CODE
+			    ,IVDT.INV_NO
+			    ,IVDT.INV_SEQ
+			    ,TXDT.TAX_NO
+			    ,TXDT.TAX_SEQ
+			    ,PJTH.ERP_ID
+			    ,TXDT.ITEM_CODE
+			    ,'2' AS UNIT_MEASURE
+			    ,TXDT.ITEM_QTY
+			    ,TXDT.UNIT_PRICE
+			    ,(SELECT TAX_DIV FROM ICOYTRHD 
+			      WHERE HOUSE_CODE = TRDT.HOUSE_CODE
+			        AND PAY_NO = TRDT.PAY_NO 
+			        AND ROWNUM = 1 
+			     )AS TAX_DIV
+			    ,TXHD.ADD_USER_ID
+			    ,GETUSERNAMELOC(IVDT.HOUSE_CODE,TXHD.ADD_USER_ID) AS USER_NAME_LOC
+			    ,DECODE(IVDT.STATUS,'C','A','R','A','D') AS STATUS
+			    ,TXHD.TAX_DATE
+			    ,TXHD.PAY_END_DATE
+			    ,(SELECT COUNT(*) FROM ICOYTXDT 
+			      WHERE HOUSE_CODE = TXHD.HOUSE_CODE
+			        AND TAX_NO = TXHD.TAX_NO) AS COUNT
+			    ,PRDT.ASSET_TYPE
+			    , DECODE(MTGL.KTGRM,'01',
+    		         DECODE(SUBSTR(PJTH.PJT_CODE,0, 2),'SI'
+    		                       ,'상품(' || SUBSTR(SUBSTR(PJTH.PJT_CODE,0, 9),0, 5) ||')'
+    		                       ,SUBSTR(PJTH.PJT_CODE,0, 9)
+    		                )
+    		        , SUBSTR(PJTH.PJT_CODE,0, 9)
+    		   ) AS ASSETSEQ
+    		   ,TXDT.SUP_AMT AS AMT
+    		   ,(SELECT DECODE(TAX_DIV,'1',TXDT.VAT_AMT,0) 
+                 FROM ICOYTRHD
+                 WHERE HOUSE_CODE = TRDT.HOUSE_CODE
+                   AND PAY_NO = TRDT.PAY_NO
+                   AND ROWNUM = 1) AS VATAMT
+			FROM ICOYTXHD TXHD, ICOYTRDT TRDT,  ICOYTXDT TXDT,
+			     ICOYIVDT IVDT, ICOYIVHD IVHD , 
+			     ICOYPODT PODT, ICOYPRDT PRDT ,
+			     ICOYPRHD PRHD, ICOYPJTH PJTH ,
+			     ICOMVNGL VNGL, ICOMMTGL MTGL 
+			WHERE TXHD.HOUSE_CODE = TRDT.HOUSE_CODE
+			  AND TXHD.TAX_NO = TRDT.TAX_NO
+			  AND TRDT.TAX_NO = TXDT.TAX_NO
+			  AND TRDT.TAX_SEQ = TXDT.TAX_SEQ
+			  AND TRDT.HOUSE_CODE = IVDT.HOUSE_CODE
+			  AND TRDT.INV_NO = IVDT.INV_NO
+			  AND TRDT.INV_SEQ = IVDT.INV_SEQ     
+			  AND IVDT.HOUSE_CODE = IVHD.HOUSE_CODE
+			  AND IVDT.INV_NO = IVHD.INV_NO
+			  AND IVDT.HOUSE_CODE  = PODT.HOUSE_CODE
+			  AND IVDT.PO_NO = PODT.PO_NO
+			  AND IVDT.PO_SEQ = PODT.PO_SEQ
+			  AND PODT.HOUSE_CODE = PRDT.HOUSE_CODE
+			  AND PODT.PR_NO = PRDT.PR_NO
+			  AND PODT.PR_SEQ = PRDT.PR_SEQ
+			  AND PRDT.HOUSE_CODE = PRHD.HOUSE_CODE
+			  AND PRDT.PR_NO = PRHD.PR_NO
+			  AND PRHD.HOUSE_CODE = PJTH.HOUSE_CODE
+			  AND PRHD.WBS = PJTH.PJT_SEQ  
+			  AND IVHD.HOUSE_CODE = VNGL.HOUSE_CODE (+)
+			  AND IVHD.VENDOR_CODE = VNGL.VENDOR_CODE (+) 
+			  AND PODT.HOUSE_CODE = MTGL.HOUSE_CODE
+		      AND PODT.ITEM_NO = MTGL.ITEM_NO 
+			  AND TXHD.HOUSE_CODE = '#house_code#'
+			  AND TXHD.TAX_NO = '#tax_no#'
+			ORDER BY TAX_NO, TAX_SEQ
+	</method>
+	
+	<method name="et_setGroupApproval">
+		UPDATE ICOYTXHD SET GROUP_TAX_NO = '#tax_no#'
+		                   ,CHANGE_DATE = TO_CHAR(SYSDATE,'YYYYMMDD')
+			               ,CHANGE_TIME = TO_CHAR(SYSDATE,'HH24MISS')
+			               ,CHANGE_USER_ID = '#user_id#'
+				WHERE HOUSE_CODE = '#house_code#'
+				  AND TAX_NO IN (#tax_no_str#)
+	</method>
+	
+	<method name="bl_getSignTaxList">
+			SELECT
+				    TXHD.TAX_NO,
+				    WBSINF.WBS_NAME,
+				    TRHD.VENDOR_CODE,
+				    GETCOMPANYNAMELOC(TRHD.HOUSE_CODE,TRHD.VENDOR_CODE,'S') AS VENDOR_NAME,
+				    TXHD.SUP_IRS_NO,
+				    TRHD.TAX_DIV,                                                    
+	                GETICOMCODE1(TRHD.HOUSE_CODE,'M400',TRHD.TAX_DIV) AS TAX_DIV_TXT, 
+	                        			GETICOMCODE1(TXHD.HOUSE_CODE,'M010',(SELECT PAY_TERMS 
+		                                                 FROM ICOYPOHD
+		                                                 WHERE HOUSE_CODE = TRDT.HOUSE_CODE 
+		                                                   AND PO_NO = TRDT.PO_NO
+		                                                 ) 
+		                         ) AS PAY_TERMS_DESC, 
+				    TXHD.SUP_AMT,
+				    TXHD.PAY_END_DATE,
+				    SUM(TRDT.TAX_AMT) AS TAX_AMT,
+				    TXHD.SUP_AMT + SUM(TRDT.TAX_AMT) AS TOT_AMT		    
+				    
+				FROM ICOYTRHD TRHD, ICOYTRDT TRDT, ICOYIVHD IVHD ,ICOYTXHD TXHD,
+				       (SELECT DISTINCT PO.HOUSE_CODE,
+			                  PO.PO_NO,
+			                  PJTH.PJT_SEQ AS WBS,
+			                  PJTH.PJT_CODE AS WBS_CODE, 
+			                  PJTH.PJT_NAME AS WBS_NAME
+			           FROM ICOYPODT PO, ICOYPRHD PR, ICOYPJTH PJTH
+			           WHERE PO.HOUSE_CODE = PR.HOUSE_CODE
+			             AND PO.PR_NO = PR.PR_NO 
+			          	 AND PR.HOUSE_CODE = PJTH.HOUSE_CODE (+)
+			          	 AND PR.WBS = PJTH.PJT_SEQ (+)  
+			          ) WBSINF
+
+				WHERE TRHD.HOUSE_CODE = TRDT.HOUSE_CODE
+				  AND TRHD.PAY_NO = TRDT.PAY_NO
+				  AND TRDT.HOUSE_CODE = IVHD.HOUSE_CODE
+				  AND TRDT.INV_NO = IVHD.INV_NO
+				  AND TRDT.HOUSE_CODE = TXHD.HOUSE_CODE
+	     		  AND TRDT.TAX_NO = TXHD.TAX_NO
+	     		  AND TRDT.HOUSE_CODE = WBSINF.HOUSE_CODE
+	     		  AND TRDT.PO_NO = WBSINF.PO_NO
+				  AND TRHD.HOUSE_CODE  = '#house_code#'
+				  AND TXHD.GROUP_TAX_NO = '#group_tax_no#'
+				  
+		       GROUP BY TXHD.TAX_NO,  WBSINF.WBS_NAME, TRHD.HOUSE_CODE, TRHD.VENDOR_CODE, 
+		                TXHD.SUP_IRS_NO, TRHD.TAX_DIV, TXHD.SUP_AMT, TXHD.HOUSE_CODE, 
+		                TRDT.HOUSE_CODE, TRDT.PO_NO, TXHD.PAY_END_DATE
+		                
+		    ORDER BY TAX_NO            
+		    		                
+	</method>
+</service>
+

@@ -1,0 +1,6 @@
+framework module Pods_JRPodPrivate_Example {
+  umbrella header "Pods-JRPodPrivate_Example-umbrella.h"
+
+  export *
+  module * { export * }
+}

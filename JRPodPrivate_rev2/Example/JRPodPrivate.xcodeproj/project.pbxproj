@@ -1,0 +1,936 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		2072763CFBBDB5228F9AB102 /* Pods_JRPodPrivate_Example.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9CD2A11CE01173D33F7DE43E /* Pods_JRPodPrivate_Example.framework */; };
+		56453F58260990660010C407 /* JRColorPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 56453F5626098FF20010C407 /* JRColorPanel.xib */; };
+		564541D92611C0B20010C407 /* JRPhotoEditeViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 564541D82611C0B20010C407 /* JRPhotoEditeViewController.m */; };
+		5662BC1B251C801500422EDB /* JRNoDataViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 5662BC18251C801500422EDB /* JRNoDataViewController.m */; };
+		5662BC1C251C801500422EDB /* JRSideBarViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 5662BC19251C801500422EDB /* JRSideBarViewController.m */; };
+		56657E192600568C004155BC /* JRTextColorPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 56657E1626005648004155BC /* JRTextColorPanel.xib */; };
+		56657F822600932F004155BC /* JRMosicaToolBar.xib in Resources */ = {isa = PBXBuildFile; fileRef = 56657F8126009328004155BC /* JRMosicaToolBar.xib */; };
+		566580ED2600BBCF004155BC /* JRNavigationBarView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 566580EC2600BBC9004155BC /* JRNavigationBarView.xib */; };
+		566BFBB0251E0B7D005784BD /* JRNoticeRemindViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 566BFBAF251E0B7D005784BD /* JRNoticeRemindViewController.m */; };
+		566EFDDF264B71A400C3E38C /* JRCurrencyView.m in Sources */ = {isa = PBXBuildFile; fileRef = 566EFDDE264B71A400C3E38C /* JRCurrencyView.m */; };
+		566EFDE3264B71C500C3E38C /* JRCurrencyView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 566EFDE2264B71C500C3E38C /* JRCurrencyView.xib */; };
+		568F301D25EF84B100D0EE16 /* p1.jpeg in Resources */ = {isa = PBXBuildFile; fileRef = 568F301925EF84B100D0EE16 /* p1.jpeg */; };
+		568F301E25EF84B100D0EE16 /* p3.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 568F301A25EF84B100D0EE16 /* p3.jpg */; };
+		568F301F25EF84B100D0EE16 /* testVideo.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 568F301B25EF84B100D0EE16 /* testVideo.mp4 */; };
+		568F302025EF84B100D0EE16 /* p2.jpeg in Resources */ = {isa = PBXBuildFile; fileRef = 568F301C25EF84B100D0EE16 /* p2.jpeg */; };
+		568F303B25EF850A00D0EE16 /* JRImageModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 568F302725EF850A00D0EE16 /* JRImageModel.m */; };
+		568F303C25EF850A00D0EE16 /* JRNormalCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 568F302A25EF850A00D0EE16 /* JRNormalCell.m */; };
+		568F303D25EF850A00D0EE16 /* JRUPLoadFaileCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 568F302B25EF850A00D0EE16 /* JRUPLoadFaileCell.m */; };
+		568F303E25EF850A00D0EE16 /* JRUploadNormalCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 568F302C25EF850A00D0EE16 /* JRUploadNormalCell.m */; };
+		568F303F25EF850A00D0EE16 /* JRUploadNormalCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 568F302E25EF850A00D0EE16 /* JRUploadNormalCell.xib */; };
+		568F304025EF850A00D0EE16 /* JRForbiddenCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 568F303025EF850A00D0EE16 /* JRForbiddenCell.xib */; };
+		568F304125EF850A00D0EE16 /* JRForbiddenCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 568F303225EF850A00D0EE16 /* JRForbiddenCell.m */; };
+		568F304225EF850A00D0EE16 /* JRUPLoadFaileCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 568F303325EF850A00D0EE16 /* JRUPLoadFaileCell.xib */; };
+		568F304325EF850A00D0EE16 /* JRNormalCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 568F303425EF850A00D0EE16 /* JRNormalCell.xib */; };
+		568F304425EF850A00D0EE16 /* JRUploadPreviewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 568F303725EF850A00D0EE16 /* JRUploadPreviewController.m */; };
+		568F304525EF850A00D0EE16 /* JRUPloadFileImageViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 568F303825EF850A00D0EE16 /* JRUPloadFileImageViewController.m */; };
+		56B400F2253146EA004C97F4 /* JRCalerdatListViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 56B400F1253146EA004C97F4 /* JRCalerdatListViewController.m */; };
+		6003F58E195388D20070C39A /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6003F58D195388D20070C39A /* Foundation.framework */; };
+		6003F590195388D20070C39A /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6003F58F195388D20070C39A /* CoreGraphics.framework */; };
+		6003F592195388D20070C39A /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6003F591195388D20070C39A /* UIKit.framework */; };
+		6003F598195388D20070C39A /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 6003F596195388D20070C39A /* InfoPlist.strings */; };
+		6003F59A195388D20070C39A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 6003F599195388D20070C39A /* main.m */; };
+		6003F59E195388D20070C39A /* JRAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 6003F59D195388D20070C39A /* JRAppDelegate.m */; };
+		6003F5A7195388D20070C39A /* JRViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 6003F5A6195388D20070C39A /* JRViewController.m */; };
+		6003F5A9195388D20070C39A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6003F5A8195388D20070C39A /* Images.xcassets */; };
+		6003F5B0195388D20070C39A /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6003F5AF195388D20070C39A /* XCTest.framework */; };
+		6003F5B1195388D20070C39A /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6003F58D195388D20070C39A /* Foundation.framework */; };
+		6003F5B2195388D20070C39A /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6003F591195388D20070C39A /* UIKit.framework */; };
+		6003F5BA195388D20070C39A /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 6003F5B8195388D20070C39A /* InfoPlist.strings */; };
+		6003F5BC195388D20070C39A /* Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 6003F5BB195388D20070C39A /* Tests.m */; };
+		665F0AE226203AB0007B1DB5 /* JRRefreshTableViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 665F0AE126203AB0007B1DB5 /* JRRefreshTableViewController.m */; };
+		665F0C15262157FB007B1DB5 /* JRLoadingTableViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 665F0C14262157FB007B1DB5 /* JRLoadingTableViewController.m */; };
+		71719F9F1E33DC2100824A3D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 71719F9D1E33DC2100824A3D /* LaunchScreen.storyboard */; };
+		C45F27F3256F97190011443D /* JRCamreaTableViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C45F27F2256F97190011443D /* JRCamreaTableViewController.m */; };
+		C47000FD2519A0BD000A8BF7 /* JRTagsViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C47000FC2519A0BD000A8BF7 /* JRTagsViewController.m */; };
+		C475156D2515D98100A95002 /* JRCellViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C475156C2515D98100A95002 /* JRCellViewController.m */; };
+		C478AC232514A1E90004DF7C /* JRButtonViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C478AC222514A1E90004DF7C /* JRButtonViewController.m */; };
+		C4A9E991251B36EC00543FE9 /* JRPopUpsViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C4A9E990251B36EC00543FE9 /* JRPopUpsViewController.m */; };
+		C4B8C8852518A8D800995A58 /* JRSearchViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C4B8C8842518A8D800995A58 /* JRSearchViewController.m */; };
+		C4CDCB342519E2A900403A08 /* JROtherViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C4CDCB332519E2A900403A08 /* JROtherViewController.m */; };
+		F3A2146F7C43885782075602 /* Pods_JRPodPrivate_Tests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0FC5705EE3595664795BCD9C /* Pods_JRPodPrivate_Tests.framework */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		6003F5B3195388D20070C39A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6003F582195388D10070C39A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 6003F589195388D20070C39A;
+			remoteInfo = JRPodPrivate;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		0FC5705EE3595664795BCD9C /* Pods_JRPodPrivate_Tests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_JRPodPrivate_Tests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		56453F5626098FF20010C407 /* JRColorPanel.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = JRColorPanel.xib; path = ../JRPodPrivate/Classes/JRUIComponents/JRPhotoEdit/Modules/Draw/Views/JRColorPanel.xib; sourceTree = "<group>"; };
+		564541D72611C0B20010C407 /* JRPhotoEditeViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = JRPhotoEditeViewController.h; sourceTree = "<group>"; };
+		564541D82611C0B20010C407 /* JRPhotoEditeViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = JRPhotoEditeViewController.m; sourceTree = "<group>"; };
+		5662BC17251C801500422EDB /* JRNoDataViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JRNoDataViewController.h; sourceTree = "<group>"; };
+		5662BC18251C801500422EDB /* JRNoDataViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JRNoDataViewController.m; sourceTree = "<group>"; };
+		5662BC19251C801500422EDB /* JRSideBarViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JRSideBarViewController.m; sourceTree = "<group>"; };
+		5662BC1A251C801500422EDB /* JRSideBarViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JRSideBarViewController.h; sourceTree = "<group>"; };
+		56657E1626005648004155BC /* JRTextColorPanel.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = JRTextColorPanel.xib; sourceTree = "<group>"; };
+		56657F8126009328004155BC /* JRMosicaToolBar.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = JRMosicaToolBar.xib; sourceTree = "<group>"; };
+		566580EC2600BBC9004155BC /* JRNavigationBarView.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = JRNavigationBarView.xib; sourceTree = "<group>"; };
+		566BFBAE251E0B7D005784BD /* JRNoticeRemindViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = JRNoticeRemindViewController.h; sourceTree = "<group>"; };
+		566BFBAF251E0B7D005784BD /* JRNoticeRemindViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = JRNoticeRemindViewController.m; sourceTree = "<group>"; };
+		566EFDDD264B71A400C3E38C /* JRCurrencyView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = JRCurrencyView.h; sourceTree = "<group>"; };
+		566EFDDE264B71A400C3E38C /* JRCurrencyView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = JRCurrencyView.m; sourceTree = "<group>"; };
+		566EFDE2264B71C500C3E38C /* JRCurrencyView.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = JRCurrencyView.xib; sourceTree = "<group>"; };
+		568F301925EF84B100D0EE16 /* p1.jpeg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = p1.jpeg; sourceTree = "<group>"; };
+		568F301A25EF84B100D0EE16 /* p3.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = p3.jpg; sourceTree = "<group>"; };
+		568F301B25EF84B100D0EE16 /* testVideo.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; path = testVideo.mp4; sourceTree = "<group>"; };
+		568F301C25EF84B100D0EE16 /* p2.jpeg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = p2.jpeg; sourceTree = "<group>"; };
+		568F302725EF850A00D0EE16 /* JRImageModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JRImageModel.m; sourceTree = "<group>"; };
+		568F302825EF850A00D0EE16 /* JRImageModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JRImageModel.h; sourceTree = "<group>"; };
+		568F302A25EF850A00D0EE16 /* JRNormalCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JRNormalCell.m; sourceTree = "<group>"; };
+		568F302B25EF850A00D0EE16 /* JRUPLoadFaileCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JRUPLoadFaileCell.m; sourceTree = "<group>"; };
+		568F302C25EF850A00D0EE16 /* JRUploadNormalCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JRUploadNormalCell.m; sourceTree = "<group>"; };
+		568F302D25EF850A00D0EE16 /* JRForbiddenCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JRForbiddenCell.h; sourceTree = "<group>"; };
+		568F302E25EF850A00D0EE16 /* JRUploadNormalCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = JRUploadNormalCell.xib; sourceTree = "<group>"; };
+		568F302F25EF850A00D0EE16 /* JRNormalCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JRNormalCell.h; sourceTree = "<group>"; };
+		568F303025EF850A00D0EE16 /* JRForbiddenCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = JRForbiddenCell.xib; sourceTree = "<group>"; };
+		568F303125EF850A00D0EE16 /* JRUPLoadFaileCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JRUPLoadFaileCell.h; sourceTree = "<group>"; };
+		568F303225EF850A00D0EE16 /* JRForbiddenCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JRForbiddenCell.m; sourceTree = "<group>"; };
+		568F303325EF850A00D0EE16 /* JRUPLoadFaileCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = JRUPLoadFaileCell.xib; sourceTree = "<group>"; };
+		568F303425EF850A00D0EE16 /* JRNormalCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = JRNormalCell.xib; sourceTree = "<group>"; };
+		568F303525EF850A00D0EE16 /* JRUploadNormalCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JRUploadNormalCell.h; sourceTree = "<group>"; };
+		568F303725EF850A00D0EE16 /* JRUploadPreviewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JRUploadPreviewController.m; sourceTree = "<group>"; };
+		568F303825EF850A00D0EE16 /* JRUPloadFileImageViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JRUPloadFileImageViewController.m; sourceTree = "<group>"; };
+		568F303925EF850A00D0EE16 /* JRUploadPreviewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JRUploadPreviewController.h; sourceTree = "<group>"; };
+		568F303A25EF850A00D0EE16 /* JRUPloadFileImageViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JRUPloadFileImageViewController.h; sourceTree = "<group>"; };
+		56B400F0253146EA004C97F4 /* JRCalerdatListViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = JRCalerdatListViewController.h; sourceTree = "<group>"; };
+		56B400F1253146EA004C97F4 /* JRCalerdatListViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = JRCalerdatListViewController.m; sourceTree = "<group>"; };
+		6003F58A195388D20070C39A /* JRPodPrivate_Example.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = JRPodPrivate_Example.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		6003F58D195388D20070C39A /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		6003F58F195388D20070C39A /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
+		6003F591195388D20070C39A /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
+		6003F595195388D20070C39A /* JRPodPrivate-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "JRPodPrivate-Info.plist"; sourceTree = "<group>"; };
+		6003F597195388D20070C39A /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		6003F599195388D20070C39A /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		6003F59B195388D20070C39A /* JRPodPrivate-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "JRPodPrivate-Prefix.pch"; sourceTree = "<group>"; };
+		6003F59C195388D20070C39A /* JRAppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = JRAppDelegate.h; sourceTree = "<group>"; };
+		6003F59D195388D20070C39A /* JRAppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = JRAppDelegate.m; sourceTree = "<group>"; };
+		6003F5A5195388D20070C39A /* JRViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = JRViewController.h; sourceTree = "<group>"; };
+		6003F5A6195388D20070C39A /* JRViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = JRViewController.m; sourceTree = "<group>"; };
+		6003F5A8195388D20070C39A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
+		6003F5AE195388D20070C39A /* JRPodPrivate_Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = JRPodPrivate_Tests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		6003F5AF195388D20070C39A /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
+		6003F5B7195388D20070C39A /* Tests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Tests-Info.plist"; sourceTree = "<group>"; };
+		6003F5B9195388D20070C39A /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		6003F5BB195388D20070C39A /* Tests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Tests.m; sourceTree = "<group>"; };
+		606FC2411953D9B200FFA9A0 /* Tests-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Tests-Prefix.pch"; sourceTree = "<group>"; };
+		665F0AE026203AB0007B1DB5 /* JRRefreshTableViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = JRRefreshTableViewController.h; sourceTree = "<group>"; };
+		665F0AE126203AB0007B1DB5 /* JRRefreshTableViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = JRRefreshTableViewController.m; sourceTree = "<group>"; };
+		665F0C13262157FB007B1DB5 /* JRLoadingTableViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = JRLoadingTableViewController.h; sourceTree = "<group>"; };
+		665F0C14262157FB007B1DB5 /* JRLoadingTableViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = JRLoadingTableViewController.m; sourceTree = "<group>"; };
+		71719F9E1E33DC2100824A3D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		7BF73AA96784FCB50ADFE096 /* README.md */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = ../README.md; sourceTree = "<group>"; };
+		8DBE3787980CAB6AF9AAC4DD /* JRPodPrivate.podspec */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; name = JRPodPrivate.podspec; path = ../JRPodPrivate.podspec; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
+		9960BE14339B0986DE3D0323 /* Pods-JRPodPrivate_Tests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-JRPodPrivate_Tests.release.xcconfig"; path = "Target Support Files/Pods-JRPodPrivate_Tests/Pods-JRPodPrivate_Tests.release.xcconfig"; sourceTree = "<group>"; };
+		9CD2A11CE01173D33F7DE43E /* Pods_JRPodPrivate_Example.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_JRPodPrivate_Example.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		C45F27F1256F97190011443D /* JRCamreaTableViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = JRCamreaTableViewController.h; sourceTree = "<group>"; };
+		C45F27F2256F97190011443D /* JRCamreaTableViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = JRCamreaTableViewController.m; sourceTree = "<group>"; };
+		C47000FB2519A0BD000A8BF7 /* JRTagsViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = JRTagsViewController.h; sourceTree = "<group>"; };
+		C47000FC2519A0BD000A8BF7 /* JRTagsViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = JRTagsViewController.m; sourceTree = "<group>"; };
+		C475156B2515D98100A95002 /* JRCellViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = JRCellViewController.h; sourceTree = "<group>"; };
+		C475156C2515D98100A95002 /* JRCellViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = JRCellViewController.m; sourceTree = "<group>"; };
+		C478AC212514A1E90004DF7C /* JRButtonViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = JRButtonViewController.h; sourceTree = "<group>"; };
+		C478AC222514A1E90004DF7C /* JRButtonViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = JRButtonViewController.m; sourceTree = "<group>"; };
+		C4A9E98F251B36EC00543FE9 /* JRPopUpsViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = JRPopUpsViewController.h; sourceTree = "<group>"; };
+		C4A9E990251B36EC00543FE9 /* JRPopUpsViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = JRPopUpsViewController.m; sourceTree = "<group>"; };
+		C4B8C8832518A8D800995A58 /* JRSearchViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = JRSearchViewController.h; sourceTree = "<group>"; };
+		C4B8C8842518A8D800995A58 /* JRSearchViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = JRSearchViewController.m; sourceTree = "<group>"; };
+		C4CDCB322519E2A900403A08 /* JROtherViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = JROtherViewController.h; sourceTree = "<group>"; };
+		C4CDCB332519E2A900403A08 /* JROtherViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = JROtherViewController.m; sourceTree = "<group>"; };
+		E4E3D8B5D530E87E14938438 /* Pods-JRPodPrivate_Example.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-JRPodPrivate_Example.debug.xcconfig"; path = "Target Support Files/Pods-JRPodPrivate_Example/Pods-JRPodPrivate_Example.debug.xcconfig"; sourceTree = "<group>"; };
+		ECCC9C38C6DFCF5DFAAF0C25 /* Pods-JRPodPrivate_Example.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-JRPodPrivate_Example.release.xcconfig"; path = "Target Support Files/Pods-JRPodPrivate_Example/Pods-JRPodPrivate_Example.release.xcconfig"; sourceTree = "<group>"; };
+		F0946D4936F54B43470D12D5 /* LICENSE */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; name = LICENSE; path = ../LICENSE; sourceTree = "<group>"; };
+		F7CF0504B953497B9BD51951 /* Pods-JRPodPrivate_Tests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-JRPodPrivate_Tests.debug.xcconfig"; path = "Target Support Files/Pods-JRPodPrivate_Tests/Pods-JRPodPrivate_Tests.debug.xcconfig"; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		6003F587195388D20070C39A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6003F590195388D20070C39A /* CoreGraphics.framework in Frameworks */,
+				6003F592195388D20070C39A /* UIKit.framework in Frameworks */,
+				6003F58E195388D20070C39A /* Foundation.framework in Frameworks */,
+				2072763CFBBDB5228F9AB102 /* Pods_JRPodPrivate_Example.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6003F5AB195388D20070C39A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6003F5B0195388D20070C39A /* XCTest.framework in Frameworks */,
+				6003F5B2195388D20070C39A /* UIKit.framework in Frameworks */,
+				6003F5B1195388D20070C39A /* Foundation.framework in Frameworks */,
+				F3A2146F7C43885782075602 /* Pods_JRPodPrivate_Tests.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		568F301825EF84B100D0EE16 /* Resource */ = {
+			isa = PBXGroup;
+			children = (
+				568F301925EF84B100D0EE16 /* p1.jpeg */,
+				568F301A25EF84B100D0EE16 /* p3.jpg */,
+				568F301B25EF84B100D0EE16 /* testVideo.mp4 */,
+				568F301C25EF84B100D0EE16 /* p2.jpeg */,
+			);
+			path = Resource;
+			sourceTree = "<group>";
+		};
+		568F302525EF850A00D0EE16 /* UploadView */ = {
+			isa = PBXGroup;
+			children = (
+				568F302625EF850A00D0EE16 /* Model */,
+				568F302925EF850A00D0EE16 /* View */,
+				568F303625EF850A00D0EE16 /* Controllers */,
+			);
+			path = UploadView;
+			sourceTree = "<group>";
+		};
+		568F302625EF850A00D0EE16 /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				568F302825EF850A00D0EE16 /* JRImageModel.h */,
+				568F302725EF850A00D0EE16 /* JRImageModel.m */,
+			);
+			path = Model;
+			sourceTree = "<group>";
+		};
+		568F302925EF850A00D0EE16 /* View */ = {
+			isa = PBXGroup;
+			children = (
+				568F302F25EF850A00D0EE16 /* JRNormalCell.h */,
+				568F302A25EF850A00D0EE16 /* JRNormalCell.m */,
+				568F303425EF850A00D0EE16 /* JRNormalCell.xib */,
+				568F303525EF850A00D0EE16 /* JRUploadNormalCell.h */,
+				568F302C25EF850A00D0EE16 /* JRUploadNormalCell.m */,
+				568F302E25EF850A00D0EE16 /* JRUploadNormalCell.xib */,
+				568F303125EF850A00D0EE16 /* JRUPLoadFaileCell.h */,
+				568F302B25EF850A00D0EE16 /* JRUPLoadFaileCell.m */,
+				568F303325EF850A00D0EE16 /* JRUPLoadFaileCell.xib */,
+				568F302D25EF850A00D0EE16 /* JRForbiddenCell.h */,
+				568F303225EF850A00D0EE16 /* JRForbiddenCell.m */,
+				568F303025EF850A00D0EE16 /* JRForbiddenCell.xib */,
+			);
+			path = View;
+			sourceTree = "<group>";
+		};
+		568F303625EF850A00D0EE16 /* Controllers */ = {
+			isa = PBXGroup;
+			children = (
+				568F303925EF850A00D0EE16 /* JRUploadPreviewController.h */,
+				568F303725EF850A00D0EE16 /* JRUploadPreviewController.m */,
+				568F303A25EF850A00D0EE16 /* JRUPloadFileImageViewController.h */,
+				568F303825EF850A00D0EE16 /* JRUPloadFileImageViewController.m */,
+			);
+			path = Controllers;
+			sourceTree = "<group>";
+		};
+		6003F581195388D10070C39A = {
+			isa = PBXGroup;
+			children = (
+				56453F5626098FF20010C407 /* JRColorPanel.xib */,
+				566580EC2600BBC9004155BC /* JRNavigationBarView.xib */,
+				56657F8126009328004155BC /* JRMosicaToolBar.xib */,
+				56657E1626005648004155BC /* JRTextColorPanel.xib */,
+				60FF7A9C1954A5C5007DD14C /* Podspec Metadata */,
+				6003F593195388D20070C39A /* Example for JRPodPrivate */,
+				6003F5B5195388D20070C39A /* Tests */,
+				6003F58C195388D20070C39A /* Frameworks */,
+				6003F58B195388D20070C39A /* Products */,
+				866F32B87FD21CDB0234F16A /* Pods */,
+			);
+			sourceTree = "<group>";
+		};
+		6003F58B195388D20070C39A /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				6003F58A195388D20070C39A /* JRPodPrivate_Example.app */,
+				6003F5AE195388D20070C39A /* JRPodPrivate_Tests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		6003F58C195388D20070C39A /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				6003F58D195388D20070C39A /* Foundation.framework */,
+				6003F58F195388D20070C39A /* CoreGraphics.framework */,
+				6003F591195388D20070C39A /* UIKit.framework */,
+				6003F5AF195388D20070C39A /* XCTest.framework */,
+				9CD2A11CE01173D33F7DE43E /* Pods_JRPodPrivate_Example.framework */,
+				0FC5705EE3595664795BCD9C /* Pods_JRPodPrivate_Tests.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		6003F593195388D20070C39A /* Example for JRPodPrivate */ = {
+			isa = PBXGroup;
+			children = (
+				568F302525EF850A00D0EE16 /* UploadView */,
+				6003F59C195388D20070C39A /* JRAppDelegate.h */,
+				6003F59D195388D20070C39A /* JRAppDelegate.m */,
+				6003F5A5195388D20070C39A /* JRViewController.h */,
+				6003F5A6195388D20070C39A /* JRViewController.m */,
+				C478AC212514A1E90004DF7C /* JRButtonViewController.h */,
+				C478AC222514A1E90004DF7C /* JRButtonViewController.m */,
+				C475156B2515D98100A95002 /* JRCellViewController.h */,
+				C475156C2515D98100A95002 /* JRCellViewController.m */,
+				C4B8C8832518A8D800995A58 /* JRSearchViewController.h */,
+				C4B8C8842518A8D800995A58 /* JRSearchViewController.m */,
+				C47000FB2519A0BD000A8BF7 /* JRTagsViewController.h */,
+				C47000FC2519A0BD000A8BF7 /* JRTagsViewController.m */,
+				C4CDCB322519E2A900403A08 /* JROtherViewController.h */,
+				C4CDCB332519E2A900403A08 /* JROtherViewController.m */,
+				C4A9E98F251B36EC00543FE9 /* JRPopUpsViewController.h */,
+				C4A9E990251B36EC00543FE9 /* JRPopUpsViewController.m */,
+				5662BC17251C801500422EDB /* JRNoDataViewController.h */,
+				5662BC18251C801500422EDB /* JRNoDataViewController.m */,
+				5662BC1A251C801500422EDB /* JRSideBarViewController.h */,
+				5662BC19251C801500422EDB /* JRSideBarViewController.m */,
+				566BFBAE251E0B7D005784BD /* JRNoticeRemindViewController.h */,
+				566BFBAF251E0B7D005784BD /* JRNoticeRemindViewController.m */,
+				56B400F0253146EA004C97F4 /* JRCalerdatListViewController.h */,
+				56B400F1253146EA004C97F4 /* JRCalerdatListViewController.m */,
+				C45F27F1256F97190011443D /* JRCamreaTableViewController.h */,
+				C45F27F2256F97190011443D /* JRCamreaTableViewController.m */,
+				564541D72611C0B20010C407 /* JRPhotoEditeViewController.h */,
+				564541D82611C0B20010C407 /* JRPhotoEditeViewController.m */,
+				665F0AE026203AB0007B1DB5 /* JRRefreshTableViewController.h */,
+				665F0AE126203AB0007B1DB5 /* JRRefreshTableViewController.m */,
+				665F0C13262157FB007B1DB5 /* JRLoadingTableViewController.h */,
+				665F0C14262157FB007B1DB5 /* JRLoadingTableViewController.m */,
+				566EFDDD264B71A400C3E38C /* JRCurrencyView.h */,
+				566EFDDE264B71A400C3E38C /* JRCurrencyView.m */,
+				566EFDE2264B71C500C3E38C /* JRCurrencyView.xib */,
+				568F301825EF84B100D0EE16 /* Resource */,
+				71719F9D1E33DC2100824A3D /* LaunchScreen.storyboard */,
+				6003F5A8195388D20070C39A /* Images.xcassets */,
+				6003F594195388D20070C39A /* Supporting Files */,
+			);
+			name = "Example for JRPodPrivate";
+			path = JRPodPrivate;
+			sourceTree = "<group>";
+		};
+		6003F594195388D20070C39A /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				6003F595195388D20070C39A /* JRPodPrivate-Info.plist */,
+				6003F596195388D20070C39A /* InfoPlist.strings */,
+				6003F599195388D20070C39A /* main.m */,
+				6003F59B195388D20070C39A /* JRPodPrivate-Prefix.pch */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		6003F5B5195388D20070C39A /* Tests */ = {
+			isa = PBXGroup;
+			children = (
+				6003F5BB195388D20070C39A /* Tests.m */,
+				6003F5B6195388D20070C39A /* Supporting Files */,
+			);
+			path = Tests;
+			sourceTree = "<group>";
+		};
+		6003F5B6195388D20070C39A /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				6003F5B7195388D20070C39A /* Tests-Info.plist */,
+				6003F5B8195388D20070C39A /* InfoPlist.strings */,
+				606FC2411953D9B200FFA9A0 /* Tests-Prefix.pch */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		60FF7A9C1954A5C5007DD14C /* Podspec Metadata */ = {
+			isa = PBXGroup;
+			children = (
+				8DBE3787980CAB6AF9AAC4DD /* JRPodPrivate.podspec */,
+				7BF73AA96784FCB50ADFE096 /* README.md */,
+				F0946D4936F54B43470D12D5 /* LICENSE */,
+			);
+			name = "Podspec Metadata";
+			sourceTree = "<group>";
+		};
+		866F32B87FD21CDB0234F16A /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				E4E3D8B5D530E87E14938438 /* Pods-JRPodPrivate_Example.debug.xcconfig */,
+				ECCC9C38C6DFCF5DFAAF0C25 /* Pods-JRPodPrivate_Example.release.xcconfig */,
+				F7CF0504B953497B9BD51951 /* Pods-JRPodPrivate_Tests.debug.xcconfig */,
+				9960BE14339B0986DE3D0323 /* Pods-JRPodPrivate_Tests.release.xcconfig */,
+			);
+			path = Pods;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		6003F589195388D20070C39A /* JRPodPrivate_Example */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6003F5BF195388D20070C39A /* Build configuration list for PBXNativeTarget "JRPodPrivate_Example" */;
+			buildPhases = (
+				7AB14FA00CF1C5C5676246B0 /* [CP] Check Pods Manifest.lock */,
+				6003F586195388D20070C39A /* Sources */,
+				6003F587195388D20070C39A /* Frameworks */,
+				6003F588195388D20070C39A /* Resources */,
+				7B956614CC2E795B9E7306B0 /* [CP] Embed Pods Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = JRPodPrivate_Example;
+			productName = JRPodPrivate;
+			productReference = 6003F58A195388D20070C39A /* JRPodPrivate_Example.app */;
+			productType = "com.apple.product-type.application";
+		};
+		6003F5AD195388D20070C39A /* JRPodPrivate_Tests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6003F5C2195388D20070C39A /* Build configuration list for PBXNativeTarget "JRPodPrivate_Tests" */;
+			buildPhases = (
+				BE2963964979A4388B6B2021 /* [CP] Check Pods Manifest.lock */,
+				6003F5AA195388D20070C39A /* Sources */,
+				6003F5AB195388D20070C39A /* Frameworks */,
+				6003F5AC195388D20070C39A /* Resources */,
+				F21C6A660C82B4B5FE99685E /* [CP] Embed Pods Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				6003F5B4195388D20070C39A /* PBXTargetDependency */,
+			);
+			name = JRPodPrivate_Tests;
+			productName = JRPodPrivateTests;
+			productReference = 6003F5AE195388D20070C39A /* JRPodPrivate_Tests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		6003F582195388D10070C39A /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				CLASSPREFIX = JR;
+				LastUpgradeCheck = 1240;
+				ORGANIZATIONNAME = wni;
+				TargetAttributes = {
+					6003F589195388D20070C39A = {
+						DevelopmentTeam = 8V83BR7H8L;
+					};
+					6003F5AD195388D20070C39A = {
+						TestTargetID = 6003F589195388D20070C39A;
+					};
+				};
+			};
+			buildConfigurationList = 6003F585195388D10070C39A /* Build configuration list for PBXProject "JRPodPrivate" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 6003F581195388D10070C39A;
+			productRefGroup = 6003F58B195388D20070C39A /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				6003F589195388D20070C39A /* JRPodPrivate_Example */,
+				6003F5AD195388D20070C39A /* JRPodPrivate_Tests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		6003F588195388D20070C39A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				568F304325EF850A00D0EE16 /* JRNormalCell.xib in Resources */,
+				568F302025EF84B100D0EE16 /* p2.jpeg in Resources */,
+				568F301E25EF84B100D0EE16 /* p3.jpg in Resources */,
+				568F301D25EF84B100D0EE16 /* p1.jpeg in Resources */,
+				56657E192600568C004155BC /* JRTextColorPanel.xib in Resources */,
+				566EFDE3264B71C500C3E38C /* JRCurrencyView.xib in Resources */,
+				568F304025EF850A00D0EE16 /* JRForbiddenCell.xib in Resources */,
+				56453F58260990660010C407 /* JRColorPanel.xib in Resources */,
+				568F301F25EF84B100D0EE16 /* testVideo.mp4 in Resources */,
+				568F303F25EF850A00D0EE16 /* JRUploadNormalCell.xib in Resources */,
+				71719F9F1E33DC2100824A3D /* LaunchScreen.storyboard in Resources */,
+				568F304225EF850A00D0EE16 /* JRUPLoadFaileCell.xib in Resources */,
+				56657F822600932F004155BC /* JRMosicaToolBar.xib in Resources */,
+				6003F5A9195388D20070C39A /* Images.xcassets in Resources */,
+				566580ED2600BBCF004155BC /* JRNavigationBarView.xib in Resources */,
+				6003F598195388D20070C39A /* InfoPlist.strings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6003F5AC195388D20070C39A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6003F5BA195388D20070C39A /* InfoPlist.strings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		7AB14FA00CF1C5C5676246B0 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-JRPodPrivate_Example-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		7B956614CC2E795B9E7306B0 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-JRPodPrivate_Example/Pods-JRPodPrivate_Example-frameworks.sh",
+				"${BUILT_PRODUCTS_DIR}/AGGeometryKit/AGGeometryKit.framework",
+				"${BUILT_PRODUCTS_DIR}/DateTools/DateTools.framework",
+				"${BUILT_PRODUCTS_DIR}/FrameAccessor/FrameAccessor.framework",
+				"${BUILT_PRODUCTS_DIR}/JKCategories/JKCategories.framework",
+				"${BUILT_PRODUCTS_DIR}/JRPodPrivate/JRPodPrivate.framework",
+				"${BUILT_PRODUCTS_DIR}/MBProgressHUD/MBProgressHUD.framework",
+				"${BUILT_PRODUCTS_DIR}/Masonry/Masonry.framework",
+				"${BUILT_PRODUCTS_DIR}/SDWebImage/SDWebImage.framework",
+				"${BUILT_PRODUCTS_DIR}/TZImagePickerController/TZImagePickerController.framework",
+				"${BUILT_PRODUCTS_DIR}/XXNibBridge/XXNibBridge.framework",
+				"${BUILT_PRODUCTS_DIR}/YBImageBrowser/YBImageBrowser.framework",
+				"${BUILT_PRODUCTS_DIR}/YYImage/YYImage.framework",
+				"${BUILT_PRODUCTS_DIR}/extobjc/extobjc.framework",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/AGGeometryKit.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/DateTools.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FrameAccessor.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/JKCategories.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/JRPodPrivate.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/MBProgressHUD.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Masonry.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SDWebImage.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/TZImagePickerController.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/XXNibBridge.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/YBImageBrowser.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/YYImage.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/extobjc.framework",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-JRPodPrivate_Example/Pods-JRPodPrivate_Example-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		BE2963964979A4388B6B2021 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-JRPodPrivate_Tests-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		F21C6A660C82B4B5FE99685E /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-JRPodPrivate_Tests/Pods-JRPodPrivate_Tests-frameworks.sh",
+				"${BUILT_PRODUCTS_DIR}/Expecta/Expecta.framework",
+				"${BUILT_PRODUCTS_DIR}/Expecta+Snapshots/Expecta_Snapshots.framework",
+				"${BUILT_PRODUCTS_DIR}/FBSnapshotTestCase/FBSnapshotTestCase.framework",
+				"${BUILT_PRODUCTS_DIR}/Specta/Specta.framework",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Expecta.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Expecta_Snapshots.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FBSnapshotTestCase.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Specta.framework",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-JRPodPrivate_Tests/Pods-JRPodPrivate_Tests-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		6003F586195388D20070C39A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				568F303D25EF850A00D0EE16 /* JRUPLoadFaileCell.m in Sources */,
+				566EFDDF264B71A400C3E38C /* JRCurrencyView.m in Sources */,
+				6003F59E195388D20070C39A /* JRAppDelegate.m in Sources */,
+				5662BC1C251C801500422EDB /* JRSideBarViewController.m in Sources */,
+				C475156D2515D98100A95002 /* JRCellViewController.m in Sources */,
+				6003F5A7195388D20070C39A /* JRViewController.m in Sources */,
+				568F304425EF850A00D0EE16 /* JRUploadPreviewController.m in Sources */,
+				C4A9E991251B36EC00543FE9 /* JRPopUpsViewController.m in Sources */,
+				C47000FD2519A0BD000A8BF7 /* JRTagsViewController.m in Sources */,
+				568F303B25EF850A00D0EE16 /* JRImageModel.m in Sources */,
+				56B400F2253146EA004C97F4 /* JRCalerdatListViewController.m in Sources */,
+				566BFBB0251E0B7D005784BD /* JRNoticeRemindViewController.m in Sources */,
+				568F303E25EF850A00D0EE16 /* JRUploadNormalCell.m in Sources */,
+				C478AC232514A1E90004DF7C /* JRButtonViewController.m in Sources */,
+				665F0AE226203AB0007B1DB5 /* JRRefreshTableViewController.m in Sources */,
+				568F304125EF850A00D0EE16 /* JRForbiddenCell.m in Sources */,
+				5662BC1B251C801500422EDB /* JRNoDataViewController.m in Sources */,
+				6003F59A195388D20070C39A /* main.m in Sources */,
+				C4B8C8852518A8D800995A58 /* JRSearchViewController.m in Sources */,
+				665F0C15262157FB007B1DB5 /* JRLoadingTableViewController.m in Sources */,
+				568F304525EF850A00D0EE16 /* JRUPloadFileImageViewController.m in Sources */,
+				C45F27F3256F97190011443D /* JRCamreaTableViewController.m in Sources */,
+				568F303C25EF850A00D0EE16 /* JRNormalCell.m in Sources */,
+				C4CDCB342519E2A900403A08 /* JROtherViewController.m in Sources */,
+				564541D92611C0B20010C407 /* JRPhotoEditeViewController.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6003F5AA195388D20070C39A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6003F5BC195388D20070C39A /* Tests.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		6003F5B4195388D20070C39A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 6003F589195388D20070C39A /* JRPodPrivate_Example */;
+			targetProxy = 6003F5B3195388D20070C39A /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		6003F596195388D20070C39A /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				6003F597195388D20070C39A /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+		6003F5B8195388D20070C39A /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				6003F5B9195388D20070C39A /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+		71719F9D1E33DC2100824A3D /* LaunchScreen.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				71719F9E1E33DC2100824A3D /* Base */,
+			);
+			name = LaunchScreen.storyboard;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		6003F5BD195388D20070C39A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		6003F5BE195388D20070C39A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = YES;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		6003F5C0195388D20070C39A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = E4E3D8B5D530E87E14938438 /* Pods-JRPodPrivate_Example.debug.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = NO;
+				DEVELOPMENT_TEAM = 8V83BR7H8L;
+				EXCLUDED_ARCHS = "";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"${PODS_CONFIGURATION_BUILD_DIR}/DateTools\"",
+					"\"${PODS_CONFIGURATION_BUILD_DIR}/JKCategories\"",
+					"\"${PODS_CONFIGURATION_BUILD_DIR}/JRPodPrivate\"",
+					"\"${PODS_CONFIGURATION_BUILD_DIR}/MBProgressHUD\"",
+					"\"${PODS_CONFIGURATION_BUILD_DIR}/Masonry\"",
+					"\"${PODS_CONFIGURATION_BUILD_DIR}/TZImagePickerController\"",
+					"\"${PODS_CONFIGURATION_BUILD_DIR}/YBImageBrowser\"",
+				);
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "JRPodPrivate/JRPodPrivate-Prefix.pch";
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"${PODS_CONFIGURATION_BUILD_DIR}/DateTools/DateTools.framework/Headers\"",
+					"\"${PODS_CONFIGURATION_BUILD_DIR}/JKCategories/JKCategories.framework/Headers\"",
+					"\"${PODS_CONFIGURATION_BUILD_DIR}/JRPodPrivate/JRPodPrivate.framework/Headers\"",
+					"\"${PODS_CONFIGURATION_BUILD_DIR}/MBProgressHUD/MBProgressHUD.framework/Headers\"",
+					"\"${PODS_CONFIGURATION_BUILD_DIR}/Masonry/Masonry.framework/Headers\"",
+					"\"${PODS_CONFIGURATION_BUILD_DIR}/TZImagePickerController/TZImagePickerController.framework/Headers\"",
+					"\"$({PODS_CONFIGURATION_BUILD_DIR}/YBImageBrowse/YBImageBrowse.framework/Headers\"",
+				);
+				INFOPLIST_FILE = "JRPodPrivate/JRPodPrivate-Info.plist";
+				MARKETING_VERSION = 1.2.1;
+				MODULE_NAME = ExampleApp;
+				PRODUCT_BUNDLE_IDENTIFIER = "org.cocoapods.demo.${PRODUCT_NAME:rfc1034identifier}";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 4.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALID_ARCHS = arm64;
+				WRAPPER_EXTENSION = app;
+			};
+			name = Debug;
+		};
+		6003F5C1195388D20070C39A /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = ECCC9C38C6DFCF5DFAAF0C25 /* Pods-JRPodPrivate_Example.release.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = NO;
+				DEVELOPMENT_TEAM = 8V83BR7H8L;
+				EXCLUDED_ARCHS = "";
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "JRPodPrivate/JRPodPrivate-Prefix.pch";
+				INFOPLIST_FILE = "JRPodPrivate/JRPodPrivate-Info.plist";
+				MARKETING_VERSION = 1.2.1;
+				MODULE_NAME = ExampleApp;
+				PRODUCT_BUNDLE_IDENTIFIER = "org.cocoapods.demo.${PRODUCT_NAME:rfc1034identifier}";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 4.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALID_ARCHS = arm64;
+				WRAPPER_EXTENSION = app;
+			};
+			name = Release;
+		};
+		6003F5C3195388D20070C39A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = F7CF0504B953497B9BD51951 /* Pods-JRPodPrivate_Tests.debug.xcconfig */;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(PLATFORM_DIR)/Developer/Library/Frameworks",
+					"$(inherited)",
+					"$(DEVELOPER_FRAMEWORKS_DIR)",
+				);
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "Tests/Tests-Prefix.pch";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				INFOPLIST_FILE = "Tests/Tests-Info.plist";
+				PRODUCT_BUNDLE_IDENTIFIER = "org.cocoapods.demo.${PRODUCT_NAME:rfc1034identifier}";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 4.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/JRPodPrivate_Example.app/JRPodPrivate_Example";
+				WRAPPER_EXTENSION = xctest;
+			};
+			name = Debug;
+		};
+		6003F5C4195388D20070C39A /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 9960BE14339B0986DE3D0323 /* Pods-JRPodPrivate_Tests.release.xcconfig */;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(PLATFORM_DIR)/Developer/Library/Frameworks",
+					"$(inherited)",
+					"$(DEVELOPER_FRAMEWORKS_DIR)",
+				);
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "Tests/Tests-Prefix.pch";
+				INFOPLIST_FILE = "Tests/Tests-Info.plist";
+				PRODUCT_BUNDLE_IDENTIFIER = "org.cocoapods.demo.${PRODUCT_NAME:rfc1034identifier}";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 4.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/JRPodPrivate_Example.app/JRPodPrivate_Example";
+				WRAPPER_EXTENSION = xctest;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		6003F585195388D10070C39A /* Build configuration list for PBXProject "JRPodPrivate" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6003F5BD195388D20070C39A /* Debug */,
+				6003F5BE195388D20070C39A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		6003F5BF195388D20070C39A /* Build configuration list for PBXNativeTarget "JRPodPrivate_Example" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6003F5C0195388D20070C39A /* Debug */,
+				6003F5C1195388D20070C39A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		6003F5C2195388D20070C39A /* Build configuration list for PBXNativeTarget "JRPodPrivate_Tests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6003F5C3195388D20070C39A /* Debug */,
+				6003F5C4195388D20070C39A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 6003F582195388D10070C39A /* Project object */;
+}

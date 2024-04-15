@@ -1,0 +1,1024 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+<service>
+	<!-- 평가 목록  -->
+	<method name="bl_getEvalSheetList">
+		<![CDATA[
+			SELECT A.ES_CD
+				  ,A.ES_VER
+				  ,A.EV_GB
+				  ,(SELECT TEXT1 FROM SCODE WHERE TYPE = 'M902' AND CODE = A.EV_GB) EV_GB_NM
+				  ,A.CSKD_GB
+				  ,(SELECT TEXT1 FROM SCODE WHERE TYPE = 'M903' AND CODE = A.CSKD_GB) CSKD_GB_NM
+				  ,A.ES_NM
+				  ,A.ADD_USER_ID
+				  ,GETUSERNAMELOC(A.HOUSE_CODE,A.ADD_USER_ID) ADD_USER_NM
+				  ,A.ADD_DATE
+				  ,A.ADD_TIME
+				  ,A.STATUS
+				  ,DECODE(A.STATUS,'D','종료','C','정상','R','정상','대기') STATUS_TXT			      			      			  			      			     
+			FROM ICOYESHD A
+			WHERE A.HOUSE_CODE = ${session.HOUSE_CODE}
+			AND A.STATUS IN ('C','R')
+			AND A.EV_GB = $S{ev_gb}
+			AND A.CSKD_GB = $S{cskd_gb}
+			AND A.ADD_USER_ID = $S{add_user_id}
+			AND A.ADD_DATE >= $S{from_date} 		
+			AND A.ADD_DATE <= $S{to_date}
+			ORDER BY A.ES_CD
+		]]>			
+	</method>
+	
+	<!-- 평가표헤드정보  -->
+	<method name="bl_getEvalSheetInfo">
+		<![CDATA[
+			SELECT A.ES_CD
+				  ,A.ES_VER
+				  ,A.EV_GB
+				  ,(SELECT TEXT1 FROM SCODE WHERE TYPE = 'M902' AND CODE = A.EV_GB) EV_GB_NM
+				  ,A.CSKD_GB
+				  ,(SELECT TEXT1 FROM SCODE WHERE TYPE = 'M903' AND CODE = A.CSKD_GB) CSKD_GB_NM
+				  ,A.ES_NM
+				  ,A.ADD_USER_ID
+				  ,GETUSERNAMELOC(A.HOUSE_CODE,A.ADD_USER_ID) ADD_USER_NM
+				  ,A.ADD_DATE
+				  ,A.ADD_TIME
+				  ,A.STATUS
+				  ,DECODE(A.STATUS,'D','종료','C','정상','R','정상','대기') STATUS_TXT			      			      			  			      			     
+			FROM ICOYESHD A
+			WHERE A.HOUSE_CODE = ${session.HOUSE_CODE}
+			AND A.ES_CD = ${es_cd}
+			AND A.ES_VER = ${es_ver}
+		]]>			
+	</method>
+	
+	<!-- 평가표상세  -->
+	<method name="bl_getEvalSheetDesc">
+		<![CDATA[
+			SELECT B.ES_CD
+			      ,B.ES_VER
+			      ,B.ES_SEQ
+			      ,(SELECT TEXT1 FROM SCODE WHERE TYPE = 'M904' AND CODE = B.GRP_GB) GRP_GB_NM
+			      ,B.GRP_GB_DM
+			      ,B.GRP_GB
+			      ,B.EV_TXT
+			      ,B.ES_DM
+			FROM ICOYESHD A, ICOYESDT B
+			WHERE A.HOUSE_CODE = B.HOUSE_CODE
+			AND A.HOUSE_CODE = ${session.HOUSE_CODE}
+			AND A.ES_CD = B.ES_CD
+			AND A.ES_CD = ${es_cd}
+			AND B.ES_VER = ${es_ver}
+			ORDER BY ES_SEQ		  
+		]]>			
+	</method>
+	
+	<!-- 기술평가계획 목록  -->
+	<method name="bl_getEtplList">
+		<![CDATA[
+			SELECT A.EVAL_YY
+			      ,A.ETPL_NO
+				  ,A.ETPL_NM
+				  ,A.ADD_USER_ID
+				  ,A.ADD_USER_NAME_LOC
+				  ,A.ADD_DATE
+				  ,A.CHANGE_USER_ID
+				  ,A.CHANGE_USER_NAME_LOC
+				  ,A.CHANGE_DATE
+				  ,A.IMPL_USER_ID
+				  ,A.IMPL_USER_NAME_LOC
+				  ,A.IMPL_DATE
+				  ,A.END_USER_ID
+				  ,A.END_USER_NAME_LOC
+				  ,A.END_DATE
+				  ,A.STATUS
+				  ,DECODE(A.STATUS,'D','삭제','C','정상','R','정상','대기') STATUS_TXT		
+				  ,A.PRG_STS
+				  ,DECODE(A.PRG_STS,'T','저장','P','실시','E','마감','대기') PRG_STS_TXT	
+				  ,A.PRG_STS PRG_STS_OLD					  			      			      			  			      			     
+			FROM ICOYETPL A
+			WHERE A.HOUSE_CODE = ${session.HOUSE_CODE}
+			AND A.STATUS IN ('C','R')
+			AND A.ADD_USER_ID = $S{add_user_id}
+			AND A.ADD_DATE >= $S{from_date} 		
+			AND A.ADD_DATE <= $S{to_date}
+			AND A.EVAL_YY = $S{p_year} 
+			ORDER BY A.ETPL_NO
+		]]>			
+	</method>
+	
+	<!-- 기술평가계획1  -->
+	<method name="bl_getEtplOne">
+		<![CDATA[
+			SELECT A.EVAL_YY
+			      ,A.ETPL_NO
+				  ,A.ETPL_NM
+				  ,A.ADD_USER_ID
+				  ,A.ADD_USER_NAME_LOC
+				  ,A.ADD_DATE
+				  ,A.CHANGE_USER_ID
+				  ,A.CHANGE_USER_NAME_LOC
+				  ,A.CHANGE_DATE
+				  ,A.IMPL_USER_ID
+				  ,A.IMPL_USER_NAME_LOC
+				  ,A.IMPL_DATE
+				  ,A.END_USER_ID
+				  ,A.END_USER_NAME_LOC
+				  ,A.END_DATE
+				  ,A.STATUS
+				  ,DECODE(A.STATUS,'D','삭제','C','정상','R','정상','대기') STATUS_TXT		
+				  ,A.PRG_STS
+				  ,DECODE(A.PRG_STS,'T','저장','P','실시','E','마감','대기') PRG_STS_TXT	
+				  ,A.PRG_STS PRG_STS_OLD					  			      			      			  			      			     
+			FROM ICOYETPL A
+			WHERE A.HOUSE_CODE = ${session.HOUSE_CODE}
+			AND A.ETPL_NO = ${etpl_no} 
+			ORDER BY A.ETPL_NO
+		]]>			
+	</method>
+	
+	<method name="et_getEtCnt2">
+		<![CDATA[
+			SELECT  COUNT(ETHD.ETPL_NO) CNT       	     
+			FROM ICOYETHD ETHD, ICOYETPL ETPL, ICOYETCK ETCK   
+			WHERE ETHD.HOUSE_CODE = ETPL.HOUSE_CODE
+			AND ETHD.ETPL_NO = ETPL.ETPL_NO
+			AND ETHD.HOUSE_CODE = ETCK.HOUSE_CODE
+			AND ETHD.ETPL_NO = ETCK.ETPL_NO
+			AND ETHD.ETPL_SEQ = ETCK.ETPL_SEQ
+			AND ETPL.STATUS IN ('C','R')
+			AND ETCK.STATUS IN ('C','R')
+  <OPT=F,S> AND ETHD.HOUSE_CODE = ? </OPT>
+  <OPT=F,S> AND ETHD.ETPL_NO = ? </OPT>
+   	      ]]>
+	</method>
+	
+	<method name="et_deleteEtpl">
+	<![CDATA[
+        update ICOYETPL set
+        	STATUS           = 'D',          	
+            CHANGE_USER_ID   = ?,
+            CHANGE_USER_NAME_LOC = (SELECT USER_NAME_LOC FROM ICOMLUSR WHERE USER_ID = ?),
+            CHANGE_DATE      = TO_CHAR(SYSDATE,'YYYYMMDD'),
+            CHANGE_TIME      = TO_CHAR(SYSDATE,'HH24MMSS')        
+         where HOUSE_CODE = ?     
+          and ETPL_NO = ?       
+          and PRG_STS = 'T'      
+	]]>
+    </method>
+    
+    <method name="et_deleteEtck2">
+	<![CDATA[
+        update ICOYETCK set
+        	STATUS           = 'D',          	
+            CHANGE_USER_ID   = ?,
+            CHANGE_USER_NAME_LOC = (SELECT USER_NAME_LOC FROM ICOMLUSR_ICT WHERE USER_ID = ?),
+            CHANGE_DATE      = TO_CHAR(SYSDATE,'YYYYMMDD'),
+            CHANGE_TIME      = TO_CHAR(SYSDATE,'HH24MMSS')        
+        where HOUSE_CODE       = ?
+        and   ETPL_NO = ?
+	]]>
+    </method>
+	
+	<method name="et_insertEtpl">
+	<![CDATA[
+	   insert into ICOYETPL 
+		( 
+		    HOUSE_CODE            ,
+		    EVAL_YY               ,     --평가년도 
+			ETPL_NO               ,     --기술평가계획번호
+		    STATUS                ,     --상태
+			PRG_STS               ,     --진행상태
+			ETPL_NM               ,     --기술평가계획제목
+			ADD_USER_ID           ,     --생성자ID
+			ADD_USER_NAME_LOC     ,     --생성자명
+			ADD_DATE              ,     --생성일자
+			ADD_TIME                    --생성시간			
+		) values (
+		    ?           ,	 
+			?           , 
+		    ?           ,
+			'C'         ,	 
+			?           ,
+			?           ,	 
+			?           ,	 
+			(SELECT USER_NAME_LOC FROM ICOMLUSR WHERE USER_ID = ?),    	 
+			TO_CHAR(SYSDATE,'YYYYMMDD'),
+			TO_CHAR(SYSDATE,'HH24MISS')		           
+		)	 
+	]]>
+    </method>
+    
+    <method name="et_updateEtpl_T">
+	<![CDATA[
+        update ICOYETPL set
+            EVAL_YY          = ?,
+        	STATUS           = 'R',          	
+            PRG_STS          = ?,          	
+            ETPL_NM          = ?,
+            CHANGE_USER_ID   = ?,
+	        CHANGE_USER_NAME_LOC = (SELECT USER_NAME_LOC FROM ICOMLUSR WHERE USER_ID = ?),
+	        CHANGE_DATE      = TO_CHAR(SYSDATE,'YYYYMMDD'),
+	        CHANGE_TIME      = TO_CHAR(SYSDATE,'HH24MMSS'),
+	        IMPL_USER_ID     = NULL,
+	        IMPL_USER_NAME_LOC = NULL,
+	        IMPL_DATE      = NULL,
+	        IMPL_TIME      = NULL,
+	        END_USER_ID    = NULL,
+	        END_USER_NAME_LOC = NULL,
+	        END_DATE       = NULL,
+	        END_TIME       = NULL          
+        where HOUSE_CODE = ?     
+          and ETPL_NO = ?       
+	]]>
+    </method>
+    
+    <method name="et_updateEtpl_P">
+	<![CDATA[
+        update ICOYETPL set
+            EVAL_YY          = ?,
+        	STATUS           = 'R',          	
+            PRG_STS          = ?,          	
+            ETPL_NM          = ?,
+            IMPL_USER_ID     = ?,
+	        IMPL_USER_NAME_LOC = (SELECT USER_NAME_LOC FROM ICOMLUSR WHERE USER_ID = ?),
+	        IMPL_DATE      = TO_CHAR(SYSDATE,'YYYYMMDD'),
+	        IMPL_TIME      = TO_CHAR(SYSDATE,'HH24MMSS'),
+	        END_USER_ID    = NULL,
+	        END_USER_NAME_LOC = NULL,
+	        END_DATE       = NULL,
+	        END_TIME       = NULL           
+        where HOUSE_CODE = ?     
+          and ETPL_NO = ?       
+	]]>
+    </method>
+    
+    <method name="et_updateEtpl_E">
+	<![CDATA[
+        update ICOYETPL set
+            EVAL_YY          = ?,
+        	STATUS           = 'R',          	
+            PRG_STS          = ?,          	
+            ETPL_NM          = ?,
+            END_USER_ID   = ?,
+	        END_USER_NAME_LOC = (SELECT USER_NAME_LOC FROM ICOMLUSR WHERE USER_ID = ?),
+	        END_DATE      = TO_CHAR(SYSDATE,'YYYYMMDD'),
+	        END_TIME      = TO_CHAR(SYSDATE,'HH24MMSS')      
+        where HOUSE_CODE = ?     
+          and ETPL_NO = ?       
+	]]>
+    </method>
+    
+    <method name="getEtplDtList">
+		<![CDATA[
+		SELECT  
+			 A.ETPL_NO
+			,A.ETPL_SEQ
+			,A.ES_CD
+			,A.ES_VER
+			,(SELECT ES_NM FROM ICOYESHD WHERE HOUSE_CODE = A.HOUSE_CODE AND ES_CD = A.ES_CD AND ES_VER = A.ES_VER) ES_NM	
+			,A.CSKD_GB
+			,(SELECT TEXT1 FROM SCODE WHERE TYPE = 'M903' AND CODE = A.CSKD_GB) CSKD_GB_NM
+			,A.GROUP1_CODE
+			,A.GROUP1_NAME_LOC
+			,(SELECT COUNT(EVAL_USER_ID) CNT 
+			   FROM ICOYETCP 
+			   WHERE HOUSE_CODE = A.HOUSE_CODE
+			     AND ETPL_NO = A.ETPL_NO
+			     AND ETPL_SEQ = A.ETPL_SEQ
+			 ) EVAL_USER_CNT
+			 ,(SELECT AGGR_CONCAT(EVAL_USER_NAME_LOC,','ORDER BY EVAL_USER_ID) 
+			   FROM ICOYETCP 
+			   WHERE HOUSE_CODE = A.HOUSE_CODE
+			     AND ETPL_NO = A.ETPL_NO
+			     AND ETPL_SEQ = A.ETPL_SEQ
+			 ) EVAL_USER_NAMES	
+			 ,(SELECT AGGR_CONCAT(EVAL_USER_ID,','ORDER BY EVAL_USER_ID) 
+			   FROM ICOYETCP 
+			   WHERE HOUSE_CODE = A.HOUSE_CODE
+			     AND ETPL_NO = A.ETPL_NO
+			     AND ETPL_SEQ = A.ETPL_SEQ
+			 ) EVAL_USER_IDS
+			 ,(SELECT PRG_STS 
+			   FROM ICOYETPL
+			   WHERE HOUSE_CODE = A.HOUSE_CODE
+			     AND ETPL_NO = A.ETPL_NO
+			  ) PRG_STS
+			  , '0' ES_CD_SEL
+			  , '0' EVAL_USER_SEL
+			  ,A.STATUS
+			  ,DECODE(A.STATUS,'D','삭제','C','정상','R','정상','대기') STATUS_TXT
+			  ,(SELECT COUNT(EVAL_USER_ID) CNT 
+			    FROM ICOYETCP 
+			    WHERE HOUSE_CODE = A.HOUSE_CODE
+			      AND ETPL_NO = A.ETPL_NO
+			      AND ETPL_SEQ = A.ETPL_SEQ
+			  ) EVAL_USER_CNT_OLD
+			  ,(SELECT AGGR_CONCAT(EVAL_USER_NAME_LOC,','ORDER BY EVAL_USER_ID) 
+			    FROM ICOYETCP 
+			    WHERE HOUSE_CODE = A.HOUSE_CODE
+			      AND ETPL_NO = A.ETPL_NO
+			      AND ETPL_SEQ = A.ETPL_SEQ
+			  ) EVAL_USER_NAMES_OLD	
+			  ,(SELECT AGGR_CONCAT(EVAL_USER_ID,','ORDER BY EVAL_USER_ID) 
+			    FROM ICOYETCP 
+			    WHERE HOUSE_CODE = A.HOUSE_CODE
+			      AND ETPL_NO = A.ETPL_NO
+			      AND ETPL_SEQ = A.ETPL_SEQ
+			  ) EVAL_USER_IDS_OLD	
+		FROM ICOYETCK A
+		WHERE A.STATUS IN ('C','R')
+		AND   A.HOUSE_CODE  = ${session.HOUSE_CODE}
+        AND   A.ETPL_NO     = ${etpl_no}
+        ORDER BY A.ETPL_SEQ
+		]]>
+	</method>
+	
+	<method name="getEtplDtList2">
+		<![CDATA[
+		SELECT  
+			 A.ETPL_NO
+			,A.ETPL_SEQ
+			,A.ES_CD
+			,A.ES_VER
+			,(SELECT ES_NM FROM ICOYESHD WHERE HOUSE_CODE = A.HOUSE_CODE AND ES_CD = A.ES_CD AND ES_VER = A.ES_VER) ES_NM	
+			,A.CSKD_GB
+			,(SELECT TEXT1 FROM SCODE WHERE TYPE = 'M903' AND CODE = A.CSKD_GB) CSKD_GB_NM
+			,A.GROUP1_CODE
+			,A.GROUP1_NAME_LOC
+			,(SELECT COUNT(EVAL_USER_ID) CNT 
+			   FROM ICOYETCP 
+			   WHERE HOUSE_CODE = A.HOUSE_CODE
+			     AND ETPL_NO = A.ETPL_NO
+			     AND ETPL_SEQ = A.ETPL_SEQ
+			 ) EVAL_USER_CNT
+			 ,(SELECT AGGR_CONCAT(EVAL_USER_NAME_LOC,','ORDER BY EVAL_USER_ID) 
+			   FROM ICOYETCP 
+			   WHERE HOUSE_CODE = A.HOUSE_CODE
+			     AND ETPL_NO = A.ETPL_NO
+			     AND ETPL_SEQ = A.ETPL_SEQ
+			 ) EVAL_USER_NAMES	
+			 ,(SELECT AGGR_CONCAT(EVAL_USER_ID,','ORDER BY EVAL_USER_ID) 
+			   FROM ICOYETCP 
+			   WHERE HOUSE_CODE = A.HOUSE_CODE
+			     AND ETPL_NO = A.ETPL_NO
+			     AND ETPL_SEQ = A.ETPL_SEQ
+			 ) EVAL_USER_IDS
+			 ,(SELECT PRG_STS 
+			   FROM ICOYETPL
+			   WHERE HOUSE_CODE = A.HOUSE_CODE
+			     AND ETPL_NO = A.ETPL_NO
+			  ) PRG_STS
+			  ,A.STATUS
+			  ,DECODE(A.STATUS,'D','삭제','C','정상','R','정상','대기') STATUS_TXT	
+		FROM ICOYETCK A
+		WHERE A.STATUS IN ('C','R')
+		AND   A.HOUSE_CODE  = ${session.HOUSE_CODE}
+        AND   A.ETPL_NO     = ${etpl_no}
+        ORDER BY A.ETPL_SEQ
+		]]>
+	</method>
+	
+	<method name="et_maxEtplSeq">
+	<![CDATA[
+		  SELECT NVL(MAX(ETPL_SEQ), 0) + 1 AS ETPL_SEQ
+		  FROM ICOYETCK
+		  WHERE 1 = 1
+<OPT=F,S> AND HOUSE_CODE = ? </OPT>
+<OPT=F,S> AND ETPL_NO = ? </OPT>
+	]]>
+    </method>
+    
+    <method name="et_insertEtck">
+	<![CDATA[
+	   insert into ICOYETCK 
+		( 
+		    HOUSE_CODE              ,    --서비스구분코드
+			ETPL_NO                 ,    --기술평가계획번호
+			ETPL_SEQ                ,    --기술평가계획항번 (정열기준)
+			STATUS                  ,    --상태코드 (C생성,R변경,D삭제)
+			ES_CD                   ,    --평가표코드
+			ES_VER                  ,    --평가표버전
+			CSKD_GB                 ,    --공종구분
+			GROUP1_CODE             ,    --기술평가 공종코드
+			GROUP1_NAME_LOC         ,    --기술평가 공종명
+			ADD_USER_ID             ,    --생성자ID
+			ADD_USER_NAME_LOC       ,    --생성자
+			ADD_DATE                ,    --생성일자
+			ADD_TIME                     --생성시각		
+		) values (
+		    ?           , 
+		    ?           ,
+			?           ,
+			'C'         ,	 
+			?           ,
+			?           ,	 
+			?           ,	 
+			'G00'||?    ,
+			?           ,
+			?           ,			
+			(SELECT USER_NAME_LOC FROM ICOMLUSR WHERE USER_ID = ?),    	 
+			TO_CHAR(SYSDATE,'YYYYMMDD'),
+			TO_CHAR(SYSDATE,'HH24MISS')
+		)
+	]]>
+    </method>
+    
+    <method name="et_updateEtck">
+	<![CDATA[
+        update ICOYETCK set
+            STATUS             = 'R',          	
+            ES_CD              = ?,
+            ES_VER             = ?, 
+            CSKD_GB            = ?,     	
+            GROUP1_CODE        = 'G00'||?,     	
+            GROUP1_NAME_LOC    = ?,     	
+            CHANGE_USER_ID     = ?,
+            CHANGE_USER_NAME_LOC = (SELECT USER_NAME_LOC FROM ICOMLUSR_ICT WHERE USER_ID = ?),
+            CHANGE_DATE        = TO_CHAR(SYSDATE,'YYYYMMDD'),
+            CHANGE_TIME        = TO_CHAR(SYSDATE,'HH24MMSS')
+        where HOUSE_CODE       = ?
+        and   ETPL_NO          = ? 
+        and   ETPL_SEQ         = ?       
+	]]>
+    </method>
+    
+    <method name="et_deleteEtcp">
+	<![CDATA[
+        delete from ICOYETCP        
+        where HOUSE_CODE       = ?
+        and   ETPL_NO          = ? 
+        and   ETPL_SEQ         = ?       
+	 ]]>
+     </method>
+     
+     <method name="et_insertEtcp">
+	<![CDATA[
+	   insert into ICOYETCP 
+		( 
+		    HOUSE_CODE              ,    --서비스구분코드
+			ETPL_NO                 ,    --기술평가계획번호
+			ETPL_SEQ                ,    --기술평가계획항번 (정열기준)
+			EVAL_USER_ID            ,    --평가자ID(기술역ID)
+			EVAL_USER_NAME_LOC           --평가자(기술역)			
+		) values (
+		    ?           , 
+		    ?           ,
+			?           ,
+			?           ,
+			?           			
+		)
+	]]>
+    </method>
+    
+    <method name="et_getEtCnt">
+		<![CDATA[			  
+			SELECT COUNT(*) CNT FROM ICOYETHD
+  <OPT=F,S> WHERE HOUSE_CODE = ? </OPT>
+  <OPT=F,S> AND ETPL_NO = ? </OPT>
+  <OPT=F,S> AND ETPL_SEQ = ? </OPT>
+  <OPT=F,S> AND EVAL_USER_ID = ? </OPT>
+		]]>
+	</method>
+
+    <method name="et_deleteEtck">
+	<![CDATA[
+        update ICOYETCK set
+        	STATUS           = 'D',          	
+            CHANGE_USER_ID   = ?,
+            CHANGE_USER_NAME_LOC = (SELECT USER_NAME_LOC FROM ICOMLUSR_ICT WHERE USER_ID = ?),
+            CHANGE_DATE      = TO_CHAR(SYSDATE,'YYYYMMDD'),
+            CHANGE_TIME      = TO_CHAR(SYSDATE,'HH24MMSS')        
+        where HOUSE_CODE       = ?
+        and   ETPL_NO = ?
+        and   ETPL_SEQ = ?       
+	]]>
+    </method>
+    
+    <!-- 기술평가대기 목록  -->
+	<method name="bl_getEtEvWaitList">
+		<![CDATA[
+			SELECT
+			       A1.HOUSE_CODE
+			      ,A1.VENDOR_CODE
+			      ,A1.VENDOR_SEQ
+			      ,GETVENDORNAME(A1.HOUSE_CODE, A1.VENDOR_CODE) AS VENDOR_NAME_LOC
+			      ,A1.ET_NO_SEL
+			      ,G.ET_NO
+			      ,G.ASC_SUM
+			      ,G.EVAL_DATE
+			      ,G.EVAL_USER_ID
+			      ,G.EVAL_USER_NAME_LOC
+			      ,A1.ETPL_NO
+			      ,A1.ETPL_SEQ
+			      ,A1.ETPL_NM
+			      ,A1.ES_CD
+			      ,A1.ES_VER
+			      ,(SELECT ES_NM FROM ICOYESHD WHERE HOUSE_CODE = A1.HOUSE_CODE AND ES_CD = A1.ES_CD AND ES_VER = A1.ES_VER) ES_NM 
+			      ,A1.CSKD_GB
+			      ,(SELECT TEXT1 FROM SCODE WHERE TYPE = 'M903' AND CODE = A1.CSKD_GB) CSKD_GB_NM
+			      ,A1.GROUP1_CODE
+			      ,A1.GROUP1_NAME_LOC
+			      ,A1.GROUP2_CODE
+			      ,A1.GROUP2_NAME_LOC    
+			FROM
+					(
+						SELECT F.HOUSE_CODE
+						      ,F.VENDOR_CODE
+						      ,F.VENDOR_SEQ
+						      ,'0' ET_NO_SEL
+						      ,B.ETPL_NO
+						      ,B.ETPL_SEQ
+						      ,A.ETPL_NM
+						      ,B.ES_CD
+						      ,B.ES_VER
+						      ,B.CSKD_GB						      
+						      ,B.GROUP1_CODE
+						      ,B.GROUP1_NAME_LOC
+						      ,F.GROUP_CODE  GROUP2_CODE
+						      ,H.GROUP_NAME GROUP2_NAME_LOC
+						      ,C.EVAL_USER_ID 
+						      ,A.EVAL_YY   
+						   FROM ICOYETPL A, ICOYETCK B, ICOYETCP C, ICOMUVEN F, ICOMUGRP H 
+						   WHERE A.HOUSE_CODE = B.HOUSE_CODE
+						   AND A.ETPL_NO = B.ETPL_NO
+						   AND B.HOUSE_CODE = C.HOUSE_CODE
+						   AND B.ETPL_NO = C.ETPL_NO
+						   AND B.ETPL_SEQ = C.ETPL_SEQ
+						   AND B.HOUSE_CODE = F.HOUSE_CODE
+						   AND B.HOUSE_CODE = H.HOUSE_CODE
+						   AND B.GROUP1_CODE = H.GROUP_UCODE
+						   AND H.GROUP_CODE = F.GROUP_CODE
+						   AND H.GROUP_LEVEL = 2
+						   AND A.HOUSE_CODE = ${session.HOUSE_CODE}	
+						   AND A.STATUS IN ('C','R')
+						   AND B.STATUS IN ('C','R')
+						   AND A.PRG_STS = 'P'
+						   AND B.STATUS IN ('C','R')						   
+					)A1 ,ICOYETHD G
+			WHERE  A1.HOUSE_CODE = G.HOUSE_CODE(+)
+			  AND A1.ETPL_NO = G.ETPL_NO(+)
+			  AND A1.ETPL_SEQ = G.ETPL_SEQ(+)
+			  AND A1.EVAL_USER_ID = G.EVAL_USER_ID(+)
+			  AND A1.VENDOR_CODE = G.VENDOR_CODE(+)
+			  AND A1.EVAL_USER_ID = ${session.ID}
+			  AND A1.EVAL_YY = $S{eval_yy}
+			  AND A1.ETPL_NO = $S{etpl_no}
+			  AND A1.GROUP1_CODE = $S{group1_code}
+			  AND A1.GROUP2_CODE = $S{group2_code}					  
+			ORDER BY A1.ETPL_NO,A1.ETPL_SEQ,A1.GROUP1_CODE,A1.GROUP2_CODE,A1.VENDOR_SEQ		
+		]]>			
+	</method>
+	
+	<!-- 기술평가헤드정보  -->
+	<method name="bl_getTeEvalInfo">
+		<![CDATA[
+			SELECT			       
+			       A1.VENDOR_CODE
+			      ,A1.VENDOR_SEQ
+			      ,A1.VENDOR_NAME_LOC
+			      ,G.ET_NO
+			      ,G.EVAL_DATE
+			      ,G.EVAL_USER_ID
+			      ,G.EVAL_USER_NAME_LOC
+			      ,A1.ETPL_NO
+			      ,A1.ETPL_SEQ
+			      ,A1.ETPL_NM
+			      ,A1.ES_CD
+			      ,A1.ES_VER
+			      ,A1.ES_NM 
+			      ,A1.CSKD_GB
+			      ,A1.CSKD_GB_NM
+			      ,A1.GROUP1_CODE
+			      ,A1.GROUP1_NAME_LOC
+			      ,A1.GROUP2_CODE
+			      ,A1.GROUP2_NAME_LOC
+			      ,A1.EVAL_YY    
+			FROM
+					(
+						SELECT A.HOUSE_CODE 
+						      ,F.VENDOR_CODE
+						      ,F.VENDOR_SEQ
+						      ,GETVENDORNAME(F.HOUSE_CODE, F.VENDOR_CODE) AS VENDOR_NAME_LOC
+						      ,B.ETPL_NO
+						      ,B.ETPL_SEQ
+						      ,A.ETPL_NM
+						      ,B.ES_CD
+						      ,B.ES_VER
+						      ,(SELECT ES_NM FROM ICOYESHD WHERE HOUSE_CODE = B.HOUSE_CODE AND ES_CD = B.ES_CD AND ES_VER = B.ES_VER) ES_NM 
+						      ,B.CSKD_GB
+						      ,(SELECT TEXT1 FROM SCODE WHERE TYPE = 'M903' AND CODE = B.CSKD_GB) CSKD_GB_NM
+						      ,B.GROUP1_CODE
+						      ,B.GROUP1_NAME_LOC
+						      ,F.GROUP_CODE  GROUP2_CODE
+						      ,H.GROUP_NAME GROUP2_NAME_LOC
+						      ,C.EVAL_USER_ID
+						      ,A.EVAL_YY    
+						   FROM ICOYETPL A, ICOYETCK B, ICOYETCP C, ICOMUVEN F, ICOMUGRP H 
+						   WHERE A.HOUSE_CODE = B.HOUSE_CODE
+						   AND A.ETPL_NO = B.ETPL_NO
+						   AND B.HOUSE_CODE = C.HOUSE_CODE
+						   AND B.ETPL_NO = C.ETPL_NO
+						   AND B.ETPL_SEQ = C.ETPL_SEQ
+						   AND B.HOUSE_CODE = F.HOUSE_CODE
+						   AND B.HOUSE_CODE = H.HOUSE_CODE
+						   AND B.GROUP1_CODE = H.GROUP_UCODE
+						   AND H.GROUP_CODE = F.GROUP_CODE
+						   AND H.GROUP_LEVEL = 2
+						   AND A.HOUSE_CODE = ${session.HOUSE_CODE}	
+						   AND A.STATUS IN ('C','R')
+						   AND B.STATUS IN ('C','R')
+						   AND A.PRG_STS = 'P'
+						   AND B.STATUS IN ('C','R')						   
+						   AND C.EVAL_USER_ID = ${session.ID}
+						   AND B.ETPL_NO = ${etpl_no}
+						   AND B.ETPL_SEQ = ${etpl_seq}
+						   AND F.VENDOR_CODE = ${vendor_code}						
+					)A1 ,ICOYETHD G
+			WHERE  A1.HOUSE_CODE = G.HOUSE_CODE(+)
+			  AND A1.ETPL_NO = G.ETPL_NO(+)
+			  AND A1.ETPL_SEQ = G.ETPL_SEQ(+)
+			  AND A1.EVAL_USER_ID = G.EVAL_USER_ID(+)
+			  AND A1.VENDOR_CODE = G.VENDOR_CODE(+)
+			ORDER BY A1.ETPL_NO,A1.ETPL_SEQ,A1.GROUP1_CODE,A1.GROUP2_CODE,A1.VENDOR_SEQ				 			 
+		]]>			
+	</method>
+	
+	<!-- 기술평가표  -->
+	<method name="bl_getTeEvalSheet">
+		<![CDATA[
+			SELECT B.ES_CD
+			      ,B.ES_VER
+			      ,B.ES_SEQ
+			      ,(SELECT TEXT1 FROM SCODE WHERE TYPE = 'M904' AND CODE = B.GRP_GB) GRP_GB_NM
+			      ,B.GRP_GB_DM
+			      ,B.GRP_GB
+			      ,B.EV_TXT
+			      ,B.ES_DM
+			FROM ICOYESHD A, ICOYESDT B
+			WHERE A.HOUSE_CODE = B.HOUSE_CODE
+			AND A.HOUSE_CODE = ${session.HOUSE_CODE}
+			AND A.ES_CD = B.ES_CD
+			AND STATUS IN ('C','R')
+			AND B.ES_CD = ${es_cd}
+			AND B.ES_VER = ${es_ver}
+			ORDER BY ES_SEQ		  
+		]]>			
+	</method>
+		
+	<method name="et_setEtHDCreate">
+		INSERT INTO ICOYETHD (
+			 HOUSE_CODE
+			,ET_NO
+			,ETPL_NO
+			,ETPL_SEQ
+			,CSKD_GB
+			,GROUP1_CODE
+			,GROUP1_NAME_LOC
+			,GROUP2_CODE
+			,GROUP2_NAME_LOC
+			,VENDOR_CODE
+			,VENDOR_NAME_LOC
+			,ASC_SUM
+			,REMARK
+			,EVAL_USER_ID
+			,EVAL_USER_NAME_LOC
+			,EVAL_DATE
+			,EVAL_TIME		
+		) VALUES (
+		    ${session.HOUSE_CODE}  
+		    ,${ET_NO}   
+		    ,${ETPL_NO}   
+		    ,${ETPL_SEQ}   
+		    ,${CSKD_GB}   
+		    ,${GROUP1_CODE}   
+		    ,${GROUP1_NAME_LOC}   
+		    ,${GROUP2_CODE}
+		    ,${GROUP2_NAME_LOC}   
+		    ,${VENDOR_CODE}
+		    ,GETCOMPANYNAMELOC( ${session.HOUSE_CODE}
+		                      , ${VENDOR_CODE}, 'S' )   
+		    ,${ASC_SUM}
+		    ,${REMARK}   
+		    ,${session.ID}  
+		    ,GETUSERINFO(${session.HOUSE_CODE}
+					   , ${session.ID}, 'NAME')   
+		    ,TO_CHAR(SYSDATE, 'YYYYMMDD')   
+		    ,TO_CHAR(SYSDATE, 'HH24MISS')		   	
+		)
+	</method>
+	
+	<method name="et_setEtDTCreate">
+		INSERT INTO ICOYETDT (
+			 HOUSE_CODE
+			,ET_NO     
+			,ET_SEQ    
+			,ES_CD     
+			,ES_VER    
+			,ES_SEQ    
+			,ASC_GD    
+			,ASC1      
+		)
+		VALUES(
+			 ${session.HOUSE_CODE}             
+			,${ET_NO}                 
+			,lpad(${ET_SEQ}, 5, '0') 
+			,${ES_CD}                 
+			,${ES_VER}                 
+			,${ES_SEQ}                 
+			,${ASC_GD}                 
+			,${ASC1}                 
+		)
+	</method>
+	
+	<!-- 기술정보결과 -->
+	<method name="bl_getTeInfoRst">
+		<![CDATA[
+			SELECT  
+                    ETHD.ETPL_NO
+                    ,ETHD.ETPL_SEQ
+					,ETPL.ETPL_NM
+                    ,ETPL.EVAL_YY
+                    ,ETCK.ES_CD
+                    ,ETCK.ES_VER
+                    ,(SELECT ES_NM FROM ICOYESHD WHERE HOUSE_CODE = ETCK.HOUSE_CODE AND ES_CD = ETCK.ES_CD AND ES_VER = ETCK.ES_VER) ES_NM	                    
+					,ETHD.CSKD_GB
+					,(SELECT TEXT1 FROM SCODE WHERE TYPE = 'M903' AND CODE = ETHD.CSKD_GB)  CSKD_GB_NM
+					,ETHD.GROUP1_CODE
+					,ETHD.GROUP1_NAME_LOC
+					,ETHD.GROUP2_CODE
+					,ETHD.GROUP2_NAME_LOC
+					,ETHD.VENDOR_CODE
+					,ETHD.VENDOR_NAME_LOC
+					,ETHD.ASC_SUM
+					,ETHD.REMARK
+					,ETHD.EVAL_USER_ID
+					,ETHD.EVAL_USER_NAME_LOC
+					,ETHD.EVAL_DATE
+					,ETHD.EVAL_TIME
+					,ETPL.PRG_STS
+					,DECODE(ETPL.PRG_STS,'T','저장','P','실시','E','마감','대기') PRG_STS_TXT			     			     
+			FROM ICOYETHD ETHD, ICOYETPL ETPL, ICOYETCK ETCK   
+			WHERE ETHD.HOUSE_CODE = ETPL.HOUSE_CODE
+			AND ETHD.ETPL_NO = ETPL.ETPL_NO
+			AND ETHD.HOUSE_CODE = ETCK.HOUSE_CODE
+			AND ETHD.ETPL_NO = ETCK.ETPL_NO
+			AND ETHD.ETPL_SEQ = ETCK.ETPL_SEQ
+			AND ETHD.HOUSE_CODE = ${session.HOUSE_CODE}
+			AND ETHD.ET_NO      = ${et_no}
+		]]>			
+	</method>
+	
+	<!-- 기술평가결과  -->
+	<method name="bl_getTeEvalRst">
+		<![CDATA[
+			SELECT ETDT.ES_CD
+			      ,ETDT.ES_VER
+			      ,ETDT.ES_SEQ
+			      ,(SELECT TEXT1 FROM SCODE WHERE TYPE = 'M904' AND CODE = ESDT.GRP_GB) GRP_GB_NM
+				  ,ESDT.GRP_GB_DM
+			      ,ESDT.GRP_GB
+			      ,ESDT.EV_TXT
+				  ,ESDT.ES_DM
+				  ,ETDT.ASC_GD
+				  ,(SELECT ASC_GD_NM FROM ICOYESDM 
+				     WHERE HOUSE_CODE = ETDT.HOUSE_CODE 
+				       AND ES_CD = ETDT.ES_CD 
+				       AND ES_VER = ETDT.ES_VER 
+				       AND ES_SEQ = ETDT.ES_SEQ 
+				       AND ASC_GD = ETDT.ASC_GD) ASC_GD_NM
+				  ,ETDT.ASC1	
+				  ,ETHD.ET_NO
+				  ,ETDT.ET_SEQ
+			FROM ICOYETHD ETHD, ICOYETDT ETDT, ICOYESDT ESDT
+			WHERE ETHD.HOUSE_CODE = ETDT.HOUSE_CODE
+			AND ETHD.ET_NO = ETDT.ET_NO
+			AND ETDT.ES_CD = ESDT.ES_CD
+			AND ETDT.ES_VER = ESDT.ES_VER
+			AND ETDT.ES_SEQ = ESDT.ES_SEQ
+			AND ETHD.HOUSE_CODE = ${session.HOUSE_CODE}
+			AND ETHD.ET_NO      = ${et_no}
+			ORDER BY ET_SEQ
+		]]>			
+	</method>
+	
+	<method name="setEthdDelete">
+	    <![CDATA[
+	    		DELETE FROM ICOYETHD 
+	    		WHERE HOUSE_CODE = ${session.HOUSE_CODE}
+	    		AND ET_NO = ${H_ET_NO}		
+			]]>
+	</method>
+	
+	<method name="setEtdtDelete">
+	    <![CDATA[
+	    		DELETE FROM ICOYETDT 
+	    		WHERE HOUSE_CODE = ${session.HOUSE_CODE}
+	    		AND ET_NO = ${H_ET_NO}		
+			]]>
+	</method>
+	
+	<method name="bl_getETPL_CNT">
+		<![CDATA[
+				SELECT COUNT(*) AS CNT 
+				FROM ICOYETPL A, ICOYETCK B
+				WHERE A.HOUSE_CODE = B.HOUSE_CODE
+				AND A.ETPL_NO = B.ETPL_NO
+				AND A.HOUSE_CODE = ${session.HOUSE_CODE}
+				AND A.STATUS IN ('C','R')
+				AND B.STATUS IN ('C','R')
+				AND A.PRG_STS IN ('T','P')
+				AND A.ETPL_NO = ${H_ETPL_NO}
+				AND B.ETPL_SEQ = ${H_ETPL_SEQ}
+		]]>
+	</method>
+	
+	<!-- 기술평가결과 목록  -->
+	<method name="bl_getEtEvRstList">
+		<![CDATA[
+			SELECT F.HOUSE_CODE
+			       ,F.VENDOR_CODE
+			       ,F.VENDOR_SEQ
+			       ,GETVENDORNAME(F.HOUSE_CODE, F.VENDOR_CODE) AS VENDOR_NAME_LOC
+			       ,B.ETPL_NO
+			       ,B.ETPL_SEQ
+			       ,A.ETPL_NM						      
+			       ,B.ES_CD
+			       ,B.ES_VER
+			       ,(SELECT ES_NM FROM ICOYESHD WHERE HOUSE_CODE = B.HOUSE_CODE AND ES_CD = B.ES_CD AND ES_VER = B.ES_VER) ES_NM	      
+			       ,B.CSKD_GB
+			       ,(SELECT TEXT1 FROM SCODE WHERE TYPE = 'M903' AND CODE = B.CSKD_GB)  CSKD_GB_NM						      
+			       ,B.GROUP1_CODE
+			       ,B.GROUP1_NAME_LOC
+			       ,F.GROUP_CODE  GROUP2_CODE
+			       ,H.GROUP_NAME GROUP2_NAME_LOC
+			       ,A.EVAL_YY
+			       ,(SELECT AGGR_CONCAT(CP.EVAL_USER_ID||'$'||CP.EVAL_USER_NAME_LOC,'^'ORDER BY CP.EVAL_USER_ID) 
+				       FROM ICOYETCP CP 
+				      WHERE CP.HOUSE_CODE = B.HOUSE_CODE
+				        AND CP.ETPL_NO = B.ETPL_NO
+				        AND CP.ETPL_SEQ = B.ETPL_SEQ
+				   ) CP_EVAL_USER_IDS			       
+			       ,(SELECT AGGR_CONCAT(EH.EVAL_USER_ID||'$'||EH.EVAL_USER_NAME_LOC||'$'||EH.ET_NO||'$'||EH.EVAL_DATE||'$'||EH.ASC_SUM,'^'ORDER BY EH.EVAL_USER_ID) 
+				 	  FROM ICOYETHD EH
+				 	 WHERE EH.HOUSE_CODE = B.HOUSE_CODE
+				 	   AND EH.ETPL_NO = B.ETPL_NO
+				 	   AND EH.ETPL_SEQ = B.ETPL_SEQ
+				 	   AND EH.GROUP1_CODE = B.GROUP1_CODE
+				 	   AND EH.GROUP2_CODE = F.GROUP_CODE
+				 	   AND EH.VENDOR_CODE = F.VENDOR_CODE
+				   ) EH_EVAL_INFOS
+				   ,DECODE(A.PRG_STS,'T','저장','P','실시','E','마감','대기') PRG_STS_TXT	
+				   ,A.PRG_STS				   			   								   				  						     
+			  FROM ICOYETPL A, ICOYETCK B, ICOMUVEN F, ICOMUGRP H 
+			  WHERE A.HOUSE_CODE = B.HOUSE_CODE
+			  AND A.ETPL_NO = B.ETPL_NO
+			  AND B.HOUSE_CODE = F.HOUSE_CODE
+			  AND B.HOUSE_CODE = H.HOUSE_CODE
+			  AND B.GROUP1_CODE = H.GROUP_UCODE
+			  AND H.GROUP_CODE = F.GROUP_CODE
+			  AND H.GROUP_LEVEL = 2
+			  AND A.HOUSE_CODE = ${session.HOUSE_CODE}
+			  AND A.STATUS IN ('C','R')
+			  AND B.STATUS IN ('C','R')
+			  AND A.PRG_STS IN ('P','E')
+			  AND B.STATUS IN ('C','R')			  
+			  AND A.EVAL_YY = $S{eval_yy}
+			  AND A.ETPL_NO = $S{etpl_no}
+			  AND B.GROUP1_CODE = $S{group1_code}
+			  AND F.GROUP_CODE = $S{group2_code}					  	
+			ORDER BY B.ETPL_NO,B.ETPL_SEQ,B.GROUP1_CODE,F.GROUP_CODE  	
+		]]>			
+	</method>
+	
+	<!-- 공사평가 통계  -->
+	<method name="bl_getEtEvList2">
+		<![CDATA[
+			SELECT
+			     C.ETPL_NO
+			    ,C.ETPL_SEQ
+			    ,C.ETPL_NM
+			   
+			    ,C.EVAL_YY
+			    ,C.ES_CD
+			    ,C.ES_VER
+			    			    
+			    ,B.CSKD_GB
+			    ,(SELECT TEXT1 FROM SCODE WHERE TYPE = 'M903' AND CODE = B.CSKD_GB)  CSKD_GB_NM 
+	            ,B.GROUP1_CODE
+			    ,B.GROUP1_NAME_LOC
+			    ,B.GROUP2_CODE
+			    ,B.GROUP2_NAME_LOC			    
+			    ,B.VENDOR_CODE
+			    ,B.VENDOR_NAME_LOC			    
+	            ,B.EVAL_USER_ID
+	            ,GETUSERNAMELOC(B.HOUSE_CODE,B.EVAL_USER_ID) EVAL_USER_NAME_LOC
+	            ,CONVERT_DATE(B.EVAL_DATE) EVAL_DATE
+	            ,A.ET_NO 
+	            ,A.ASC1_1
+	            ,A.ASC1_2
+	            ,A.ASC1_3
+	            ,A.ASC1_4
+	            ,A.ASC1_5
+	            ,A.ASC1_6
+	            ,A.ASC1_7
+	            ,A.ASC1_8
+	            ,A.ASC1_9
+	            ,A.ASC1_10
+	            ,A.ASC1_11
+	            ,A.ASC1_12
+	            ,A.ASC1_13
+	            ,A.ASC1_14
+	            ,A.ASC1_15
+	            ,A.ASC1_16
+	            ,A.ASC1_17
+	            ,A.ASC1_18
+	            ,A.ASC1_19
+	            ,A.ASC1_20
+	            ,SUBSTR(B.REMARK,1,20) REMARK
+	            ,B.ASC_SUM
+	            ,B.ET_NO				        
+	      FROM
+	      ( 
+	         SELECT
+	         	 ET_NO
+	         	,MAX(DECODE(RID,1,ASC1)) ASC1_1
+	         	,MAX(DECODE(RID,2,ASC1)) ASC1_2
+	         	,MAX(DECODE(RID,3,ASC1)) ASC1_3
+	         	,MAX(DECODE(RID,4,ASC1)) ASC1_4
+	         	,MAX(DECODE(RID,5,ASC1)) ASC1_5
+	         	,MAX(DECODE(RID,6,ASC1)) ASC1_6
+	         	,MAX(DECODE(RID,7,ASC1)) ASC1_7
+	         	,MAX(DECODE(RID,8,ASC1)) ASC1_8
+	         	,MAX(DECODE(RID,9,ASC1)) ASC1_9
+	         	,MAX(DECODE(RID,10,ASC1)) ASC1_10
+	         	,MAX(DECODE(RID,11,ASC1)) ASC1_11
+	         	,MAX(DECODE(RID,12,ASC1)) ASC1_12
+	         	,MAX(DECODE(RID,13,ASC1)) ASC1_13
+	         	,MAX(DECODE(RID,14,ASC1)) ASC1_14
+	         	,MAX(DECODE(RID,15,ASC1)) ASC1_15
+	         	,MAX(DECODE(RID,16,ASC1)) ASC1_16
+	         	,MAX(DECODE(RID,17,ASC1)) ASC1_17
+	         	,MAX(DECODE(RID,18,ASC1)) ASC1_18
+	         	,MAX(DECODE(RID,19,ASC1)) ASC1_19
+	         	,MAX(DECODE(RID,20,ASC1)) ASC1_20	         		         
+	         FROM 
+	         (
+	            SELECT  
+	            	ET_NO
+	               ,ROW_NUMBER() OVER (PARTITION BY ET_NO ORDER BY ES_SEQ) RID
+	               ,ASC1
+	            FROM
+	            (
+		            SELECT ETDT.ES_CD
+					      ,ETDT.ES_VER
+					      ,ETDT.ES_SEQ
+					      ,ETDT.ASC1	
+						  ,ETHD.ET_NO
+						  ,ETDT.ET_SEQ
+					FROM ICOYETHD ETHD, ICOYETDT ETDT, ICOYESDT ESDT
+					WHERE ETHD.HOUSE_CODE = ETDT.HOUSE_CODE
+					AND ETHD.ET_NO = ETDT.ET_NO
+					AND ETDT.ES_CD = ESDT.ES_CD
+					AND ETDT.ES_VER = ESDT.ES_VER
+					AND ETDT.ES_SEQ = ESDT.ES_SEQ
+					AND ETHD.HOUSE_CODE = ${session.HOUSE_CODE}
+					AND ETHD.GROUP1_CODE = $S{group1_code}
+					AND ETHD.GROUP2_CODE = $S{group2_code}
+				)
+			  )
+			  GROUP BY ET_NO 
+			)A 
+		   ,ICOYETHD B
+		   ,(
+			  SELECT PL.HOUSE_CODE
+			        ,PL.ETPL_NO
+			        ,PL.ETPL_NM
+			        ,PL.EVAL_YY
+			        ,CK.ETPL_SEQ
+			        ,CK.ES_CD
+			        ,CK.ES_VER			        
+			  FROM ICOYETPL PL, ICOYETCK CK
+			  WHERE PL.HOUSE_CODE = CK.HOUSE_CODE
+			  AND PL.ETPL_NO = CK.ETPL_NO
+			  AND PL.STATUS <> 'D'
+			  AND PL.PRG_STS = 'E'
+			  AND CK.STATUS <> 'D'			  
+			  AND PL.HOUSE_CODE = ${session.HOUSE_CODE}
+			  AND CK.GROUP1_CODE  = $S{group1_code}   
+			)C
+		 WHERE A.ET_NO = B.ET_NO
+		 AND B.ETPL_NO = C.ETPL_NO 
+		 AND B.ETPL_SEQ = C.ETPL_SEQ		 
+		 AND B.EVAL_DATE >= $S{from_date} 		
+		 AND B.EVAL_DATE <= $S{to_date}
+		 AND B.EVAL_USER_ID   = $S{eval_user_id}
+		 AND B.GROUP1_CODE = $S{group1_code}
+		 AND B.GROUP2_CODE = $S{group2_code}
+		 AND B.VENDOR_CODE = $S{vendor_code}
+		 AND B.ETPL_NO   = $S{etpl_no}
+		 ORDER BY B.GROUP1_NAME_LOC,B.GROUP2_NAME_LOC,B.VENDOR_NAME_LOC 						  
+		]]>			
+	</method>
+  
+</service>
+

@@ -1,0 +1,693 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+<service>
+	<method name="et_getDisplay2">
+		SELECT
+		 	 LUSR.PASSWORD
+		 	,LUSR.USER_NAME_LOC
+		 	,LUSR.USER_NAME_ENG
+		 	,LUSR.WORK_TYPE
+		 	,LUSR.USER_TYPE
+		  	,(CASE
+			  	WHEN LUSR.USER_TYPE='S' THEN '공급업체'
+			  	ELSE (select company_name_loc from icomcmgl where house_code = lusr.house_code and company_code = lusr.company_code) END) AS USER_TYPE_LOC
+		  	,(CASE
+			  	WHEN LUSR.WORK_TYPE='Z' THEN '어드민'
+			  	WHEN LUSR.WORK_TYPE='G' THEN '일반'
+			  	ELSE '' END) AS WORK_TYPE_LOC
+			,LUSR.USER_ID
+			,LUSR.COMPANY_CODE
+			,replace(ADDR.PHONE_NO1, '-','') 	as PHONE_NO1
+			,ADDR.EMAIL
+			,replace(ADDR.PHONE_NO2, '-','')   AS  PHONE_NO2
+			,replace(ADDR.FAX_NO, '-','')   	AS  FAX_NO
+		FROM ICOMLUSR LUSR, ICOMADDR ADDR
+		WHERE LUSR.HOUSE_CODE = ADDR.HOUSE_CODE
+
+		<if test="${company_code}" operator="eq"	value="WOORI"	>
+		 	AND LUSR.USER_ID = ADDR.CODE_NO
+		</if>
+		<if test="${company_code}" operator="ne"	value="WOORI"	>
+
+		 	AND LUSR.COMPANY_CODE	= ADDR.CODE_NO
+	 	</if>
+		 	AND LUSR.HOUSE_CODE 	= '#house_code#'
+		<![CDATA[
+		 	<OPT=F,S>  AND LUSR.USER_ID = ?    </OPT>
+		]]>
+	</method>
+
+
+	<method name="et_setUserInfoUpdate4_1">
+		UPDATE ICOMLUSR
+		SET	 STATUS				    = '#status#'
+			,CHANGE_USER_ID			= '#user_id#'
+			,CHANGE_DATE			= '#change_date#'
+			,CHANGE_TIME			= '#change_time#'
+			,USER_NAME_ENG  		= ?
+			,EMAIL  				= ?
+			,PW_RESET_FLAG  		= 'N'
+		WHERE HOUSE_CODE           	= '#house_code#'
+		  AND 	USER_ID 	= ?
+	</method>
+
+
+	<method name="et_setUserInfoUpdate4_2">
+		UPDATE ICOMADDR SET
+			  	PHONE_NO1 = ?
+			  , PHONE_NO2 = ?
+			  , FAX_NO    = ?
+		WHERE HOUSE_CODE = '#house_code#'
+		AND CODE_NO      = ?
+
+	</method>
+
+
+	<method name="et_setUserInfoUpdate4_3">
+		UPDATE ICOMADDR SET
+	   			PHONE_NO1    = ?
+	   			, PHONE_NO2  = ?
+	  		 	, FAX_NO     = ?
+	   			, EMAIL      = ?
+	 WHERE HOUSE_CODE = '#house_code#'
+	 AND CODE_NO      = ?
+
+	</method>
+
+
+	<method name="et_setPwdReset">
+	   UPDATE ICOMLUSR
+		  SET
+		       PW_RESET_FLAG          = 'Y'
+		      ,PW_RESET_DATE          = '#change_date#'
+		      ,PASSWORD               = '#password#'   	-- 초기화 비밀번호
+		      ,PASS_CHECK_CNT         = '0'
+		  WHERE HOUSE_CODE 	= '#house_code#'
+		  AND   USER_ID 	= '#sel_user_id#'
+	</method>
+<!-- 사용자등록-등록(Z159)-insert  -->
+	<method name="et_setInsert_1">
+		INSERT INTO ICOMLUSR
+		(
+			  HOUSE_CODE
+			, USER_ID
+			, PASSWORD
+			, USER_NAME_LOC
+			, USER_NAME_ENG
+			, COMPANY_CODE
+			, DEPT
+			, RESIDENT_NO
+			, EMPLOYEE_NO
+			, EMAIL
+			, POSITION
+			, LANGUAGE
+			, TIME_ZONE
+			, COUNTRY
+			, CITY_CODE
+			, PR_LOCATION
+			, MANAGER_POSITION
+			, MENU_PROFILE_CODE
+			, USER_TYPE
+			, WORK_TYPE
+			, CTRL_CODE
+			, LOGIN_NCY
+			, STATUS
+			, SIGN_STATUS			
+			, ADD_DATE
+			, ADD_TIME
+			, ADD_USER_ID
+			, CHANGE_USER_ID
+		) VALUES (
+			  ?
+			, ?
+			, '#makepw#'
+			, ?
+			, ?
+			, ?
+			, ?
+			, ?
+			, ?
+			, ?
+			, ?
+			, ?
+			, ?
+			, ?
+			, ?
+			, ?
+			, ?
+			, '#menu_profile_code#'
+			, ?
+			, ?
+			, ?
+			, ?
+			, 'C'
+			, 'R' --sign_status
+			, '#add_date#'
+			, '#add_time#'
+			, '#id#'
+			, '#id#'
+		)
+	</method>
+ <!-- 사용자등록-등록(Z159)-insert  -->
+	<method name="et_setInsert_2">
+		INSERT INTO ICOMADDR
+		(
+			  HOUSE_CODE
+			, CODE_NO
+			, CODE_TYPE
+			, ZIP_CODE
+			, PHONE_NO1
+			, FAX_NO
+			, HOMEPAGE
+			, ADDRESS_LOC
+			, ADDRESS_ENG
+			, CEO_NAME_LOC
+			, CEO_NAME_ENG
+			, EMAIL
+			, ZIP_BOX_NO
+			, PHONE_NO2
+			, DELY_ZIP_CODE
+			, DELY_ADDRESS_LOC
+		) VALUES (
+			  ?   --house_code
+			, ?   --user_id
+			, ?   --code_type
+			, ?   --ZIP_CODE
+			, ?   --PHONE_NO1
+			, ?   --FAX_NO
+			, ?   --HOMEPAGE
+			, ?   --ADDRESS_LOC
+			, ?   --ADDRESS_ENG
+			, ?   --CEO_NAME_LOC
+			, ?   --CEO_NAME_ENG
+			, ?   --EMAIL
+			, ?   --ZIP_BOX_NO
+			, ?   --PHONE_NO2
+			, ?   --DELY_ZIP_CODE
+			, ?   --DELY_ADDRESS_LOC
+		)
+	</method>
+
+
+	<method name="et_setStatusD_1">
+		UPDATE ICOMLUSR
+		SET STATUS = 'D',
+			CHANGE_DATE = '#add_date#',
+			CHANGE_TIME = '#add_time#',
+			CHANGE_USER_ID = '#id#',
+			CHANGE_USER_NAME_LOC = '#name_loc#',
+			CHANGE_USER_NAME_ENG = '#name_eng#',
+			CHANGE_USER_DEPT = '#depart#'
+		WHERE HOUSE_CODE = ?
+		AND USER_ID = ?
+	</method>
+
+	<method name="et_setStatusD_2">
+		DELETE FROM ICOMRULR
+		WHERE HOUSE_CODE = ?
+		AND USER_ID = ?
+	</method>
+
+	<method name="et_setStatusD_3">
+		DELETE FROM ICOMRULR
+		WHERE HOUSE_CODE = ?
+		AND NEXT_SIGN_USER_ID = ?
+	</method>
+  <!-- 사용자등록-중복확인 버튼(Z159) -->
+	<method name="Check_Duplicate">
+	<![CDATA[
+		SELECT
+			COUNT(*) AS CNT
+		FROM
+			ICOMLUSR LUSR, ICOMADDR ADDR
+		WHERE
+			LUSR.HOUSE_CODE = ADDR.HOUSE_CODE
+			AND LUSR.USER_ID = ADDR.CODE_NO
+		<OPT=F,S> AND LUSR.HOUSE_CODE = ? </OPT>
+		<OPT=F,S> AND LUSR.USER_ID = ? </OPT>
+	]]>
+	</method>
+
+	<method name="et_FindID">
+	<![CDATA[
+		SELECT
+			LUSR.USER_ID,
+			LUSR.PHONE_NO AS PHONE_NO2
+		FROM
+			ICOMLUSR LUSR
+		WHERE
+			  LUSR.HOUSE_CODE = ${session.HOUSE_CODE}
+		  AND LUSR.EMPLOYEE_NO   = ${user_sabun}
+		  AND LUSR.USER_NAME_LOC = ${user_name_loc}
+	]]>
+	</method>
+
+	<!-- ICT 수정 : ID찾기 공통 : 발송된 sms인증번호에 의하여 sms번호로 ID를 발송 유효시간은 3분 -->
+	<method name="et_FindID1">
+	<![CDATA[
+				select    VNGL.VENDOR_CODE														as VENDOR_CODE
+						, LUSR.USER_ID															as USER_ID
+						, replace(ADDR.PHONE_NO2,'-','')										as MOBILE_NO
+				  from				ICOMVNGL	VNGL
+				  		inner join	ICOMLUSR	LUSR	on  VNGL.HOUSE_CODE  = LUSR.HOUSE_CODE
+				  										and VNGL.VENDOR_CODE = LUSR.COMPANY_CODE
+				  		inner join	ICOMADDR	ADDR	on  LUSR.HOUSE_CODE  = ADDR.HOUSE_CODE
+				  										and LUSR.USER_ID     = ADDR.CODE_NO
+				 where 1=1
+				   and 'GAD'                          = ${user_gubun}
+				   and VNGL.HOUSE_CODE                = ${session.HOUSE_CODE}
+				   and VNGL.IRS_NO                    = ${irs_no}
+				   and LUSR.SMS_CHECK_NO              = ${sms_check_no}
+				   and LUSR.SMS_CHECK_TIME            > to_char(SYSDATE-(1/(24*60)*TO_NUMBER(3)),'YYYYMMDDHH24MISS')
+				   and replace(ADDR.PHONE_NO2,'-','') = ${vendor_sms_no}
+				   and ADDR.CODE_TYPE                 = '3'
+				   and LUSR.STATUS              not in ('D')
+			union all
+				select    VNGL.VENDOR_CODE														as VENDOR_CODE
+						, LUSR.USER_ID															as USER_ID
+						, replace(ADDR.PHONE_NO2,'-','')										as MOBILE_NO
+				  from				ICOMVNGL_ICT	VNGL
+				  		inner join	ICOMLUSR_ICT	LUSR	on  VNGL.HOUSE_CODE  = LUSR.HOUSE_CODE
+				  											and VNGL.VENDOR_CODE = LUSR.COMPANY_CODE
+				  		inner join	ICOMADDR_ICT	ADDR	on  LUSR.HOUSE_CODE  = ADDR.HOUSE_CODE
+				  											and LUSR.USER_ID     = ADDR.CODE_NO
+				 where 1=1
+				   and 'ICT'                          = ${user_gubun}
+				   and VNGL.HOUSE_CODE                = ${session.HOUSE_CODE}
+				   and VNGL.IRS_NO                    = ${irs_no}
+				   and LUSR.SMS_CHECK_NO              = ${sms_check_no}
+				   and LUSR.SMS_CHECK_TIME            > to_char(SYSDATE-(1/(24*60)*TO_NUMBER(3)),'YYYYMMDDHH24MISS')
+				   and replace(ADDR.PHONE_NO2,'-','') = ${vendor_sms_no}
+				   and ADDR.CODE_TYPE                 = '3'
+				   and LUSR.STATUS              not in ('D')
+	]]>
+	</method>
+
+
+	<!-- ICT 사용 : sms번호 요청 : ID찾기-->
+	<method name="ReqCheckNo_ID">
+	<![CDATA[
+				select    VNGL.VENDOR_CODE														as VENDOR_CODE
+						, LUSR.USER_ID															as USER_ID
+						, replace(ADDR.PHONE_NO2,'-','')										as MOBILE_NO
+						, substr('000000' || to_char(ROUND(DBMS_RANDOM.VALUE(0,999999),0)), -6) as RND_CHK_NO
+				  from				ICOMVNGL	VNGL
+				  		inner join	ICOMLUSR	LUSR	on  VNGL.HOUSE_CODE  = LUSR.HOUSE_CODE
+				  										and VNGL.VENDOR_CODE = LUSR.COMPANY_CODE
+				  		inner join	ICOMADDR	ADDR	on  LUSR.HOUSE_CODE  = ADDR.HOUSE_CODE
+				  										and LUSR.USER_ID     = ADDR.CODE_NO
+				 where 1=1
+				   and 'GAD'                          = ${user_gubun}
+				   and VNGL.HOUSE_CODE                = ${session.HOUSE_CODE} 
+				   and VNGL.IRS_NO                    = ${irs_no}
+				   and replace(ADDR.PHONE_NO2,'-','') = ${vendor_sms_no}
+				   and ADDR.CODE_TYPE                 = '3'						-- 사용자 주소정보
+				   and LUSR.STATUS              not in ('D')
+			union all
+				select    VNGL.VENDOR_CODE														as VENDOR_CODE
+						, LUSR.USER_ID															as USER_ID
+						, replace(ADDR.PHONE_NO2,'-','')										as MOBILE_NO
+						, substr('000000' || to_char(ROUND(DBMS_RANDOM.VALUE(0,999999),0)), -6) as RND_CHK_NO
+				  from				ICOMVNGL_ICT	VNGL
+				  		inner join	ICOMLUSR_ICT	LUSR	on  VNGL.HOUSE_CODE  = LUSR.HOUSE_CODE
+				  											and VNGL.VENDOR_CODE = LUSR.COMPANY_CODE
+				  		inner join	ICOMADDR_ICT	ADDR	on  LUSR.HOUSE_CODE  = ADDR.HOUSE_CODE
+				  											and LUSR.USER_ID     = ADDR.CODE_NO
+				 where 1=1
+				   and 'ICT'                          = ${user_gubun} 
+				   and VNGL.HOUSE_CODE                = ${session.HOUSE_CODE} 
+				   and VNGL.IRS_NO                    = ${irs_no}
+				   and replace(ADDR.PHONE_NO2,'-','') = ${vendor_sms_no}
+				   and ADDR.CODE_TYPE                 = '3'						-- 사용자 주소정보
+				   and LUSR.STATUS              not in ('D')
+
+	]]>
+	</method>
+
+	<!-- ICT 사용 : sms번호 요청 : PW찾기-->
+	<method name="ReqCheckNo_PW">
+	<![CDATA[
+				select    LUSR.COMPANY_CODE														as VENDOR_CODE
+						, LUSR.USER_ID															as USER_ID
+						, replace(ADDR.PHONE_NO2,'-','')										as MOBILE_NO
+						, substr('000000' || to_char(ROUND(DBMS_RANDOM.VALUE(0,999999),0)), -6) as RND_CHK_NO
+
+				  from				ICOMLUSR	LUSR
+				  		inner join	ICOMADDR	ADDR	on  LUSR.HOUSE_CODE  = ADDR.HOUSE_CODE
+				  										and LUSR.USER_ID     = ADDR.CODE_NO
+				 where 1=1
+				   and 'GAD'                          = ${user_gubun}
+				   and LUSR.HOUSE_CODE                = ${session.HOUSE_CODE} 
+				   and LUSR.USER_ID                   = ${user_id}
+				   and replace(ADDR.PHONE_NO2,'-','') = ${user_sms_no}
+				   and ADDR.CODE_TYPE                 = '3'						-- 사용자 주소정보
+				   and LUSR.STATUS              not in ('D')
+			union all
+				select    LUSR.COMPANY_CODE														as VENDOR_CODE
+						, LUSR.USER_ID															as USER_ID
+						, replace(ADDR.PHONE_NO2,'-','')										as MOBILE_NO
+						, substr('000000' || to_char(ROUND(DBMS_RANDOM.VALUE(0,999999),0)), -6) as RND_CHK_NO
+
+				  from				ICOMLUSR_ICT	LUSR
+				  		inner join	ICOMADDR_ICT	ADDR	on  LUSR.HOUSE_CODE  = ADDR.HOUSE_CODE
+				  											and LUSR.USER_ID     = ADDR.CODE_NO
+				 where 1=1
+				   and 'ICT'                          = ${user_gubun}
+				   and LUSR.HOUSE_CODE                = ${session.HOUSE_CODE} 
+				   and LUSR.USER_ID                   = ${user_id}
+				   and replace(ADDR.PHONE_NO2,'-','') = ${user_sms_no}
+				   and ADDR.CODE_TYPE                 = '3'						-- 사용자 주소정보
+				   and LUSR.STATUS              not in ('D')
+
+	]]>
+	</method>
+
+ <!-- 	신규사용자승인-조회(A73) & 사용자승인-조회	-->
+	<method name="et_getMainternace">
+		SELECT L.HOUSE_CODE,
+	          L.USER_ID,
+	          L.USER_NAME_LOC,
+	          GETICOMCODE2(L.HOUSE_CODE, 'M104', L.work_TYPE) text_work_type,
+		     ( CASE l.USER_TYPE
+		            WHEN 'S' THEN GETICOMCODE2(l.HOUSE_CODE,'M106',l.POSITION)
+		            WHEN 'WOORI' THEN GETICORCODE2(l.HOUSE_CODE, l.COMPANY_CODE, 'C002', l.POSITION)
+		            ELSE GETICORCODE2(l.HOUSE_CODE, l.COMPANY_CODE,'C002',l.POSITION)
+		      END )   AS  POSITION,
+		     ( CASE l.USER_TYPE
+		            WHEN 'S' THEN GETICOMCODE2(l.HOUSE_CODE,'M107',l.MANAGER_POSITION)
+		            WHEN 'WOORI' THEN GETICOMCODE2(l.HOUSE_CODE,'M107',l.MANAGER_POSITION)
+		            ELSE GETICORCODE2(l.HOUSE_CODE, l.COMPANY_CODE,'C001',l.MANAGER_POSITION)
+	     	 END)   as  MANAGER_POSITION,
+	          (CASE
+	              WHEN L.USER_TYPE = 'S'
+	                 THEN GETICOMCODE2(L.HOUSE_CODE, 'M103', L.USER_TYPE)
+	              ELSE GETCOMPANYNAMELOC(L.HOUSE_CODE, L.COMPANY_CODE,
+	                                         L.USER_TYPE)
+	           END
+	          ) AS COMPANY_NAME,
+	          (CASE
+	              WHEN L.USER_TYPE = 'S'
+	                 THEN GETICOMCODE2(L.HOUSE_CODE, 'M103', L.USER_TYPE)
+	              ELSE GETCOMPANYNAMELOC(L.HOUSE_CODE, L.COMPANY_CODE,
+	                                         L.USER_TYPE)
+	           END
+	          ) AS TEXT_USER_TYPE,
+	          (CASE
+	              WHEN L.USER_TYPE = 'S'
+	                 THEN L.DEPT
+	              ELSE GETDEPTNAMELOC(L.HOUSE_CODE, L.COMPANY_CODE, L.DEPT)
+	           END
+	          ) AS DEPT_NAME,
+	          A.PHONE_NO1 AS PHONE_NO,
+	          (SELECT DISTINCT MENU_NAME
+	                      FROM ICOMMUPD
+	                     WHERE HOUSE_CODE = L.HOUSE_CODE 
+						 and MENU_PROFILE_CODE = L.MENU_PROFILE_CODE) AS MENU_NAME,
+	          L.MENU_PROFILE_CODE,
+	          L.SIGN_STATUS,
+	          L.USER_TYPE,
+	          CASE WHEN L.LOGIN_NCY = 'Y' THEN '가능'
+	          	   WHEN L.LOGIN_NCY = 'N' THEN '불가'
+	          	   ELSE '불가' END AS LOGIN_NCY_NAME 
+	          
+	     FROM ICOMLUSR L LEFT OUTER JOIN ICOMADDR A ON L.HOUSE_CODE = A.HOUSE_CODE
+	      											   and L.USER_ID = A.CODE_NO  -- L.COMPAN_CODE 수정
+	    WHERE L.status != 'D'
+		<![CDATA[
+		<OPT=F,S> and l.HOUSE_CODE = ?                          </OPT>
+		<OPT=S,S> AND l.USER_ID LIKE '%' || ? || '%'              </OPT>
+		<OPT=S,S> AND l.USER_NAME_LOC LIKE UPPER('%' || ? || '%') </OPT>
+		<OPT=S,S> AND l.COMPANY_CODE = ?                        </OPT>
+		<OPT=S,S> AND l.DEPT = ?                                </OPT>
+		<OPT=S,S> AND l.USER_TYPE = ?                           </OPT>
+		<OPT=S,S> AND l.WORK_TYPE = ?                           </OPT>		
+		]]>
+
+
+
+	<if test="${sign_status}" operator="eq"	value="R"	>	<!-- R=등록 , A=승인 -->
+		AND l.SIGN_STATUS = 'R'
+	</if>
+
+	<if test="${sign_status}" operator="ne"	value="R"	>
+		AND l.SIGN_STATUS = 'A'
+	</if>
+
+			<if test="${menu_type}" operator="ne" value="${menu_type_admin}">
+			<!-- 2011.3.24 정민석  메뉴프로파일 코드 널값이여서 조회 안되던 부분 NVL사용하여 수정 -->
+			AND NVL(L.MENU_PROFILE_CODE, ' ') != '#menu_type_admin#'
+		</if>
+
+	</method>
+
+
+	<method name="et_getAvailableUser">
+	<![CDATA[
+			--운영사의 ADMIN과 공급사의 ADMIN을 뺀 나머지를 계산한다.
+			SELECT    
+					COUNT(NVL(USER_ID,0)) -2  AS TOTAL_CNT,
+					SUM(CASE WHEN COMPANY_CODE IS NOT NULL AND COMPANY_CODE = '#company_code#' THEN 1 ELSE 0 END) - 2 AS COMPANY_CNT, 
+					SUM(CASE WHEN COMPANY_CODE IS NOT NULL AND COMPANY_CODE != '#company_code#' THEN 1 ELSE 0 END) AS SUPPLY_CNT
+			FROM ICOMLUSR
+			WHERE status != 'D'  
+			and HOUSE_CODE = '#house_code#'
+			AND SIGN_STATUS = 'A'
+			AND LOGIN_NCY = 'Y'			
+	]]>
+	</method>
+
+
+<!-- 	사용자승인-상세정보 	-->
+	<method name="et_getDisplay">
+	   SELECT L.HOUSE_CODE,
+	          L.PASSWORD,
+	          L.USER_ID,
+	          L.USER_NAME_LOC,
+	          (CASE
+	              WHEN L.USER_TYPE = 'S'
+	                 THEN L.USER_NAME_LOC
+	              ELSE GETCOMPANYNAMELOC(L.HOUSE_CODE, L.COMPANY_CODE, L.USER_TYPE)
+	           END
+	          ) AS COMPANY_NAME_LOC,
+	          '' AS COMPANY_NAME_ENG,
+	          L.DEPT,
+	          (CASE
+	              WHEN L.USER_TYPE = 'S'
+	                 THEN GETICOMCODE2(L.HOUSE_CODE, 'M105', L.DEPT)
+	              ELSE GETDEPTNAMELOC(L.HOUSE_CODE, L.COMPANY_CODE, L.DEPT)
+	           END
+	          ) AS DEPT_NAME_LOC,
+	          L.USER_TYPE,
+	          (CASE
+	              WHEN L.USER_TYPE = 'S'
+	                 THEN GETICOMCODE2(L.HOUSE_CODE, 'M103', L.USER_TYPE)
+	              ELSE GETCOMPANYNAMELOC(L.HOUSE_CODE, L.COMPANY_CODE, L.USER_TYPE)
+	           END
+	          ) AS TEXT_USER_TYPE,
+	          L.WORK_TYPE,
+	          GETICOMCODE1(L.HOUSE_CODE, 'M104', L.WORK_TYPE) AS TEXT_WORK_TYPE,
+	          L.USER_NAME_ENG,
+	          L.COMPANY_CODE,
+	          L.RESIDENT_NO,
+	          L.EMPLOYEE_NO,
+	          L.EMAIL,
+	          L.POSITION,
+	          GETICORCODE2(L.HOUSE_CODE, L.COMPANY_CODE, 'C002', L.POSITION) as POSITION_NAME,
+	          GETICOMCODE2(L.HOUSE_CODE, 'M013', L.LANGUAGE) AS LANGUAGE_NAME,
+	          L.LANGUAGE,
+	          L.TIME_ZONE,
+	          GETICOMCODE1(L.HOUSE_CODE, 'M075', L.TIME_ZONE) AS TIME_ZONE_NAME,
+	          L.COUNTRY,
+	          GETICOMCODE2(L.HOUSE_CODE, 'M001', L.COUNTRY) AS COUNTRY_NAME,
+	          (SELECT CASE SUBSTR(CODE, 1, 2)
+	                     WHEN 'KR'
+	                        THEN TEXT2
+	                     ELSE TEXT1
+	                  END AS TEXT
+	             FROM SCODE
+	            WHERE HOUSE_CODE = L.HOUSE_CODE
+	              AND TYPE = 'M004'
+	              AND SUBSTR(CODE, 1, 2) = L.COUNTRY
+	              AND SUBSTR(CODE, 3, 5) = L.CITY_CODE
+	              AND USE_FLAG = 'Y'
+	              AND STATUS IN('C', 'R')) AS CITY_NAME,
+	          STATE,
+	          L.CITY_CODE,
+	          L.PR_LOCATION,
+	          L.MANAGER_POSITION,
+	          GETICOMCODE2(L.HOUSE_CODE, 'M107', L.MANAGER_POSITION) AS MANAGER_POSITION_NAME,
+	          L.USER_TYPE,
+	          (CASE
+	              WHEN L.USER_TYPE = 'S'
+	                 THEN GETICOMCODE2(L.HOUSE_CODE, 'M103', L.USER_TYPE)
+	              ELSE GETCOMPANYNAMELOC(L.HOUSE_CODE, L.COMPANY_CODE,
+	                                         L.USER_TYPE)
+	           END
+	          ) AS TEXT_USER_TYPE,
+	          A.CODE_TYPE,
+	          A.ZIP_CODE,
+	          A.ADDRESS_LOC,
+	          A.ADDRESS_ENG,
+	          A.DELY_ZIP_CODE,
+	          A.DELY_ADDRESS_LOC,
+	          A.PHONE_NO1 AS PHONE_NO,
+	          A.FAX_NO,
+	          A.HOMEPAGE,
+	          L.MENU_PROFILE_CODE,
+	          (SELECT DISTINCT MENU_NAME
+	             FROM ICOMMUPD
+	            WHERE HOUSE_CODE = L.HOUSE_CODE AND MENU_PROFILE_CODE = L.MENU_PROFILE_CODE) AS MENU_PROFILE_NAME,
+	          L.WORK_TYPE,
+	          GETICOMCODE1(L.HOUSE_CODE, 'M104', L.WORK_TYPE) AS TEXT_WORK_TYPE,
+	          L.CTRL_CODE,
+	          GETICOMCODE2(L.HOUSE_CODE, 'M062', L.PR_LOCATION) AS PR_LOCATION_NAME,
+	          A.CEO_NAME_LOC,
+	          A.CEO_NAME_ENG,
+	          A.ZIP_BOX_NO,
+	          A.PHONE_NO2 AS MOBILE_NO,
+	          L.LOGIN_NCY
+	     FROM ICOMLUSR L,
+	          ICOMADDR A
+	    WHERE L.USER_ID = A.CODE_NO  -- L.COMPAN_CODE 수정
+	      AND A.HOUSE_CODE = L.HOUSE_CODE
+	      AND L.HOUSE_CODE = '#house_code#'
+		<![CDATA[
+		<OPT=F,S>  AND L.USER_ID = ?    </OPT>
+		]]>
+
+	</method>
+
+	<method name="et_getUserMenuProfile">
+		<![CDATA[
+		SELECT MENU_PROFILE_CODE FROM ICOMLUSR
+	 	<OPT=F,S> WHERE HOUSE_CODE = ? </OPT>
+		<OPT=F,S> AND USER_ID = ? </OPT>
+		]]>
+	</method>
+	
+<!--  사용자승인 - 승인(버튼)  -->
+	<method name="et_setApproval">
+		 UPDATE ICOMLUSR SET
+		   	  SIGN_STATUS 		= 'A'
+			, MENU_PROFILE_CODE = ?
+			, CHANGE_DATE 		= '#add_date#'
+			, CHANGE_TIME 		= '#add_time#'
+			, CHANGE_USER_ID 	= '#id#'
+			, PW_RESET_FLAG 	= 'N'
+			, PASS_CHECK_CNT	= 0
+			, PW_RESET_DATE		= '#add_date#'
+		 WHERE HOUSE_CODE = ?
+		 AND USER_ID = ?
+	</method>
+
+		<method name="et_setApproval_CTRL">
+			INSERT INTO ICOMBACP
+             (
+                HOUSE_CODE
+              , COMPANY_CODE
+              , CTRL_CODE
+              , CTRL_TYPE
+              , CTRL_PERSON_ID
+              , ADD_USER_ID
+              , STATUS
+              , ADD_DATE
+              , ADD_TIME
+              , CHANGE_USER_ID
+              , CHANGE_DATE
+              , CHANGE_TIME
+             )
+             (
+             SELECT
+                '#house_code#'                  --HOUSE_CODE
+              , '#company_code#'                 --COMPANY_CODE
+              , 'P01'                 --CTRL_CODE
+              , 'P'                 --CTRL_TYPE
+              , USER_ID                 --CTRL_PERSON_ID
+              , '#id#'     --ADD_USER_ID
+              , 'C'      --STATUS
+              , '#add_date#'    --ADD_DATE
+              , '#add_time#'    --ADD_TIME
+              , 'SK_MASTER'     --CHANGE_USER_ID
+              , '#add_date#'    --CHANGE_DATE
+              , '#add_time#'    --CHANGE_TIME
+              FROM ICOMLUSR
+              WHERE HOUSE_CODE = '#house_code#'
+                AND USER_ID = '#user_id#'
+             )
+	</method>
+
+	<!-- 사용자현황-삭제(A72) -->
+	<method name="et_setDelete">
+		 update ICOMLUSR set
+			  status 		= 'D'
+			 ,change_user_id= '#user_id#'
+			 ,change_date 	= TO_CHAR(SYSDATE, 'YYYYMMDD')
+			 ,change_time 	= SUBSTR(TO_CHAR(SYSDATE, 'HH24MISS'), 1, 6)
+		WHERE HOUSE_CODE = ?
+		 AND USER_ID = ?
+	</method>
+
+  	<!-- //사용자현황-수정 > 사용자수정(팝업)-저장(S378) -1 -->
+	<method name="et_setUserInfoUpdate2_01">
+		UPDATE ICOMLUSR
+		SET	 STATUS				    = '#status#'
+			,CHANGE_USER_ID			= '#user_id#'
+			,CHANGE_DATE			= '#change_date#'
+			,CHANGE_TIME			= '#change_time#'
+			,USER_TYPE  			= ?
+			,WORK_TYPE  			= ?
+			,COMPANY_CODE  			= ?
+	<if test="${pwd}" operator="ne"	value="">
+			,PASSWORD  				= '#pwd#'
+			,PW_RESET_DATE  		= '#change_date#'
+	</if>
+			,USER_NAME_LOC  		= ?
+			,USER_NAME_ENG  		= ?
+			,DEPT  			        = ?
+			,RESIDENT_NO  			= ?
+			,EMPLOYEE_NO  			= ?
+			,EMAIL  			    = ?
+			,POSITION  			    = ?
+			,MANAGER_POSITION  		= ?
+			,LANGUAGE  			    = ?
+			,PR_LOCATION  			= ?
+			,TIME_ZONE  			= ?
+			,COUNTRY  			    = ?
+			,CITY_CODE  			= ?
+			,STATE  			    = ?
+			,CTRL_CODE  			= ?
+			,MENU_PROFILE_CODE  	= ?
+			,PW_RESET_FLAG  		= 'Y'
+			,LOGIN_NCY				= ?
+		WHERE HOUSE_CODE            = '#house_code#'
+	  	  AND USER_ID = ?
+	</method>
+
+
+  <!-- //사용자현황-수정 > 사용자수정(팝업)-저장(S378) -2 -->
+	<method name="et_setUserInfoUpdate2_02">
+	 UPDATE ICOMADDR SET
+		     ZIP_CODE       	= ?
+		   , PHONE_NO1      	= ?
+		   , PHONE_NO2      	= ?
+		   , FAX_NO         	= ?
+		   , ADDRESS_LOC    	= ?
+		   , ADDRESS_ENG    	= ?
+		   , EMAIL          	= ?
+		   , DELY_ZIP_CODE  	= ?
+		   , DELY_ADDRESS_LOC 	= ?
+	 WHERE HOUSE_CODE = ?
+	 AND CODE_NO      = ?
+	 AND CODE_TYPE    = ?
+	</method>
+
+	<!-- //사용자현황-그리드에 프로파일명 클릭 팝업(A73 =====> S228) -->
+	<method name="getMenuobject">
+	 SELECT MENU_OBJECT_CODE
+	 FROM   ICOMMUPD
+	 <![CDATA[
+	 <OPT=F,S> WHERE  HOUSE_CODE = ? </OPT>
+	 <OPT=F,S> AND    MENU_PROFILE_CODE =  ? </OPT>
+	 ]]>
+	</method>
+
+</service>

@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<service>
+	<method name="getExpandTreeList">
+		<![CDATA[
+        	SELECT
+        	 SG_REFITEM
+        	 ,SG_NAME
+        	 ,PARENT_SG_REFITEM
+        	 ,LEVEL_COUNT,
+        	 LEAF_FLAG AS IS_LEAF
+        	 ,USE_FLAG AS IS_USE FROM SSGGL 
+			WHERE HOUSE_CODE = ${session.HOUSE_CODE} 
+			AND USE_FLAG = 'Y' 
+			ORDER BY LEVEL_COUNT, SG_REFITEM 				
+		]]>
+	</method>
+	
+	
+	<method name="setNodeInsert">
+	<![CDATA[
+        	insert into SSGGL ( 			
+				house_code, 					
+				sg_refitem, 					
+				sg_name,    					
+				parent_sg_refitem, 				
+				level_count,					
+				LEAF_FLAG,						
+				sg_type,						
+				add_date,						
+				change_date,					
+				add_user_id)					
+				select 						
+				${session.HOUSE_CODE},				
+				NVL(max(sg_refitem),0) + 1,		
+				${sg_name},   							
+				NVL(max(${sg_refitem}),0),   							
+				${level_count},   							
+				${leaf_flag},							
+				'',   							
+				TO_CHAR(SYSDATE,'YYYYMMDD'), 
+				TO_CHAR(SYSDATE,'YYYYMMDD'), 
+				${session.ID} from SSGGL   
+				]]>				
+	</method>
+	
+	<method name="setNodeInsert_select">
+	<![CDATA[
+		select 
+		NVL(max(sg_refitem),0) as sg_refitem
+		from SSGGL
+		]]>
+	</method>
+	
+	<method name="setNodeUpdate">
+	<![CDATA[
+				update SSGGL set									
+				sg_name       = ${sg_name},  								
+				sg_type       = '',  								
+				change_date = TO_CHAR(SYSDATE,'YYYYMMDD'), 		
+				add_user_id = ${session.ID} 					
+				where 
+				house_code = ${session.HOUSE_CODE} 
+				and sg_refitem = ${sg_refitem}    
+				]]>    			
+	</method>
+	
+	<method name="setNodeSelect">
+	<![CDATA[
+				select sg_refitem,level_count
+				from SSGGL
+				where
+				house_code = ${session.HOUSE_CODE} 
+				and sg_refitem = ${sg_refitem}
+				]]>    			
+	</method>
+	
+	<method name="setNodeDelete_1">
+	<![CDATA[
+				update SSGGL set use_flag = 'N' 						
+				where house_code = ${session.HOUSE_CODE} 
+				and sg_refitem = ${sg_refitem}	 						
+				]]>
+	</method>
+	
+	<method name="setNodeDelete_2">
+	<![CDATA[
+				update SSGGL set use_flag = 'N' 						
+				where house_code = ${session.HOUSE_CODE} 
+				and parent_sg_refitem = ${sg_refitem}						
+				]]>
+	</method>
+	
+	<method name="getNodeInfo">
+		<![CDATA[
+				SELECT A.SG_REFITEM, A.SG_NAME, A.DEFINITION,                                       
+				  --A.VENDOR_SPECIAL_REMARK, 
+				  A.NOTICE_FLAG AS IS_NOTICE,                            
+				  NVL((SELECT TEMPLATE_NAME FROM ICOMVSTH WHERE HOUSE_CODE = A.HOUSE_CODE      
+				  			AND S_TEMPLATE_REFITEM = A.S_TEMPLATE_REFITEM),'') AS S_TEMP,       
+				  NVL((SELECT TEMPLATE_NAME FROM ICOMVCTH WHERE HOUSE_CODE = A.HOUSE_CODE      
+				  			AND C_TEMPLATE_REFITEM = A.C_TEMPLATE_REFITEM),'') AS C_TEMP,       
+				  A.PURCHASE_CONDITION,                                                           
+				  A.S_TEMPLATE_REFITEM,                                                           
+				  A.C_TEMPLATE_REFITEM,                                                           
+				  A.SG_CHARGE AS USER_ID,                                                         
+				  NVL((SELECT USER_NAME_LOC FROM ICOMLUSR WHERE HOUSE_CODE = A.HOUSE_CODE      
+				  			AND USER_ID = A.SG_CHARGE),'') AS USER_NAME_LOC,                    
+				  NVL((SELECT TEXT1 FROM SCODE WHERE HOUSE_CODE = ${session.HOUSE_CODE}                     
+				  		AND TYPE='M127' AND CODE = A.SG_TYPE AND NVL(DEL_FLAG, 'N') = 'N'),'') AS TYPE
+				  --,A.ATTACH_NO,   
+				  --S.SRC_FILE_NAME as FILE_NAME            
+				FROM SSGGL A 
+				--LEFT OUTER JOIN SFILE S        
+				--on (A.ATTACH_NO=S.DOC_NO)                                                           
+				WHERE 
+				A.HOUSE_CODE = ${session.HOUSE_CODE}                                               
+				AND A.SG_REFITEM = ${sg_refitem} 		
+		]]>
+	</method>	
+	
+<!-- 	<method name="getNodeInfo"> -->
+<!-- 		<![CDATA[ -->
+<!-- 				SELECT A.SG_REFITEM, A.SG_NAME, A.DEFINITION,                                        -->
+<!-- 				  A.VENDOR_SPECIAL_REMARK, A.NOTICE_FLAG AS IS_NOTICE,                             -->
+<!-- 				  NVL((SELECT TEMPLATE_NAME FROM ICOMVSTH WHERE HOUSE_CODE = A.HOUSE_CODE       -->
+<!-- 				  			AND S_TEMPLATE_REFITEM = A.S_TEMPLATE_REFITEM),'') AS S_TEMP,        -->
+<!-- 				  NVL((SELECT TEMPLATE_NAME FROM ICOMVCTH WHERE HOUSE_CODE = A.HOUSE_CODE       -->
+<!-- 				  			AND C_TEMPLATE_REFITEM = A.C_TEMPLATE_REFITEM),'') AS C_TEMP,        -->
+<!-- 				  A.PURCHASE_CONDITION,                                                            -->
+<!-- 				  A.S_TEMPLATE_REFITEM,                                                            -->
+<!-- 				  A.C_TEMPLATE_REFITEM,                                                            -->
+<!-- 				  A.SG_CHARGE AS USER_ID,                                                          -->
+<!-- 				  NVL((SELECT USER_NAME_LOC FROM ICOMLUSR WHERE HOUSE_CODE = A.HOUSE_CODE       -->
+<!-- 				  			AND USER_ID = A.SG_CHARGE),'') AS USER_NAME_LOC,                     -->
+<!-- 				  NVL((SELECT TEXT1 FROM SCODE WHERE HOUSE_CODE = ${session.HOUSE_CODE}                      -->
+<!-- 				  		AND TYPE='M127' AND CODE = A.SG_TYPE AND NVL(DEL_FLAG, 'N') = 'N'),'') AS TYPE, -->
+<!-- 				  A.ATTACH_NO,    -->
+<!-- 				  S.SRC_FILE_NAME as FILE_NAME             -->
+<!-- 				FROM SSGGL A LEFT OUTER JOIN SFILE S         -->
+<!-- 				on (A.ATTACH_NO=S.DOC_NO)                                                            -->
+<!-- 				WHERE  -->
+<!-- 				A.HOUSE_CODE = ${session.HOUSE_CODE}                                                -->
+<!-- 				AND A.SG_REFITEM = ${sg_refitem} 		 -->
+<!-- 		]]> -->
+<!-- 	</method>	 -->
+	
+	<method name="setSgUpdate">
+		<![CDATA[
+         update SSGGL
+                     set sg_name               = ${sgname}
+                        ,definition            = ${definition}
+                        ,vendor_special_remark = ${remark}
+                        ,NOTICE_FLAG           = ${is_notice}
+                        ,s_template_refitem    = ${st_num}
+                        ,c_template_refitem    = ${ct_num}
+                        ,purchase_condition    = ${condition}
+                        ,change_date           = TO_CHAR(SYSDATE,'YYYYMMDD')
+                        ,sg_charge             = ${user_id}
+                        ,attach_no             = ${ATTACH_NO}
+          where house_code = ${session.HOUSE_CODE} 
+            and sg_refitem = NVL(${sgrefitem},0)
+		]]>
+	</method>	
+	
+</service>

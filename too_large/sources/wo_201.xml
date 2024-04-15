@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<service>
+	<method name="selectQueryCntYear">
+	<![CDATA[
+		SELECT
+			COUNT(*) AS CNT,
+			SUBSTR(MAX(ADD_DATE), 0, 4) AS YEAR
+		FROM
+			SCODE
+		WHERE
+			TYPE               = 'EV001'
+		AND
+			LANGUAGE           = 'KO'
+		AND
+			NVL(DEL_FLAG, 'N') = 'N'												
+		 ]]>
+	</method>
+	
+	<method name="insertQueryScode">
+		INSERT INTO SCODE (
+			TYPE,        CODE,     LANGUAGE, ADD_DATE, ADD_TIME,
+			ADD_USER_ID, USE_FLAG, TEXT1,    DEL_FLAG, HOUSE_CODE
+		)
+		SELECT
+			TYPE,           CODE,     LANGUAGE, TO_CHAR(SYSDATE, 'YYYYMMDD'), TO_CHAR(SYSDATE, 'HH24MISS'),
+			${ADD_USER_ID}, USE_FLAG, TEXT1,    DEL_FLAG,                     HOUSE_CODE
+		FROM
+			SCODE
+		WHERE
+			TYPE = 'EV001'
+		AND
+			LANGUAGE = 'KO'
+		AND
+			ADD_DATE LIKE '%' ||  ${YEAR} || '%'
+		AND
+			USE_FLAG = 'Y'
+	</method>
+	
+	<method name="selectQeuryList">
+		SELECT
+			TEXT1    AS NAME,
+			USE_FLAG AS USEFLAG,
+			CODE,
+			ADD_DATE
+		FROM
+			SCODE
+		WHERE TYPE     = 'EV001'
+		AND   LANGUAGE = 'KO'
+		AND   USE_FLAG = $S{USE_FLAG}
+		AND   ADD_DATE LIKE '%' || ${ADD_DATE} || '%'
+		AND   CODE     LIKE '%' || $S{CODE}    || '%'
+		AND   NVL(DEL_FLAG, 'N') = 'N'
+		ORDER BY
+			ADD_DATE DESC,
+			ADD_TIME DESC
+	</method>
+	
+	<method name="updateScodeInfo">
+		UPDATE
+			SCODE
+		SET
+			USE_FLAG = ${USE_FLAG},
+			TEXT1    = ${TEXT1}
+		WHERE
+			TYPE     = 'EV001'
+		AND
+			CODE     = ${CODE}
+		AND
+			LANGUAGE = 'KO'
+		AND
+			ADD_DATE = ${ADD_DATE}
+	</method>
+	
+	<method name="insertScodeInfo">
+		INSERT INTO SCODE (
+			TYPE,        CODE,     LANGUAGE, ADD_DATE,  ADD_TIME,
+			ADD_USER_ID, USE_FLAG, TEXT1,    HOUSE_CODE
+		)
+		VALUES(
+			'EV001',
+			(
+				SELECT
+					'ev' || DECODE(COUNT(*), 0 ,1, COUNT(*) + 1) AS CNT_MAX
+				FROM
+					SCODE
+				WHERE
+					TYPE = 'EV001'
+				AND
+					LANGUAGE = 'KO'
+			),
+			'KO', TO_CHAR(SYSDATE, 'YYYYMMDD'), TO_CHAR(SYSDATE, 'HH24MISS'),
+			
+			${ADD_USER_ID},
+			${USE_FLAG},
+			${TEXT1},
+			${HOUSE_CODE}
+		)
+	</method>
+	
+	<method name="selectSevlnCnt">
+		SELECT
+			COUNT(*) CNT
+		FROM
+			SEVLN
+		WHERE
+			1         = 1
+		AND
+			EV_M_ITEM = ${EV_M_ITEM}
+		AND EV_D_ITEM = $S{EV_D_ITEM}
+		AND
+			NVL(DEL_FLAG,'N') = 'N'	
+	</method>
+	
+	<method name="deleteScodeEv001">
+		UPDATE SCODE SET
+			DEL_FLAG = 'Y' 
+		WHERE
+			TYPE     = 'EV001'
+		AND
+			CODE     = ${CODE}
+		AND
+			LANGUAGE = 'KO'
+		AND
+			ADD_DATE = ${ADD_DATE}
+	</method>
+	
+	<method name="deleteScodeInfo">
+		UPDATE SCODE SET
+			DEL_FLAG = 'Y' 
+		WHERE
+			TYPE = ${CODE}
+		AND
+			LANGUAGE = 'KO'
+		AND
+			ADD_DATE LIKE '%' || ${ADD_DATE_YEAR} || '%'
+	</method>
+</service>	

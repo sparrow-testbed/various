@@ -1,0 +1,758 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+<service>
+
+	<method name="et_mty_getMaintain">
+	<![CDATA[
+		select
+			use_flag,
+			code,
+			text2,
+			text1,
+			text3,
+			text4,
+			text5,
+			text6,
+			text7
+		from
+			scode
+	 	where
+	 		type = ${type}
+		and
+			house_code = ${house_code}
+		]]>
+		<if test="${code}" operator = "eq" value="">
+			and code not in ('01','02','03')
+		</if>
+		<if test="${code}" operator = "ne" value="">
+			and code = ${code}
+		</if> 																
+	</method>
+
+	<method name="et_mty_setUpdate">
+	<![CDATA[
+		UPDATE
+			SCODE
+		SET
+			CHANGE_USER_ID = ${CHANGE_USER_ID},
+			CHANGE_DATE    = TO_CHAR(SYSDATE, 'YYYYMMDD'),
+			CHANGE_TIME    = TO_CHAR(SYSDATE, 'HH24MISS'),
+			USE_FLAG       = ${USE_FLAG},
+			TEXT2          = ${TEXT2},
+			TEXT1          = ${TEXT1},
+			TEXT3          = ${TEXT3},
+			TEXT4          = ${TEXT4},
+			TEXT5          = ${TEXT5},
+			TEXT6          = ${TEXT6},
+			TEXT7          = ${TEXT7}
+		WHERE
+			TYPE       = ${TYPE}
+		AND
+			CODE       = ${CODE}
+		AND
+			HOUSE_CODE = ${HOUSE_CODE}
+	]]>
+	</method>
+
+	<method name="et_mty_setDelete">
+	<![CDATA[
+		DELETE FROM
+			SCODE
+		WHERE
+			TYPE       = ${TYPE}
+		AND
+			CODE       = ${CODE}
+		AND
+			HOUSE_CODE = ${HOUSE_CODE}
+	]]>
+	</method>
+	
+	<method name="chkCodeCount">
+	<![CDATA[
+		SELECT 
+			TO_CHAR(COUNT(CODE)) as cnt
+		FROM
+			SCODE
+		WHERE
+			TYPE IN ('M040', 'M041', 'M042', 'M122')
+		AND
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			SUBSTR(
+				CODE,
+				0,
+				LENGTH(${CODE})
+			) = ${CODE}
+		AND
+			CODE NOT IN (${CODE})
+	]]>
+	</method>	
+
+	<method name="et_mct_getMaintain">
+	<![CDATA[
+		SELECT 
+			USE_FLAG,
+			TEXT3,
+			CODE,
+			TEXT2,
+			TEXT1,
+			TEXT4,
+			TEXT5,
+			GETICOMCODE1('100', 'M051', TEXT5) AS STA_NAME,
+			TEXT6,
+			TEXT7
+		FROM
+			SCODE
+ 		WHERE
+ 			TYPE = ${TYPE}
+		AND
+			HOUSE_CODE = ${HOUSE_CODE}
+ 		AND
+ 			SUBSTR(
+ 				CODE,
+ 				0,
+ 				LENGTH(${CODE})
+ 			) = ${CODE} 
+	]]>
+	</method>
+
+	<method name="et_mct_setUpdate">
+	<![CDATA[
+		UPDATE
+			SCODE
+		SET
+			CHANGE_USER_ID = ${CHANGE_USER_ID},
+			CHANGE_DATE    = TO_CHAR(SYSDATE, 'YYYYMMDD'),
+			CHANGE_TIME    = TO_CHAR(SYSDATE, 'HH24MISS'),
+			TEXT2          = ${TEXT2},
+			TEXT1          = ${TEXT1},
+			TEXT4          = ${TEXT4},
+			TEXT5          = ${TEXT5},
+			TEXT6          = ${TEXT6},
+			TEXT7          = ${TEXT7},
+			USE_FLAG       = ${USE_FLAG}
+		WHERE
+			TYPE       = ${TYPE}
+		AND
+			CODE       = ${CODE}
+		AND
+			TEXT3      = ${TEXT3}
+		AND
+			HOUSE_CODE = ${HOUSE_CODE}
+	]]>
+	</method>
+
+	<method name="">
+	<![CDATA[
+		 SELECT USE_FLAG, TEXT3, TEXT4, CODE, TEXT1, TEXT2, TEXT5, TEXT6, TEXT7
+           FROM ICOMCODE
+      <OPT=F,S> WHERE TEXT3  = ? </OPT>
+      <OPT=F,S> AND TEXT4  = ? </OPT>
+      		    AND HOUSE_CODE = '#house_code#'
+      <OPT=F,S> AND TYPE = ? </OPT>
+                AND STATUS != 'D'
+	]]>
+	</method>
+
+	<method name="et_mcl_setUpdate">
+	<![CDATA[
+		UPDATE	
+			SCODE
+		SET
+			CHANGE_USER_ID = ${CHANGE_USER_ID},
+			CHANGE_DATE    = TO_CHAR(SYSDATE, 'YYYYMMDD'),
+			CHANGE_TIME    = TO_CHAR(SYSDATE, 'HH24MISS'),
+			USE_FLAG       = ${USE_FLAG},
+			TEXT3          = ${TEXT3},
+			TEXT4          = ${TEXT4},
+			TEXT1          = ${TEXT1},
+			TEXT2          = ${TEXT2},
+			TEXT5          = ${TEXT5},
+			TEXT6          = ${TEXT6},
+			TEXT7          = ${TEXT7}
+		WHERE
+			TYPE       = ${TYPE}
+		AND
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			CODE       = ${CODE}
+	]]>
+	</method>
+
+	<method name="et_mty_checkItem">
+	<![CDATA[
+		select
+			count(*) AS CNT
+		from
+			scode
+		where
+			house_code = ${house_code}
+       	and
+       		type = ${type}
+		--and status != 'D'
+		and
+			code  = ${item_type}
+	]]>
+	</method>
+
+	<method name="et_mty_setInsert">
+	<![CDATA[
+		 INSERT INTO SCODE (
+		 	HOUSE_CODE, TYPE,        CODE,        LANGUAGE,    ADD_DATE, 
+		 	ADD_TIME,   ADD_USER_ID, CHANGE_DATE, CHANGE_TIME, CHANGE_USER_ID, 
+		 	FLAG,       SORT_SEQ,    USE_FLAG,    IF_FLAG,     TEXT1, 
+		 	TEXT2,      TEXT3,       TEXT4,       TEXT5,       TEXT6, 
+		 	TEXT7,      TEXT8,       DEL_FLAG,    ACC_DATE
+		 )
+         VALUES(
+         	${HOUSE_CODE},
+         	${TYPE},
+         	${CODE},
+         	'KO',
+         	TO_CHAR(SYSDATE, 'YYYYMMDD'),
+         	
+         	TO_CHAR(SYSDATE, 'HH24MISS'),
+         	${USER_ID},
+         	TO_CHAR(SYSDATE, 'YYYYMMDD'),
+         	TO_CHAR(SYSDATE, 'HH24MISS'),
+         	${USER_ID},
+         	
+         	NULL,
+         	1,
+         	${USE_FLAG},
+         	'N',
+         	${TEXT1},
+         	
+         	${TEXT2},
+         	${TEXT3},
+         	${TEXT4},
+			${TEXT5},
+			${TEXT6},
+			
+			${TEXT7}, 
+         	NULL,
+         	NULL,
+         	NULL
+         )
+	]]>
+	</method>
+
+	<method name="et_getCount">
+	<![CDATA[
+		 select count(*)
+		   from icomcode
+          where house_code = '#house_code#'
+      <OPT=F,S> and type = ? </OPT>
+      <OPT=F,S> and text3 = ? </OPT>
+      <OPT=S,S> and text4 = ? </OPT>
+	]]>
+	</method>
+
+	<method name="et_mct_checkItem">
+	<![CDATA[
+		SELECT
+			DECODE(COUNT(CODE), 0, 'Y', 'N') AS CNT
+		FROM
+			SCODE
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			TYPE       = ${TYPE}
+		AND
+			CODE       = ${CODE}
+	]]>
+	</method>
+
+	<method name="et_mct_setInsert">
+	<![CDATA[
+		  INSERT INTO SCODE (
+		 	HOUSE_CODE, TYPE,        CODE,        LANGUAGE,    ADD_DATE, 
+		 	ADD_TIME,   ADD_USER_ID, CHANGE_DATE, CHANGE_TIME, CHANGE_USER_ID, 
+		 	FLAG,       SORT_SEQ,    USE_FLAG,    IF_FLAG,     TEXT1, 
+		 	TEXT2,      TEXT3,       TEXT4,       TEXT5,       TEXT6, 
+		 	TEXT7,      TEXT8,       DEL_FLAG,    ACC_DATE
+		 )
+         VALUES(
+         	${HOUSE_CODE},
+         	${TYPE},
+         	${CODE},
+         	'KO',
+         	TO_CHAR(SYSDATE, 'YYYYMMDD'),
+         	
+         	TO_CHAR(SYSDATE, 'HH24MISS'),
+         	${USER_ID},
+         	TO_CHAR(SYSDATE, 'YYYYMMDD'),
+         	TO_CHAR(SYSDATE, 'HH24MISS'),
+         	${USER_ID},
+         	
+         	NULL,
+         	1,
+         	${USE_FLAG},
+         	'N',
+         	${TEXT1},
+         	
+         	${TEXT2},
+         	${TEXT3},
+         	${TEXT4},
+			${TEXT5},
+			${TEXT6},
+			
+			${TEXT7}, 
+         	NULL,
+         	NULL,
+         	NULL
+         )
+	]]>
+	</method>
+
+	<method name="et_mct_setDelete">
+	<![CDATA[
+		DELETE FROM
+			SCODE
+		WHERE
+			TYPE = ${TYPE}
+		AND
+			CODE = ${CODE}
+		AND
+			TEXT3 = ${TEXT3}
+		AND
+			HOUSE_CODE = ${HOUSE_CODE}
+	]]>
+	</method>
+
+	<method name="et_mcl_getMainternace">
+	<![CDATA[
+		SELECT
+		  	USE_FLAG,
+		  	TEXT3,
+		  	TEXT4,
+		  	CODE,
+		  	TEXT1,
+		  	TEXT2,
+		  	TEXT5,
+		  	TEXT6,
+		  	TEXT7
+		FROM
+			SCODE
+ 		WHERE
+ 			TEXT3      = ${TEXT3}
+		AND
+			TEXT4      = ${TEXT4}
+		AND
+			HOUSE_CODE = ${HOUSE_CODE}
+ 		AND
+ 			TYPE       = ${TYPE}
+	]]>
+	</method>
+
+	<method name="et_getMaxClass">
+		SELECT 
+			${ITEM_CODE} || LPAD(NVL(COUNT(0), 0) + 1, 3, '0') AS CLASS
+		FROM
+			SCODE
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			TYPE = ${TYPE}		
+		AND
+			SUBSTR(
+				CODE,
+				0,
+				LENGTH(${ITEM_CODE})
+			) = ${ITEM_CODE}
+	</method>
+
+	<method name="et_mcl_checkItem">
+	<![CDATA[
+		SELECT
+			DECODE(COUNT(CODE), 0, 'Y', 'N') AS CNT
+		FROM
+			SCODE
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			TYPE = ${TYPE}
+		AND
+			CODE = ${CODE}
+	]]>
+	</method>
+	
+	<method name="et_mcl_checkItem2">
+	<![CDATA[
+		select
+			DECODE(COUNT(CODE), 0, 'Y', 'N') AS CNT
+		from
+			scode
+		where
+			house_code = ${house_code}
+		and
+			type       = ${type}
+		and
+			code       = ${code}
+	]]>
+	</method>
+	
+	<method name="et_mcl_checkItem_1">
+	<![CDATA[
+		  select NVL(TEXT3,'X'), NVL(TEXT4,'X')
+            FROM ICOMCODE
+           WHERE HOUSE_CODE = '#house_code#'
+       <OPT=F,S> AND TYPE = ? </OPT>
+                 AND STATUS != 'D'
+       <OPT=F,S> AND CODE  = ? </OPT>
+	]]>
+	</method>
+
+	<method name="et_mcl_checkItem2_1">
+	<![CDATA[
+		  select NVL(text3,'X'), NVL(text4,'X'), NVL(text5,'X')
+            from icomcode
+           where house_code = '#house_code#'
+   <OPT=F,S> and type = ? </OPT>
+             and status != 'D'
+   <OPT=F,S> and code  = ? </OPT>
+	]]>
+	</method>
+
+
+
+	<method name="et_mcl_setInsert">
+	<![CDATA[
+		   INSERT INTO SCODE (
+		 	HOUSE_CODE, TYPE,        CODE,        LANGUAGE,    ADD_DATE, 
+		 	ADD_TIME,   ADD_USER_ID, CHANGE_DATE, CHANGE_TIME, CHANGE_USER_ID, 
+		 	FLAG,       SORT_SEQ,    USE_FLAG,    IF_FLAG,     TEXT1, 
+		 	TEXT2,      TEXT3,       TEXT4,       TEXT5,       TEXT6, 
+		 	TEXT7,      TEXT8,       DEL_FLAG,    ACC_DATE
+		 )
+         VALUES(
+         	${HOUSE_CODE},
+         	${TYPE},
+         	${CODE},
+         	'KO',
+         	TO_CHAR(SYSDATE, 'YYYYMMDD'),
+         	
+         	TO_CHAR(SYSDATE, 'HH24MISS'),
+         	${USER_ID},
+         	TO_CHAR(SYSDATE, 'YYYYMMDD'),
+         	TO_CHAR(SYSDATE, 'HH24MISS'),
+         	${USER_ID},
+         	
+         	NULL,
+         	1,
+         	${USE_FLAG},
+         	'N',
+         	${TEXT1},
+         	
+         	${TEXT2},
+         	${TEXT3},
+         	${TEXT4},
+			${TEXT5},
+			${TEXT6},
+			
+			${TEXT7}, 
+         	NULL,
+         	NULL,
+         	NULL
+         )
+	]]>
+	</method>
+
+	<method name="et_mcl_setDelete">
+	<![CDATA[
+		DELETE FROM
+			SCODE
+		WHERE
+			TYPE       = ${TYPE}
+		AND
+			CODE       = ${CODE}
+		AND
+			HOUSE_CODE = ${HOUSE_CODE}
+	]]>
+	</method>
+
+	<method name="et_delClssCount">
+	<![CDATA[
+		   SELECT COUNT(*)
+		     FROM ICOMMCPM
+            WHERE HOUSE_CODE = '#house_code#'
+        <OPT=F,S> AND MATERIAL_CLASS1 = ? </OPT>
+	]]>
+	</method>
+
+	<method name="et_getPurArea">
+	<![CDATA[
+		SELECT
+			M.PURCHASE_LOCATION as area_code,
+			GETICOMCODE2(M.HOUSE_CODE,'M039',M.PURCHASE_LOCATION) AS area_name,
+			M.CTRL_CODE as ctrl_code,
+			M.CTRL_TYPE as ctrl_type,
+			M.COMPANY_CODE as company_code,
+			P.CTRL_NAME_LOC
+		FROM
+			ICOMBACO P,
+			ICOMMCPM M
+ 		WHERE
+ 			M.HOUSE_CODE      = ${HOUSE_CODE}
+		AND
+			P.HOUSE_CODE      = M.HOUSE_CODE
+ 		AND
+ 			M.MATERIAL_CLASS1 = ${MATERIAL_CLASS1}
+ 		AND
+ 			P.CTRL_TYPE       = ${CTRL_TYPE}
+		AND
+			P.CTRL_CODE       = M.CTRL_CODE
+		AND
+			P.COMPANY_CODE    = M.COMPANY_CODE
+	]]>
+	</method>
+
+	<method name="et_getCtrlperson_1">
+	<![CDATA[
+		SELECT
+			COUNT(*)
+		FROM
+			ICOMBACO
+		WHERE
+			HOUSE_CODE   = ${HOUSE_CODE}
+		AND
+			COMPANY_CODE = ${COMPANY_CODE}
+		AND
+			CTRL_CODE    = ${CTRL_CODE}
+	]]>
+	</method>
+
+	<method name="et_getCtrlperson_2">
+	<![CDATA[
+		 SELECT
+		 	CTRL_PERSON_ID
+		FROM
+			ICOMBACP
+		where
+			house_code   = ${HOUSE_CODE}
+		and
+			company_code = ${COMPANY_CODE}
+		and
+			ctrl_type    = 'P'
+		and
+			ctrl_code    = ${CTRL_CODE}
+	]]>
+	</method>
+
+	<method name="et_Area_setInsert">
+	<![CDATA[
+		 INSERT INTO ICOMMCPM (
+			MATERIAL_CLASS1, PURCHASE_LOCATION, CTRL_TYPE, CTRL_CODE,      COMPANY_CODE,
+			ADD_USER_ID,     ADD_DATE,          ADD_TIME,  CHANGE_USER_ID, CHANGE_DATE,
+			CHANGE_TIME,     HOUSE_CODE
+		 )
+         VALUES(
+	         ${MATERIAL_CLASS1},
+	         ${PURCHASE_LOCATION},
+	         ${CTRL_TYPE},
+	         ${CTRL_CODE},
+	         ${COMPANY_CODE},
+	         
+	         ${ADD_USER_ID},
+	         TO_CHAR(SYSDATE, 'YYYYMMDD'),
+	         TO_CHAR(SYSDATE, 'HH24MISS'),
+	         ${ADD_USER_ID},
+	         TO_CHAR(SYSDATE, 'YYYYMMDD'),
+	         
+	         TO_CHAR(SYSDATE, 'HH24MISS'),
+	         ${HOUSE_CODE}
+         )
+	]]>
+	</method>
+
+	<method name="et_Area_setDelete">
+	<![CDATA[
+		DELETE FROM
+			ICOMMCPM
+		WHERE
+			MATERIAL_CLASS1   = ${MATERIAL_CLASS1}
+		AND
+			PURCHASE_LOCATION = ${PURCHASE_LOCATION}
+		AND
+			HOUSE_CODE        = ${HOUSE_CODE}
+	]]>
+	</method>
+
+
+	<method name="et_msp_getMainternace">
+	<![CDATA[
+	select 	'' as pr_type,
+	        a.text3 as code3,
+	        (select text2 from icomcode where house_code='#house_code#' and type = 'M040' and code = a.text3) as text3,
+	        a.text4 as code4,
+	        (select text2 from icomcode where house_code='#house_code#' and type = 'M041' and code = a.text4) as text4,
+	        a.code as code5,
+	        (select text2 from icomcode where house_code='#house_code#' and type = 'M042' and code = a.code) as text5,
+	        a.code,
+	        a.text2,
+	        a.text1,
+	        a.use_flag,
+	        a.sort_seq
+	  from	icomcode a
+	 where	a.house_code = '#house_code#'
+	   and	a.type = 'M042'
+	  <OPT=S,S> and text3  = ?  </OPT>
+	  <OPT=S,S> and text4  = ?  </OPT>
+	  <OPT=S,S> and code   = ?  </OPT>
+	  <OPT=S,S> and text2  like '%' || ?  || '%'     </OPT>
+	  <OPT=S,S> and upper(text1)  like upper('%' || ? || '%')     </OPT>
+	   and	a.status <> 'D'
+	order by a.code
+	]]>
+	</method>
+
+	<method name="et_mcl_getMainternace2">
+	<![CDATA[
+		select
+			use_flag,
+			text3,
+			geticomcode1(house_code, 'M040', text3) as text3_name,
+			text4,
+			geticomcode1(house_code, 'M041', text4) as text4_name,
+			text5,
+			geticomcode1(house_code, 'M042', text5) as text5_name,
+			code,
+			text1,
+			text2,
+			text6,
+			text7
+		from
+			scode
+		where
+			1=1
+		and
+			text3  = ${text3}
+		and
+			text4  = ${text4}
+		and
+			text5  = ${text5}
+		and
+			house_code = ${house_code}
+		and
+			type = ${type}
+	]]>
+	</method>
+
+
+	<method name="et_mcl_setInsert2">
+	<![CDATA[
+		INSERT INTO SCODE (
+		 	HOUSE_CODE, TYPE,        CODE,        LANGUAGE,    ADD_DATE, 
+		 	ADD_TIME,   ADD_USER_ID, CHANGE_DATE, CHANGE_TIME, CHANGE_USER_ID, 
+		 	FLAG,       SORT_SEQ,    USE_FLAG,    IF_FLAG,     TEXT1, 
+		 	TEXT2,      TEXT3,       TEXT4,       TEXT5,       TEXT6, 
+		 	TEXT7,      TEXT8,       DEL_FLAG,    ACC_DATE
+		 )
+         VALUES(
+         	${HOUSE_CODE},
+         	${TYPE},
+         	${CODE},
+         	'KO',
+         	TO_CHAR(SYSDATE, 'YYYYMMDD'),
+         	
+         	TO_CHAR(SYSDATE, 'HH24MISS'),
+         	${USER_ID},
+         	TO_CHAR(SYSDATE, 'YYYYMMDD'),
+         	TO_CHAR(SYSDATE, 'HH24MISS'),
+         	${USER_ID},
+         	
+         	NULL,
+         	1,
+         	${USE_FLAG},
+         	'N',
+         	${TEXT1},
+         	
+         	${TEXT2},
+         	${TEXT3},
+         	${TEXT4},
+			${TEXT5},
+			${TEXT6},
+			
+			${TEXT7}, 
+         	NULL,
+         	NULL,
+         	NULL
+         )
+	]]>
+	</method>
+
+
+
+
+
+
+
+	<method name="">
+		<if test="" operator="" value="">
+
+		</if>
+	</method>
+
+	<method name="et_mcl_setUpdate2">
+	 	update
+	 		scode
+		set
+			change_user_id = ${change_user_id},
+			change_date    = TO_CHAR(SYSDATE, 'YYYYMMDD'),
+			change_time    = TO_CHAR(SYSDATE, 'HH24MISS'),
+			use_flag       = ${use_flag},
+			text3          = ${text3},
+			text4          = ${text4},
+			text5          = ${text5},
+			text1          = ${text1},
+			text2          = ${text2},
+			text6          = ${text6},
+			text7          = ${text7}
+		where
+			type       = ${type}
+		and
+			house_code = ${house_code}
+		and
+			code       = ${code}
+	</method>
+
+	<method name="et_mcl_setDelete2">
+		delete from
+			scode
+		where
+			type = ${type}
+		and
+			code = ${code}
+		and
+			house_code = ${house_code}
+
+	</method>
+
+	<method name="">
+
+	</method>
+
+	<method name="">
+
+	</method>
+
+	<method name="">
+
+	</method>
+
+	<method name="">
+
+	</method>
+
+	<method name="">
+
+	</method>
+
+	<method name="">
+
+	</method>
+
+	<method name="">
+
+	</method>
+
+</service>

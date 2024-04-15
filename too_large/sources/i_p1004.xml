@@ -1,0 +1,1332 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<service>
+
+<method name="getRfqList">
+	<![CDATA[
+			SELECT                                                                                                                          
+			 		 H.RFQ_STATUS
+			 		,(SELECT TEXT1 FROM SCODE WHERE TYPE = 'M661_ICT' AND CODE = H.RFQ_STATUS) RFQ_STATUS_TEXT
+			 		/*			 		                                                                                                               
+			 		,(CASE
+		                WHEN TO_NUMBER(TO_CHAR(SYSDATE,'YYYYMMDD') || SUBSTR(TO_CHAR(SYSDATE, 'HH24MISS'), 1, 6)) < TO_NUMBER(H.RFQ_CLOSE_DATE || rpad(H.RFQ_CLOSE_TIME,6,'0')) THEN (SELECT TEXT1 FROM SCODE WHERE TYPE = 'M661_ICT' AND CODE = H.RFQ_STATUS)
+		                WHEN H.RFQ_STATUS = 'T' THEN '견적중'
+		                ELSE '견적마감'
+		                END
+		              ) AS RFQ_STATUS_TEXT
+			 		 */                        
+			 		,H.RFQ_NO                                                                                                                  
+			 		,H.RFQ_COUNT
+			 		,H.RFQ_NM
+			 		,H.BIZ_NO
+			 		,B.BIZ_NM			 		
+			 		,H.ITEM_NO
+			 		,(SELECT TEXT1 FROM SCODE WHERE TYPE = 'M680_ICT' AND CODE = H.ITEM_NO) ITEM_NM
+			 		,H.ITEM_CN
+			 		,H.RMK_TXT
+			 		,H.RFQ_DATE
+			 		,H.RFQ_CLOSE_DATE||H.RFQ_CLOSE_TIME RFQ_CLOSE_DT   
+			 		,H.RFQ_CLOSE_DATE                                                                               
+			 		,H.RFQ_CLOSE_TIME
+			 		,H.RFQ_ID
+			 		,H.RFQ_NAME			 		
+			 		,(SELECT COUNT(DISTINCT VENDOR_CODE) 
+			 		    FROM ICOYRQOP_ICT
+				       WHERE RFQ_NO = H.RFQ_NO
+				         AND RFQ_COUNT = H.RFQ_COUNT
+				         AND STATUS IN ('C','R')				         
+				     ) AS VENDOR_CNT     
+				    ,(SELECT COUNT(DISTINCT VENDOR_CODE) 
+			 		    FROM ICOYRQOP_ICT
+				       WHERE RFQ_NO = H.RFQ_NO
+				         AND RFQ_COUNT = H.RFQ_COUNT
+				         AND STATUS IN ('C','R')
+				         AND SUBMIT_FLAG = 'Y'				         
+				     ) AS SUBMIT_COUNT                                                  			                                              			 
+			 FROM ICOYRQHD_ICT H, ICOYRQBZ_ICT B                                                                                                                  
+			 WHERE H.BIZ_NO = B.BIZ_NO
+			 AND   H.STATUS IN ('C', 'R')
+			 AND   B.STATUS IN ('C', 'R')                                                                                                           
+			 AND   H.CHANGE_DATE  BETWEEN   $S{start_change_date} 
+			 AND  $S{end_change_date}                                                       
+			 AND   H.BIZ_NO            =    $S{biz_no}
+			 AND   B.BIZ_NM            LIKE  '%' || $S{biz_nm} || '%'                                                                
+			 AND   H.RFQ_NO            =    $S{rfq_no} 			 
+			 AND   H.RFQ_NM            LIKE  '%' || $S{rfq_nm} || '%'                                                                			                                                                              
+			 AND   H.RMK_TXT LIKE '%' || $S{subject} || '%'                                                                               
+			 AND   H.RFQ_ID = $S{ctrl_person_id}  			                       
+	]]>
+			<if test="${rfq_status}" operator="eq" value="">
+			<![CDATA[
+			 AND  H.RFQ_STATUS IN ('T','B')                                                                                                        
+			 --AND  TO_NUMBER(TO_CHAR(SYSDATE,'YYYYMMDD') || SUBSTR(TO_CHAR(SYSDATE, 'HH24MISS'), 1, 6)) < TO_NUMBER(H.RFQ_CLOSE_DATE || rpad(H.RFQ_CLOSE_TIME,6,'0'))
+			 ]]>              
+			</if>
+			
+			<if test="${rfq_status}" operator="eq" value="B">
+			<![CDATA[
+			 AND  H.RFQ_STATUS = 'B'                                                                                                        
+			 --AND  TO_NUMBER(TO_CHAR(SYSDATE,'YYYYMMDD') || SUBSTR(TO_CHAR(SYSDATE, 'HH24MISS'), 1, 6)) < TO_NUMBER(H.RFQ_CLOSE_DATE || rpad(H.RFQ_CLOSE_TIME,6,'0'))
+			 ]]>              
+			</if>
+			<if test="${rfq_status}" operator="eq" value="E">
+			<![CDATA[
+			 AND  H.RFQ_STATUS = 'E'                                                                                                       
+			 ]]>           
+			</if>
+			<if test="${rfq_status}" operator="eq" value="T">
+			<![CDATA[
+			 AND  H.RFQ_STATUS = 'T'                                                                                                       
+			 --AND  TO_NUMBER(TO_CHAR(SYSDATE,'YYYYMMDD') || SUBSTR(TO_CHAR(SYSDATE, 'HH24MISS'), 1, 6)) < TO_NUMBER(H.RFQ_CLOSE_DATE || rpad(H.RFQ_CLOSE_TIME,6,'0'))
+			 ]]>           
+			</if>
+			ORDER    BY H.RFQ_NO DESC, H.RFQ_COUNT DESC                                                                                                          			                                                   
+	</method>
+	
+
+	<method name="getRfqList2">
+	<![CDATA[
+			SELECT                                                                                                                          
+			 		 H.RFQ_STATUS
+			 		,(SELECT TEXT1 FROM SCODE WHERE TYPE = 'M661_ICT' AND CODE = H.RFQ_STATUS) RFQ_STATUS_TEXT
+			 		/*			 		                                                                                                               
+			 		,(CASE
+		                WHEN TO_NUMBER(TO_CHAR(SYSDATE,'YYYYMMDD') || SUBSTR(TO_CHAR(SYSDATE, 'HH24MISS'), 1, 6)) < TO_NUMBER(H.RFQ_CLOSE_DATE || rpad(H.RFQ_CLOSE_TIME,6,'0')) THEN (SELECT TEXT1 FROM SCODE WHERE TYPE = 'M661_ICT' AND CODE = H.RFQ_STATUS)
+		                WHEN H.RFQ_STATUS = 'T' THEN '견적중'
+		                ELSE '견적마감'
+		                END
+		              ) AS RFQ_STATUS_TEXT
+			 		*/                        
+			 		,H.RFQ_NO                                                                                                                  
+			 		,H.RFQ_COUNT
+			 		,H.RFQ_NM
+			 		,H.BIZ_NO
+			 		,B.BIZ_NM			 		
+			 		,H.ITEM_NO
+			 		,(SELECT TEXT1 FROM SCODE WHERE TYPE = 'M680_ICT' AND CODE = H.ITEM_NO) ITEM_NM
+			 		,H.ITEM_CN
+			 		,H.RMK_TXT
+			 		,H.RFQ_DATE
+			 		,H.RFQ_CLOSE_DATE||H.RFQ_CLOSE_TIME RFQ_CLOSE_DT   
+			 		,H.RFQ_CLOSE_DATE                                                                               
+			 		,H.RFQ_CLOSE_TIME
+			 		,H.RFQ_ID
+			 		,H.RFQ_NAME			 		
+			 		,(SELECT COUNT(DISTINCT VENDOR_CODE) 
+			 		    FROM ICOYRQOP_ICT
+				       WHERE RFQ_NO = H.RFQ_NO
+				         AND RFQ_COUNT = H.RFQ_COUNT
+				         AND STATUS IN ('C','R')				         
+				     ) AS VENDOR_CNT     
+				    ,(SELECT COUNT(DISTINCT VENDOR_CODE) 
+			 		    FROM ICOYRQOP_ICT
+				       WHERE RFQ_NO = H.RFQ_NO
+				         AND RFQ_COUNT = H.RFQ_COUNT
+				         AND STATUS IN ('C','R')
+				         AND SUBMIT_FLAG = 'Y'				                  
+				     ) AS SUBMIT_COUNT
+				    ,(SELECT COUNT(DISTINCT VENDOR_CODE) 
+			 		    FROM ICOYRQOP_ICT
+				       WHERE RFQ_NO = H.RFQ_NO
+				         AND RFQ_COUNT = H.RFQ_COUNT
+				         AND STATUS IN ('C','R')
+				         AND CONFIRM_FLAG = 'Y'				                  
+				     ) AS CONFIRM_COUNT                                                                  			                                              			 
+			 FROM ICOYRQHD_ICT H, ICOYRQBZ_ICT B                                                                                                                  
+			 WHERE H.BIZ_NO = B.BIZ_NO
+			 AND   H.STATUS IN ('C', 'R')
+			 AND   B.STATUS IN ('C', 'R')                                                                                                           
+			 AND   H.CHANGE_DATE  BETWEEN   $S{start_change_date} 
+			 AND  $S{end_change_date}                                                       
+			 AND   H.BIZ_NO            =    $S{biz_no}
+			 AND   B.BIZ_NM            LIKE  '%' || $S{biz_nm} || '%'                                                                
+			 AND   H.RFQ_NO            =    $S{rfq_no} 			 
+			 AND   H.RFQ_NM            LIKE  '%' || $S{rfq_nm} || '%'                                                                			                                                                              
+			 AND   H.RMK_TXT LIKE '%' || $S{subject} || '%'                                                                               
+			 AND   H.RFQ_ID = $S{ctrl_person_id}  
+			 AND   H.RFQ_STATUS IN ('B','E')       			                       
+	]]>
+			<if test="${rfq_status}" operator="eq" value="">
+			<![CDATA[
+			 AND  H.RFQ_STATUS IN ('B','E')                                                                                                        
+			 --AND  TO_NUMBER(TO_CHAR(SYSDATE,'YYYYMMDD') || SUBSTR(TO_CHAR(SYSDATE, 'HH24MISS'), 1, 6)) < TO_NUMBER(H.RFQ_CLOSE_DATE || rpad(H.RFQ_CLOSE_TIME,6,'0'))
+			 ]]>              
+			</if>
+			
+			<if test="${rfq_status}" operator="eq" value="B">
+			<![CDATA[
+			 AND  H.RFQ_STATUS = 'B'                                                                                                        
+			 --AND  TO_NUMBER(TO_CHAR(SYSDATE,'YYYYMMDD') || SUBSTR(TO_CHAR(SYSDATE, 'HH24MISS'), 1, 6)) < TO_NUMBER(H.RFQ_CLOSE_DATE || rpad(H.RFQ_CLOSE_TIME,6,'0'))
+			 ]]>              
+			</if>
+			<if test="${rfq_status}" operator="eq" value="E">
+			<![CDATA[
+			AND  H.RFQ_STATUS = 'E'                                                                                                    			 
+			 --AND  ( H.RFQ_STATUS = 'E'  OR ( H.RFQ_STATUS = 'B' AND TO_NUMBER(TO_CHAR(SYSDATE,'YYYYMMDD') || SUBSTR(TO_CHAR(SYSDATE, 'HH24MISS'), 1, 6)) >= TO_NUMBER(H.RFQ_CLOSE_DATE || rpad(H.RFQ_CLOSE_TIME,6,'0')) ) )                                                                                                    
+			 ]]>           
+			</if>
+			ORDER    BY H.RFQ_NO DESC, H.RFQ_COUNT DESC                                                                                                          			                                                   
+	</method>
+	
+	<method name="getRfqList3">
+	<![CDATA[
+			SELECT                                                                                                                          
+			 		 H.RFQ_STATUS			 		                                                                                                               
+			 		,(SELECT TEXT1 FROM SCODE WHERE TYPE = 'M661_ICT' AND CODE = H.RFQ_STATUS) RFQ_STATUS_TEXT
+			 		/*
+			 		,(CASE
+		                WHEN TO_NUMBER(TO_CHAR(SYSDATE,'YYYYMMDD') || SUBSTR(TO_CHAR(SYSDATE, 'HH24MISS'), 1, 6)) < TO_NUMBER(H.RFQ_CLOSE_DATE || rpad(H.RFQ_CLOSE_TIME,6,'0')) THEN (SELECT TEXT1 FROM SCODE WHERE TYPE = 'M661_ICT' AND CODE = H.RFQ_STATUS)
+		                WHEN H.RFQ_STATUS = 'T' THEN '견적중'
+		                ELSE '견적마감'
+		                END
+		              ) AS RFQ_STATUS_TEXT
+			 		*/                         
+			 		,H.RFQ_NO                                                                                                                  
+			 		,H.RFQ_NO H_RFQ_NO                                                                                                                  
+			 		,H.RFQ_COUNT
+			 		,H.RFQ_COUNT H_RFQ_COUNT
+			 		,O.RFQ_SEQ
+			 		,O.RFQ_SEQ H_RFQ_SEQ
+			 		,H.RFQ_NM
+			 		,H.BIZ_NO
+			 		,H.BIZ_NO H_BIZ_NO			 		
+			 		,B.BIZ_NM			 		
+			 		,H.ITEM_NO
+			 		,H.ITEM_NO H_ITEM_NO
+			 		/*
+			 		,(SELECT TEXT1 FROM SCODE WHERE TYPE = 'M680_ICT' AND CODE = H.ITEM_NO) ITEM_NM
+			 		*/
+			 		,(SELECT TEXT1 FROM SCODE WHERE TYPE = 'M680_ICT' AND TEXT4 = '0' AND CODE = H.ITEM_NO) ITEM_NM  	
+			 		,H.ITEM_CN
+			 		,O.MFCO_CODE
+			 		/*
+			 		,(SELECT TEXT1 제조사 FROM SCODE WHERE TYPE = 'M680_ICT' AND CODE = O.MFCO_CODE) MFCO_NM
+			 		*/
+			 		,(SELECT TEXT2 제조사 FROM SCODE WHERE TYPE = 'M681_ICT' AND TEXT4 = H.ITEM_NO AND TEXT5 = O.MFCO_CODE) MFCO_NM         			
+			 		,H.RMK_TXT
+			 		,H.RFQ_DATE
+			 		,H.RFQ_CLOSE_DATE||H.RFQ_CLOSE_TIME RFQ_CLOSE_DT   
+			 		,H.RFQ_CLOSE_DATE                                                                               
+			 		,H.RFQ_CLOSE_TIME
+			 		,H.RFQ_ID
+			 		,H.RFQ_NAME	
+			 		
+			 		, O.VENDOR_CODE				                                                 
+				    , GETCOMPANYNAMELOC_ICT('000',O.VENDOR_CODE, 'S')  AS VENDOR_NAME			         
+					, O.SUBMIT_USER_ID
+					, O.SUBMIT_USER_NAME
+					, O.SUBMIT_DATE
+					, NVL(O.SUBMIT_FLAG,'X') AS SUBMIT_FLAG
+					, (SELECT TEXT1 FROM SCODE WHERE USE_FLAG = 'Y' AND TYPE = 'M691_ICT' AND CODE = NVL(O.SUBMIT_FLAG,'X'))  AS SUBMIT_FLAG_TEXT
+					, NVL(O.CONFIRM_FLAG,'X') AS CONFIRM_FLAG
+					, (SELECT TEXT1 FROM SCODE WHERE USE_FLAG = 'Y' AND TYPE = 'M692_ICT' AND CODE = NVL(O.CONFIRM_FLAG,'X'))  AS CONFIRM_FLAG_TEXT					
+					, O.QTA_NO				
+					, O.CONFIRM_REASON				
+					, O.ATTACH_NO				
+					, O.ATTACH_NO AS ATTACH_NO_H				
+					,(SELECT COUNT(*) 
+					    FROM sfile 
+					   WHERE DOC_NO = O.ATTACH_NO) AS ATTACH_CNT   
+					  				
+			 				 					 		                                                     			                                              			 
+			 FROM ICOYRQHD_ICT H, ICOYRQBZ_ICT B, ICOYRQOP_ICT O                                                                                                                 
+			 WHERE H.BIZ_NO = B.BIZ_NO			 
+			 AND   H.STATUS IN ('C', 'R')
+			 AND   B.STATUS IN ('C', 'R')
+			 AND   H.RFQ_NO = O.RFQ_NO
+			 AND   H.RFQ_COUNT = O.RFQ_COUNT
+			 AND   O.STATUS IN ('C', 'R')	
+			 AND   H.RFQ_STATUS = 'E' 		                                                                                                            
+			 AND   H.CHANGE_DATE  BETWEEN   $S{start_change_date} 
+			 AND  $S{end_change_date}                                                       
+			 AND   H.BIZ_NO            =    $S{biz_no}
+			 AND   B.BIZ_NM            LIKE  '%' || $S{biz_nm} || '%'                                                                
+			 AND   H.RFQ_NO            =    $S{rfq_no} 			 
+			 AND   H.RFQ_NM            LIKE  '%' || $S{rfq_nm} || '%'                                                                			                                                                              
+			 AND   H.RMK_TXT LIKE '%' || $S{subject} || '%'                                                                               
+			 AND   H.RFQ_ID = $S{ctrl_person_id}  
+			 AND   H.ITEM_NO = $S{sel_item_no}  
+			 AND   O.MFCO_CODE = $S{sel_mfco_code}       			                       
+	]]>
+	         ORDER    BY H.BIZ_NO DESC, H.RFQ_NO DESC, H.RFQ_COUNT DESC                                                                                                          			                                                   
+	</method>
+	
+	<method name="getRfqList4">
+	<![CDATA[
+			SELECT                                                                                                                          
+			 		 H.RFQ_STATUS			 		                                                                                                               
+			 		,(SELECT TEXT1 FROM SCODE WHERE TYPE = 'M661_ICT' AND CODE = H.RFQ_STATUS) RFQ_STATUS_TEXT
+			 		,H.RFQ_NO                                                                                                                  
+			 		,H.RFQ_NO H_RFQ_NO                                                                                                                  
+			 		,H.RFQ_COUNT
+			 		,H.RFQ_COUNT H_RFQ_COUNT
+			 		,O.RFQ_SEQ
+			 		,O.RFQ_SEQ H_RFQ_SEQ
+			 		,H.RFQ_NM
+			 		,H.BIZ_NO
+			 		,H.BIZ_NO H_BIZ_NO			 		
+			 		,B.BIZ_NM			 		
+			 		,H.ITEM_NO
+			 		,H.ITEM_NO H_ITEM_NO
+			 		,(SELECT TEXT1 FROM SCODE WHERE TYPE = 'M680_ICT' AND TEXT4 = '0' AND CODE = H.ITEM_NO) ITEM_NM  	
+			 		,H.ITEM_CN
+			 		,O.MFCO_CODE
+			 		,(SELECT TEXT2 제조사 FROM SCODE WHERE TYPE = 'M681_ICT' AND TEXT4 = H.ITEM_NO AND TEXT5 = O.MFCO_CODE) MFCO_NM         			
+			 		,H.RMK_TXT
+			 		,H.RFQ_DATE
+			 		,H.RFQ_CLOSE_DATE||H.RFQ_CLOSE_TIME RFQ_CLOSE_DT   
+			 		,H.RFQ_CLOSE_DATE                                                                               
+			 		,H.RFQ_CLOSE_TIME
+			 		,H.RFQ_ID
+			 		,H.RFQ_NAME				 		
+			 		, O.VENDOR_CODE				                                                 
+				    , GETCOMPANYNAMELOC_ICT('000',O.VENDOR_CODE, 'S')  AS VENDOR_NAME			         
+					, O.SUBMIT_USER_ID
+					, O.SUBMIT_USER_NAME
+					, O.SUBMIT_DATE
+					, NVL(O.SUBMIT_FLAG,'X') AS SUBMIT_FLAG
+					, (SELECT TEXT1 FROM SCODE WHERE USE_FLAG = 'Y' AND TYPE = 'M691_ICT' AND CODE = NVL(O.SUBMIT_FLAG,'X'))  AS SUBMIT_FLAG_TEXT
+					, NVL(O.CONFIRM_FLAG,'X') AS CONFIRM_FLAG
+					, (SELECT TEXT1 FROM SCODE WHERE USE_FLAG = 'Y' AND TYPE = 'M692_ICT' AND CODE = NVL(O.CONFIRM_FLAG,'X'))  AS CONFIRM_FLAG_TEXT					
+					, O.QTA_NO				
+					, O.CONFIRM_REASON				
+					, O.ATTACH_NO				
+					, O.ATTACH_NO AS ATTACH_NO_H				
+					,(SELECT COUNT(*) 
+					    FROM sfile 
+					   WHERE DOC_NO = O.ATTACH_NO) AS ATTACH_CNT   					  							 				 					 		                                                     			                                              
+			 FROM ICOYRQHD_ICT H, ICOYRQBZ_ICT B, ICOYRQOP_ICT O
+			     ,(
+			     	SELECT H1.RFQ_NO, H1.RFQ_COUNT
+			        FROM ICOYRQHD_ICT H1,ICOYRQDT1_ICT D1
+			        WHERE H1.STATUS IN ('C', 'R')
+			        AND D1.STATUS IN ('C', 'R')
+			        AND H1.RFQ_NO = D1.RFQ_NO
+			        AND H1.RFQ_COUNT = D1.RFQ_COUNT
+			        AND D1.OP_DIS = $S{sel_op_dis}
+			        AND D1.INTERNALDISK_TYPE = $S{sel_disk_type}
+			        AND D1.CPU LIKE '%' || $S{cpu} || '%' 
+			        AND D1.MEM BETWEEN $S{start_mem} 
+			        AND $S{end_mem}
+			        AND 'usable_cpt_cn' = $S{start_usable_cpt_cn}                     			       
+			        UNION			        
+			     	SELECT H2.RFQ_NO, H2.RFQ_COUNT
+			        FROM ICOYRQHD_ICT H2,ICOYRQDT2_ICT D2
+			        WHERE H2.STATUS IN ('C', 'R')
+			        AND D2.STATUS IN ('C', 'R')
+			        AND H2.RFQ_NO = D2.RFQ_NO
+			        AND H2.RFQ_COUNT = D2.RFQ_COUNT
+			        AND D2.OP_DIS = $S{sel_op_dis}  
+			     	AND D2.INTERNALDISK_TYPE = $S{sel_disk_type}	
+			     	AND D2.CPU LIKE '%' || $S{cpu} || '%'  
+			     	AND D2.MEM BETWEEN $S{start_mem} 
+			        AND $S{end_mem}            		        	
+			        AND 'usable_cpt_cn' = $S{start_usable_cpt_cn}		       
+			        UNION			        
+			     	SELECT H3.RFQ_NO, H3.RFQ_COUNT
+			        FROM ICOYRQHD_ICT H3,ICOYRQDT3_ICT D3
+			        WHERE H3.STATUS IN ('C', 'R')
+			        AND D3.STATUS IN ('C', 'R')
+			        AND H3.RFQ_NO = D3.RFQ_NO
+			        AND H3.RFQ_COUNT = D3.RFQ_COUNT
+			        AND D3.OP_DIS = $S{sel_op_dis}  
+			        AND D3.DISK_TYPE = $S{sel_disk_type}
+			        AND 'cpu' = $S{cpu}    
+			        AND 'mem' = $S{start_mem}  
+			        AND D3.USABLE_CPT_CN BETWEEN $S{start_usable_cpt_cn} 
+			        AND $S{end_usable_cpt_cn}        
+			     	UNION			        
+			     	SELECT H4.RFQ_NO, H4.RFQ_COUNT
+			        FROM ICOYRQHD_ICT H4,ICOYRQDT4_ICT D4
+			        WHERE H4.STATUS IN ('C', 'R')
+			        AND D4.STATUS IN ('C', 'R')
+			        AND H4.RFQ_NO = D4.RFQ_NO
+			        AND H4.RFQ_COUNT = D4.RFQ_COUNT
+			        AND D4.OP_DIS = $S{sel_op_dis}  
+			        AND 'sel_disk_type' = $S{sel_disk_type}	
+			        AND 'cpu' = $S{cpu}    
+			        AND 'mem' = $S{start_mem}  
+			        AND 'usable_cpt_cn' = $S{start_usable_cpt_cn}       
+			     	UNION			        
+			     	SELECT H5.RFQ_NO, H5.RFQ_COUNT
+			        FROM ICOYRQHD_ICT H5,ICOYRQDT5_ICT D5
+			        WHERE H5.STATUS IN ('C', 'R')
+			        AND D5.STATUS IN ('C', 'R')
+			        AND H5.RFQ_NO = D5.RFQ_NO
+			        AND H5.RFQ_COUNT = D5.RFQ_COUNT
+			        AND D5.OP_DIS = $S{sel_op_dis}
+			        AND 'sel_disk_type' = $S{sel_disk_type}	
+			        AND 'cpu' = $S{cpu}    
+			        AND 'mem' = $S{start_mem}  
+			        AND 'usable_cpt_cn' = $S{start_usable_cpt_cn}       
+			     	UNION			        
+			     	SELECT H6.RFQ_NO, H6.RFQ_COUNT
+			        FROM ICOYRQHD_ICT H6,ICOYRQDT6_ICT D6
+			        WHERE H6.STATUS IN ('C', 'R')
+			        AND D6.STATUS IN ('C', 'R')
+			        AND H6.RFQ_NO = D6.RFQ_NO
+			        AND H6.RFQ_COUNT = D6.RFQ_COUNT
+			        AND D6.OP_DIS = $S{sel_op_dis}
+			        AND 'sel_disk_type' = $S{sel_disk_type}	
+			        AND 'cpu' = $S{cpu}    
+			        AND 'mem' = $S{start_mem}     
+			        AND 'usable_cpt_cn' = $S{start_usable_cpt_cn}    
+			     	UNION			        
+			     	SELECT H7.RFQ_NO, H7.RFQ_COUNT
+			        FROM ICOYRQHD_ICT H7,ICOYRQDT7_ICT D7
+			        WHERE H7.STATUS IN ('C', 'R')
+			        AND D7.STATUS IN ('C', 'R')
+			        AND H7.RFQ_NO = D7.RFQ_NO
+			        AND H7.RFQ_COUNT = D7.RFQ_COUNT
+			        AND D7.OP_DIS = $S{sel_op_dis}
+			        AND 'sel_disk_type' = $S{sel_disk_type}	
+			        AND 'cpu' = $S{cpu}    
+			        AND 'mem' = $S{start_mem} 
+			        AND 'usable_cpt_cn' = $S{start_usable_cpt_cn}        
+			     	UNION			        
+			     	SELECT H8.RFQ_NO, H8.RFQ_COUNT
+			        FROM ICOYRQHD_ICT H8,ICOYRQDT8_ICT D8
+			        WHERE H8.STATUS IN ('C', 'R')
+			        AND D8.STATUS IN ('C', 'R')
+			        AND H8.RFQ_NO = D8.RFQ_NO
+			        AND H8.RFQ_COUNT = D8.RFQ_COUNT
+			        AND D8.OP_DIS = $S{sel_op_dis}
+			        AND 'sel_disk_type' = $S{sel_disk_type}	
+			        AND 'cpu' = $S{cpu}    
+			        AND 'mem' = $S{start_mem}  
+			        AND 'usable_cpt_cn' = $S{start_usable_cpt_cn}       
+			     	UNION			        
+			     	SELECT H9.RFQ_NO, H9.RFQ_COUNT
+			        FROM ICOYRQHD_ICT H9,ICOYRQDT9_ICT D9
+			        WHERE H9.STATUS IN ('C', 'R')
+			        AND D9.STATUS IN ('C', 'R')
+			        AND H9.RFQ_NO = D9.RFQ_NO
+			        AND H9.RFQ_COUNT = D9.RFQ_COUNT
+			        AND D9.OP_DIS = $S{sel_op_dis}
+			        AND 'sel_disk_type' = $S{sel_disk_type}	
+			        AND 'cpu' = $S{cpu}    
+			        AND 'mem' = $S{start_mem} 
+			        AND 'usable_cpt_cn' = $S{start_usable_cpt_cn}        			     	            		  			     
+			     ) HD			     			                                                                                                                     
+			 WHERE H.BIZ_NO = B.BIZ_NO			 
+			 AND   H.STATUS IN ('C', 'R')
+			 AND   B.STATUS IN ('C', 'R')
+			 AND   H.RFQ_NO = O.RFQ_NO
+			 AND   H.RFQ_COUNT = O.RFQ_COUNT
+			 AND   O.STATUS IN ('C', 'R')	
+			 AND   H.RFQ_STATUS = 'E'
+			 AND   O.CONFIRM_FLAG = 'Y' 				 
+			 AND   H.RFQ_NO = HD.RFQ_NO
+			 AND   H.RFQ_COUNT = HD.RFQ_COUNT	
+			 AND   H.CHANGE_DATE  BETWEEN   $S{start_change_date} 
+			 AND  $S{end_change_date}                                                       
+			 AND   H.BIZ_NO            =    $S{biz_no}
+			 AND   B.BIZ_NM            LIKE  '%' || $S{biz_nm} || '%'                                                                
+			 AND   H.RFQ_NO            =    $S{rfq_no} 			 
+			 AND   H.RFQ_NM            LIKE  '%' || $S{rfq_nm} || '%'                                                                			                                                                              
+			 AND   H.RMK_TXT LIKE '%' || $S{subject} || '%'                                                                               
+			 AND   H.RFQ_ID = $S{ctrl_person_id}  
+			 AND   H.ITEM_NO = $S{sel_item_no}  
+			 AND   O.MFCO_CODE = $S{sel_mfco_code}   
+			 AND   O.VENDOR_CODE = $S{settle_vendor_code}   						     			                      
+	]]>
+	         ORDER    BY H.BIZ_NO DESC, H.RFQ_NO DESC, H.RFQ_COUNT DESC                                                                                                          			                                                   
+	</method>
+	
+	<method name="getRfqDT1Display">
+	<![CDATA[
+         SELECT
+            'U' CRUD,
+         	RFQ_NO,
+			RFQ_COUNT,
+			RQDT_SEQ,
+			STATUS,
+			ITEM_NO,     
+			(SELECT TEXT1 FROM SCODE WHERE TYPE = 'M680_ICT' AND TEXT4 = '0' AND CODE = A.ITEM_NO) ITEM_NM,
+			NVL(OP_DIS,'선택') OP_DIS,
+			NVL(EQPM,'선택') EQPM,
+			USG,
+			CNT_CN,
+			NVL(OS,'선택') OS,
+			CPU,
+			MEM,
+			NVL(INTERNALDISK_TYPE,'선택') INTERNALDISK_TYPE,
+			INTERNALDISK_CPT_CN,
+			INTERNALDISK_CNT_CN,
+			NVL(NIC_TYPE,'선택') NIC_TYPE,
+			NVL(NIC_PORT_CN,'선택') NIC_PORT_CN,
+			NIC_CD_CN,
+			NVL(HBA_TYPE,'선택') HBA_TYPE,
+			NVL(HBA_PORT_CN,'선택') HBA_PORT_CN,
+			HBA_CD_CN,
+			NVL(CLUSTER_DIS,'선택') CLUSTER_DIS,
+			ETC
+         FROM ICOYRQDT1_ICT A
+        WHERE A.RFQ_NO     = $S{rfq_no}  
+          AND A.RFQ_COUNT  = $S{rfq_count}
+          AND A.STATUS 	   IN ('C', 'R')      
+	]]>  
+	</method>
+		
+	<method name="getRfqDT2Display">
+	<![CDATA[
+         SELECT
+            'U' CRUD,
+         	RFQ_NO,             
+			RFQ_COUNT,          
+			RQDT_SEQ,           
+			STATUS,             
+			ITEM_NO,     
+			(SELECT TEXT1 FROM SCODE WHERE TYPE = 'M680_ICT' AND TEXT4 = '0' AND CODE = A.ITEM_NO) ITEM_NM,
+			NVL(OP_DIS,'선택') OP_DIS,      
+			NVL(EQPM,'선택') EQPM,             
+			USG,                
+			CNT_CN,             
+			NVL(PT_MK_YN,'선택') PT_MK_YN,           
+			PT_CN,              
+			CPU,                
+			MEM,               
+			NVL(INTERNALDISK_TYPE,'선택') INTERNALDISK_TYPE,  
+			INTERNALDISK_CPT_CN,
+			INTERNALDISK_CNT_CN,
+			NVL(NIC_TYPE,'선택') NIC_TYPE,           
+			NVL(NIC_PORT_CN,'선택') NIC_PORT_CN,        
+			NIC_CD_CN,          
+			NVL(HBA_TYPE,'선택') HBA_TYPE,           
+			NVL(HBA_PORT_CN,'선택') HBA_PORT_CN,        
+			HBA_CD_CN,          
+			NVL(CLUSTER_DIS,'선택') CLUSTER_DIS,
+			ETC               
+         FROM ICOYRQDT2_ICT A
+        WHERE A.RFQ_NO     = $S{rfq_no}  
+          AND A.RFQ_COUNT  = $S{rfq_count}
+          AND A.STATUS 	   IN ('C', 'R')      
+	]]>  
+	</method>
+	
+	<method name="getRfqDT3Display">
+	<![CDATA[
+         SELECT
+            'U' CRUD,
+         	RFQ_NO,           
+			RFQ_COUNT,        
+			RQDT_SEQ,         
+			STATUS,           
+			ITEM_NO,     
+			(SELECT TEXT1 FROM SCODE WHERE TYPE = 'M680_ICT' AND TEXT4 = '0' AND CODE = A.ITEM_NO) ITEM_NM,
+			NVL(OP_DIS,'선택') OP_DIS,           
+			NVL(EQPM,'선택') EQPM,             
+			NVL(EQPM_DIS,'선택') EQPM_DIS,         
+			USG,              
+			CNT_CN,           
+			CACHE_MEM,        
+			NVL(DISK_TYPE,'선택') DISK_TYPE,  
+			DISK_CPT_CN,      
+			USABLE_CPT_CN,    
+			NVL(RAID,'선택') RAID,             
+			NVL(FRONT_PROT_TYPE,'선택') FRONT_PROT_TYPE,  
+			FRONT_PROT_CNT_CN,
+			ETC              
+         FROM ICOYRQDT3_ICT A
+        WHERE A.RFQ_NO     = $S{rfq_no}  
+          AND A.RFQ_COUNT  = $S{rfq_count}
+          AND A.STATUS 	   IN ('C', 'R')      
+	]]>  
+	</method>
+	
+    <method name="getRfqDT4Display">
+	<![CDATA[
+         SELECT
+            'U' CRUD,
+         	RFQ_NO,     
+			RFQ_COUNT,  
+			RQDT_SEQ,   
+			STATUS,     
+			ITEM_NO,     
+			(SELECT TEXT1 FROM SCODE WHERE TYPE = 'M680_ICT' AND TEXT4 = '0' AND CODE = A.ITEM_NO) ITEM_NM,
+			NVL(OP_DIS,'선택') OP_DIS, 
+			USG,        
+			NVL(PRD_DIS,'선택') PRD_DIS,    
+			NVL(EDITION_DIS,'선택') EDITION_DIS,
+			NVL(EQPM_DIS,'선택') EQPM_DIS,   
+			SA_YANG,    
+			CNT_CN,     
+			ETC        
+         FROM ICOYRQDT4_ICT A
+        WHERE A.RFQ_NO     = $S{rfq_no}  
+          AND A.RFQ_COUNT  = $S{rfq_count}
+          AND A.STATUS 	   IN ('C', 'R')      
+	]]>  
+	</method>
+	
+	<method name="getRfqDT5Display">
+	<![CDATA[
+         SELECT
+            'U' CRUD,
+         	RFQ_NO,     
+			RFQ_COUNT,  
+			RQDT_SEQ,   
+			STATUS,     
+			ITEM_NO,     
+			(SELECT TEXT1 FROM SCODE WHERE TYPE = 'M680_ICT' AND TEXT4 = '0' AND CODE = A.ITEM_NO) ITEM_NM,
+			NVL(OP_DIS,'선택') OP_DIS, 
+			USG,        
+			NVL(EDITION_DIS,'선택') EDITION_DIS,
+			NVL(EQPM_DIS,'선택') EQPM_DIS,   
+			SA_YANG,    
+			CNT_CN,     
+			ETC        
+         FROM ICOYRQDT5_ICT A
+        WHERE A.RFQ_NO     = $S{rfq_no}  
+          AND A.RFQ_COUNT  = $S{rfq_count}
+          AND A.STATUS 	   IN ('C', 'R')      
+	]]>  
+	</method>	
+	
+	<method name="getRfqDT6Display">
+	<![CDATA[
+         SELECT
+            'U' CRUD,
+         	RFQ_NO,     
+			RFQ_COUNT,  
+			RQDT_SEQ,   
+			STATUS,     
+			ITEM_NO,     
+			(SELECT TEXT1 FROM SCODE WHERE TYPE = 'M680_ICT' AND TEXT4 = '0' AND CODE = A.ITEM_NO) ITEM_NM,
+			NVL(OP_DIS,'선택') OP_DIS, 
+			USG,        
+			NVL(EQPM_DIS,'선택') EQPM_DIS,   
+			SA_YANG,    
+			CNT_CN,     
+			ETC        
+         FROM ICOYRQDT6_ICT A
+        WHERE A.RFQ_NO     = $S{rfq_no}  
+          AND A.RFQ_COUNT  = $S{rfq_count}
+          AND A.STATUS 	   IN ('C', 'R')      
+	]]>  
+	</method>	
+	
+	<method name="getRfqDT7Display">
+	<![CDATA[
+         SELECT
+            'U' CRUD,
+         	RFQ_NO,     
+			RFQ_COUNT,  
+			RQDT_SEQ,   
+			STATUS,     
+			ITEM_NO,     
+			(SELECT TEXT1 FROM SCODE WHERE TYPE = 'M680_ICT' AND TEXT4 = '0' AND CODE = A.ITEM_NO) ITEM_NM,
+			NVL(OP_DIS,'선택') OP_DIS, 
+			USG,        
+			NVL(EQPM_DIS,'선택') EQPM_DIS,   
+			SA_YANG,    
+			CNT_CN,     
+			ETC        
+         FROM ICOYRQDT7_ICT A
+        WHERE A.RFQ_NO     = $S{rfq_no}  
+          AND A.RFQ_COUNT  = $S{rfq_count}
+          AND A.STATUS 	   IN ('C', 'R')      
+	]]>  
+	</method>	
+	
+	<method name="getRfqDT8Display">
+	<![CDATA[
+         SELECT
+            'U' CRUD,
+         	RFQ_NO,     
+			RFQ_COUNT,  
+			RQDT_SEQ,   
+			STATUS,
+			A.ITEM_NO ITEM_NO,     
+			ITEM_NO,     
+			(SELECT TEXT1 FROM SCODE WHERE TYPE = 'M680_ICT' AND TEXT4 = '0' AND CODE = A.ITEM_NO) ITEM_NM,
+			NVL(OP_DIS,'선택') OP_DIS, 
+			USG,        
+			NVL(EQPM_DIS,'선택') EQPM_DIS,   
+			SA_YANG,    
+			CNT_CN,     
+			ETC        
+         FROM ICOYRQDT8_ICT A
+        WHERE A.RFQ_NO     = $S{rfq_no}  
+          AND A.RFQ_COUNT  = $S{rfq_count}
+          AND A.STATUS 	   IN ('C', 'R')      
+	]]>  
+	</method>	
+	
+	<method name="getRfqDT9Display">
+	<![CDATA[
+         SELECT
+            'U' CRUD,
+         	RFQ_NO,     
+			RFQ_COUNT,  
+			RQDT_SEQ,   
+			STATUS,     
+			ITEM_NO,     
+			(SELECT TEXT1 FROM SCODE WHERE TYPE = 'M680_ICT' AND TEXT4 = '0' AND CODE = A.ITEM_NO) ITEM_NM,
+			NVL(OP_DIS,'선택') OP_DIS, 
+			USG,        
+			NVL(OS_DIS,'선택') OS_DIS,   
+			SA_YANG,    
+			CNT_CN,     
+			ETC        
+         FROM ICOYRQDT9_ICT A
+        WHERE A.RFQ_NO     = $S{rfq_no}  
+          AND A.RFQ_COUNT  = $S{rfq_count}
+          AND A.STATUS 	   IN ('C', 'R')      
+	]]>  
+	</method>	
+	
+	<method name="et_getRfqHDDisplay">
+	<![CDATA[
+		SELECT
+			H.RFQ_NM           
+			,H.BIZ_NO
+			,(SELECT BIZ_NM FROM ICOYRQBZ_ICT WHERE BIZ_NO = H.BIZ_NO) BIZ_NM           
+			,H.STATUS           
+			,H.RFQ_STATUS       
+			,H.ITEM_NO
+			,(SELECT TEXT1 FROM SCODE WHERE TYPE = 'M680_ICT' AND TEXT4 = '0' AND CODE = H.ITEM_NO) ITEM_NM           
+			,H.ITEM_CN          
+			,H.RFQ_DATE
+			,TO_CHAR(TO_DATE(H.RFQ_CLOSE_DATE,'YYYYMMDD'),'YYYY/MM/DD') RFQ_CLOSE_DATE
+			,SUBSTR(H.RFQ_CLOSE_TIME,1,2) SZTIME
+			,SUBSTR(H.RFQ_CLOSE_TIME,3,4) SZMIN    
+			,H.RMK_TXT
+			,H.RFQ_ID
+	        ,H.RFQ_NAME
+	        ,(SELECT COUNT(Z.RFQ_NO)
+	            FROM ICOYRQOP_ICT Z
+	           WHERE Z.RFQ_NO     = H.RFQ_NO
+	             AND Z.RFQ_COUNT  = H.RFQ_COUNT
+	             AND Z.STATUS IN ('C', 'R')) AS VENDOR_CNT
+	        ,GETVENDORS2_ICT(H.RFQ_NO, H.RFQ_COUNT)	AS VENDOR_INFO
+		FROM ICOYRQHD_ICT H
+		WHERE 1 = 1   
+		<OPT=S,S> AND   RFQ_NO     = ? </OPT>                                                                                          
+		<OPT=S,N> AND   RFQ_COUNT  = ? </OPT>           
+		]]>    
+	</method>
+	
+	
+	<method name="et_setRfqHDCreate">
+	<![CDATA[          
+		INSERT INTO ICOYRQHD_ICT (                               
+			RFQ_NO,             RFQ_COUNT,          RFQ_NM,             BIZ_NO,             STATUS,              
+            RFQ_STATUS,         ITEM_NO,            ITEM_CN,            RFQ_DATE,           RFQ_CLOSE_DATE,      
+            RFQ_CLOSE_TIME,     RMK_TXT,            RFQ_ID,             RFQ_NAME,           SIGN_DATE,           
+            SIGN_PERSON_ID,     SIGN_PERSON_NAME,   SIGN_STATUS,        ADD_USER_ID,        ADD_USER_NAME,       
+            ADD_DATE,           ADD_TIME,           CHANGE_USER_ID,     CHANGE_USER_NAME,   CHANGE_DATE,        
+            CHANGE_TIME           
+		)
+		VALUES (         
+			${RFQ_NO},         
+			${RFQ_COUNT},      
+			${RFQ_NM},           
+			${BIZ_NO},
+			${STATUS},
+			
+			${RFQ_STATUS},                                               
+			${ITEM_NO}, 
+			${ITEM_CN}, 
+			${RFQ_DATE},
+			${RFQ_CLOSE_DATE},                                            
+			
+			${RFQ_CLOSE_TIME},       
+			${RMK_TXT},       
+			${RFQ_ID}, 
+			${RFQ_NAME},
+			${SIGN_DATE},                                              
+			
+			${SIGN_PERSON_ID},      
+			${SIGN_PERSON_NAME},    
+			${SIGN_STATUS},         
+			${ADD_USER_ID},
+			${ADD_USER_NAME},                                            
+			
+			${ADD_DATE},    
+			${ADD_TIME},
+			${CHANGE_USER_ID},
+			${CHANGE_USER_NAME},
+			${CHANGE_DATE},
+			
+			${CHANGE_TIME}			
+		)                                
+	]]>
+	</method>
+	
+	<method name="et_setRfqOPCreate">
+	<![CDATA[
+		INSERT INTO ICOYRQOP_ICT (       
+			RFQ_NO,                RFQ_COUNT,             RFQ_SEQ,               STATUS,                VENDOR_CODE,           
+			ADD_USER_ID,           ADD_USER_NAME,         ADD_DATE,              ADD_TIME,              CHANGE_USER_ID,        
+			CHANGE_USER_NAME,      CHANGE_DATE,           CHANGE_TIME           
+		)
+		VALUES (                   
+			${RFQ_NO},  
+			${RFQ_COUNT},  
+			${RFQ_SEQ},     
+			${STATUS},  
+			${VENDOR_CODE},
+			
+			${ADD_USER_ID}, 
+			${ADD_USER_NAME},      
+			${ADD_DATE},                            
+			${ADD_TIME}, 
+			${CHANGE_USER_ID},
+			
+			${CHANGE_USER_NAME}, 
+			${CHANGE_DATE}, 
+			${CHANGE_TIME}
+		)                            
+	]]>
+	</method>
+	
+	<method name="et_setRfqDT1Create">
+	<![CDATA[
+		INSERT INTO ICOYRQDT1_ICT (       
+			RFQ_NO     ,RFQ_COUNT    ,RQDT_SEQ           ,STATUS              ,ITEM_NO,            
+            OP_DIS     ,EQPM         ,USG                ,CNT_CN              ,OS,                 
+            CPU        ,MEM          ,INTERNALDISK_TYPE  ,INTERNALDISK_CPT_CN ,INTERNALDISK_CNT_CN,
+            NIC_TYPE   ,NIC_PORT_CN  ,NIC_CD_CN          ,HBA_TYPE            ,HBA_PORT_CN,        
+            HBA_CD_CN  ,CLUSTER_DIS  ,ETC                     
+		)
+		VALUES (                   
+			${RFQ_NO},  
+			${RFQ_COUNT},  
+			${RQDT_SEQ},  
+			${STATUS},  
+			${ITEM_NO},  
+			
+			${OP_DIS},  
+			${EQPM},  
+			${USG},  
+			${CNT_CN},  
+			${OS},  
+			
+			${CPU},  
+			${MEM},  
+			${INTERNALDISK_TYPE},  
+			${INTERNALDISK_CPT_CN},  
+			${INTERNALDISK_CNT_CN},  
+			
+			${NIC_TYPE},  
+			${NIC_PORT_CN},  
+			${NIC_CD_CN},  
+			${HBA_TYPE},  
+			${HBA_PORT_CN},  
+			
+			${HBA_CD_CN},  
+			${CLUSTER_DIS},  
+			${ETC}
+		)                            
+	]]>
+	</method>
+	
+	<method name="et_setRfqDT2Create">
+	<![CDATA[
+		INSERT INTO ICOYRQDT2_ICT (       
+			RFQ_NO     ,RFQ_COUNT    ,RQDT_SEQ           ,STATUS              ,ITEM_NO,            
+            OP_DIS     ,EQPM         ,USG                ,CNT_CN              ,PT_MK_YN,              
+            PT_CN      ,CPU          ,MEM                ,INTERNALDISK_TYPE   ,INTERNALDISK_CPT_CN,   
+            INTERNALDISK_CNT_CN      ,NIC_TYPE           ,NIC_PORT_CN         ,NIC_CD_CN,              
+            HBA_TYPE   ,HBA_PORT_CN,HBA_CD_CN    ,CLUSTER_DIS        ,ETC                
+		)
+		VALUES (                   
+			${RFQ_NO             },  
+			${RFQ_COUNT          },  
+			${RQDT_SEQ           },  
+			${STATUS             },  
+			${ITEM_NO            }, 
+			 
+			${OP_DIS             },  
+			${EQPM               },  
+			${USG                },  
+			${CNT_CN             },  
+			${PT_MK_YN           },
+			  
+			${PT_CN              },  
+			${CPU                },  
+			${MEM                },  
+			${INTERNALDISK_TYPE  },  
+			${INTERNALDISK_CPT_CN},
+			  
+			${INTERNALDISK_CNT_CN},  
+			${NIC_TYPE           },  
+			${NIC_PORT_CN        },  
+			${NIC_CD_CN          },  
+			${HBA_TYPE           },
+			  
+			${HBA_PORT_CN        },  
+			${HBA_CD_CN          },  
+			${CLUSTER_DIS        },  
+			${ETC                }  			
+		)                            
+	]]>
+	</method>
+	
+	<method name="et_setRfqDT3Create">
+	<![CDATA[
+		INSERT INTO ICOYRQDT3_ICT (       
+			RFQ_NO                ,RFQ_COUNT             ,RQDT_SEQ              ,STATUS                ,ITEM_NO,               
+            OP_DIS                ,EQPM                  ,EQPM_DIS              ,USG                   ,CNT_CN,                
+            CACHE_MEM             ,DISK_TYPE             ,DISK_CPT_CN           ,USABLE_CPT_CN         ,RAID,
+            FRONT_PROT_TYPE       ,FRONT_PROT_CNT_CN     ,ETC                   
+		)
+		VALUES (                   
+			${RFQ_NO           },  
+			${RFQ_COUNT        },  
+			${RQDT_SEQ         },  
+			${STATUS           },  
+			${ITEM_NO          },
+			  
+			${OP_DIS           },  
+			${EQPM             },  
+			${EQPM_DIS         },  
+			${USG              },  
+			${CNT_CN           },
+			  
+			${CACHE_MEM        },  
+			${DISK_TYPE        },  
+			${DISK_CPT_CN      },  
+			${USABLE_CPT_CN    },  
+			${RAID             },  
+			
+			${FRONT_PROT_TYPE  },			  
+			${FRONT_PROT_CNT_CN},  
+			${ETC              }
+		)                            
+	]]>
+	</method>
+	
+	
+	<method name="et_setRfqDT4Create">
+	<![CDATA[
+		INSERT INTO ICOYRQDT4_ICT (       
+			RFQ_NO           ,RFQ_COUNT        ,RQDT_SEQ         ,STATUS           ,ITEM_NO,          
+            OP_DIS           ,USG              ,PRD_DIS          ,EDITION_DIS      ,EQPM_DIS,         
+            SA_YANG          ,CNT_CN           ,ETC                   
+		)
+		VALUES (                   
+			${RFQ_NO     },  
+			${RFQ_COUNT  },  
+			${RQDT_SEQ   },  
+			${STATUS     },  
+			${ITEM_NO    },
+			  
+			${OP_DIS     },  
+			${USG        },  
+			${PRD_DIS    },  
+			${EDITION_DIS},  
+			${EQPM_DIS   },
+			  
+			${SA_YANG    },  
+			${CNT_CN     },  
+			${ETC        }			
+		)                            
+	]]>
+	</method>
+	
+	<method name="et_setRfqDT5Create">
+	<![CDATA[
+		INSERT INTO ICOYRQDT5_ICT (       
+			RFQ_NO           ,RFQ_COUNT        ,RQDT_SEQ         ,STATUS           ,ITEM_NO,          
+            OP_DIS           ,USG              ,EDITION_DIS      ,EQPM_DIS         ,SA_YANG,          
+            CNT_CN           ,ETC                   
+		)
+		VALUES (                   
+			${RFQ_NO     },  
+			${RFQ_COUNT  },  
+			${RQDT_SEQ   },  
+			${STATUS     },  
+			${ITEM_NO    },
+			  
+			${OP_DIS     },  
+			${USG        },  
+			${EDITION_DIS},  
+			${EQPM_DIS   },			 
+			${SA_YANG    },
+			  
+			${CNT_CN     },  
+			${ETC        }			
+		)                            
+	]]>
+	</method>
+	
+	<method name="et_setRfqDT6Create">
+	<![CDATA[
+		INSERT INTO ICOYRQDT6_ICT (       
+			RFQ_NO           ,RFQ_COUNT        ,RQDT_SEQ         ,STATUS           ,ITEM_NO,          
+            OP_DIS           ,USG              ,EQPM_DIS         ,SA_YANG          ,CNT_CN,           
+            ETC                   
+		)
+		VALUES (                   
+			${RFQ_NO     },  
+			${RFQ_COUNT  },  
+			${RQDT_SEQ   },  
+			${STATUS     },  
+			${ITEM_NO    },
+			  
+			${OP_DIS     },  
+			${USG        },  
+			${EQPM_DIS   },			 
+			${SA_YANG    },  
+			${CNT_CN     },
+			  
+			${ETC        }			
+		)                            
+	]]>
+	</method>
+	
+	<method name="et_setRfqDT7Create">
+	<![CDATA[
+		INSERT INTO ICOYRQDT7_ICT (       
+			RFQ_NO           ,RFQ_COUNT        ,RQDT_SEQ         ,STATUS           ,ITEM_NO,          
+            OP_DIS           ,USG              ,EQPM_DIS         ,SA_YANG          ,CNT_CN,           
+            ETC                   
+		)
+		VALUES (                   
+			${RFQ_NO     },  
+			${RFQ_COUNT  },  
+			${RQDT_SEQ   },  
+			${STATUS     },  
+			${ITEM_NO    },
+			  
+			${OP_DIS     },  
+			${USG        },  
+			${EQPM_DIS   },			 
+			${SA_YANG    },  
+			${CNT_CN     },
+			  
+			${ETC        }			
+		)                            
+	]]>
+	</method>
+      
+    <method name="et_setRfqDT8Create">
+	<![CDATA[
+		INSERT INTO ICOYRQDT8_ICT (       
+			RFQ_NO           ,RFQ_COUNT        ,RQDT_SEQ         ,STATUS           ,ITEM_NO,          
+            OP_DIS           ,USG              ,EQPM_DIS         ,SA_YANG          ,CNT_CN,           
+            ETC                   
+		)
+		VALUES (                   
+			${RFQ_NO     },  
+			${RFQ_COUNT  },  
+			${RQDT_SEQ   },  
+			${STATUS     },  
+			${ITEM_NO    },
+			  
+			${OP_DIS     },  
+			${USG        },  
+			${EQPM_DIS   },			 
+			${SA_YANG    },  
+			${CNT_CN     },
+			  
+			${ETC        }			
+		)                            
+	]]>
+	</method>
+    
+    <method name="et_setRfqDT9Create">
+	<![CDATA[
+		INSERT INTO ICOYRQDT9_ICT (       
+			RFQ_NO           ,RFQ_COUNT        ,RQDT_SEQ         ,STATUS           ,ITEM_NO,          
+            OP_DIS           ,USG              ,OS_DIS           ,SA_YANG          ,CNT_CN,           
+            ETC                   
+		)
+		VALUES (                   
+			${RFQ_NO     },  
+			${RFQ_COUNT  },  
+			${RQDT_SEQ   },  
+			${STATUS     },  
+			${ITEM_NO    },
+			  
+			${OP_DIS     },  
+			${USG        },  
+			${OS_DIS     },			 
+			${SA_YANG    },  
+			${CNT_CN     },
+			  
+			${ETC        }			
+		)                            
+	]]>
+	</method>   
+      
+	<method name="et_setRfqHDChange">
+	<![CDATA[
+	     UPDATE ICOYRQHD_ICT                 
+		 SET                             
+		 	 RFQ_NM                       = $S{RFQ_NM}               
+		 	,BIZ_NO                       = $S{BIZ_NO}               
+		 	,STATUS			              = $S{STATUS}			     
+		 	,RFQ_STATUS                   = $S{RFQ_STATUS}           
+		 	,ITEM_NO                      = $S{ITEM_NO}              
+		 	,ITEM_CN                      = $S{ITEM_CN}              
+		 	,RFQ_DATE		              = $S{RFQ_DATE}		     
+		 	,RFQ_CLOSE_DATE               = $S{RFQ_CLOSE_DATE}       
+		 	,RFQ_CLOSE_TIME               = $S{RFQ_CLOSE_TIME}       
+		 	,RMK_TXT                      = $S{RMK_TXT}              
+		 	,RFQ_ID                       = $S{RFQ_ID}               
+		 	,RFQ_NAME                     = $S{RFQ_NAME}             
+		 	,SIGN_DATE                    = $S{SIGN_DATE}            
+		 	,SIGN_PERSON_ID               = $S{SIGN_PERSON_ID}       
+		 	,SIGN_PERSON_NAME             = $S{SIGN_PERSON_NAME}     
+		 	,SIGN_STATUS                  = $S{SIGN_STATUS}          
+		 	,CHANGE_USER_ID               = $S{CHANGE_USER_ID}       
+		 	,CHANGE_USER_NAME             = $S{CHANGE_USER_NAME}     
+		 	,CHANGE_DATE                  = $S{CHANGE_DATE}          
+		 	,CHANGE_TIME		          = $S{CHANGE_TIME}		     
+		 WHERE RFQ_NO     = ${RFQ_NO}            
+		 AND   RFQ_COUNT  = ${RFQ_COUNT}                                                    
+	]]>
+	</method>
+	
+	<method name="et_delRfqHDDelete">
+	<![CDATA[
+		 DELETE FROM ICOYRQHD_ICT            
+		 WHERE RFQ_NO     = ${rfq_no}            
+		 AND   RFQ_COUNT  = ${rfq_count}            
+	]]>
+	</method>
+	
+	<method name="et_delRfqOPDelete">
+	<![CDATA[
+		 DELETE FROM ICOYRQOP_ICT            
+		 WHERE RFQ_NO     = ${rfq_no}            
+		 AND   RFQ_COUNT  = ${rfq_count}            
+	]]>
+	</method>
+	
+	<method name="et_setRfqDT1Delete">
+	<![CDATA[
+		 DELETE FROM ICOYRQDT1_ICT            
+		 WHERE RFQ_NO     = ${rfq_no}            
+		 AND   RFQ_COUNT  = ${rfq_count}       
+	]]>
+	</method>
+	
+	<method name="et_setRfqDT2Delete">
+	<![CDATA[
+		 DELETE FROM ICOYRQDT2_ICT            
+		 WHERE	RFQ_NO	    = ${rfq_no}	                 
+		 AND	RFQ_COUNT   = ${rfq_count}          
+	]]>
+	</method>
+	
+	<method name="et_setRfqDT3Delete">
+	<![CDATA[
+		 DELETE FROM ICOYRQDT3_ICT            
+		 WHERE	RFQ_NO	    = ${rfq_no}	                 
+		 AND	RFQ_COUNT   = ${rfq_count}          
+	]]>
+	</method>
+	
+	<method name="et_setRfqDT4Delete">
+	<![CDATA[
+		 DELETE FROM ICOYRQDT4_ICT            
+		 WHERE	RFQ_NO	    = ${rfq_no}	                 
+		 AND	RFQ_COUNT   = ${rfq_count}          
+	]]>
+	</method>
+	
+	<method name="et_setRfqDT5Delete">
+	<![CDATA[
+		 DELETE FROM ICOYRQDT5_ICT            
+		 WHERE	RFQ_NO	    = ${rfq_no}	                 
+		 AND	RFQ_COUNT   = ${rfq_count}          
+	]]>
+	</method>
+	
+	<method name="et_setRfqDT6Delete">
+	<![CDATA[
+		 DELETE FROM ICOYRQDT6_ICT            
+		 WHERE	RFQ_NO	    = ${rfq_no}	                 
+		 AND	RFQ_COUNT   = ${rfq_count}          
+	]]>
+	</method>
+	
+	<method name="et_setRfqDT7Delete">
+	<![CDATA[
+		 DELETE FROM ICOYRQDT7_ICT            
+		 WHERE	RFQ_NO	    = ${rfq_no}	                 
+		 AND	RFQ_COUNT   = ${rfq_count}          
+	]]>
+	</method>
+	
+	<method name="et_setRfqDT8Delete">
+	<![CDATA[
+		 DELETE FROM ICOYRQDT8_ICT            
+		 WHERE	RFQ_NO	    = ${rfq_no}	                 
+		 AND	RFQ_COUNT   = ${rfq_count}          
+	]]>
+	</method>
+	
+	<method name="et_setRfqDT9Delete">
+	<![CDATA[
+		 DELETE FROM ICOYRQDT9_ICT            
+		 WHERE	RFQ_NO	    = ${rfq_no}	                 
+		 AND	RFQ_COUNT   = ${rfq_count}          
+	]]>
+	</method>
+	
+	<method name="et_setRFQCancel">
+	<![CDATA[
+			 UPDATE	ICOYRQHD_ICT				 
+			 SET	RFQ_STATUS = 'T'			 
+				  ,	RFQ_DATE = NULL
+ 			 WHERE	RFQ_NO	   = $S{rfq_no}			 
+			 AND	RFQ_COUNT  = $S{rfq_count}			                                          
+	]]>
+	</method>
+	
+	<method name="et_setRFQClose">
+	<![CDATA[
+			 UPDATE	ICOYRQHD_ICT				 
+			 SET	RFQ_STATUS = 'E'			 
+				  ,	RFQ_CLOSE_DATE_ORG = $S{rfq_close_date}		
+ 				  ,	RFQ_CLOSE_TIME_ORG = $S{rfq_close_time}		
+ 			 WHERE	RFQ_NO	   = $S{rfq_no}			 
+			 AND	RFQ_COUNT  = $S{rfq_count}			                                          
+	]]>
+	</method>
+	
+	<method name="et_setRFQCloseCancel">
+	<![CDATA[
+			 UPDATE	ICOYRQHD_ICT				 
+			 SET	RFQ_STATUS = 'B'			 
+				  ,	RFQ_CLOSE_DATE_ORG = NULL		
+ 				  ,	RFQ_CLOSE_TIME_ORG = NULL		
+ 			 WHERE	RFQ_NO	   = $S{rfq_no}			 
+			 AND	RFQ_COUNT  = $S{rfq_count}			                                          
+	]]>
+	</method>
+	
+	<method name="et_setRFQExtends">
+	<![CDATA[
+			 UPDATE	ICOYRQHD				 
+			 SET				 
+					RFQ_FLAG       = 'B',		
+					RFQ_CLOSE_DATE = $S{RFQ_EXTENDS_DATE},		
+ 					RFQ_CLOSE_TIME = $S{RFQ_EXTENDS_TIME}		
+ 			 WHERE	HOUSE_CODE = ${session.HOUSE_CODE}			 
+			 AND	RFQ_NO	   = ${RFQ_NO}			 
+			 AND	RFQ_COUNT  = ${RFQ_COUNT}	
+			 AND    'N'        = ( SELECT MIN(SETTLE_FLAG) SETTLE_FLAG
+									 FROM ICOYRQDT 
+									 WHERE RFQ_NO  = ${RFQ_NO}
+									 AND RFQ_COUNT = ${RFQ_COUNT}	
+									 AND STATUS IN ( 'C','R') )		    
+			 --AND	TO_CHAR(SYSDATE, 'YYYYMMDDHH24MI') <=  RFQ_CLOSE_DATE || RFQ_CLOSE_TIME                                          
+	]]>
+	</method>
+
+
+	<method name="et_getRFQStatus">
+	<![CDATA[
+			 SELECT MIN(SETTLE_FLAG) SETTLE_FLAG
+			  FROM ICOYRQDT 
+			 WHERE 1=1
+			<OPT=F,S>   AND RFQ_NO   =  ? </OPT>
+			<OPT=F,S>  AND RFQ_COUNT =  ? </OPT>
+		   	   AND STATUS IN ( 'C','R') 		                                              
+	]]>
+	</method>
+	
+	<method name="et_Approval">
+	<![CDATA[
+		 UPDATE	ICOYRQHD										 
+		   SET SIGN_STATUS		= '#flag#',					 
+			   SIGN_PERSON_ID	= '#sign_user_id#',			 
+			   SIGN_DATE		= '#sign_date#'				 
+		 WHERE HOUSE_CODE		= '#house_code#'	 
+		   AND COMPANY_CODE		= '#company_code#'	 
+		   AND RFQ_NO			= '#exec_no#'					 
+		   AND RFQ_COUNT		= '#exec_seq#'				 
+		   AND STATUS			!= 'D'							 			                                         
+	]]>
+	</method>
+	
+	<method name="et_Reject">
+	<![CDATA[
+		 UPDATE	ICOYRQHD										 
+		   SET SIGN_STATUS		= '#flag#',					 
+			   SIGN_PERSON_ID	= '#sign_user_id#'
+		 WHERE HOUSE_CODE		= '#house_code#'	 
+		   AND COMPANY_CODE		= '#company#'	 
+		   AND RFQ_NO			= '#exec_no#'					 
+		   AND RFQ_COUNT		= '#exec_seq#'				 
+		   AND STATUS			!= 'D'							 	
+	]]>
+	</method>
+	
+	<method name="et_getVendorDisplay">
+	<![CDATA[
+		 SELECT		O.VENDOR_CODE				                                                 
+					,GETCOMPANYNAMELOC_ICT('000',O.VENDOR_CODE, 'S')  AS VENDOR_NAME    
+					,(SELECT TEXT1 FROM SCODE WHERE TYPE = 'M691_ICT' AND CODE = NVL(O.SUBMIT_FLAG,'X')) SUBMIT_FLAG 			 					 	
+			 		,(SELECT TEXT1 FROM SCODE WHERE TYPE = 'M692_ICT' AND CODE = NVL(O.CONFIRM_FLAG,'X')) CONFIRM_FLAG 
+			 					 		                         
+		 FROM		ICOYRQOP_ICT O
+		 WHERE		O.STATUS IN	('C','R')	                                                    
+		   AND		O.RFQ_NO 		= $S{rfq_no}                                        
+		   AND		O.RFQ_COUNT		= $S{rfq_count}
+		 ORDER BY   O.RFQ_SEQ                              			                                         
+	]]>
+	</method>
+	
+	
+	<method name="getRfqConfirmDetail">
+		<![CDATA[
+			SELECT
+				  ROWNUM      AS NO
+				, O.RFQ_NO
+				, O.RFQ_COUNT
+				, O.RFQ_SEQ
+				, H.ITEM_NO
+			    , (SELECT TEXT1 FROM SCODE WHERE TYPE = 'M680_ICT' AND TEXT4 = '0' AND CODE = H.ITEM_NO) ITEM_NM  			
+				, O.MFCO_CODE
+				,(SELECT TEXT2 제조사 FROM SCODE WHERE TYPE = 'M681_ICT' AND TEXT4 = H.ITEM_NO AND TEXT5 = O.MFCO_CODE) MFCO_NM
+				, O.VENDOR_CODE				                                                 
+			    , GETCOMPANYNAMELOC_ICT('000',O.VENDOR_CODE, 'S')  AS VENDOR_NAME			         
+				, O.SUBMIT_USER_ID
+				, O.SUBMIT_USER_NAME
+				, TO_CHAR(TO_DATE(O.SUBMIT_DATE||O.SUBMIT_TIME, 'YYYYMMDDHH24MISS'), 'YYYY/MM/DD HH24:MI') AS SUBMIT_DATE_TIME
+				, NVL(O.SUBMIT_FLAG,'X') AS SUBMIT_FLAG
+				, (SELECT TEXT1 FROM SCODE WHERE USE_FLAG = 'Y' AND TYPE = 'M691_ICT' AND CODE = NVL(O.SUBMIT_FLAG,'X'))  AS SUBMIT_FLAG_NAME
+				, NVL(O.CONFIRM_FLAG,'X') AS CONFIRM_FLAG
+				, O.QTA_NO				
+				, O.CONFIRM_REASON				
+				, O.ATTACH_NO				
+				, O.ATTACH_NO AS ATTACH_NO_H				
+				,(SELECT COUNT(*) 
+				    FROM sfile 
+				   WHERE DOC_NO = O.ATTACH_NO) AS ATTACH_CNT  
+		     FROM ICOYRQHD_ICT H, ICOYRQOP_ICT O
+		     WHERE H.RFQ_NO = O.RFQ_NO
+		     AND   H.RFQ_COUNT = O.RFQ_COUNT
+		     AND   H.STATUS IN ('C','R')
+		     AND   O.STATUS IN ('C','R')		   
+		     AND   O.RFQ_NO 		= $S{rfq_no}                                        
+		     AND   O.RFQ_COUNT		= $S{rfq_count}
+		    ORDER BY   O.RFQ_SEQ                              			                   
+		]]>
+	</method>
+	
+	<method name="et_setRQOP">
+		<![CDATA[  
+				UPDATE ICOYRQOP_ICT
+				   SET                             
+				       CONFIRM_FLAG         = ${CONFIRM_FLAG     } 
+				     , CONFIRM_DATE         = TO_CHAR(SYSDATE,'YYYYMMDD') 
+				     , CONFIRM_TIME         = TO_CHAR(SYSDATE,'HH24MISS') 
+				     , CONFIRM_USER_ID      = ${CONFIRM_USER_ID  }
+				     , CONFIRM_USER_NAME    = ${CONFIRM_USER_NAME  }
+				     , CONFIRM_REASON       = ${CONFIRM_REASON  } 				      
+				 WHERE RFQ_NO               = ${RFQ_NO       }  
+				   AND RFQ_COUNT            = ${RFQ_COUNT    }  
+				   AND RFQ_SEQ              = ${RFQ_SEQ  } 				   				                                          	
+		]]>   
+	</method>  
+
+</service>
+
+

@@ -1,0 +1,1192 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+<service> 
+		<method name = "getWaitList_1">
+	
+	/* CEO ROLE 일때*/
+SELECT *
+FROM
+(
+	SELECT
+			 MAX(CAN_APPROVAL) AS CAN_APPROVAL
+			,APP_STATUS
+			,APP_STATUS_TEXT
+			,DOC_TYPE_TEXT
+			,DOC_TYPE
+			,DOC_NO
+			,SUBJECT
+			,DOC_SEQ
+			,ITEM_COUNT
+			,ADD_USER_ID
+			,ADD_USER_NAME
+			,SIGN_REMARK
+			,CONVERT_DATE(ADD_DATE) AS ADD_DATE
+			,CUR
+			,TTL_AMT
+			,ACCOUNT_CODE
+			,SHIPPER_TYPE
+			,SHIPPER_TYPE_TEXT
+			,ARGENT_FLAG
+			,COMPANY_CODE
+			,MAX(NEXT_SIGN_USER_ID   ) AS NEXT_SIGN_USER_ID
+			,STRATEGY_TYPE
+			,APP_STAGE
+			,ATTACH_NO
+			,ATTACH_NO AS ATTACH_NO_IMG
+			,MAX(PERSON_APP_STATUS   ) AS PERSON_APP_STATUS
+			,MAX(SIGN_DATE           ) AS SIGN_DATE
+			,MAX(SIGN_PATH_SEQ       ) AS SIGN_PATH_SEQ
+			,MAX(PROCEEDING_FLAG	 ) AS PROCEEDING_FLAG
+	FROM
+	(
+	SELECT
+		 CASE WHEN SIGN_CHECK = 'Y' AND APP_STATUS IS NULL AND SIGN_USER_ID = ${session.ID} THEN 'Y' ELSE '' END AS CAN_APPROVAL
+		, NVL(SCTM.APP_STATUS,'P') AS APP_STATUS
+	 	, GETICOMCODE1(SCTM.HOUSE_CODE,'M109',NVL(SCTM.APP_STATUS,'P')) AS APP_STATUS_TEXT
+	 	/*, (CASE WHEN SCTM.DOC_TYPE = 'TAX' THEN
+	 	        CASE WHEN SCTM.DOC_SEQ = 'R' THEN '매입 '
+	 	             WHEN SCTM.DOC_SEQ = 'P' THEN '매출 '
+	 	             ELSE ''
+	 	        END || GETICOMCODE1(SCTM.HOUSE_CODE,'M999',CASE WHEN INSTR(SCTM.DOC_TYPE, '^') = '0' THEN SCTM.DOC_TYPE
+	 												ELSE SUBSTR(SCTM.DOC_TYPE, 1, INSTR(SCTM.DOC_TYPE, '^')-1)
+	 												END)
+	 	    ELSE GETICOMCODE1(SCTM.HOUSE_CODE,'M999',CASE WHEN INSTR(SCTM.DOC_TYPE, '^') = '0' THEN SCTM.DOC_TYPE
+	 												ELSE SUBSTR(SCTM.DOC_TYPE, 1, INSTR(SCTM.DOC_TYPE, '^')-1)
+	 												END)
+	 	    END ) AS  DOC_TYPE_TEXT */	 	    
+	 	, DECODE(SCTM.DOC_TYPE,'BID_ICT','입찰공문','') AS DOC_TYPE_TEXT
+	 	, SCTM.DOC_TYPE
+	 	, SCTM.DOC_NO
+	 	, SCTM.SUBJECT AS SUBJECT
+	 	, (CASE WHEN SUBSTR(SCTM.DOC_SEQ, 8, 2) = 'AD' THEN '계약금'
+	 		   	WHEN SUBSTR(SCTM.DOC_SEQ, 8, 2) = 'JD' THEN '중도금'
+	 		   	WHEN SUBSTR(SCTM.DOC_SEQ, 8, 2) = 'RD' THEN '잔금'
+	 		   	WHEN SUBSTR(SCTM.DOC_SEQ, 8, 2) = '00' THEN '계획결재'
+	 		   	WHEN SUBSTR(SCTM.DOC_SEQ, 8, 2) = '01' THEN '결과결재'
+	 		   	ELSE SCTM.DOC_SEQ
+	 	  	END ) AS DOC_SEQ
+	 	, SCTM.ITEM_COUNT
+	 	, SCTM.ADD_USER_ID
+	 	, GETUSERNAME(SCTM.HOUSE_CODE,SCTM.ADD_USER_ID,'LOC') AS ADD_USER_NAME
+	 	, SCTM.SIGN_REMARK
+	 	, SCTM.ADD_DATE
+	 	, SCTM.CUR
+	 	, ROUND(ROUND(SCTM.TTL_AMT,1) ,0 )      AS TTL_AMT
+	 	, SCTM.ACCOUNT_CODE
+	 	, SCTM.SHIPPER_TYPE
+	 	, GETICOMCODE2(SCTM.HOUSE_CODE,'M025',SCTM.SHIPPER_TYPE) AS SHIPPER_TYPE_TEXT
+	 	, SCTM.ARGENT_FLAG
+	 	, SCTM.COMPANY_CODE
+	 	
+		, (
+	        SELECT SIGN_USER_ID
+	        FROM ICOMSCTP_ICT
+	        WHERE    HOUSE_CODE      = SCTP.HOUSE_CODE
+	     	  AND    COMPANY_CODE    = SCTP.COMPANY_CODE
+	     	  AND    DOC_TYPE        = SCTP.DOC_TYPE
+	     	  AND    DOC_NO          = SCTP.DOC_NO
+	     	  AND    DOC_SEQ         = SCTP.DOC_SEQ
+	          AND    SIGN_PATH_SEQ   =
+	                                      (
+	                                        SELECT
+	                            				    MIN(SIGN_PATH_SEQ)
+	                               		    FROM     ICOMSCTP_ICT
+	                               		    WHERE    HOUSE_CODE      = SCTP.HOUSE_CODE
+	                                 	      AND    COMPANY_CODE    = SCTP.COMPANY_CODE
+	                                 	      AND    DOC_TYPE        = SCTP.DOC_TYPE
+	                                 	      AND    DOC_NO          = SCTP.DOC_NO
+	                                 	      AND    DOC_SEQ         = SCTP.DOC_SEQ
+	                                 	      AND    SIGN_PATH_SEQ   >  SCTP.SIGN_PATH_SEQ  --  현재 SIGN_PATH_SEQ
+	                                 	      AND 	PROCEEDING_FLAG = 'P'
+                                      )
+      )  AS NEXT_SIGN_USER_ID
+	 	, SCTM.STRATEGY_TYPE
+	 	, NVL(SCTM.APP_STAGE,0) AS APP_STAGE
+	 	, SCTM.ATTACH_NO
+	 	, SCTM.ATTACH_NO  AS ATTACH_NO_IMG
+	 	, (CASE WHEN SCTP.APP_STATUS IS NULL THEN '미결'
+	 		   	ELSE '완료'
+	 	  	END ) AS PERSON_APP_STATUS
+			,    (SELECT SIGN_DATE
+			FROM ICOMSCTP_ICT
+			WHERE SCTM.HOUSE_CODE = HOUSE_CODE
+			AND SCTM.COMPANY_CODE = COMPANY_CODE
+			AND SCTM.DOC_TYPE = DOC_TYPE
+			AND SCTM.DOC_SEQ = DOC_SEQ
+			AND SCTM.DOC_NO = DOC_NO
+			AND SIGN_PATH_SEQ =
+			(SELECT MAX(SIGN_PATH_SEQ)
+			FROM ICOMSCTP_ICT
+			WHERE SCTM.HOUSE_CODE = HOUSE_CODE
+			AND SCTM.COMPANY_CODE = COMPANY_CODE
+			AND SCTM.DOC_TYPE = DOC_TYPE
+			AND SCTM.DOC_SEQ = DOC_SEQ
+			AND SCTM.DOC_NO = DOC_NO)
+			) AS SIGN_DATE
+			,SCTP.SIGN_PATH_SEQ
+			,SCTP.PROCEEDING_FLAG
+	 FROM ICOMSCTM_ICT SCTM
+	 	LEFT OUTER JOIN ICOMLUSR_ICT LUSR
+	 		ON SCTM.HOUSE_CODE = LUSR.HOUSE_CODE
+	 		AND SCTM.ADD_USER_ID = LUSR.USER_ID
+	 	JOIN ICOMSCTP_ICT SCTP
+	 		ON SCTM.HOUSE_CODE = SCTP.HOUSE_CODE
+	 		AND SCTM.COMPANY_CODE = SCTP.COMPANY_CODE
+	 		AND SCTM.DOC_TYPE = SCTP.DOC_TYPE
+	 		AND SCTM.DOC_SEQ = SCTP.DOC_SEQ
+	 		AND SCTM.DOC_NO = SCTP.DOC_NO
+	 WHERE 1=1
+	  #str#
+
+		<if test ="${doc_type}" operator = "eq" value = "BID_ICT">
+				AND SCTM.DOC_TYPE 		IN ('BID_ICT')
+			</if>
+		<if test ="${doc_type}" operator = "ne" value = "BID_ICT">
+				AND SCTM.DOC_TYPE 		= $S{doc_type}
+			</if>
+				
+		
+	<![CDATA[
+		AND SCTM.STATUS != 'N'	
+    	AND SCTM.HOUSE_CODE = ${session.HOUSE_CODE}
+	    AND SCTM.DOC_NO 		= $S{DOC_NO}
+	    AND SCTM.SHIPPER_TYPE	= $S{shipper_type}
+		AND SCTM.ADD_DATE BETWEEN $S{from_date} 
+		AND $S{to_date}
+		AND SCTM.DOC_TYPE 		= $S{doc_type} 
+	]]>
+
+	--ORDER BY DECODE(SCTM.ARGENT_FLAG, 'T', 1, 2), SCTM.ADD_DATE DESC
+	ORDER BY SCTM.ADD_DATE DESC, SCTM.ADD_TIME DESC
+	)
+
+	GROUP BY APP_STATUS
+			,APP_STATUS_TEXT
+			,DOC_TYPE_TEXT
+			,DOC_TYPE
+			,DOC_NO
+			,SUBJECT
+			,DOC_SEQ
+			,ITEM_COUNT
+			,ADD_USER_ID
+			,ADD_USER_NAME
+			,SIGN_REMARK
+			,ADD_DATE
+			,CUR
+			,TTL_AMT
+			,ACCOUNT_CODE
+			,SHIPPER_TYPE
+			,SHIPPER_TYPE_TEXT
+			,ARGENT_FLAG
+			,COMPANY_CODE
+--			,NEXT_SIGN_USER_ID
+			,STRATEGY_TYPE
+			,APP_STAGE
+			,ATTACH_NO
+--			,PERSON_APP_STATUS
+--			,SIGN_DATE
+--			,SIGN_PATH_SEQ
+)
+WHERE 	1=1
+	<![CDATA[
+  		AND SUBJECT 			LIKE '%' || $S{SUBJECT} || '%'     
+    	AND ADD_USER_NAME 		LIKE '%' || $S{ADD_USER_NAME} || '%'    
+    	AND SIGN_DATE BETWEEN $S{sign_from_date}
+    	AND $S{sign_to_date}
+	]]>
+		<if test ="${app_status}" operator = "eq" value = "P">
+		/* 진행건중에 미결문서 제외 */
+  AND CAN_APPROVAL != 'Y' OR CAN_APPROVAL IS NULL
+		</if>
+	
+
+
+
+	</method>
+	
+	
+	<method name = "getWaitList_2">
+	/* 일반유저 일때 */
+SELECT *
+FROM
+(
+		 SELECT
+		 CASE WHEN SIGN_CHECK = 'Y' AND SCTP.APP_STATUS IS NULL AND SIGN_USER_ID = ${session.ID} THEN 'Y' ELSE 'N' END AS CAN_APPROVAL
+		,NVL(SCTM.APP_STATUS,'P') AS APP_STATUS
+	 	, GETICOMCODE1(SCTM.HOUSE_CODE,'M109',NVL(SCTM.APP_STATUS,'P')) AS APP_STATUS_TEXT
+	 	/*, (CASE WHEN SCTM.DOC_TYPE = 'TAX' THEN
+	 	        CASE WHEN SCTM.DOC_SEQ = 'R' THEN '매입 '
+	 	             WHEN SCTM.DOC_SEQ = 'P' THEN '매출 '
+	 	             ELSE ''
+	 	        END || GETICOMCODE1(SCTM.HOUSE_CODE,'M999',CASE WHEN INSTR(SCTM.DOC_TYPE, '^') = '0' THEN SCTM.DOC_TYPE
+	 												ELSE SUBSTR(SCTM.DOC_TYPE, 1, INSTR(SCTM.DOC_TYPE, '^')-1)
+	 												END)
+	 	    ELSE GETICOMCODE1(SCTM.HOUSE_CODE,'M999',CASE WHEN INSTR(SCTM.DOC_TYPE, '^') = '0' THEN SCTM.DOC_TYPE
+	 												ELSE SUBSTR(SCTM.DOC_TYPE, 1, INSTR(SCTM.DOC_TYPE, '^')-1)
+	 												END)
+	 	    END ) AS  DOC_TYPE_TEXT */
+	 	, DECODE(SCTM.DOC_TYPE,'BID_ICT','입찰공문','') AS DOC_TYPE_TEXT	 	
+	 	, SCTM.DOC_TYPE
+	 	, SCTM.DOC_NO
+	 	, SCTM.SUBJECT AS SUBJECT
+	 	, (CASE WHEN SUBSTR(SCTM.DOC_SEQ, 8, 2) = 'AD' THEN '계약금'
+	 		   	WHEN SUBSTR(SCTM.DOC_SEQ, 8, 2) = 'JD' THEN '중도금'
+	 		   	WHEN SUBSTR(SCTM.DOC_SEQ, 8, 2) = 'RD' THEN '잔금'
+	 		   	WHEN SUBSTR(SCTM.DOC_SEQ, 8, 2) = '00' THEN '계획결재'
+	 		   	WHEN SUBSTR(SCTM.DOC_SEQ, 8, 2) = '01' THEN '결과결재'
+	 		   	ELSE SCTM.DOC_SEQ
+	 	  	END ) AS DOC_SEQ
+	 	, SCTM.ITEM_COUNT
+	 	, SCTM.ADD_USER_ID
+	 	, GETUSERNAME(SCTM.HOUSE_CODE,SCTM.ADD_USER_ID,'LOC') AS ADD_USER_NAME
+	 	, SCTM.SIGN_REMARK
+	 	, CONVERT_DATE(SCTM.ADD_DATE) AS ADD_DATE
+	 	, SCTM.CUR
+	 	, ROUND(ROUND(SCTM.TTL_AMT,1) ,0 )      AS TTL_AMT
+	 	, SCTM.ACCOUNT_CODE
+	 	, SCTM.SHIPPER_TYPE
+	 	, GETICOMCODE2(SCTM.HOUSE_CODE,'M025',SCTM.SHIPPER_TYPE) AS SHIPPER_TYPE_TEXT
+	 	, SCTM.ARGENT_FLAG
+	 	, SCTM.COMPANY_CODE
+
+		, (
+	        SELECT SIGN_USER_ID
+	        FROM ICOMSCTP_ICT
+	        WHERE    HOUSE_CODE      = SCTP.HOUSE_CODE
+	     	  AND    COMPANY_CODE    = SCTP.COMPANY_CODE
+	     	  AND    DOC_TYPE        = SCTP.DOC_TYPE
+	     	  AND    DOC_NO          = SCTP.DOC_NO
+	     	  AND    DOC_SEQ         = SCTP.DOC_SEQ
+	          AND    SIGN_PATH_SEQ   =
+	                                      (
+	                                        SELECT
+	                            				    MIN(SIGN_PATH_SEQ)
+	                               		    FROM     ICOMSCTP_ICT
+	                               		    WHERE    HOUSE_CODE      = SCTP.HOUSE_CODE
+	                                 	      AND    COMPANY_CODE    = SCTP.COMPANY_CODE
+	                                 	      AND    DOC_TYPE        = SCTP.DOC_TYPE
+	                                 	      AND    DOC_NO          = SCTP.DOC_NO
+	                                 	      AND    DOC_SEQ         = SCTP.DOC_SEQ
+	                                 	      AND    SIGN_PATH_SEQ   >  SCTP.SIGN_PATH_SEQ  --  현재 SIGN_PATH_SEQ
+	                                 	      AND 	PROCEEDING_FLAG = 'P'
+                                      )
+      )  AS NEXT_SIGN_USER_ID
+	 	, SCTM.STRATEGY_TYPE
+	 	, NVL(SCTM.APP_STAGE,0) AS APP_STAGE
+	 	, SCTM.ATTACH_NO
+	 	, SCTM.ATTACH_NO AS ATTACH_NO_IMG
+	 	, (CASE WHEN SCTP.APP_STATUS IS NULL THEN '미결'
+	 		   	ELSE '완료'
+	 	  	END ) AS PERSON_APP_STATUS
+			,    (SELECT SIGN_DATE
+			FROM ICOMSCTP_ICT
+			WHERE SCTM.HOUSE_CODE = HOUSE_CODE
+			AND SCTM.COMPANY_CODE = COMPANY_CODE
+			AND SCTM.DOC_TYPE = DOC_TYPE
+			AND SCTM.DOC_SEQ = DOC_SEQ
+			AND SCTM.DOC_NO = DOC_NO
+			AND SIGN_PATH_SEQ =
+			(SELECT MAX(SIGN_PATH_SEQ)
+			FROM ICOMSCTP_ICT
+			WHERE SCTM.HOUSE_CODE = HOUSE_CODE
+			AND SCTM.COMPANY_CODE = COMPANY_CODE
+			AND SCTM.DOC_TYPE = DOC_TYPE
+			AND SCTM.DOC_SEQ = DOC_SEQ
+			AND SCTM.DOC_NO = DOC_NO)
+			) AS SIGN_DATE
+			,SCTP.SIGN_PATH_SEQ
+			,SCTP.PROCEEDING_FLAG
+	 FROM ICOMSCTM_ICT SCTM
+	 	LEFT OUTER JOIN ICOMLUSR_ICT LUSR
+	 		ON SCTM.HOUSE_CODE = LUSR.HOUSE_CODE
+	 		AND SCTM.ADD_USER_ID = LUSR.USER_ID
+	 	JOIN ICOMSCTP_ICT SCTP
+	 		ON SCTM.HOUSE_CODE = SCTP.HOUSE_CODE
+	 		AND SCTM.COMPANY_CODE = SCTP.COMPANY_CODE
+	 		AND SCTM.DOC_TYPE = SCTP.DOC_TYPE
+	 		AND SCTM.DOC_SEQ = SCTP.DOC_SEQ
+	 		AND SCTM.DOC_NO = SCTP.DOC_NO
+	 WHERE 1=1
+
+
+
+	<if test ="${app_status}" operator = "eq" value = "N">
+		/*1. 미결 : 본인이 결재를 해야할 건. */
+	  AND SCTP.SIGN_USER_ID 	=  ${session.ID}
+	  AND SCTP.SIGN_CHECK 		=  'Y'
+	  AND SCTP.APP_STATUS IS NULL
+	  AND (SCTM.APP_STATUS = 'P' AND PROCEEDING_FLAG <![CDATA[<>]]> 'R')
+	</if>
+
+	/*2.
+		일반
+			- 진행중 : 본인은 결재완료, 최종은 진행중
+			- 완료   : 본인과 최종결재자 결재완료
+			- 반려   : 본인 또는 차기결재자 결재 반료
+
+	 */
+
+	<if test ="${app_status}" operator = "eq" value = "R">
+		AND SCTM.APP_STATUS = 'R'
+		AND (
+			SCTP.APP_STATUS = 'R'	OR EXISTS 	(
+													SELECT 	1
+													FROM 	ICOMSCTP_ICT
+													WHERE 	HOUSE_CODE 		= SCTM.HOUSE_CODE
+													  AND	COMPANY_CODE 	= SCTM.COMPANY_CODE
+													  AND	DOC_TYPE 		= SCTM.DOC_TYPE
+													  AND	DOC_NO 			= SCTM.DOC_NO
+													  AND	DOC_SEQ 		= SCTM.DOC_SEQ
+													  AND	APP_STATUS 		= 'R'
+													  AND	SIGN_PATH_SEQ 	> SCTP.SIGN_PATH_SEQ
+												)
+			)
+	</if>
+
+	<if test ="${app_status}" operator = "eq" value = "E">
+	    /* 결제완료, 반려경우 같이 적용으로 변경(2012-08-14)*/
+		AND (
+				(SCTM.APP_STATUS = 'E') OR
+				(SCTM.APP_STATUS = 'R'  AND (SCTP.APP_STATUS = 'R'	OR EXISTS 	(
+														SELECT 	1
+														FROM 	ICOMSCTP_ICT
+														WHERE 	HOUSE_CODE 		= SCTM.HOUSE_CODE
+														  AND	COMPANY_CODE 	= SCTM.COMPANY_CODE
+														  AND	DOC_TYPE 		= SCTM.DOC_TYPE
+														  AND	DOC_NO 			= SCTM.DOC_NO
+														  AND	DOC_SEQ 		= SCTM.DOC_SEQ
+														  AND	APP_STATUS 		= 'R'
+														  AND	SIGN_PATH_SEQ 	> SCTP.SIGN_PATH_SEQ
+													)
+												)
+				)
+			)		
+	</if>
+
+	<if test ="${app_status}" operator = "eq" value = "P">
+		
+		AND ((SCTM.APP_STATUS = 'P' AND PROCEEDING_FLAG <![CDATA[<>]]> 'R') OR (SCTM.APP_STATUS = 'E' AND PROCEEDING_FLAG = 'R') )
+		AND	SCTP.APP_STATUS		= 'E'
+
+	</if>
+
+	<if test ="${app_status}" operator = "eq" value = "">
+		AND (
+				(
+				    SCTP.SIGN_USER_ID 	=  ${session.ID}
+	  			AND SCTP.SIGN_CHECK 		=  'Y'
+	  			AND SCTP.APP_STATUS IS NULL
+	  			
+	  			AND ((SCTM.APP_STATUS = 'P' AND PROCEEDING_FLAG <![CDATA[<>]]> 'R') OR (SCTM.APP_STATUS = 'E' AND PROCEEDING_FLAG = 'R') )
+	  			)
+	  				OR
+	  			(
+	  			SCTM.APP_STATUS = 'R'
+				AND (
+						SCTP.APP_STATUS = 'R'	OR EXISTS 	(
+																SELECT 	1
+																FROM 	ICOMSCTP_ICT
+																WHERE 	HOUSE_CODE 		= SCTM.HOUSE_CODE
+													  			  AND	COMPANY_CODE 	= SCTM.COMPANY_CODE
+													  			  AND	DOC_TYPE 		= SCTM.DOC_TYPE
+													  			  AND	DOC_NO 			= SCTM.DOC_NO
+													  			  AND	DOC_SEQ 		= SCTM.DOC_SEQ
+													  			  AND	APP_STATUS 		= 'R'
+													  			  AND	SIGN_PATH_SEQ 	> SCTP.SIGN_PATH_SEQ
+															)
+					)
+				)
+	  				OR
+	  			SCTM.APP_STATUS = 'E'
+	  				OR
+	  			(
+	  				/* SCTM.APP_STATUS 	= 'P' */
+	  			    ((SCTM.APP_STATUS = 'P' AND PROCEEDING_FLAG <![CDATA[<>]]> 'R') OR (SCTM.APP_STATUS = 'E' AND PROCEEDING_FLAG = 'R') )
+				AND	SCTP.APP_STATUS		= 'E'
+				)
+			)
+	</if>
+		AND SCTP.SIGN_USER_ID = ${session.ID}
+	<![CDATA[
+		AND SCTM.STATUS != 'N'
+		AND SCTM.HOUSE_CODE  	= ${session.HOUSE_CODE}     
+		AND SCTM.DOC_NO 		= $S{DOC_NO}
+		AND SCTM.SHIPPER_TYPE	= $S{shipper_type}
+		AND SCTM.ADD_DATE BETWEEN $S{from_date}	  
+		AND ${to_date}   	
+		AND SCTM.DOC_TYPE 		= $S{doc_type}
+	]]>
+
+		<if test ="${doc_type}" operator = "eq" value = "BID_ICT">
+				AND SCTM.DOC_TYPE 		IN ('BID_ICT')
+			</if>
+		<if test ="${doc_type}" operator = "ne" value = "BID_ICT">
+				AND SCTM.DOC_TYPE = $S{doc_type}
+			</if>
+		
+
+	--ORDER BY DECODE(SCTM.ARGENT_FLAG, 'T', 1, 2), SCTM.ADD_DATE DESC
+	ORDER BY SCTM.ADD_DATE DESC, SCTM.ADD_TIME DESC
+)
+WHERE 1=1
+	<![CDATA[
+ 		AND SUBJECT 			LIKE '%' || $S{SUBJECT} || '%'     	
+  		AND ADD_USER_NAME 		LIKE '%' || $S{ADD_USER_NAME} || '%'     	
+  		AND SIGN_DATE BETWEEN $S{sign_from_date} 
+  		AND $S{sign_to_date}   	
+  	]]>
+	 
+	 	</method>
+	 	
+	 	
+	 	<method name ="getSignPath">
+	<![CDATA[
+		SELECT
+		       A.ATTACH_NO,
+			   '0' as SIGN_PATH_SEQ,
+                CASE
+                        WHEN GETUSERINFO_ICT(A.HOUSE_CODE, A.ADD_USER_ID, 'MANAGER_POSITION') >= 20 THEN GETICOMCODE2(A.HOUSE_CODE,'M107',GETUSERINFO_ICT(A.HOUSE_CODE, A.ADD_USER_ID, 'MANAGER_POSITION'))
+                                                                                                ELSE GETICORCODE2(A.HOUSE_CODE, A.COMPANY_CODE, 'C002', GETUSERINFO_ICT(A.HOUSE_CODE, A.ADD_USER_ID, 'POSITION'))
+                END AS POSITION_TEXT,
+				(SELECT USER_NAME_LOC
+				   FROM ICOMLUSR_ICT
+				  WHERE USER_ID = A.ADD_USER_ID AND HOUSE_CODE = ${session.HOUSE_CODE}) AS USER_NAME_LOC,
+				A.ADD_USER_ID AS SIGN_USER_ID,
+				SUBSTR(A.ADD_DATE,3,2)|| '/' ||
+					SUBSTR(A.ADD_DATE,5,2)|| '/' ||
+					SUBSTR(A.ADD_DATE,7,2) as SIGN_DATE,
+					SUBSTR(A.ADD_TIME,1,2) || ':' ||
+					SUBSTR(A.ADD_TIME,3,2) as SIGN_TIME,
+				'A' AS APP_STATUS
+			FROM ICOMSCTM_ICT A
+		   WHERE A.DOC_NO   = ${doc_no}
+		     AND A.DOC_SEQ   = ${doc_seq}
+			 AND A.DOC_TYPE = ${doc_type}
+			 AND A.HOUSE_CODE = ${session.HOUSE_CODE}
+			UNION ALL
+		SELECT
+		       '' AS ATTACH_NO,
+		       B.SIGN_PATH_SEQ,
+                
+                CASE
+                        WHEN GETUSERINFO_ICT(B.HOUSE_CODE, B.SIGN_USER_ID, 'MANAGER_POSITION') >= 20 THEN GETICOMCODE2(B.HOUSE_CODE,'M107',GETUSERINFO_ICT(B.HOUSE_CODE, B.SIGN_USER_ID, 'MANAGER_POSITION'))
+                                                                                                ELSE GETICORCODE2(B.HOUSE_CODE, B.COMPANY_CODE, 'C002', GETUSERINFO_ICT(B.HOUSE_CODE, B.SIGN_USER_ID, 'POSITION'))
+                END AS POSITION_TEXT,
+				(SELECT USER_NAME_LOC
+				   FROM ICOMLUSR_ICT
+				  WHERE USER_ID = B.SIGN_USER_ID AND HOUSE_CODE = ${session.HOUSE_CODE}) AS USER_NAME_LOC,
+				B.SIGN_USER_ID,
+				SUBSTR(B.SIGN_DATE,3,2)|| '/' ||
+					SUBSTR(B.SIGN_DATE,5,2)|| '/' ||
+					SUBSTR(B.SIGN_DATE,7,2) as SIGN_DATE,
+				SUBSTR(B.SIGN_TIME,1,2)|| ':' ||
+					SUBSTR(B.SIGN_TIME,3,2) as SIGN_TIME,
+				B.APP_STATUS AS APP_STATUS
+			FROM ICOMSCTP_ICT B
+		   WHERE B.DOC_NO = ${doc_no}
+		     AND B.DOC_SEQ = ${doc_seq}
+		     AND B.DOC_TYPE = ${doc_type}
+		     AND B.PROCEEDING_FLAG = 'P'
+		     AND B.HOUSE_CODE = ${session.HOUSE_CODE}
+		   ORDER BY SIGN_PATH_SEQ
+	]]>
+	</method>
+	
+	
+	<method name ="getSignAgree">
+	<![CDATA[
+		  SELECT 	B.SIGN_PATH_SEQ,
+					GETDEPTNAMELOC(B.HOUSE_CODE, B.COMPANY_CODE, GETUSERINFO_ICT(B.HOUSE_CODE, B.SIGN_USER_ID, 'DEPT')) AS POSITION_TEXT,
+					(SELECT USER_NAME_LOC FROM ICOMLUSR_ICT WHERE USER_ID = B.SIGN_USER_ID AND HOUSE_CODE = ${session.HOUSE_CODE}) AS USER_NAME_LOC,
+																	B.SIGN_USER_ID,
+																	SUBSTR(B.SIGN_DATE,3,2)|| '/' ||
+																	SUBSTR(B.SIGN_DATE,5,2)|| '/' ||
+																	SUBSTR(B.SIGN_DATE,7,2) as SIGN_DATE,
+																	SUBSTR(B.SIGN_TIME,1,2)|| ':' ||
+																	SUBSTR(B.SIGN_TIME,3,2) as SIGN_TIME,
+																	B.APP_STATUS AS APP_STATUS
+			FROM ICOMSCTP_ICT B
+		WHERE B.DOC_NO = ${doc_no}
+		AND B.DOC_SEQ  = ${doc_seq}
+		AND B.DOC_TYPE = ${doc_type}
+		AND B.PROCEEDING_FLAG = 'C'
+		AND B.HOUSE_CODE = ${session.HOUSE_CODE}
+		ORDER BY SIGN_PATH_SEQ
+	]]>
+	</method>
+	
+	
+	<method name ="getSignOpinion">
+	<![CDATA[
+		SELECT '0' 																												AS SEQ
+			   ,case when A.sign_remark = '' then ''
+		 		     else  '기안자(' || (SELECT USER_NAME_LOC FROM ICOMLUSR_ICT WHERE USER_ID=A.ADD_USER_ID AND HOUSE_CODE = ${session.HOUSE_CODE}) || ') 의견 : '
+		 		end																												AS SIGN_USER
+			   ,A.SIGN_REMARK 			 																						AS SIGN_REMARK
+			   ,A.ATTACH_NO
+			FROM ICOMSCTM_ICT A WHERE A.DOC_NO = ${doc_no}
+					AND A.DOC_TYPE = ${doc_type}
+					AND A.DOC_SEQ = ${doc_seq}
+					AND A.HOUSE_CODE = ${session.HOUSE_CODE}
+			union all
+		SELECT  B.SIGN_PATH_SEQ 																								AS SEQ
+			  ,case when B.sign_remark = '' then ''
+			   else DECODE(B.PROCEEDING_FLAG , 'C', '합의자(','R','수신자(','결재자(')  || (SELECT USER_NAME_LOC FROM ICOMLUSR_ICT
+																				 WHERE USER_ID=B.SIGN_USER_ID AND HOUSE_CODE = ${session.HOUSE_CODE}) || ') 의견 : '
+		       end																											    AS SIGN_USER
+    		  ,B.SIGN_REMARK 																									AS SIGN_REMARK
+    		  ,''
+			FROM ICOMSCTP_ICT B WHERE B.DOC_NO = ${doc_no}
+						AND B.DOC_TYPE = ${doc_type}
+						AND B.DOC_SEQ = ${doc_seq}
+						AND B.HOUSE_CODE = ${session.HOUSE_CODE}
+						AND B.PROCEEDING_FLAG <> 'R'
+		ORDER BY 1
+	]]>
+	</method>
+	
+	<method name ="getSignPath2">
+	<![CDATA[
+				SELECT '0' as SIGN_PATH_SEQ,
+                /*결재란 직책 :  직책이 팀장이상이면 직책 그외에는 직위*/
+                CASE
+                        WHEN GETUSERINFO_ICT(A.HOUSE_CODE, A.ADD_USER_ID, 'MANAGER_POSITION') >= 20 THEN GETICOMCODE2(A.HOUSE_CODE,'M107',GETUSERINFO_ICT(A.HOUSE_CODE, A.ADD_USER_ID, 'MANAGER_POSITION'))
+                                                                                                ELSE GETICORCODE2(A.HOUSE_CODE, A.COMPANY_CODE, 'C002', GETUSERINFO_ICT(A.HOUSE_CODE, A.ADD_USER_ID, 'POSITION'))
+                END AS POSITION_TEXT,
+				(SELECT USER_NAME_LOC FROM ICOMLUSR_ICT
+				WHERE USER_ID = A.ADD_USER_ID AND HOUSE_CODE = ${session.HOUSE_CODE}) AS USER_NAME_LOC,
+				A.ADD_USER_ID AS SIGN_USER_ID,
+				SUBSTR(A.ADD_DATE,3,2)|| '/' ||
+				SUBSTR(A.ADD_DATE,5,2)|| '/' ||
+				SUBSTR(A.ADD_DATE,7,2) as SIGN_DATE,
+				SUBSTR(A.ADD_TIME,1,2)|| ':' ||
+				SUBSTR(A.ADD_TIME,3,2) as SIGN_TIME,
+				'A' AS APP_STATUS
+				FROM ICOMSCTM_ICT A WHERE A.DOC_NO = ${doc_no}
+				AND A.DOC_TYPE = ${doc_type}
+				AND A.DOC_SEQ = ${doc_seq}
+				AND A.HOUSE_CODE = ${session.HOUSE_CODE}
+				UNION ALL
+				SELECT B.SIGN_PATH_SEQ,
+                /*결재란 직책 :  직책이 팀장이상이면 직책 그외에는 직위*/
+                CASE
+                        WHEN GETUSERINFO_ICT(B.HOUSE_CODE, B.SIGN_USER_ID, 'MANAGER_POSITION') >= 20 THEN GETICOMCODE2(B.HOUSE_CODE,'M107',GETUSERINFO_ICT(B.HOUSE_CODE, B.SIGN_USER_ID, 'MANAGER_POSITION'))
+                                                                                                ELSE GETICORCODE2(B.HOUSE_CODE, B.COMPANY_CODE, 'C002', GETUSERINFO_ICT(B.HOUSE_CODE, B.SIGN_USER_ID, 'POSITION'))
+                END AS POSITION_TEXT,
+				(SELECT USER_NAME_LOC FROM ICOMLUSR_ICT WHERE USER_ID = B.SIGN_USER_ID AND HOUSE_CODE = ${session.HOUSE_CODE}) AS USER_NAME_LOC,
+				B.SIGN_USER_ID,
+				SUBSTR(B.SIGN_DATE,3,2)|| '/' ||
+				SUBSTR(B.SIGN_DATE,5,2)|| '/' ||
+				SUBSTR(B.SIGN_DATE,7,2) as SIGN_DATE,
+				SUBSTR(B.SIGN_TIME,1,2)|| ':' ||
+				SUBSTR(B.SIGN_TIME,3,2) as SIGN_TIME,
+				B.APP_STATUS AS APP_STATUS
+				FROM ICOMSCTP_ICT B
+				WHERE B.DOC_NO = ${doc_no}
+				AND B.DOC_TYPE = ${doc_type}
+				AND B.DOC_SEQ = ${doc_seq}
+				AND B.HOUSE_CODE = ${session.HOUSE_CODE}
+				AND B.PROCEEDING_FLAG = 'P'
+				ORDER BY SIGN_PATH_SEQ
+	]]>
+	</method>
+	
+	<method name ="getSignAgree2">
+	<![CDATA[
+		  SELECT 	B.SIGN_PATH_SEQ,
+					GETDEPTNAMELOC(B.HOUSE_CODE, B.COMPANY_CODE, GETUSERINFO_ICT(B.HOUSE_CODE, B.SIGN_USER_ID, 'DEPT')) AS POSITION_TEXT,
+					(SELECT USER_NAME_LOC FROM ICOMLUSR_ICT WHERE USER_ID = B.SIGN_USER_ID AND HOUSE_CODE = ${session.HOUSE_CODE}) AS USER_NAME_LOC,
+																	B.SIGN_USER_ID,
+																	SUBSTR(B.SIGN_DATE,3,2)|| '/' ||
+																	SUBSTR(B.SIGN_DATE,5,2)|| '/' ||
+																	SUBSTR(B.SIGN_DATE,7,2) as SIGN_DATE,
+																	SUBSTR(B.SIGN_TIME,1,2)|| ':' ||
+																	SUBSTR(B.SIGN_TIME,3,2) as SIGN_TIME,
+																	B.APP_STATUS AS APP_STATUS
+			FROM ICOMSCTP_ICT B
+		WHERE B.DOC_NO = ${doc_no}
+		AND B.DOC_TYPE = ${doc_type}
+		AND B.DOC_SEQ  = ${doc_seq}
+		AND B.PROCEEDING_FLAG = 'C'
+		AND B.HOUSE_CODE = ${session.HOUSE_CODE}
+		ORDER BY SIGN_PATH_SEQ
+	]]>
+	</method>
+	
+	<method name="getMethodName">
+	<![CDATA[
+		 SELECT TEXT3 FROM SCODE 
+		 WHERE TYPE='S003' 
+		 AND CODE=${doc_type_h}			 
+	]]>
+	</method>
+	
+	<method name ="setEndApp_1">
+	<![CDATA[
+		 SELECT APP_STATUS
+		 		FROM ICOMSCTM_ICT
+			 WHERE HOUSE_CODE	= ${session.HOUSE_CODE}
+	 		 AND COMPANY_CODE = ${session.COMPANY_CODE}
+		 	 AND DOC_TYPE = ${DOC_TYPE}
+		 	 AND DOC_NO = ${DOC_NO}
+		 	 AND NVL(DOC_SEQ,0) = ${DOC_SEQ}
+	]]>
+	</method>
+
+		<method name ="setEndApp_2">
+	<![CDATA[
+		 UPDATE ICOMSCTM_ICT SET
+		 	STATUS = 'R'
+		 ,	APP_STATUS = 'E'
+		 WHERE HOUSE_CODE = ${session.HOUSE_CODE}
+		 	AND COMPANY_CODE = ${session.COMPANY_CODE}
+		  	AND DOC_TYPE = ${DOC_TYPE}
+		  	AND DOC_NO = ${DOC_NO}
+		  	AND NVL(DOC_SEQ,0) = ${DOC_SEQ}
+	]]>
+	</method>
+
+	<method name ="setEndApp_3">
+	<![CDATA[
+		 UPDATE ICOMSCTP_ICT SET
+		 	SIGN_DATE = ${current.DATE}
+		 ,SIGN_TIME = ${current.TIME}
+		 ,SIGN_REMARK = $S{sign_remark}
+		 ,APP_STATUS = 'E'
+		 WHERE HOUSE_CODE	= ${session.HOUSE_CODE}
+		 	AND COMPANY_CODE = ${session.COMPANY_CODE}
+			AND DOC_TYPE = ${DOC_TYPE}
+			AND DOC_NO = ${DOC_NO}
+			AND NVL(DOC_SEQ,0) = ${DOC_SEQ}
+		 	AND SIGN_PATH_SEQ = ${APP_STAGE}
+	]]>
+	</method>
+	
+	
+	
+	<method name="setUpdate_1">
+	<![CDATA[
+		 UPDATE ICOMSCTM_ICT
+		 SET	  NEXT_SIGN_USER_ID	= ${NEXT_SIGN_USER_ID}
+ 				, APP_STAGE			= ${APP_STAGE}
+ 				, STATUS 			= 'R'
+ 		WHERE	HOUSE_CODE 		= ${session.HOUSE_CODE}
+ 		  AND 	COMPANY_CODE 	= ${session.COMPANY_CODE}
+ 		  AND 	DOC_TYPE 		= ${DOC_TYPE}
+ 		  AND 	DOC_NO 			= ${DOC_NO}
+ 		  AND 	NVL(DOC_SEQ,0) 	= ${DOC_SEQ}
+	]]>
+	</method>
+
+	<method name="setUpdate_2">
+	<![CDATA[
+		UPDATE ICOMSCTP_ICT
+		SET		  SIGN_DATE		= ${current.DATE}
+				, SIGN_TIME		= ${current.TIME}
+				, SIGN_REMARK 	= $S{sign_remark}
+				, APP_STATUS 	= 'E'
+		WHERE 	HOUSE_CODE 		= ${session.HOUSE_CODE}
+		 AND 	COMPANY_CODE	= ${session.COMPANY_CODE}
+		 AND 	DOC_TYPE 		= ${DOC_TYPE}
+		 AND 	DOC_NO 			= ${DOC_NO}
+		 AND	NVL(DOC_SEQ,0) 	= ${DOC_SEQ}
+		 AND 	SIGN_PATH_SEQ 	= ${APP_STAGE}
+	]]>
+	</method>
+
+	<method name="setUpdate_3">
+	<![CDATA[
+			UPDATE ICOMSCTP_ICT
+			SET		SIGN_CHECK	= 'Y'
+			WHERE 	HOUSE_CODE 	= ${session.HOUSE_CODE}
+			  AND 	COMPANY_CODE	= ${session.COMPANY_CODE}
+			  AND 	DOC_TYPE 		= ${DOC_TYPE}
+			  AND 	DOC_NO 			= ${DOC_NO}
+			  AND 	NVL(DOC_SEQ,0)	= ${DOC_SEQ}
+			  AND 	SIGN_USER_ID 	= ${NEXT_SIGN_USER_ID}
+	]]>
+	</method>
+
+
+	<method name="setUpdate_4">
+	<![CDATA[
+		SELECT	PROCEEDING_FLAG
+		FROM	ICOMSCTP_ICT
+		WHERE	HOUSE_CODE 		= ${session.HOUSE_CODE}
+		  AND	COMPANY_CODE 	= ${session.COMPANY_CODE}
+		  AND	DOC_TYPE 		= ${DOC_TYPE}
+		  AND	DOC_NO 			= ${DOC_NO}
+		  AND	DOC_SEQ 		= ${DOC_SEQ}
+		  AND	SIGN_PATH_SEQ 	= ${APP_STAGE}
+
+	]]>
+	</method>
+
+
+	<method name="setUpdate_5">
+
+		SELECT   MIN(SIGN_PATH_SEQ) - TO_NUMBER(${APP_STAGE}) 	AS GAP
+				,MIN(SIGN_PATH_SEQ)                 						AS NEXT_SIGN_PATH_SEQ_P	 -- 다음 PROCEEDING_FLAG = 'P'
+   		FROM     ICOMSCTP_ICT
+   		WHERE    HOUSE_CODE      = ${session.HOUSE_CODE}
+     	  AND    COMPANY_CODE    = ${session.COMPANY_CODE}
+     	  AND    DOC_TYPE        = ${DOC_TYPE}
+     	  AND    DOC_NO          = ${DOC_NO}
+     	  AND    DOC_SEQ         = ${DOC_SEQ}
+     	  AND    SIGN_PATH_SEQ > ${APP_STAGE}  --  현재 SIGN_PATH_SEQ
+     	  AND 	PROCEEDING_FLAG = 'P'
+	</method>
+
+	<method name="setUpdate_6_1">
+		UPDATE ICOMSCTP_ICT
+					SET SIGN_CHECK = 'Y'
+		WHERE    HOUSE_CODE      = ${session.HOUSE_CODE}
+     	  AND    COMPANY_CODE    = ${session.COMPANY_CODE}
+     	  AND    DOC_TYPE        = ${DOC_TYPE}
+     	  AND    DOC_NO          = ${DOC_NO}
+     	  AND    DOC_SEQ         = ${DOC_SEQ}
+     	  AND    TO_NUMBER(SIGN_PATH_SEQ) > TO_NUMBER(${APP_STAGE})  --  현재 SIGN_PATH_SEQ
+	</method>
+
+	<method name="setUpdate_6_2">
+		UPDATE ICOMSCTP_ICT SET
+					SIGN_CHECK	= 'Y'
+		WHERE 	HOUSE_CODE 		= ${session.HOUSE_CODE}
+		  AND 	COMPANY_CODE 	= ${session.COMPANY_CODE}
+		  AND 	DOC_TYPE 		= ${DOC_TYPE}
+		  AND 	DOC_NO 			= ${DOC_NO}
+		  AND 	NVL(DOC_SEQ,0)  = ${DOC_SEQ}
+		  AND 	SIGN_PATH_SEQ 	= ${next_sign_path_seq_p}
+	</method>
+
+	<method name="setUpdate_6_3">
+		<![CDATA[
+		UPDATE ICOMSCTP_ICT
+					SET SIGN_CHECK = 'Y'
+		WHERE    HOUSE_CODE      = ${session.HOUSE_CODE}
+     	  AND    COMPANY_CODE    = ${session.COMPANY_CODE}
+     	  AND    DOC_TYPE        = ${DOC_TYPE}
+     	  AND    DOC_NO          = ${DOC_NO}
+     	  AND    DOC_SEQ         = ${DOC_SEQ}
+     	  AND    TO_NUMBER(SIGN_PATH_SEQ) > TO_NUMBER(${APP_STAGE})  --  현재 SIGN_PATH_SEQ
+     	  AND	 TO_NUMBER(SIGN_PATH_SEQ) <= TO_NUMBER(${next_sign_path_seq_p})   --  다음 결재자(PROCEEDING_FLAG = 'P')
+     	  ]]>
+	</method>
+
+	<method name="setUpdate_7">
+		<![CDATA[
+		SELECT  COUNT(*) 		AS NOT_APPROVAL_CNT
+   		FROM     ICOMSCTP_ICT
+   		WHERE    HOUSE_CODE      = ${session.HOUSE_CODE}
+     	  AND    COMPANY_CODE    = ${session.COMPANY_CODE}
+     	  AND    DOC_TYPE        = ${DOC_TYPE}
+     	  AND    DOC_NO          = ${DOC_NO}
+     	  AND    DOC_SEQ         = ${DOC_SEQ}
+          AND    TO_NUMBER(SIGN_PATH_SEQ) < TO_NUMBER(${next_sign_path_seq_p})	--  다음 결재자(PROCEEDING_FLAG = 'P')
+          AND    SIGN_DATE IS NULL 
+          AND    PROCEEDING_FLAG <> 'R'
+	   	]]>
+	</method>
+	
+	<method name="setInsert_1">
+	<![CDATA[
+		 UPDATE ICOMSCTM_ICT SET
+		 		NEXT_SIGN_USER_ID	= ${NEXT_SIGN_USER_ID}
+		 	  , APP_STAGE	= ${APP_STAGE}
+		      , STATUS = 'R'
+		 WHERE HOUSE_CODE = ${session.HOUSE_CODE}
+		 	and COMPANY_CODE = ${session.COMPANY_CODE}
+		 	AND DOC_TYPE = ${DOC_TYPE}
+		 	AND DOC_NO = ${DOC_NO}
+		 	AND	NVL(DOC_SEQ,0) =	${DOC_SEQ}
+	]]>
+	</method>
+
+	<method name="setInsert_2">
+	<![CDATA[
+		 UPDATE ICOMSCTP_ICT SET
+			 	SIGN_DATE	= ${current.DATE}
+			 , SIGN_TIME	= ${current.TIME}
+			 , SIGN_REMARK = $S{remark}
+			 , APP_STATUS = 'E'
+		 WHERE HOUSE_CODE = ${session.HOUSE_CODE}
+		 	and COMPANY_CODE = ${session.COMPANY_CODE}
+		 	AND DOC_TYPE = ${DOC_TYPE}
+		 	AND DOC_NO = ${DOC_NO}
+		 	AND	NVL(DOC_SEQ,0) =	${DOC_SEQ}
+		 	AND SIGN_PATH_SEQ = ${APP_STAGE}
+	]]>
+	</method>
+
+	<method name="setInsert_3">
+	<![CDATA[
+		 INSERT INTO ICOMSCTP_ICT(
+					 HOUSE_CODE,
+					 COMPANY_CODE,
+					 DOC_TYPE,
+					 DOC_NO,
+					 DOC_SEQ,
+					 SIGN_PATH_SEQ,
+					 PROCEEDING_FLAG,
+					 APP_STATUS,
+					 SIGN_CHECK,
+					 SIGN_USER_ID,
+					 SIGN_POSITION,
+					 SIGN_M_POSITION
+					 )VALUES(
+					 ${session.HOUSE_CODE},
+					 ${session.COMPANY_CODE},
+					 ${DOC_TYPE},
+					 ${DOC_NO},
+					 ${DOC_SEQ},
+					 ${APP_STAGE}+1,
+					 'P',
+					 '',
+					 'N',
+					 ${NEXT_SIGN_USER_ID},
+					 '',
+					 ''
+					 )
+	]]>
+	</method>
+	
+	
+	
+	
+	
+	
+	<method name="setRefund_1">
+	<![CDATA[
+       	SELECT APP_STATUS
+		FROM ICOMSCTM_ICT
+		WHERE HOUSE_CODE	= ${session.HOUSE_CODE}
+		  AND COMPANY_CODE = ${session.COMPANY_CODE}
+		  AND DOC_TYPE = ${DOC_TYPE}
+		  AND DOC_NO = ${DOC_NO}
+		  AND NVL(DOC_SEQ,0) = ${DOC_SEQ}
+
+	]]>
+	</method>
+
+	<method name="setRefund_2">
+	<![CDATA[
+		UPDATE ICOMSCTM_ICT SET
+			STATUS = 'R'
+		,	APP_STATUS = 'R'
+	WHERE HOUSE_CODE = ${session.HOUSE_CODE}
+	  AND COMPANY_CODE = ${session.COMPANY_CODE}
+ 	  AND DOC_TYPE = ${DOC_TYPE}
+ 	  AND DOC_NO = ${DOC_NO}
+ 	  AND NVL(DOC_SEQ,0) = ${DOC_SEQ}
+
+	]]>
+	</method>
+
+	<method name="setRefund_3">
+	<![CDATA[
+		UPDATE ICOMSCTP_ICT SET
+			SIGN_DATE = ${current.DATE}
+			,SIGN_TIME = ${current.TIME}
+			,SIGN_REMARK = $S{sign_remark}
+			,APP_STATUS = 'R'
+		WHERE HOUSE_CODE	= ${session.HOUSE_CODE}
+		  AND COMPANY_CODE = ${session.COMPANY_CODE}
+	 	  AND DOC_TYPE = ${DOC_TYPE}
+		  AND DOC_NO = ${DOC_NO}
+		  AND NVL(DOC_SEQ,0) = ${DOC_SEQ}
+		  AND SIGN_PATH_SEQ = ${APP_STAGE}
+	]]>
+	</method>
+	
+	<method name="et_setBDHD2Magam_ICT">
+		<![CDATA[
+			 UPDATE ICOYBDHD2_ICT
+			 SET ANN_STATUS = substring(ANN_STATUS,1,1)||'E'
+			 WHERE HOUSE_CODE	= ${session.HOUSE_CODE}
+             AND (ANN_NO,ANN_COUNT) IN (SELECT ANN_NO2,ANN_COUNT2 
+                                          FROM ICOYBDHD_ICT 
+                                         WHERE BID_NO = ${DOC_NO}
+                                           AND BID_COUNT = ${DOC_SEQ} )	 
+		]]>
+	</method>
+	
+	<method name ="setEndBDAP2_ICT">
+	<![CDATA[
+		UPDATE ICOYBDAP2_ICT
+           SET INP_CNF = 'Y',FINAL_FLAG = 'Y'
+         WHERE HOUSE_CODE	= ${session.HOUSE_CODE}
+           AND (ANN_NO,ANN_COUNT,VENDOR_CODE) IN (SELECT ANN_NO,ANN_COUNT,VENDOR_CODE 
+                                                    FROM ICOYBDAP2_ICT 
+                                                   WHERE HOUSE_CODE	= ${session.HOUSE_CODE}
+                                                     AND (ANN_NO,ANN_COUNT) IN (SELECT ANN_NO2,ANN_COUNT2 
+                                                                                  FROM ICOYBDHD_ICT 
+                                                                                 WHERE BID_NO = ${DOC_NO}
+                                                                                   AND BID_COUNT = ${DOC_SEQ} )
+                                                     AND STATUS IN ('C','R')
+                                                     AND ATTACH_NO IS NOT NULL
+                                                     AND FINAL_FLAG IS NULL)
+	]]>
+	</method>
+	
+	<method name="I__MAIL_BD_GONGGO_ICT">
+		<![CDATA[
+		INSERT INTO UMS_MAIL_INFO
+		(
+		    UMS_TRNO,
+			UMS_REQ_SRNO,
+			UMS_REQ_DT,
+			UMS_TMPL_NO,
+			BIZ_CHRG_ENO,
+			UMS_RGS_DEPT_BRCD,
+			SND_RSV_DTM,
+			ITCSNO,
+			UMS_RVPE_NM,
+			UMS_RECP_EMAIL,
+			SMKT_CMGN_ID,
+			UMS_SPR1_TXT,
+			UMS_SPR2_TXT,
+			EML_TITL_TXT,
+			UMS_SNDL_NM,
+			UMS_DMSG_EMAIL,
+			SCEML_PWNO,
+			ATFL_PATH1_ADR,
+			ATFL1_NM,
+			ATFL_PATH2_ADR,
+			ATFL2_NM,
+			ATFL_PATH3_ADR,
+			ATFL3_NM,
+			ATFL_PATH4_ADR,
+			ATFL4_NM,
+			ATFL_PATH5_ADR,
+			ATFL5_NM,
+			CUS_NM,
+			ACNO,
+			ENCY_RRNO,
+			BR_DIS_NM,
+			BR_TEL_NO,
+			BR_CRPE_FNM,
+			TMPL_MPNG1_TXT,
+			TMPL_MPNG2_TXT,
+			TMPL_MPNG3_TXT,
+			TMPL_MPNG4_TXT,
+			TMPL_MPNG5_TXT,
+			TMPL_MPNG6_TXT,
+			TMPL_MPNG7_TXT,
+			TMPL_MPNG8_TXT,
+			TMPL_MPNG9_TXT,
+			TMPL_MPNG10_TXT,
+			TMPL_MPNG11_TXT,
+			TMPL_MPNG12_TXT,
+			TMPL_MPNG13_TXT,
+			TMPL_MPNG14_TXT,
+			TMPL_MPNG15_TXT,
+			TMPL_MPNG16_TXT,
+			TMPL_MPNG17_TXT,
+			TMPL_MPNG18_TXT,
+			TMPL_MPNG19_TXT,
+			TMPL_MPNG20_TXT,
+			TMPL_MPNG21_TXT,
+			TMPL_MPNG22_TXT,
+			TMPL_MPNG23_TXT,
+			TMPL_MPNG24_TXT,
+			TMPL_MPNG25_TXT,
+			TMPL_MPNG26_TXT,
+			TMPL_MPNG27_TXT,
+			TMPL_MPNG28_TXT,
+			TMPL_MPNG29_TXT,
+			TMPL_MPNG30_TXT,
+			TMPL_MPNG31_TXT,
+			TMPL_MPNG32_TXT,
+			TMPL_MPNG33_TXT,
+			TMPL_MPNG34_TXT,
+			TMPL_MPNG35_TXT,
+			TMPL_MPNG36_TXT,
+			TMPL_MPNG37_TXT,
+			TMPL_MPNG38_TXT,
+			TMPL_MPNG39_TXT,
+			TMPL_MPNG40_TXT,
+			TMPL_MPNG41_TXT,
+			TMPL_MPNG42_TXT,
+			TMPL_MPNG43_TXT,
+			TMPL_MPNG44_TXT,
+			TMPL_MPNG45_TXT,
+			TMPL_MPNG46_TXT,
+			TMPL_MPNG47_TXT,
+			TMPL_MPNG48_TXT,
+			TMPL_MPNG49_TXT,
+			TMPL_MPNG50_TXT,
+			EMSD_CNT,
+			EAI_TRSMN_DT,
+			EAI_TRSMN_SRNO,
+			EAI_TMS_RTCD,
+			EAI_TMS_RST_DTM
+		) 
+		        SELECT 
+			(SELECT 'MASGF'||TO_CHAR(SYSDATE, 'YYMMDDHH24MISS')||TRIM(TO_CHAR(TO_NUMBER(NVL(MAX(SUBSTR(UMS_TRNO,17,2)),'0')) + 1,'00'))
+		    FROM UMS_MAIL_INFO 
+		    WHERE UMS_TRNO LIKE '%MASGF'||TO_CHAR(SYSDATE, 'YYMMDDHH24MISS')||'%') UMS_TRNO	
+		    ,ROW_NUMBER() OVER(ORDER BY A.BID_COUNT) UMS_REQ_SRNO 
+		    ,TO_CHAR(SYSDATE, 'YYYYMMDD') UMS_REQ_DT
+		    ,DECODE(A.BID_COUNT,'1','MAWMGSGF0120964','MAWMGSGF0121007') UMS_TMPL_NO
+			,A.ADD_USER_ID       BIZ_CHRG_ENO
+			,A.ADD_USER_DEPT     UMS_RGS_DEPT_BRCD
+			,TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') SND_RSV_DTM
+			,'MASGF000000'                ITCSNO
+			,A.UMS_RVPE_NM  UMS_RVPE_NM
+	        ,A.UMS_RECP_EMAIL UMS_RECP_EMAIL
+	        ,NULL SMKT_CMGN_ID
+	        ,NULL UMS_SPR1_TXT
+	        ,NULL UMS_SPR2_TXT
+	        ,NULL EML_TITL_TXT
+	        ,'우리은행' UMS_SNDL_NM
+	        ,'webmaster@wooribank.com' UMS_DMSG_EMAIL
+	        ,NULL SCEML_PWNO
+			,NULL ATFL_PATH1_ADR
+			,NULL ATFL1_NM
+			,NULL ATFL_PATH2_ADR
+			,NULL ATFL2_NM
+			,NULL ATFL_PATH3_ADR
+			,NULL ATFL3_NM
+			,NULL ATFL_PATH4_ADR
+			,NULL ATFL4_NM
+			,NULL ATFL_PATH5_ADR
+			,NULL ATFL5_NM
+			,A.UMS_RVPE_NM CUS_NM 
+			,NULL ACNO
+			,NULL ENCY_RRNO
+			,NULL BR_DIS_NM
+			,NULL BR_TEL_NO
+			,NULL BR_CRPE_FNM
+			,A.TMPL_MPNG1_TXT TMPL_MPNG1_TXT
+			,A.TMPL_MPNG2_TXT TMPL_MPNG2_TXT
+			,A.TMPL_MPNG3_TXT TMPL_MPNG3_TXT
+			,A.TMPL_MPNG4_TXT TMPL_MPNG4_TXT
+			,NULL TMPL_MPNG5_TXT
+			,NULL TMPL_MPNG6_TXT
+			,NULL TMPL_MPNG7_TXT
+			,NULL TMPL_MPNG8_TXT
+			,NULL TMPL_MPNG9_TXT
+			,NULL TMPL_MPNG10_TXT
+			,NULL TMPL_MPNG11_TXT
+			,NULL TMPL_MPNG12_TXT
+			,NULL TMPL_MPNG13_TXT
+			,NULL TMPL_MPNG14_TXT
+			,NULL TMPL_MPNG15_TXT
+			,NULL TMPL_MPNG16_TXT
+			,NULL TMPL_MPNG17_TXT
+			,NULL TMPL_MPNG18_TXT
+			,NULL TMPL_MPNG19_TXT
+			,NULL TMPL_MPNG20_TXT
+			,NULL TMPL_MPNG21_TXT
+			,NULL TMPL_MPNG22_TXT
+			,NULL TMPL_MPNG23_TXT
+			,NULL TMPL_MPNG24_TXT
+			,NULL TMPL_MPNG25_TXT
+			,NULL TMPL_MPNG26_TXT
+			,NULL TMPL_MPNG27_TXT
+			,NULL TMPL_MPNG28_TXT
+			,NULL TMPL_MPNG29_TXT
+			,NULL TMPL_MPNG30_TXT
+			,NULL TMPL_MPNG31_TXT
+			,NULL TMPL_MPNG32_TXT
+			,NULL TMPL_MPNG33_TXT
+			,NULL TMPL_MPNG34_TXT
+			,NULL TMPL_MPNG35_TXT
+			,NULL TMPL_MPNG36_TXT
+			,NULL TMPL_MPNG37_TXT
+			,NULL TMPL_MPNG38_TXT
+			,NULL TMPL_MPNG39_TXT
+			,NULL TMPL_MPNG40_TXT
+			,NULL TMPL_MPNG41_TXT
+			,NULL TMPL_MPNG42_TXT
+			,NULL TMPL_MPNG43_TXT
+			,NULL TMPL_MPNG44_TXT
+			,NULL TMPL_MPNG45_TXT
+			,NULL TMPL_MPNG46_TXT
+			,NULL TMPL_MPNG47_TXT
+			,NULL TMPL_MPNG48_TXT
+			,NULL TMPL_MPNG49_TXT
+			,NULL TMPL_MPNG50_TXT
+			,0 EMSD_CNT
+			,TO_CHAR(SYSDATE, 'YYYYMMDD') EAI_TRSMN_DT
+			,(SELECT TO_CHAR(SYSDATE, 'YYMMDDHH24MISS')||TRIM(TO_CHAR(TO_NUMBER(NVL(MAX(SUBSTR(UMS_TRNO,17,2)),'0')) + 1,'00'))
+		      FROM UMS_MAIL_INFO 
+		      WHERE UMS_TRNO LIKE '%MASGF'||TO_CHAR(SYSDATE, 'YYMMDDHH24MISS')||'%')||LPAD(ROW_NUMBER() OVER(ORDER BY A.BID_COUNT), 2, '0') EAI_TRSMN_SRNO
+	        ,'X' EAI_TMS_RTCD
+	        ,NULL EAI_TMS_RST_DTM 
+        FROM 
+        (
+	        SELECT
+	            BDHD.BID_NO
+				,BDHD.BID_COUNT
+				,BDHD.ADD_USER_ID
+				,BDHD.ADD_USER_DEPT
+				,ADDR.CEO_NAME_LOC UMS_RVPE_NM
+				,ADDR.EMAIL UMS_RECP_EMAIL
+				,SUBSTR(BDHD.ANN_ITEM,0,13) TMPL_MPNG1_TXT
+                ,BDHD.ANN_ITEM TMPL_MPNG2_TXT
+                ,CONVERT_DATE(BDHD.X_DOC_SUBMIT_DATE)||' '||SUBSTR(BDHD.X_DOC_SUBMIT_TIME,0,2)||':'||SUBSTR(BDHD.X_DOC_SUBMIT_TIME,3,2) TMPL_MPNG3_TXT
+                ,CONVERT_DATE(BDPG.BID_BEGIN_DATE)||' '||SUBSTR(BDPG.BID_BEGIN_TIME,0,2)||':'||SUBSTR(BDPG.BID_BEGIN_TIME,3,2) TMPL_MPNG4_TXT 
+			FROM ICOYBDHD_ICT BDHD
+			INNER JOIN	ICOYBDPG_ICT BDPG ON BDHD.HOUSE_CODE = BDPG.HOUSE_CODE AND BDHD.BID_NO     = BDPG.BID_NO AND BDHD.BID_COUNT  = BDPG.BID_COUNT
+			INNER JOIN ICOYBDAP_ICT BDAP ON BDHD.HOUSE_CODE = BDAP.HOUSE_CODE AND BDHD.BID_NO      = BDAP.BID_NO  AND BDHD.BID_COUNT = BDAP.BID_COUNT
+			INNER JOIN ICOMADDR_ICT ADDR ON BDAP.HOUSE_CODE = ADDR.HOUSE_CODE AND BDAP.VENDOR_CODE = ADDR.CODE_NO
+			WHERE BDHD.HOUSE_CODE = ${session.HOUSE_CODE}
+			AND BDHD.BID_NO     = ${DOC_NO}
+			AND BDHD.BID_COUNT  = ${DOC_SEQ}
+			AND BDHD.STATUS IN ('C','R')
+			AND BDPG.STATUS IN ('C','R')
+			AND BDAP.STATUS IN ('C','R')
+			AND ADDR.CODE_TYPE  = '2'
+			
+			UNION
+			
+			SELECT
+			     BDHD.BID_NO
+				,BDHD.BID_COUNT
+				,BDHD.ADD_USER_ID
+				,BDHD.ADD_USER_DEPT
+				,(SELECT USER_NAME FROM ICOMVNCP_ICT WHERE HOUSE_CODE = BDAP.HOUSE_CODE AND VENDOR_CODE = BDAP.VENDOR_CODE AND BIZ_RPS_YN = 'Y')	UMS_RVPE_NM	
+				,(SELECT EMAIL FROM ICOMVNCP_ICT WHERE HOUSE_CODE = BDAP.HOUSE_CODE AND VENDOR_CODE = BDAP.VENDOR_CODE AND BIZ_RPS_YN = 'Y')	UMS_RECP_EMAIL	
+				,SUBSTR(BDHD.ANN_ITEM,0,13) TMPL_MPNG1_TXT
+                ,BDHD.ANN_ITEM TMPL_MPNG2_TXT
+                ,CONVERT_DATE(BDHD.X_DOC_SUBMIT_DATE)||' '||SUBSTR(BDHD.X_DOC_SUBMIT_TIME,0,2)||':'||SUBSTR(BDHD.X_DOC_SUBMIT_TIME,3,2) TMPL_MPNG3_TXT
+                ,CONVERT_DATE(BDPG.BID_BEGIN_DATE)||' '||SUBSTR(BDPG.BID_BEGIN_TIME,0,2)||':'||SUBSTR(BDPG.BID_BEGIN_TIME,3,2) TMPL_MPNG4_TXT							
+			FROM ICOYBDHD_ICT	BDHD
+			INNER JOIN	ICOYBDPG_ICT BDPG ON BDHD.HOUSE_CODE = BDPG.HOUSE_CODE AND BDHD.BID_NO     = BDPG.BID_NO AND BDHD.BID_COUNT  = BDPG.BID_COUNT
+			INNER JOIN	ICOYBDAP_ICT	BDAP	ON  BDHD.HOUSE_CODE  = BDAP.HOUSE_CODE AND BDHD.BID_NO      = BDAP.BID_NO AND BDHD.BID_COUNT   = BDAP.BID_COUNT					
+			WHERE	BDHD.HOUSE_CODE = ${session.HOUSE_CODE}			
+			AND     BDHD.STATUS IN ('C','R')
+			AND     BDPG.STATUS IN ('C','R')
+			AND     BDAP.STATUS IN ('C','R')			
+			AND		BDHD.BID_NO     = ${DOC_NO}
+			AND		BDHD.BID_COUNT  = ${DOC_SEQ}
+		
+			UNION
+		
+			SELECT
+				BDHD.BID_NO
+				,BDHD.BID_COUNT
+				,BDHD.ADD_USER_ID
+				,BDHD.ADD_USER_DEPT
+				,(SELECT USER_NAME_LOC FROM ICOMLUSR_ICT WHERE USER_ID = BDHD.ADD_USER_ID) UMS_RVPE_NM
+				,ADDR.EMAIL UMS_RECP_EMAIL
+				,SUBSTR(BDHD.ANN_ITEM,0,13) TMPL_MPNG1_TXT
+                ,BDHD.ANN_ITEM TMPL_MPNG2_TXT
+                ,CONVERT_DATE(BDHD.X_DOC_SUBMIT_DATE)||' '||SUBSTR(BDHD.X_DOC_SUBMIT_TIME,0,2)||':'||SUBSTR(BDHD.X_DOC_SUBMIT_TIME,3,2) TMPL_MPNG3_TXT
+                ,CONVERT_DATE(BDPG.BID_BEGIN_DATE)||' '||SUBSTR(BDPG.BID_BEGIN_TIME,0,2)||':'||SUBSTR(BDPG.BID_BEGIN_TIME,3,2) TMPL_MPNG4_TXT
+			FROM ICOYBDHD_ICT BDHD
+			INNER JOIN	ICOYBDPG_ICT BDPG ON BDHD.HOUSE_CODE = BDPG.HOUSE_CODE AND BDHD.BID_NO     = BDPG.BID_NO AND BDHD.BID_COUNT  = BDPG.BID_COUNT
+			INNER JOIN ICOMADDR_ICT ADDR ON BDHD.HOUSE_CODE = ADDR.HOUSE_CODE AND BDHD.ADD_USER_ID = ADDR.CODE_NO
+		    WHERE BDHD.HOUSE_CODE = ${session.HOUSE_CODE}
+			AND BDHD.BID_NO     = ${DOC_NO}
+			AND BDHD.BID_COUNT  = ${DOC_SEQ}			
+			AND BDHD.STATUS IN ('C','R')
+			AND BDPG.STATUS IN ('C','R')			
+			AND ADDR.CODE_TYPE  = '3'
+		) A
+		]]>
+	</method>
+	
+	
+
+</service>

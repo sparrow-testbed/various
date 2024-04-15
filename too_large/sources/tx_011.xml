@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<service>
+	<method name="selectSpy1glInfo">
+		SELECT
+			HOUSE_CODE,   PAY_SEND_NO,         VENDOR_CODE, DEPOSITOR_NAME, BANK_CODE,
+			BANK_ACCT,    PAY_AMT,             SIGNER_FLAG, SIGNER_NO,      SIGNER_BIO,
+			WORK_KIND,    BMSBMSYY,            SOGSOGCD,    ASTASTGB,       MNGMNGNO,
+			BSSBSSNO,     APPAPPYY,            BMSSRLNO,    APPAPPNO,       APPAPPAM,
+			JUMJUM_CD,    IGJM_CD,             BDSBDSCD,    BDSBDSNM,       USE_KIND,
+			DEAL_AREA,    DURABLE_YEAR,        DEAL_DEBT,   ACCOUNTKIND,    DEAL_KIND,
+			TRM_RTN_SQNO, USER_TRM_NO,         STATUS_CD,   ADD_DATE,       ADD_TIME,
+			ADD_USER_ID,  CHANGE_DATE,         CHANGE_TIME, CHANGE_USER_ID, TCP_STATE,
+			WEB_STATE,    MANUAL_ACCOUNT_KIND, DEL_YN
+		FROM
+			SPY1GL
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			PAY_SEND_NO = ${PAY_SEND_NO}
+	</method>
+	
+	<method name="selectSpy1lnList">
+		SELECT
+			HOUSE_CODE,  PAY_SEND_NO, PAY_SEND_SEQ,   TAX_NO,   TAX_SEQ,
+			JUMJUJMCD,   IGJMCD,      PMKPMKCD,       CNT,      AMT,
+			APPAPPAM,    DOSUNQNO,    ADD_DATE,       ADD_TIME, ADD_USER_ID,
+			CHANGE_DATE, CHANGE_TIME, CHANGE_USER_ID, MODEL_NO
+		FROM
+			SPY1LN
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			PAY_SEND_NO = ${PAY_SEND_NO}
+	</method>
+	<method name="selectSpy1List">
+		SELECT
+			   GL.HOUSE_CODE,   GL.PAY_SEND_NO,         GL.VENDOR_CODE,    GL.DEPOSITOR_NAME,    GL.BANK_CODE,
+			   GL.BANK_ACCT,    GL.PAY_AMT,             GL.SIGNER_FLAG,    GL.SIGNER_NO,         GL.SIGNER_BIO,
+			   GL.WORK_KIND,    GL.BMSBMSYY,            GL.SOGSOGCD,       GL.ASTASTGB,          GL.MNGMNGNO,
+			   GL.BSSBSSNO,     GL.APPAPPYY,            GL.BMSSRLNO,       GL.APPAPPNO,          GL.APPAPPAM,
+			   GL.JUMJUM_CD,    GL.IGJM_CD,             GL.BDSBDSCD,       GL.BDSBDSNM,          GL.USE_KIND,
+			   GL.DEAL_AREA,    GL.DURABLE_YEAR,        NVL(GL.DEAL_DEBT,0) AS DEAL_DEBT,        GL.ACCOUNTKIND,       GL.DEAL_KIND,
+			   GL.TRM_RTN_SQNO, GL.USER_TRM_NO,         GL.STATUS_CD,      GL.ADD_DATE,          GL.ADD_TIME,
+			   GL.ADD_USER_ID,  GL.CHANGE_DATE,         GL.CHANGE_TIME,    GL.CHANGE_USER_ID,    GL.TCP_STATE,
+			   GL.WEB_STATE,    GL.MANUAL_ACCOUNT_KIND, GL.DEL_YN,
+			   LN.PAY_SEND_SEQ, LN.TAX_NO,              LN.TAX_SEQ,
+			   LN.JUMJUJMCD,    LN.IGJMCD,              LN.PMKPMKCD,       LN.CNT,               LN.AMT,
+			   LN.APPAPPAM AS APPAPPAMDT,       LN.DOSUNQNO,       LN.MODEL_NO,
+			   (SELECT SUBSTRB(REMARK,1,104) FROM ICOYTXDT WHERE HOUSE_CODE = LN.HOUSE_CODE AND TAX_NO = LN.TAX_NO AND TAX_SEQ = LN.TAX_SEQ) REMARK,
+			   (SELECT SUBSTRB(PODT.SPECIFICATION,150)   
+			      FROM ICOYTRDT TRDT, ICOYPODT PODT  
+			   	 WHERE TRDT.HOUSE_CODE = PODT.HOUSE_CODE 
+			   	   AND TRDT.PO_NO      = PODT.PO_NO   
+			   	   AND TRDT.PO_SEQ     = PODT.PO_SEQ
+			   	   AND TRDT.HOUSE_CODE = LN.HOUSE_CODE 
+			   	   AND TRDT.TAX_NO     = LN.TAX_NO 
+			   	   AND TRDT.TAX_SEQ    = LN.TAX_SEQ			       
+			   ) SPECIFICATION			   
+		FROM
+			   SPY1GL GL, SPY1LN LN
+		WHERE
+			   GL.HOUSE_CODE     = LN.HOUSE_CODE 
+		  AND  GL.PAY_SEND_NO	= LN.PAY_SEND_NO
+		  AND  GL.HOUSE_CODE = ${session.HOUSE_CODE}
+		  AND  GL.PAY_SEND_NO = ${PAY_SEND_NO}
+	</method>
+	<method name="updateSpy1glBSNum">
+		UPDATE
+			SPY1GL
+		SET
+			BS_NUM        = $S{BS_NUM},
+			RTN_BS_NUM    = $S{RTN_BS_NUM},
+			STATUS_CD     = ${STATUS_CD},
+			TCP_TIME      = TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS'),
+			TRN_LOG_KEY_VAL = $S{TRN_LOG_KEY_VAL},   -- TOBE 2017-07-01 추가 로그키값 56
+			SLIP_NO         = $S{SLIP_NO}            -- TOBE 2017-07-01 추가 전표번호 16
+		WHERE
+			PAY_SEND_NO = ${PAY_SEND_NO}
+	</method>
+	<method name="updateSpy1glTcpState">
+		UPDATE SPY1GL
+		SET    
+		       STATUS_CD      = ${STATUS_CD}
+		     , ACC_NUM        = $S{ACC_NUM}  
+		     , RTN_ACC_NUM    = $S{RTN_ACC_NUM}  
+		     , TCP_STATE      = $S{TCP_STATE}  
+		WHERE  PAY_SEND_NO    = ${PAY_SEND_NO}
+	</method>
+		<method name="insertSinfhdInfo">
+		INSERT INTO SINFHD(
+			HOUSE_CODE,     INF_NO,       INF_TYPE,   INF_CODE,   INF_DATE,
+			INF_START_TIME, INF_END_TIME, INF_STATUS, INF_REASON, INF_SEND,
+			INF_ID
+		)
+		VALUES(
+			${HOUSE_CODE},
+			${INF_NO},
+			${INF_TYPE},
+			${INF_CODE},
+			TO_CHAR(SYSDATE, 'YYYYMMDD'),
+			
+			TO_CHAR(SYSDATE, 'HH24MISS'),
+			NULL,
+			${INF_STATUS},
+			${INF_REASON},
+			${INF_SEND},
+			
+			${INF_ID}
+		)
+	</method>
+	<method name="updateSpy1glExeTryDt">
+		UPDATE
+			SPY1GL
+		SET
+			EXE_TRY_DT  = TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')			
+		WHERE
+			PAY_SEND_NO = ${PAY_SEND_NO}
+	</method>
+	<method name="updateSpy1glCcltTryDt">
+		UPDATE
+			SPY1GL
+		SET
+			CCLT_TRY_DT  = TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')			
+		WHERE
+			PAY_SEND_NO = ${PAY_SEND_NO}
+	</method>
+</service>

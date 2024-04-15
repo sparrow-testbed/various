@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<service>
+	<method name="et_getItemConfirmList">
+    <![CDATA[
+ <![CDATA[
+	SELECT RHD.REQ_DATE,                                                                              
+	       RHD.SPECIFICATION,                                                                     
+	       RHD.DESCRIPTION_LOC,                                                                       
+	       GETICOMCODE2('#HOUSE_CODE#','M183', RHD.REQ_TYPE) REQ_TYPE,                          	  
+	       RHD.REQ_TYPE as REQ_CODE,                                                                   
+	       (SELECT USER_NAME_LOC FROM ICOMLUSR WHERE HOUSE_CODE = '#HOUSE_CODE#' AND USER_ID = RHD.REQ_USER_ID) 
+	       as REQ_NAME_LOC,                                                                       	  
+	       GETICOMCODE2('#HOUSE_CODE#','M184',RHD.DATA_TYPE) DATA_TYPE,                         	 
+	       RHD.CONFIRM_DATE,                                                                          
+	       (SELECT USER_NAME_LOC FROM ICOMLUSR WHERE HOUSE_CODE = '#HOUSE_CODE#' AND USER_ID = RHD.CONFIRM_USER_ID) CONFIRM_NAME_LOC,               
+	       GETICOMCODE2('#HOUSE_CODE#','M185',RHD.CONFIRM_STATUS) CONFIRM_STATUS,               	 
+	       RHD.CONFIRM_STATUS as CONFIRM_CODE,                                                        
+	       RHD.REQ_ITEM_NO,                                                                           
+	       RHD.IMAGE_FILE_PATH,                                                                       
+	       RHD.ITEM_NO, ITEM_GROUP, REMARK,                                                                               
+	       GETCOMPANYNAME(VDR.HOUSE_CODE, VDR.VENDOR_CODE, 'S', 'KR') VENDOR_NAME,                    
+	       RHD.ITEM_GROUP, RHD.DATA_OCCUR_TYPE,                                                                       
+	       CASE WHEN RHD.DATA_OCCUR_TYPE='L' THEN '통합'                                              
+	            WHEN RHD.DATA_OCCUR_TYPE='V' THEN '공급사'                                            
+	            ELSE '' END AS DATA_OCCUR_NAME,                                    					 
+	       RHD.BASIC_UNIT,                                                                            
+	       RHD.Z_PURCHASE_TYPE,  		  															 
+	       RHD.DELIVERY_LT,       		  															   
+	       RHD.QI_FLAG,        			  															   
+	       RHD.DO_FLAG,        			  															   
+	       RHD.Z_WORK_STAGE_FLAG,           															 
+	       RHD.Z_DELIVERY_CONFIRM_FLAG,     															 
+	       GETICOMCODE3('100','M602',RHD.Z_PURCHASE_TYPE) as Z_PURCHASE_TYPE_COLOR,					 
+	       RHD.REJECT_REMARK,           															 	 
+	       RHD.MAKER_NAME           															 	 
+	  FROM ICOMREHD RHD  LEFT OUTER JOIN                                                                 				 
+	                                    ( SELECT USR.USER_ID,                                                           
+	                                             USR.HOUSE_CODE,                                                        
+	                                             NGL.VENDOR_CODE                                                        
+	                                        FROM ICOMLUSR USR, ICOMVNGL NGL                                   
+	                                       WHERE USR.HOUSE_CODE   = '#HOUSE_CODE#'                                     
+	                                         AND USR.HOUSE_CODE   = NGL.HOUSE_CODE                                       
+	                                         AND USR.COMPANY_CODE = NGL.VENDOR_CODE                                    
+	                                     ) VDR                                                                         
+	                                  ON  RHD.HOUSE_CODE = VDR.HOUSE_CODE                                                              
+	                                 AND RHD.REQ_USER_ID = VDR.USER_ID                                                                 
+	 WHERE RHD.HOUSE_CODE  =  '#HOUSE_CODE#'                                                          
+	   AND RHD.STATUS      <> 'D'                                                                             
+	   AND RHD.SIGN_STATUS = 'E'                                                                         
+	   AND RHD.DATA_OCCUR_TYPE IN ('L','V')                                                           
+	 <OPT=S,S> AND RHD.REQ_DATE      >=      ?    </OPT>                                               
+	 <OPT=S,S> AND RHD.REQ_DATE      <=      ?    </OPT>                                               
+	 <OPT=S,S> AND (SELECT USER_NAME_LOC FROM ICOMLUSR WHERE HOUSE_CODE = '#HOUSE_CODE#' AND USER_ID = RHD.REQ_USER_ID) LIKE '%' || ? || '%'   </OPT>                                                                                                     
+	 <OPT=S,S> AND UPPER(RHD.DESCRIPTION_LOC) LIKE '%' || UPPER(?) || '%' </OPT>                                         
+	 <OPT=S,S> AND RHD.CONFIRM_STATUS = ?          </OPT>                                                                                                       
+	 ORDER BY RHD.REQ_DATE , RHD.CONFIRM_DATE DESC    
+	]]> 
+    ]]>
+	</method>
+</service>

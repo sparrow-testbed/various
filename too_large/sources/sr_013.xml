@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+<service>
+	  <method name ="getTempList">
+    <![CDATA[
+		select a.c_template_refitem, a.template_name, a.change_date, b.user_name_loc 	
+    	from icomvcth a, icomlusr b 													
+		where a.add_user_id = b.user_id 
+		and a.house_code= ${session.HOUSE_CODE}		
+		and a.house_code = b.house_code 
+		and a.use_flag = 'Y' 		
+		and a.template_name  LIKE '%' || $S{item_name}  || '%'
+   		and b.user_name_loc  LIKE '%' || $S{operator}  || '%'	
+		order by a.change_date asc
+	 ]]>
+	 
+	 
+	 
+    </method>
+    
+     <method name ="setTempDelete">
+    <![CDATA[
+    	UPDATE icomvcth SET use_flag = 'N'					
+		WHERE HOUSE_CODE = ${session.HOUSE_CODE} 
+		  AND C_TEMPLATE_REFITEM IN ( ${c_template_refitem} ) 				
+    ]]>
+    </method>
+   
+
+</service>

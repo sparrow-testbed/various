@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+<service> 
+	
+	<method name="getChannelList">
+	<![CDATA[	
+		SELECT                                                                                             											 
+		    A.SIGN_PATH_SEQ, B.USER_NAME_LOC, D.DEPT_NAME_LOC AS DEPT_NAME                                 
+           ,( CASE B.USER_TYPE                                                                                      
+              WHEN 'S' THEN GETICOMCODE2(B.HOUSE_CODE,'M106',B.POSITION)                        
+              WHEN 'IBKS' THEN GETICORCODE2(B.HOUSE_CODE, B.COMPANY_CODE, 'C002', B.POSITION)                        
+              ELSE GETICOMCODE1(B.HOUSE_CODE,'C002',B.POSITION)                
+        	END )   AS  POSITION_NAME                                                                                   
+           ,( CASE B.USER_TYPE                                                                                      
+              WHEN 'S' THEN GETICOMCODE2(B.HOUSE_CODE,'M107',B.MANAGER_POSITION)               
+              WHEN 'IBKS' THEN GETICOMCODE2(B.HOUSE_CODE,'M107',B.MANAGER_POSITION)               
+              ELSE GETICOMCODE1(B.HOUSE_CODE,'C001',B.MANAGER_POSITION)        
+        	END)   as  MANAGER_POSITION_NAME
+		    ,A.PROCEEDING_FLAG, A.SIGN_USER_ID, A.SIGN_PATH_NO, B.POSITION, B.MANAGER_POSITION 
+		    ,A.USER_ID
+		    ,GETUSERNAMELOC(A.HOUSE_CODE,A.USER_ID) AS USER_NAME          											 
+		FROM ICOMRULP A                                                                                    											 
+			, ICOMLUSR B                                                                                    											 
+		  LEFT OUTER JOIN ICOMOGDP D                                                                                    											
+		    ON  B.HOUSE_CODE = D.HOUSE_CODE        																								 
+		    AND B.COMPANY_CODE = D.COMPANY_CODE     																								 
+		    AND B.DEPT = D.DEPT   																													 
+		WHERE                                                                                              											 
+		    A.HOUSE_CODE = B.HOUSE_CODE                                  																			 
+		    AND A.SIGN_USER_ID = B.USER_ID                                																			 
+			AND A.HOUSE_CODE   = ${session.HOUSE_CODE}                                                     											                                                       											 
+			AND A.SIGN_PATH_NO = ${SIGN_PATH_NO}                                                       											 
+		ORDER BY TO_NUMBER( A.SIGN_PATH_SEQ)
+	]]>
+	</method>
+
+    <method name="setChannelInsert">
+		 INSERT INTO ICOMRULP  						
+						 (  											
+						 	HOUSE_CODE  								
+						 , USER_ID  									
+						 , SIGN_PATH_NO  								
+						 , SIGN_PATH_SEQ  								
+						 , SIGN_USER_ID  								
+						 , PROCEEDING_FLAG  							
+						 , ADD_DATE  									
+						 , ADD_TIME  									
+						 )    											
+						 SELECT    									
+						   ${session.HOUSE_CODE}  											
+						 , ${session.ID}  											
+						 , ${SIGN_PATH_NO}  											
+						 , (                                            
+						     SELECT                                     
+						     	NVL(MAX(SIGN_PATH_SEQ), 0) + 1 AS SIGN_PATH_SEQ   
+						 	  	FROM ICOMRULP                             			 
+						 	  	WHERE HOUSE_CODE = ${session.HOUSE_CODE}       							    							 
+						   		AND SIGN_PATH_NO = ${SIGN_PATH_NO}                    		 
+						   )  											
+						 , ${SIGN_USER_ID}  											
+						 , ${PROCEEDING_FLAG}  											
+						 , ${current.DATE}  											
+						 , ${current.TIME}
+						 FROM DUAL  											
+    												
+	</method>
+	
+	<method name="setChannelUpdate">
+	<![CDATA[
+		 UPDATE ICOMRULP SET 		 
+		 	  SIGN_USER_ID  = ${SIGN_USER_ID} 	 
+		 	, PROCEEDING_FLAG  = ${PROCEEDING_FLAG} 	 
+		 WHERE 					 
+		 	HOUSE_CODE = ${session.HOUSE_CODE} 			 
+		 	AND USER_ID = ${session.ID} 		 
+		 	AND SIGN_PATH_NO = ${SIGN_PATH_NO} 	 
+		 	AND SIGN_PATH_SEQ = ${SIGN_PATH_SEQ} 	 	
+	]]>
+	</method>
+	
+	<method name="setChannelDelete_1">
+	<![CDATA[
+		 DELETE FROM ICOMRULP 		 
+			 WHERE HOUSE_CODE = ${session.HOUSE_CODE} 		 
+			 	AND USER_ID = ${session.ID}  		 
+			 	AND SIGN_PATH_NO = ${SIGN_PATH_NO} 	 
+			 	AND SIGN_PATH_SEQ = ${SIGN_PATH_SEQ} 	 	
+	]]>
+	</method>
+	
+	<method name="setChannelDelete_2">
+	<![CDATA[
+		 UPDATE ICOMRULP SET 							 
+		 		SIGN_PATH_SEQ = ${i}   			 
+		 WHERE  										 
+		 		HOUSE_CODE = ${session.HOUSE_CODE} 			 
+		 	AND USER_ID = ${session.ID}   			 
+		 	AND SIGN_PATH_NO = ${SIGN_PATH_NO}    		 
+		 	AND SIGN_PATH_SEQ = ${SIGN_PATH_SEQ} 	 	
+	]]>
+	</method>
+	
+	<method name="setChannelDelete_select">
+	<![CDATA[
+		 SELECT  									 
+		 	SIGN_PATH_SEQ 							 
+		 FROM ICOMRULP 								 
+		 WHERE 										 
+		 	HOUSE_CODE = ${session.HOUSE_CODE}   			 
+		 	AND USER_ID = ${session.ID}  		 
+		 	AND SIGN_PATH_NO = ${SIGN_PATH_NO} 	 
+		 ORDER BY SIGN_PATH_SEQ 					 	
+	]]>
+	</method>
+	
+</service>

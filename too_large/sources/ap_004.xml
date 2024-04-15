@@ -1,0 +1,467 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+<service> 
+   <method name="getProgressList_is_ceo">
+	/* CEO ROLE 일때*/
+SELECT *
+FROM
+(
+	SELECT
+			 MAX(CAN_APPROVAL) AS CAN_APPROVAL
+			,APP_STATUS
+			,APP_STATUS_TEXT
+			,DOC_TYPE_TEXT
+			,DOC_TYPE
+			,DOC_NO
+			,SUBJECT
+			,DOC_SEQ
+			,ITEM_COUNT
+			,ADD_USER_ID
+			,ADD_USER_NAME
+			,SIGN_REMARK
+			,ADD_DATE
+			,CUR
+			,TTL_AMT
+			,ACCOUNT_CODE
+			,SHIPPER_TYPE
+			,SHIPPER_TYPE_TEXT
+			,ARGENT_FLAG
+			,COMPANY_CODE
+			,MAX(NEXT_SIGN_USER_ID   ) AS NEXT_SIGN_USER_ID
+			,STRATEGY_TYPE
+			,APP_STAGE
+			,ATTACH_NO
+			,ATTACH_NO AS ATTACH_NO_IMG
+			,MAX(PERSON_APP_STATUS   ) AS PERSON_APP_STATUS
+			,MAX(SIGN_DATE           ) AS SIGN_DATE
+			,MAX(SIGN_PATH_SEQ       ) AS SIGN_PATH_SEQ
+			,MAX(PROCEEDING_FLAG	 ) AS PROCEEDING_FLAG
+	FROM
+	(
+	SELECT
+		 CASE WHEN SIGN_CHECK = 'Y' AND APP_STATUS IS NULL AND SIGN_USER_ID = ${session.ID} THEN 'Y' ELSE '' END AS CAN_APPROVAL
+		, NVL(SCTM.APP_STATUS,'P') AS APP_STATUS
+	 	, GETICOMCODE1(SCTM.HOUSE_CODE,'M109',NVL(SCTM.APP_STATUS,'P')) AS APP_STATUS_TEXT
+	 	, (CASE WHEN SCTM.DOC_TYPE = 'TAX' THEN
+	 	        CASE WHEN SCTM.DOC_SEQ = 'R' THEN '매입 '
+	 	             WHEN SCTM.DOC_SEQ = 'P' THEN '매출 '
+	 	             ELSE ''
+	 	        END || GETICOMCODE1(SCTM.HOUSE_CODE,'M999',CASE WHEN INSTR(SCTM.DOC_TYPE, '^') = '0' THEN SCTM.DOC_TYPE
+	 												ELSE SUBSTR(SCTM.DOC_TYPE, 1, INSTR(SCTM.DOC_TYPE, '^')-1)
+	 												END)
+	 	    ELSE GETICOMCODE1(SCTM.HOUSE_CODE,'M999',CASE WHEN INSTR(SCTM.DOC_TYPE, '^') = '0' THEN SCTM.DOC_TYPE
+	 												ELSE SUBSTR(SCTM.DOC_TYPE, 1, INSTR(SCTM.DOC_TYPE, '^')-1)
+	 												END)
+	 	    END ) AS  DOC_TYPE_TEXT
+	 	, SCTM.DOC_TYPE
+	 	, SCTM.DOC_NO
+	 	, ( CASE WHEN SCTM.DOC_TYPE = 'TAX'
+		       THEN  DECODE((SELECT COUNT(*) FROM ICOYTXHD 
+		                WHERE HOUSE_CODE = SCTM.HOUSE_CODE
+		                  AND GROUP_TAX_NO = SCTM.DOC_NO), 1, 
+		               getDocSubject(SCTM.HOUSE_CODE
+		                            ,(SELECT PO_NO FROM ICOYTRDT 
+		                               WHERE HOUSE_CODE = SCTM.HOUSE_CODE
+		                                 AND TAX_NO = SCTM.DOC_NO 
+		                                 AND ROWNUM = 1)  
+		                            , 'POD', SCTM.DOC_SEQ),
+		               getDocSubject(SCTM.HOUSE_CODE
+		                             , (SELECT PO_NO FROM ICOYTRDT 
+		                                WHERE HOUSE_CODE = SCTM.HOUSE_CODE
+		                                  AND TAX_NO = SCTM.DOC_NO 
+		                                  AND ROWNUM = 1)  
+		                             , 'POD', SCTM.DOC_SEQ) || ' 외 ' 
+		                                    || (SELECT COUNT(*) -1 FROM ICOYTXHD 
+		                                        WHERE HOUSE_CODE = SCTM.HOUSE_CODE
+		                                        AND GROUP_TAX_NO = SCTM.DOC_NO) 
+		                                    || '건' )
+
+	 	ELSE
+	 	 getDocSubject(SCTM.HOUSE_CODE, SCTM.DOC_NO, SCTM.DOC_TYPE, SCTM.DOC_SEQ)
+	 	END ) AS SUBJECT
+	 	, (CASE WHEN SUBSTR(SCTM.DOC_SEQ, 8, 2) = 'AD' THEN '계약금'
+	 		   	WHEN SUBSTR(SCTM.DOC_SEQ, 8, 2) = 'JD' THEN '중도금'
+	 		   	WHEN SUBSTR(SCTM.DOC_SEQ, 8, 2) = 'RD' THEN '잔금'
+	 		   	WHEN SUBSTR(SCTM.DOC_SEQ, 8, 2) = '00' THEN '계획결재'
+	 		   	WHEN SUBSTR(SCTM.DOC_SEQ, 8, 2) = '01' THEN '결과결재'
+	 		   	ELSE SCTM.DOC_SEQ
+	 	  	END ) AS DOC_SEQ
+	 	, SCTM.ITEM_COUNT
+	 	, SCTM.ADD_USER_ID
+	 	, GETUSERNAME(SCTM.HOUSE_CODE,SCTM.ADD_USER_ID,'LOC') AS ADD_USER_NAME
+	 	, SCTM.SIGN_REMARK
+	 	, SCTM.ADD_DATE
+	 	, SCTM.CUR
+	 	, ROUND(ROUND(SCTM.TTL_AMT,1) ,0 )      AS TTL_AMT
+	 	, SCTM.ACCOUNT_CODE
+	 	, SCTM.SHIPPER_TYPE
+	 	, GETICOMCODE2(SCTM.HOUSE_CODE,'M025',SCTM.SHIPPER_TYPE) AS SHIPPER_TYPE_TEXT
+	 	, SCTM.ARGENT_FLAG
+	 	, SCTM.COMPANY_CODE
+
+		, (
+	        SELECT SIGN_USER_ID
+	        FROM ICOMSCTP
+	        WHERE    HOUSE_CODE      = SCTP.HOUSE_CODE
+	     	  AND    COMPANY_CODE    = SCTP.COMPANY_CODE
+	     	  AND    DOC_TYPE        = SCTP.DOC_TYPE
+	     	  AND    DOC_NO          = SCTP.DOC_NO
+	     	  AND    DOC_SEQ         = SCTP.DOC_SEQ
+	          AND    SIGN_PATH_SEQ   =
+	                                      (
+	                                        SELECT
+	                            				    MIN(SIGN_PATH_SEQ)
+	                               		    FROM     ICOMSCTP
+	                               		    WHERE    HOUSE_CODE      = SCTP.HOUSE_CODE
+	                                 	      AND    COMPANY_CODE    = SCTP.COMPANY_CODE
+	                                 	      AND    DOC_TYPE        = SCTP.DOC_TYPE
+	                                 	      AND    DOC_NO          = SCTP.DOC_NO
+	                                 	      AND    DOC_SEQ         = SCTP.DOC_SEQ
+	                                 	      AND    SIGN_PATH_SEQ   >  SCTP.SIGN_PATH_SEQ  --  현재 SIGN_PATH_SEQ
+	                                 	      AND 	PROCEEDING_FLAG = 'P'
+                                      )
+      )  AS NEXT_SIGN_USER_ID
+	 	, SCTM.STRATEGY_TYPE
+	 	, NVL(SCTM.APP_STAGE,0) AS APP_STAGE
+	 	, SCTM.ATTACH_NO
+	 	, SCTM.ATTACH_NO AS ATTACH_NO_IMG
+	 	, (CASE WHEN SCTP.APP_STATUS IS NULL THEN '미결'
+	 		   	ELSE '완료'
+	 	  	END ) AS PERSON_APP_STATUS
+			,    (SELECT SIGN_DATE
+			FROM ICOMSCTP
+			WHERE SCTM.HOUSE_CODE = HOUSE_CODE
+			AND SCTM.COMPANY_CODE = COMPANY_CODE
+			AND SCTM.DOC_TYPE = DOC_TYPE
+			AND SCTM.DOC_SEQ = DOC_SEQ
+			AND SCTM.DOC_NO = DOC_NO
+			AND SIGN_PATH_SEQ =
+			(SELECT MAX(SIGN_PATH_SEQ)
+			FROM ICOMSCTP
+			WHERE SCTM.HOUSE_CODE = HOUSE_CODE
+			AND SCTM.COMPANY_CODE = COMPANY_CODE
+			AND SCTM.DOC_TYPE = DOC_TYPE
+			AND SCTM.DOC_SEQ = DOC_SEQ
+			AND SCTM.DOC_NO = DOC_NO)
+			) AS SIGN_DATE
+			,SCTP.SIGN_PATH_SEQ
+			,SCTP.PROCEEDING_FLAG
+	 FROM ICOMSCTM SCTM
+	 	LEFT OUTER JOIN ICOMLUSR LUSR
+	 		ON SCTM.HOUSE_CODE = LUSR.HOUSE_CODE
+	 		AND SCTM.ADD_USER_ID = LUSR.USER_ID
+	 	JOIN ICOMSCTP SCTP
+	 		ON SCTM.HOUSE_CODE = SCTP.HOUSE_CODE
+	 		AND SCTM.COMPANY_CODE = SCTP.COMPANY_CODE
+	 		AND SCTM.DOC_TYPE = SCTP.DOC_TYPE
+	 		AND SCTM.DOC_SEQ = SCTP.DOC_SEQ
+	 		AND SCTM.DOC_NO = SCTP.DOC_NO
+	 WHERE 1=1
+		#str#
+
+
+
+			<if test ="${doc_type}" operator = "eq" value = "BID">
+				AND SCTM.DOC_TYPE 		IN ('BID')
+			</if>
+			<if test ="${doc_type}" operator = "ne" value = "BID">
+				AND SCTM.DOC_TYPE 		= $S{doc_type}
+			</if>
+	<![CDATA[
+		AND SCTM.STATUS != 'N'	
+		AND SCTM.HOUSE_CODE  	= ${session.HOUSE_CODE}
+		AND SCTM.DOC_NO 		= $S{DOC_NO}
+		AND SCTM.SHIPPER_TYPE	= $S{shipper_type}
+		AND SCTM.ADD_DATE BETWEEN $S{from_date} 
+		AND $S{to_date}
+	]]>
+
+	ORDER BY DECODE(SCTM.ARGENT_FLAG, 'T', 1, 2), SCTM.ADD_DATE DESC
+	)
+
+	GROUP BY APP_STATUS
+			,APP_STATUS_TEXT
+			,DOC_TYPE_TEXT
+			,DOC_TYPE
+			,DOC_NO
+			,SUBJECT
+			,DOC_SEQ
+			,ITEM_COUNT
+			,ADD_USER_ID
+			,ADD_USER_NAME
+			,SIGN_REMARK
+			,ADD_DATE
+			,CUR
+			,TTL_AMT
+			,ACCOUNT_CODE
+			,SHIPPER_TYPE
+			,SHIPPER_TYPE_TEXT
+			,ARGENT_FLAG
+			,COMPANY_CODE
+			,STRATEGY_TYPE
+			,APP_STAGE
+			,ATTACH_NO
+			,ATTACH_NO AS ATTACH_NO_IMG
+)
+WHERE 	1=1
+	<![CDATA[
+  	AND SUBJECT 			LIKE '%' || $S{subject} || '%'
+    AND ADD_USER_NAME 		LIKE '%' || $S{add_user_name} || '%'
+    AND SIGN_DATE BETWEEN $S{sign_from_date}
+	AND $S{sign_to_date}
+	]]>
+		<if test ="${app_status}" operator = "eq" value = "P">
+		/* 진행건중에 미결문서 제외 */
+  AND CAN_APPROVAL != 'Y' OR CAN_APPROVAL IS NULL
+		</if>
+</method>
+
+	<method name="getProgressList">
+	/* 일반유저 일때 */
+SELECT *
+FROM
+(
+		 SELECT
+		 CASE WHEN SIGN_CHECK = 'Y' AND SCTP.APP_STATUS IS NULL AND SIGN_USER_ID = ${session.ID} THEN 'Y' ELSE 'N' END AS CAN_APPROVAL
+		,NVL(SCTM.APP_STATUS,'P') AS APP_STATUS
+	 	, GETICOMCODE1(SCTM.HOUSE_CODE,'M109',NVL(SCTM.APP_STATUS,'P')) AS APP_STATUS_TEXT
+	 	, (CASE WHEN SCTM.DOC_TYPE = 'TAX' THEN
+	 	        CASE WHEN SCTM.DOC_SEQ = 'R' THEN '매입 '
+	 	             WHEN SCTM.DOC_SEQ = 'P' THEN '매출 '
+	 	             ELSE ''
+	 	        END || GETICOMCODE1(SCTM.HOUSE_CODE,'M999',CASE WHEN INSTR(SCTM.DOC_TYPE, '^') = '0' THEN SCTM.DOC_TYPE
+	 												ELSE SUBSTR(SCTM.DOC_TYPE, 1, INSTR(SCTM.DOC_TYPE, '^')-1)
+	 												END)
+	 	    ELSE GETICOMCODE1(SCTM.HOUSE_CODE,'M999',CASE WHEN INSTR(SCTM.DOC_TYPE, '^') = '0' THEN SCTM.DOC_TYPE
+	 												ELSE SUBSTR(SCTM.DOC_TYPE, 1, INSTR(SCTM.DOC_TYPE, '^')-1)
+	 												END)
+	 	    END ) AS  DOC_TYPE_TEXT
+	 	, SCTM.DOC_TYPE
+	 	, SCTM.DOC_NO
+	 	, ( CASE WHEN SCTM.DOC_TYPE = 'TAX'
+		       THEN  DECODE((SELECT COUNT(*) FROM ICOYTXHD 
+		                WHERE HOUSE_CODE = SCTM.HOUSE_CODE
+		                  AND GROUP_TAX_NO = SCTM.DOC_NO), 1, 
+		               getDocSubject(SCTM.HOUSE_CODE
+		                            ,(SELECT PO_NO FROM ICOYTRDT 
+		                               WHERE HOUSE_CODE = SCTM.HOUSE_CODE
+		                                 AND TAX_NO = SCTM.DOC_NO 
+		                                 AND ROWNUM = 1)  
+		                            , 'POD', SCTM.DOC_SEQ),
+		               getDocSubject(SCTM.HOUSE_CODE
+		                             , (SELECT PO_NO FROM ICOYTRDT 
+		                                WHERE HOUSE_CODE = SCTM.HOUSE_CODE
+		                                  AND TAX_NO = SCTM.DOC_NO 
+		                                  AND ROWNUM = 1)  
+		                             , 'POD', SCTM.DOC_SEQ) || ' 외 ' 
+		                                    || (SELECT COUNT(*) -1 FROM ICOYTXHD 
+		                                        WHERE HOUSE_CODE = SCTM.HOUSE_CODE
+		                                        AND GROUP_TAX_NO = SCTM.DOC_NO) 
+		                                    || '건' )
+
+	 	ELSE
+	 	 getDocSubject(SCTM.HOUSE_CODE, SCTM.DOC_NO, SCTM.DOC_TYPE, SCTM.DOC_SEQ)
+	 	END ) AS SUBJECT
+	 	, (CASE WHEN SUBSTR(SCTM.DOC_SEQ, 8, 2) = 'AD' THEN '계약금'
+	 		   	WHEN SUBSTR(SCTM.DOC_SEQ, 8, 2) = 'JD' THEN '중도금'
+	 		   	WHEN SUBSTR(SCTM.DOC_SEQ, 8, 2) = 'RD' THEN '잔금'
+	 		   	WHEN SUBSTR(SCTM.DOC_SEQ, 8, 2) = '00' THEN '계획결재'
+	 		   	WHEN SUBSTR(SCTM.DOC_SEQ, 8, 2) = '01' THEN '결과결재'
+	 		   	ELSE SCTM.DOC_SEQ
+	 	  	END ) AS DOC_SEQ
+	 	, SCTM.ITEM_COUNT
+	 	, SCTM.ADD_USER_ID
+	 	, GETUSERNAME(SCTM.HOUSE_CODE,SCTM.ADD_USER_ID,'LOC') AS ADD_USER_NAME
+	 	, SCTM.SIGN_REMARK
+	 	, SCTM.ADD_DATE
+	 	, SCTM.CUR
+	 	, ROUND(ROUND(SCTM.TTL_AMT,1) ,0 )      AS TTL_AMT
+	 	, SCTM.ACCOUNT_CODE
+	 	, SCTM.SHIPPER_TYPE
+	 	, GETICOMCODE2(SCTM.HOUSE_CODE,'M025',SCTM.SHIPPER_TYPE) AS SHIPPER_TYPE_TEXT
+	 	, SCTM.ARGENT_FLAG
+	 	, SCTM.COMPANY_CODE
+
+		, (
+	        SELECT SIGN_USER_ID
+	        FROM ICOMSCTP
+	        WHERE    HOUSE_CODE      = SCTP.HOUSE_CODE
+	     	  AND    COMPANY_CODE    = SCTP.COMPANY_CODE
+	     	  AND    DOC_TYPE        = SCTP.DOC_TYPE
+	     	  AND    DOC_NO          = SCTP.DOC_NO
+	     	  AND    DOC_SEQ         = SCTP.DOC_SEQ
+	          AND    SIGN_PATH_SEQ   =
+	                                      (
+	                                        SELECT
+	                            				    MIN(SIGN_PATH_SEQ)
+	                               		    FROM     ICOMSCTP
+	                               		    WHERE    HOUSE_CODE      = SCTP.HOUSE_CODE
+	                                 	      AND    COMPANY_CODE    = SCTP.COMPANY_CODE
+	                                 	      AND    DOC_TYPE        = SCTP.DOC_TYPE
+	                                 	      AND    DOC_NO          = SCTP.DOC_NO
+	                                 	      AND    DOC_SEQ         = SCTP.DOC_SEQ
+	                                 	      AND    SIGN_PATH_SEQ   >  SCTP.SIGN_PATH_SEQ  --  현재 SIGN_PATH_SEQ
+	                                 	      AND 	PROCEEDING_FLAG = 'P'
+                                      )
+      )  AS NEXT_SIGN_USER_ID
+	 	, SCTM.STRATEGY_TYPE
+	 	, NVL(SCTM.APP_STAGE,0) AS APP_STAGE
+	 	, SCTM.ATTACH_NO
+	 	, SCTM.ATTACH_NO AS ATTACH_NO_IMG
+	 	, (CASE WHEN SCTP.APP_STATUS IS NULL THEN '미결'
+	 		   	ELSE '완료'
+	 	  	END ) AS PERSON_APP_STATUS
+			,    (SELECT SIGN_DATE
+			FROM ICOMSCTP
+			WHERE SCTM.HOUSE_CODE = HOUSE_CODE
+			AND SCTM.COMPANY_CODE = COMPANY_CODE
+			AND SCTM.DOC_TYPE = DOC_TYPE
+			AND SCTM.DOC_SEQ = DOC_SEQ
+			AND SCTM.DOC_NO = DOC_NO
+			AND SIGN_PATH_SEQ =
+			(SELECT MAX(SIGN_PATH_SEQ)
+			FROM ICOMSCTP
+			WHERE SCTM.HOUSE_CODE = HOUSE_CODE
+			AND SCTM.COMPANY_CODE = COMPANY_CODE
+			AND SCTM.DOC_TYPE = DOC_TYPE
+			AND SCTM.DOC_SEQ = DOC_SEQ
+			AND SCTM.DOC_NO = DOC_NO)
+			) AS SIGN_DATE
+			,SCTP.SIGN_PATH_SEQ
+			,SCTP.PROCEEDING_FLAG
+	 FROM ICOMSCTM SCTM
+	 	LEFT OUTER JOIN ICOMLUSR LUSR
+	 		ON SCTM.HOUSE_CODE = LUSR.HOUSE_CODE
+	 		AND SCTM.ADD_USER_ID = LUSR.USER_ID
+	 	JOIN ICOMSCTP SCTP
+	 		ON SCTM.HOUSE_CODE = SCTP.HOUSE_CODE
+	 		AND SCTM.COMPANY_CODE = SCTP.COMPANY_CODE
+	 		AND SCTM.DOC_TYPE = SCTP.DOC_TYPE
+	 		AND SCTM.DOC_SEQ = SCTP.DOC_SEQ
+	 		AND SCTM.DOC_NO = SCTP.DOC_NO
+	 WHERE 1=1
+
+
+
+	<if test ="${app_status}" operator = "eq" value = "N">
+		/*1. 미결 : 본인이 결재를 해야할 건. */
+	  AND SCTP.SIGN_USER_ID 	=  ${session.ID}
+	  AND SCTP.SIGN_CHECK 		=  'Y'
+	  AND SCTP.APP_STATUS IS NULL
+	  AND (SCTM.APP_STATUS = 'P' AND PROCEEDING_FLAG <![CDATA[<>]]> 'R')
+	</if>
+
+	/*2.
+		일반
+			- 진행중 : 본인은 결재완료, 최종은 진행중
+			- 완료   : 본인과 최종결재자 결재완료
+			- 반려   : 본인 또는 차기결재자 결재 반료
+
+	 */
+
+	<if test ="${app_status}" operator = "eq" value = "R">
+		AND SCTM.APP_STATUS = 'R'
+		AND (
+			SCTP.APP_STATUS = 'R'	OR EXISTS 	(
+													SELECT 	1
+													FROM 	ICOMSCTP
+													WHERE 	HOUSE_CODE 		= SCTM.HOUSE_CODE
+													  AND	COMPANY_CODE 	= SCTM.COMPANY_CODE
+													  AND	DOC_TYPE 		= SCTM.DOC_TYPE
+													  AND	DOC_NO 			= SCTM.DOC_NO
+													  AND	DOC_SEQ 		= SCTM.DOC_SEQ
+													  AND	APP_STATUS 		= 'R'
+													  AND	SIGN_PATH_SEQ 	> SCTP.SIGN_PATH_SEQ
+												)
+			)
+	</if>
+
+	<if test ="${app_status}" operator = "eq" value = "E">
+	    /* 결제완료, 반려경우 같이 적용으로 변경(2012-08-14)*/
+		AND (
+				(SCTM.APP_STATUS = 'E') OR
+				(SCTM.APP_STATUS = 'R'  AND (SCTP.APP_STATUS = 'R'	OR EXISTS 	(
+														SELECT 	1
+														FROM 	ICOMSCTP
+														WHERE 	HOUSE_CODE 		= SCTM.HOUSE_CODE
+														  AND	COMPANY_CODE 	= SCTM.COMPANY_CODE
+														  AND	DOC_TYPE 		= SCTM.DOC_TYPE
+														  AND	DOC_NO 			= SCTM.DOC_NO
+														  AND	DOC_SEQ 		= SCTM.DOC_SEQ
+														  AND	APP_STATUS 		= 'R'
+														  AND	SIGN_PATH_SEQ 	> SCTP.SIGN_PATH_SEQ
+													)
+												)
+				)
+			)		
+	</if>
+
+	<if test ="${app_status}" operator = "eq" value = "P">
+		AND ((SCTM.APP_STATUS = 'P' AND PROCEEDING_FLAG <![CDATA[<>]]> 'R') OR (SCTM.APP_STATUS = 'E' AND PROCEEDING_FLAG = 'R') )
+		AND	SCTP.APP_STATUS		= 'E'
+
+	</if>
+
+	<if test ="${app_status}" operator = "eq" value = "">
+		AND (
+				(
+				    SCTP.SIGN_USER_ID 	=  ${session.ID}
+	  			AND SCTP.SIGN_CHECK 		=  'Y'
+	  			AND SCTP.APP_STATUS IS NULL
+	  			AND ((SCTM.APP_STATUS = 'P' AND PROCEEDING_FLAG <![CDATA[<>]]> 'R') OR (SCTM.APP_STATUS = 'E' AND PROCEEDING_FLAG = 'R') )
+	  			)
+	  				OR
+	  			(
+	  			SCTM.APP_STATUS = 'R'
+				AND (
+						SCTP.APP_STATUS = 'R'	OR EXISTS 	(
+																SELECT 	1
+																FROM 	ICOMSCTP
+																WHERE 	HOUSE_CODE 		= SCTM.HOUSE_CODE
+													  			  AND	COMPANY_CODE 	= SCTM.COMPANY_CODE
+													  			  AND	DOC_TYPE 		= SCTM.DOC_TYPE
+													  			  AND	DOC_NO 			= SCTM.DOC_NO
+													  			  AND	DOC_SEQ 		= SCTM.DOC_SEQ
+													  			  AND	APP_STATUS 		= 'R'
+													  			  AND	SIGN_PATH_SEQ 	> SCTP.SIGN_PATH_SEQ
+															)
+					)
+				)
+	  				OR
+	  			SCTM.APP_STATUS = 'E'
+	  				OR
+	  			(
+	  			    ((SCTM.APP_STATUS = 'P' AND PROCEEDING_FLAG <![CDATA[<>]]> 'R') OR (SCTM.APP_STATUS = 'E' AND PROCEEDING_FLAG = 'R') )
+				AND	SCTP.APP_STATUS		= 'E'
+				)
+			)
+	</if>
+		AND SCTP.SIGN_USER_ID = ${session.ID}
+	<![CDATA[
+		AND SCTM.STATUS != 'N'
+		AND SCTM.HOUSE_CODE  	= ${session.HOUSE_CODE}
+		AND SCTM.DOC_NO 		= $S{DOC_NO}
+		AND SCTM.SHIPPER_TYPE	= $S{shipper_type}
+		AND SCTM.ADD_DATE BETWEEN $S{from_date}
+		AND $S{to_date}
+	]]>
+
+			<if test ="${doc_type}" operator = "eq" value = "BID">
+				AND SCTM.DOC_TYPE 		IN ('BID')
+			</if>
+			<if test ="${doc_type}" operator = "ne" value = "BID">
+				AND SCTM.DOC_TYPE = $S{doc_type}
+			</if>
+
+
+	ORDER BY DECODE(SCTM.ARGENT_FLAG, 'T', 1, 2), SCTM.ADD_DATE DESC
+)
+WHERE 1=1
+	<![CDATA[
+ 		AND SUBJECT 			LIKE '%' || $S{subject} || '%'
+  		AND ADD_USER_NAME 		LIKE '%' || $S{add_user_name} || '%'
+  		AND SIGN_DATE BETWEEN $S{sign_from_date} 
+		AND $S{sign_to_date}    
+  	]]>
+	</method>
+		
+</service>

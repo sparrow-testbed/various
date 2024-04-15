@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+<service>
+	<method name="selectItemList">
+		SELECT
+			ITEM_NO,
+			DESCRIPTION_LOC,
+			SPECIFICATION
+		FROM
+			ICOYPODT
+		WHERE
+			HOUSE_CODE   = ${HOUSE_CODE}
+		AND
+			VENDOR_CODE  = ${VENDOR_CODE}
+		AND
+			COMPANY_CODE = ${COMPANY_CODE}
+		AND UPPER(ITEM_NO) LIKE UPPER('%' || $S{ITEM_NO} || '%')
+		AND UPPER( DESCRIPTION_LOC ) LIKE UPPER( '%' || $S{DESCRIPTION_LOC} || '%' ) 
+		AND
+			STATUS IN ('C','R')
+	</method>
+</service>

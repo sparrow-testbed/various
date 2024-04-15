@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="17701" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina6_1" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="17703"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" id="iN0-l3-epB" customClass="JRCurrencyView">
+            <rect key="frame" x="0.0" y="0.0" width="291" height="190"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="IB7-Yp-lpb">
+                    <rect key="frame" x="98" y="82" width="154" height="35"/>
+                    <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                    <textInputTraits key="textInputTraits" keyboardType="decimalPad"/>
+                </textField>
+                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="ua9-nn-9QK">
+                    <rect key="frame" x="0.0" y="0.0" width="291" height="34"/>
+                    <subviews>
+                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="汇率兑换" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="7pD-st-2YQ">
+                            <rect key="frame" x="105" y="6.5" width="70" height="21"/>
+                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                            <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                            <nil key="textColor"/>
+                            <nil key="highlightedColor"/>
+                        </label>
+                    </subviews>
+                    <color key="backgroundColor" red="0.89411764705882346" green="0.92549019607843142" blue="0.90980392156862744" alpha="1" colorSpace="calibratedRGB"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="34" id="ThZ-EX-r0D"/>
+                    </constraints>
+                </view>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="原币金额:" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Qai-vB-Fd4">
+                    <rect key="frame" x="16" y="45" width="74" height="21"/>
+                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                    <nil key="textColor"/>
+                    <nil key="highlightedColor"/>
+                </label>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="$2900" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="qcu-FS-wri">
+                    <rect key="frame" x="98" y="45" width="52" height="21"/>
+                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                    <nil key="textColor"/>
+                    <nil key="highlightedColor"/>
+                </label>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="汇款汇率:" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Lc7-Ml-r2V">
+                    <rect key="frame" x="16" y="89" width="74" height="21"/>
+                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                    <nil key="textColor"/>
+                    <nil key="highlightedColor"/>
+                </label>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="人  民  币:" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="fWf-ge-pOq">
+                    <rect key="frame" x="16" y="137" width="74" height="22"/>
+                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                    <nil key="textColor"/>
+                    <nil key="highlightedColor"/>
+                </label>
+                <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="G6z-0p-Bd2">
+                    <rect key="frame" x="98" y="131" width="154" height="34"/>
+                    <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                    <textInputTraits key="textInputTraits" keyboardType="decimalPad"/>
+                </textField>
+            </subviews>
+            <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+            <constraints>
+                <constraint firstItem="IB7-Yp-lpb" firstAttribute="top" secondItem="qcu-FS-wri" secondAttribute="bottom" constant="16" id="2KQ-d5-7XS"/>
+                <constraint firstItem="Qai-vB-Fd4" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leadingMargin" id="2KR-dM-dLs"/>
+                <constraint firstItem="Qai-vB-Fd4" firstAttribute="leading" secondItem="Lc7-Ml-r2V" secondAttribute="leading" id="BNN-Ur-k22"/>
+                <constraint firstItem="ua9-nn-9QK" firstAttribute="width" secondItem="iN0-l3-epB" secondAttribute="width" id="OT2-cT-Gai"/>
+                <constraint firstItem="qcu-FS-wri" firstAttribute="leading" secondItem="IB7-Yp-lpb" secondAttribute="leading" id="Oo7-9I-rtM"/>
+                <constraint firstAttribute="bottom" secondItem="G6z-0p-Bd2" secondAttribute="bottom" constant="25" id="PlO-FQ-kyK"/>
+                <constraint firstItem="fWf-ge-pOq" firstAttribute="top" secondItem="Lc7-Ml-r2V" secondAttribute="bottom" constant="27" id="VXh-8K-FRu"/>
+                <constraint firstItem="qcu-FS-wri" firstAttribute="leading" secondItem="Qai-vB-Fd4" secondAttribute="trailing" constant="8" id="YCF-wu-GlR"/>
+                <constraint firstItem="G6z-0p-Bd2" firstAttribute="top" secondItem="IB7-Yp-lpb" secondAttribute="bottom" constant="14" id="a6A-h2-dlp"/>
+                <constraint firstAttribute="trailing" secondItem="IB7-Yp-lpb" secondAttribute="trailing" constant="39" id="apE-Fo-iru"/>
+                <constraint firstItem="Lc7-Ml-r2V" firstAttribute="centerY" secondItem="IB7-Yp-lpb" secondAttribute="centerY" id="eou-Eu-K8z"/>
+                <constraint firstItem="Qai-vB-Fd4" firstAttribute="baseline" secondItem="qcu-FS-wri" secondAttribute="baseline" id="g5E-1p-c8P"/>
+                <constraint firstItem="fWf-ge-pOq" firstAttribute="centerY" secondItem="G6z-0p-Bd2" secondAttribute="centerY" id="g8J-tz-77s"/>
+                <constraint firstItem="Lc7-Ml-r2V" firstAttribute="top" secondItem="Qai-vB-Fd4" secondAttribute="bottom" constant="23" id="gGu-5J-VO5"/>
+                <constraint firstItem="ua9-nn-9QK" firstAttribute="centerX" secondItem="iN0-l3-epB" secondAttribute="centerX" id="npa-d3-iPw"/>
+                <constraint firstItem="ua9-nn-9QK" firstAttribute="top" secondItem="iN0-l3-epB" secondAttribute="top" id="pnu-YJ-2qa"/>
+                <constraint firstItem="Lc7-Ml-r2V" firstAttribute="leading" secondItem="fWf-ge-pOq" secondAttribute="leading" id="ppN-OB-kyH"/>
+                <constraint firstItem="IB7-Yp-lpb" firstAttribute="leading" secondItem="G6z-0p-Bd2" secondAttribute="leading" id="qeA-fV-kqA"/>
+                <constraint firstItem="IB7-Yp-lpb" firstAttribute="trailing" secondItem="G6z-0p-Bd2" secondAttribute="trailing" id="r04-ys-3IR"/>
+            </constraints>
+            <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
+            <connections>
+                <outlet property="originNumber" destination="qcu-FS-wri" id="RxO-eR-4gf"/>
+                <outlet property="textField2" destination="G6z-0p-Bd2" id="Jh7-AY-F1Q"/>
+                <outlet property="textFileld1" destination="IB7-Yp-lpb" id="URn-mS-rnk"/>
+            </connections>
+            <point key="canvasLocation" x="-334.05797101449281" y="-79.017857142857139"/>
+        </view>
+    </objects>
+</document>

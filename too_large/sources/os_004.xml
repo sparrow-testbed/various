@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<service>
+	<method name="updateSosglInfo">
+		UPDATE
+			SOSGL
+		SET
+			OSQ_FLAG       = ${OSQ_FLAG},
+			SUBJECT        = ${SUBJECT},
+			OSQ_CLOSE_DATE = ${OSQ_CLOSE_DATE},
+			REMARK         = ${REMARK},
+			ATTACH_NO      = ${ATTACH_NO},
+			SIGN_STATUS    = ${SIGN_STATUS}
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			OSQ_NO     = ${OSQ_NO}
+		AND
+			OSQ_COUNT  = ${OSQ_COUNT}
+	</method>
+	
+	<method name="deleteSosse">
+		DELETE FROM
+			SOSSE
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			OSQ_NO     = ${OSQ_NO}
+		AND
+			OSQ_COUNT  = ${OSQ_COUNT}
+	</method>
+	
+	<method name="deleteSosln">
+		DELETE FROM
+			SOSLN
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			OSQ_NO     = ${OSQ_NO}
+		AND
+			OSQ_COUNT  = ${OSQ_COUNT}
+	</method>
+	
+	<method name="insertSoslnInfo">
+		INSERT INTO SOSLN(         
+			HOUSE_CODE,      OSQ_NO,              OSQ_COUNT,           OSQ_SEQ,          STATUS,
+			COMPANY_CODE,    PLANT_CODE,          OSQ_PROCEEDING_FLAG, ADD_DATE,         ADD_TIME,
+			ADD_USER_ID,     CHANGE_DATE,         CHANGE_TIME,         CHANGE_USER_ID,   ITEM_NO,
+			UNIT_MEASURE,    RD_DATE,             VALID_FROM_DATE,     VALID_TO_DATE,    PURCHASE_PRE_PRICE,
+			OSQ_QTY,         OSQ_AMT,             BID_COUNT,           CUR,              PR_NO,
+			PR_SEQ,          SETTLE_FLAG,         SETTLE_QTY,          TBE_FLAG,         TBE_DEPT,
+			PRICE_TYPE,      TBE_PROCEEDING_FLAG, SAMPLE_FLAG,         DELY_TO_LOCATION, ATTACH_NO,
+			SHIPPER_TYPE,    CONTRACT_FLAG,       COST_COUNT,          YEAR_QTY,         DELY_TO_ADDRESS,
+			MIN_PRICE,       MAX_PRICE,           STR_FLAG,            TBE_NO,           Z_REMARK,
+			TECHNIQUE_GRADE, TECHNIQUE_TYPE,      INPUT_FROM_DATE,     INPUT_TO_DATE,    TECHNIQUE_FLAG,
+			SPECIFICATION,   MAKER_NAME,          MAKE_AMT_CODE, P_ITEM_NO, DELY_TO_DEPT
+		)
+		VALUES (
+			${HOUSE_CODE},           
+			${OSQ_NO},              
+			${OSQ_COUNT},           
+			LPAD(${OSQ_SEQ}, 6, '0'), 
+			${STATUS},
+			
+			${COMPANY_CODE},         
+			${PLANT_CODE},          
+			${OSQ_PROCEEDING_FLAG}, 
+			${ADD_DATE},              
+			${ADD_TIME},
+			
+			${ADD_USER_ID},          
+			${CHANGE_DATE},         
+			${CHANGE_TIME},         
+			${CHANGE_USER_ID},        
+			${ITEM_NO},
+			
+			${UNIT_MEASURE},         
+			${RD_DATE},             
+			${VALID_FROM_DATE},     
+			${VALID_TO_DATE},         
+			${PURCHASE_PRE_PRICE},
+			
+			${OSQ_QTY},              
+			${OSQ_AMT},             
+			${BID_COUNT},           
+			${CUR},                   
+			${PR_NO},
+			
+			LPAD(${PR_SEQ}, 5, '0'), 
+			${SETTLE_FLAG},         
+			${SETTLE_QTY},          
+			${TBE_FLAG},              
+			${TBE_DEPT},
+			
+			${PRICE_TYPE},           
+			${TBE_PROCEEDING_FLAG}, 
+			${SAMPLE_FLAG},         
+			${DELY_TO_LOCATION},      
+			${ATTACH_NO},
+			
+			${SHIPPER_TYPE},         
+			${CONTRACT_FLAG},       
+			${COST_COUNT},          
+			${YEAR_QTY},              
+			${DELY_TO_ADDRESS},
+			
+			${MIN_PRICE},            
+			${MAX_PRICE},           
+			${STR_FLAG},            
+			${TBE_NO},                
+			${Z_REMARK},
+			
+			${TECHNIQUE_GRADE},      
+			${TECHNIQUE_TYPE},      
+			${INPUT_FROM_DATE},     
+			${INPUT_TO_DATE},         
+			${TECHNIQUE_FLAG},
+			
+			${SPECIFICATION},        
+			${MAKER_NAME},
+			${MAKE_AMT_CODE},
+			${P_ITEM_NO},
+			${DELY_TO_DEPT}
+			
+		)
+	</method>
+	
+	<method name="setSosseCreate">
+	<![CDATA[
+		INSERT INTO SOSSE (
+			HOUSE_CODE, OSQ_NO,       OSQ_COUNT,      OSQ_SEQ,    VENDOR_CODE,
+			STATUS,     COMPANY_CODE, CONFIRM_FLAG,   ADD_DATE,   ADD_USER_ID,
+			ADD_TIME,   CHANGE_DATE,  CHANGE_USER_ID, CHANGE_TIME
+		)
+		VALUES(
+			${HOUSE_CODE},
+			${OSQ_NO},
+			${OSQ_COUNT},
+			LPAD(${OSQ_SEQ}, 6, '0'), 
+			${VENDOR_CODE},
+			
+			${STATUS},
+			${COMPANY_CODE},
+			${CONFIRM_FLAG},
+			TO_CHAR(SYSDATE, 'YYYYMMDD'),
+			${ADD_USER_ID},
+			
+			TO_CHAR(SYSDATE, 'HH24MISS'),
+			TO_CHAR(SYSDATE, 'YYYYMMDD'),
+			${ADD_USER_ID},
+			TO_CHAR(SYSDATE, 'HH24MISS')
+		)                            
+	]]>
+	</method>
+	
+	<method name="setPRComfirm">
+	<![CDATA[
+		UPDATE
+			ICOYPRDT
+		SET
+			PR_PROCEEDING_FLAG = 'G',
+			BID_STATUS         = ${BID_STATUS}				 
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}  						 
+		AND
+			PR_NO      = ${PR_NO}				   		 
+		AND
+			PR_SEQ     = ${PR_SEQ} 	                                     
+	]]>
+	</method>
+</service>

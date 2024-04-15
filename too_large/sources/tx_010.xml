@@ -1,0 +1,664 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+<service>
+	
+	<method name="bl_getPayBugetExpenseList_20210421_bak">
+		SELECT
+			TAX_NO,       TAX_SEQ,    DELY_TO_LOCATION, DELY_TO_LOCATION_NM, IGJM_CD,
+			ACCOUNT_CODE, ACCOUNT_NM, ITEM_NO,          ITEM_NM,             SPECIFICATION,
+			QTY,          UNIT_PRICE, AMT,              VENDOR_CODE,         VENDOR_NAME,
+			PY_CNT,       ADD_DATE,   TAX_DATE,         SUBJECT,           PR_NO
+		FROM
+			(
+				SELECT
+					TXHD.TAX_NO,
+					TXDT.TAX_SEQ,
+					
+					PRDT.DEMAND_DEPT                                                          AS DELY_TO_LOCATION,
+                    GETDEPTNAME(PRDT.HOUSE_CODE, PRDT.COMPANY_CODE, PRDT.DEMAND_DEPT, 'LOC' ) AS DELY_TO_LOCATION_NM,
+     					
+					OGIL.ILGAE_CD                                                             AS IGJM_CD,
+					MTGL.ACCOUNT_CODE                                                         AS ACCOUNT_CODE,
+					MTGL.ACCOUNT_NM                                                           AS ACCOUNT_NM,
+					TRDT.ITEM_NO                                                              AS ITEM_NO,
+					MTGL.DESCRIPTION_LOC                                                      AS ITEM_NM,
+					PODT.SPECIFICATION                                                        AS SPECIFICATION,
+					TRDT.ITEM_QTY                                                             AS QTY,
+					TRDT.DELY_UNIT_PRICE                                                      AS UNIT_PRICE,
+					TRDT.DELY_AMT                                                             AS AMT,
+					TRHD.VENDOR_CODE,
+					GETCOMPANYNAMELOC(TRHD.HOUSE_CODE,TRHD.VENDOR_CODE,'S')                   AS VENDOR_NAME,
+					(
+						SELECT
+							COUNT(1)
+						FROM
+							SPY1LN PYLN
+						INNER JOIN SPY1GL PYGL ON PYLN.HOUSE_CODE = PYGL.HOUSE_CODE AND PYLN.PAY_SEND_NO = PYGL.PAY_SEND_NO
+						WHERE
+							PYLN.HOUSE_CODE = TXDT.HOUSE_CODE
+						AND
+							PYLN.TAX_NO     = TXDT.TAX_NO
+						AND
+							PYLN.TAX_SEQ    = TXDT.TAX_SEQ
+						AND
+							PYGL.DEL_YN     = 'N'
+					) AS PY_CNT,
+					CONVERT_DATE(TRHD.ADD_DATE) AS ADD_DATE,
+					CONVERT_DATE(TXHD.TAX_DATE) AS TAX_DATE,
+					PRHD.SUBJECT AS SUBJECT,
+					PRHD.PR_NO AS PR_NO					
+				FROM
+					ICOYTRHD TRHD
+				INNER JOIN ICOYTRDT TRDT ON TRHD.HOUSE_CODE = TRDT.HOUSE_CODE AND TRHD.PAY_NO      = TRDT.PAY_NO
+				INNER JOIN ICOYPODT PODT ON TRDT.HOUSE_CODE = PODT.HOUSE_CODE AND TRDT.PO_NO       = PODT.PO_NO   AND TRDT.PO_SEQ  = PODT.PO_SEQ
+				INNER JOIN ICOYPRHD PRHD ON PODT.HOUSE_CODE = PRHD.HOUSE_CODE AND PODT.PR_NO       = PRHD.PR_NO
+				
+				INNER JOIN ICOYPRDT PRDT ON PRHD.HOUSE_CODE = PRDT.HOUSE_CODE AND PRHD.PR_NO       = PRDT.PR_NO
+                                                           AND PODT.PR_NO       = PRDT.PR_NO   AND PODT.PR_SEQ  = PRDT.PR_SEQ
+                INNER JOIN ICOMOGIL OGIL ON PRDT.HOUSE_CODE = OGIL.HOUSE_CODE AND PRDT.DEMAND_DEPT = OGIL.DEPT
+				
+				INNER JOIN ICOYTXHD TXHD ON TRDT.HOUSE_CODE = TXHD.HOUSE_CODE AND TRDT.TAX_NO      = TXHD.TAX_NO
+				INNER JOIN ICOYTXDT TXDT ON TRDT.HOUSE_CODE = TXDT.HOUSE_CODE AND TRDT.TAX_NO      = TXDT.TAX_NO  AND TRDT.TAX_SEQ = TXDT.TAX_SEQ
+				INNER JOIN ICOMMTGL MTGL ON TRDT.HOUSE_CODE = MTGL.HOUSE_CODE AND TRDT.ITEM_NO     = MTGL.ITEM_NO
+				WHERE 
+					MTGL.MATERIAL_TYPE IN ('02', '04')
+				AND
+					TRHD.HOUSE_CODE  = ${session.HOUSE_CODE}
+				AND
+					TXHD.PROGRESS_CODE IN ('P', 'E')
+				AND
+					TXHD.KTGRM = '03'
+		<![CDATA[  
+				AND TXHD.COMPANY_CODE = $S{vendor_code}										
+			    AND TXHD.TAX_NO       = $S{tax_no}								
+	      	    AND TXHD.TAX_DATE 	BETWEEN $S{inv_start_date}
+			    	AND $S{inv_end_date}          
+			    AND TXHD.PROGRESS_CODE       = $S{progress_code}
+			    AND MTGL.MATERIAL_TYPE       = $S{MATERIAL_TYPE}
+				AND (MTGL.MATERIAL_CTRL_TYPE = $S{MATERIAL_CTRL_TYPE} OR MTGL.MATERIAL_CTRL_TYPE = MTGL.MATERIAL_TYPE ||'000')
+				AND MTGL.MATERIAL_CLASS1     = $S{MATERIAL_CLASS1}
+				AND MTGL.MATERIAL_CLASS2     = $S{MATERIAL_CLASS2}
+				AND EXISTS (SELECT '1' FROM ICOYIVHD WHERE INV_NO = TRDT.INV_NO AND PURCHASE_ID = $S{purchase_id})
+		]]>   			  
+			)
+			WHERE
+				PY_CNT = 0
+			ORDER BY
+				ADD_DATE DESC,
+				TAX_NO DESC
+	</method>
+	
+	<method name="bl_getPayBugetExpenseList_20210626">
+		SELECT
+			TAX_NO,       TAX_SEQ,    DELY_TO_LOCATION, DELY_TO_LOCATION_NM, IGJM_CD,
+			ACCOUNT_CODE, ACCOUNT_NM, ITEM_NO,          ITEM_NM,             SPECIFICATION,
+			QTY,          UNIT_PRICE, AMT,              VENDOR_CODE,         VENDOR_NAME,
+			PY_CNT,       ADD_DATE,   TAX_DATE,         SUBJECT,           PR_NO
+		FROM
+			(
+				
+		        
+		        SELECT
+					TXHD.TAX_NO,
+					TXDT.TAX_SEQ,
+					
+					PRDT.DEMAND_DEPT                                                          AS DELY_TO_LOCATION,
+                    GETDEPTNAME(PRDT.HOUSE_CODE, PRDT.COMPANY_CODE, PRDT.DEMAND_DEPT, 'LOC' ) AS DELY_TO_LOCATION_NM,
+     					
+					OGIL.ILGAE_CD                                                             AS IGJM_CD,
+					MTGL.ACCOUNT_CODE                                                         AS ACCOUNT_CODE,
+					MTGL.ACCOUNT_NM                                                           AS ACCOUNT_NM,
+					TRDT.ITEM_NO                                                              AS ITEM_NO,
+					MTGL.DESCRIPTION_LOC                                                      AS ITEM_NM,
+					PODT.SPECIFICATION                                                        AS SPECIFICATION,
+					TRDT.ITEM_QTY                                                             AS QTY,
+					TRDT.DELY_UNIT_PRICE                                                      AS UNIT_PRICE,
+					TRDT.DELY_AMT                                                             AS AMT,
+					TRHD.VENDOR_CODE,
+					GETCOMPANYNAMELOC(TRHD.HOUSE_CODE,TRHD.VENDOR_CODE,'S')                   AS VENDOR_NAME,
+					(
+						SELECT
+							COUNT(1)
+						FROM
+							SPY1LN PYLN
+						INNER JOIN SPY1GL PYGL ON PYLN.HOUSE_CODE = PYGL.HOUSE_CODE AND PYLN.PAY_SEND_NO = PYGL.PAY_SEND_NO
+						WHERE
+							PYLN.HOUSE_CODE = TXDT.HOUSE_CODE
+						AND
+							PYLN.TAX_NO     = TXDT.TAX_NO
+						AND
+							PYLN.TAX_SEQ    = TXDT.TAX_SEQ
+						AND
+							PYGL.DEL_YN     = 'N'
+					) AS PY_CNT,
+					CONVERT_DATE(TRHD.ADD_DATE) AS ADD_DATE,
+					CONVERT_DATE(TXHD.TAX_DATE) AS TAX_DATE,
+					PRHD.SUBJECT AS SUBJECT,
+					PRHD.PR_NO AS PR_NO					
+				FROM
+					ICOYTRHD TRHD
+				INNER JOIN ICOYTRDT TRDT ON TRHD.HOUSE_CODE = TRDT.HOUSE_CODE AND TRHD.PAY_NO      = TRDT.PAY_NO
+				INNER JOIN ICOYPODT PODT ON TRDT.HOUSE_CODE = PODT.HOUSE_CODE AND TRDT.PO_NO       = PODT.PO_NO   AND TRDT.PO_SEQ  = PODT.PO_SEQ
+				INNER JOIN ICOYPRHD PRHD ON PODT.HOUSE_CODE = PRHD.HOUSE_CODE AND PODT.PR_NO       = PRHD.PR_NO
+				
+				INNER JOIN ICOYPRDT PRDT ON PRHD.HOUSE_CODE = PRDT.HOUSE_CODE AND PRHD.PR_NO       = PRDT.PR_NO
+                                                           AND PODT.PR_NO       = PRDT.PR_NO   AND PODT.PR_SEQ  = PRDT.PR_SEQ
+                INNER JOIN ICOMOGIL OGIL ON PRDT.HOUSE_CODE = OGIL.HOUSE_CODE AND PRDT.DEMAND_DEPT = OGIL.DEPT
+				
+				INNER JOIN ICOYTXHD TXHD ON TRDT.HOUSE_CODE = TXHD.HOUSE_CODE AND TRDT.TAX_NO      = TXHD.TAX_NO
+				INNER JOIN ICOYTXDT TXDT ON TRDT.HOUSE_CODE = TXDT.HOUSE_CODE AND TRDT.TAX_NO      = TXDT.TAX_NO  AND TRDT.TAX_SEQ = TXDT.TAX_SEQ
+				INNER JOIN ICOMMTGL MTGL ON TRDT.HOUSE_CODE = MTGL.HOUSE_CODE AND TRDT.ITEM_NO     = MTGL.ITEM_NO
+								
+				INNER JOIN SALEEBILL BILL ON TRDT.TAX_NO    = BILL.RESSEQ
+				
+				WHERE TXHD.TAX_NO IN (					
+					                      SELECT
+			                                     DISTINCT TAX_NO 
+					                      FROM
+												(
+												   SELECT
+														TXHD.TAX_NO,
+														(
+															SELECT
+																COUNT(1)
+															FROM
+																SPY1LN PYLN
+															INNER JOIN SPY1GL PYGL ON PYLN.HOUSE_CODE = PYGL.HOUSE_CODE AND PYLN.PAY_SEND_NO = PYGL.PAY_SEND_NO
+															WHERE
+																PYLN.HOUSE_CODE = TXDT.HOUSE_CODE
+															AND
+																PYLN.TAX_NO     = TXDT.TAX_NO
+															AND
+																PYLN.TAX_SEQ    = TXDT.TAX_SEQ
+															AND
+																PYGL.DEL_YN     = 'N'
+														) AS PY_CNT					
+													FROM
+														ICOYTRHD TRHD
+													INNER JOIN ICOYTRDT TRDT ON TRHD.HOUSE_CODE = TRDT.HOUSE_CODE AND TRHD.PAY_NO      = TRDT.PAY_NO
+													INNER JOIN ICOYPODT PODT ON TRDT.HOUSE_CODE = PODT.HOUSE_CODE AND TRDT.PO_NO       = PODT.PO_NO   AND TRDT.PO_SEQ  = PODT.PO_SEQ
+													INNER JOIN ICOYPRHD PRHD ON PODT.HOUSE_CODE = PRHD.HOUSE_CODE AND PODT.PR_NO       = PRHD.PR_NO
+													
+													INNER JOIN ICOYPRDT PRDT ON PRHD.HOUSE_CODE = PRDT.HOUSE_CODE AND PRHD.PR_NO       = PRDT.PR_NO
+									                                                           AND PODT.PR_NO       = PRDT.PR_NO   AND PODT.PR_SEQ  = PRDT.PR_SEQ
+									                INNER JOIN ICOMOGIL OGIL ON PRDT.HOUSE_CODE = OGIL.HOUSE_CODE AND PRDT.DEMAND_DEPT = OGIL.DEPT
+													
+													INNER JOIN ICOYTXHD TXHD ON TRDT.HOUSE_CODE = TXHD.HOUSE_CODE AND TRDT.TAX_NO      = TXHD.TAX_NO
+													INNER JOIN ICOYTXDT TXDT ON TRDT.HOUSE_CODE = TXDT.HOUSE_CODE AND TRDT.TAX_NO      = TXDT.TAX_NO  AND TRDT.TAX_SEQ = TXDT.TAX_SEQ
+													INNER JOIN ICOMMTGL MTGL ON TRDT.HOUSE_CODE = MTGL.HOUSE_CODE AND TRDT.ITEM_NO     = MTGL.ITEM_NO
+																	
+													INNER JOIN SALEEBILL BILL ON TRDT.TAX_NO    = BILL.RESSEQ
+													
+													WHERE 
+														MTGL.MATERIAL_TYPE IN ('02', '04')
+													AND
+														TRHD.HOUSE_CODE  = ${session.HOUSE_CODE}
+													AND
+														TXHD.PROGRESS_CODE IN ('P', 'E')
+													AND
+														TXHD.KTGRM = '03'
+											<![CDATA[  
+													AND TXHD.COMPANY_CODE = $S{vendor_code}										
+												    AND TXHD.TAX_NO       = $S{tax_no}								
+										      	    AND TXHD.TAX_DATE 	BETWEEN $S{inv_start_date}
+												    	AND $S{inv_end_date}          
+												    AND TXHD.PROGRESS_CODE       = $S{progress_code}
+												    AND MTGL.MATERIAL_TYPE       = $S{MATERIAL_TYPE}
+													AND (MTGL.MATERIAL_CTRL_TYPE = $S{MATERIAL_CTRL_TYPE} OR MTGL.MATERIAL_CTRL_TYPE = MTGL.MATERIAL_TYPE ||'000')
+													AND MTGL.MATERIAL_CLASS1     = $S{MATERIAL_CLASS1}
+													AND MTGL.MATERIAL_CLASS2     = $S{MATERIAL_CLASS2}
+													AND BILL.RECMEMNAME          = TRIM($S{purchase_name})
+											]]> 
+										)
+										WHERE
+				                        PY_CNT = 0  					
+									)	  
+			)
+			WHERE
+				PY_CNT = 0
+			ORDER BY
+				ADD_DATE DESC,
+				TAX_NO DESC
+	</method>
+	
+	<method name="bl_getPayBugetExpenseList">
+		SELECT
+			TAX_NO,       TAX_SEQ,    DELY_TO_LOCATION, DELY_TO_LOCATION_NM, IGJM_CD,
+			ACCOUNT_CODE, ACCOUNT_NM, ITEM_NO,          ITEM_NM,             SPECIFICATION,
+			QTY,          UNIT_PRICE, AMT,              VENDOR_CODE,         VENDOR_NAME,
+			PY_CNT,       ADD_DATE,   TAX_DATE,         SUBJECT,           PR_NO
+		FROM
+			(
+				
+		        
+		        SELECT
+					TXHD.TAX_NO,
+					TXDT.TAX_SEQ,
+					
+					PRDT.DEMAND_DEPT                                                          AS DELY_TO_LOCATION,
+                    GETDEPTNAME(PRDT.HOUSE_CODE, PRDT.COMPANY_CODE, PRDT.DEMAND_DEPT, 'LOC' ) AS DELY_TO_LOCATION_NM,
+     					
+					OGIL.ILGAE_CD                                                             AS IGJM_CD,
+					MTGL.ACCOUNT_CODE                                                         AS ACCOUNT_CODE,
+					MTGL.ACCOUNT_NM                                                           AS ACCOUNT_NM,
+					TRDT.ITEM_NO                                                              AS ITEM_NO,
+					MTGL.DESCRIPTION_LOC                                                      AS ITEM_NM,
+					PODT.SPECIFICATION                                                        AS SPECIFICATION,
+					TRDT.ITEM_QTY                                                             AS QTY,
+					TRDT.DELY_UNIT_PRICE                                                      AS UNIT_PRICE,
+					TRDT.DELY_AMT                                                             AS AMT,
+					TRHD.VENDOR_CODE,
+					GETCOMPANYNAMELOC(TRHD.HOUSE_CODE,TRHD.VENDOR_CODE,'S')                   AS VENDOR_NAME,
+					(
+						SELECT
+							COUNT(1)
+						FROM
+							SPY1LN PYLN
+						INNER JOIN SPY1GL PYGL ON PYLN.HOUSE_CODE = PYGL.HOUSE_CODE AND PYLN.PAY_SEND_NO = PYGL.PAY_SEND_NO
+						WHERE
+							PYLN.HOUSE_CODE = TXDT.HOUSE_CODE
+						AND
+							PYLN.TAX_NO     = TXDT.TAX_NO
+						AND
+							PYLN.TAX_SEQ    = TXDT.TAX_SEQ
+						AND
+							PYGL.DEL_YN     = 'N'
+					) AS PY_CNT,
+					CONVERT_DATE(TRHD.ADD_DATE) AS ADD_DATE,
+					CONVERT_DATE(TXHD.TAX_DATE) AS TAX_DATE,
+					PRHD.SUBJECT AS SUBJECT,
+					PRHD.PR_NO AS PR_NO					
+				FROM
+					ICOYTRHD TRHD
+				INNER JOIN ICOYTRDT TRDT ON TRHD.HOUSE_CODE = TRDT.HOUSE_CODE AND TRHD.PAY_NO      = TRDT.PAY_NO
+				INNER JOIN ICOYPODT PODT ON TRDT.HOUSE_CODE = PODT.HOUSE_CODE AND TRDT.PO_NO       = PODT.PO_NO   AND TRDT.PO_SEQ  = PODT.PO_SEQ
+				INNER JOIN ICOYPRHD PRHD ON PODT.HOUSE_CODE = PRHD.HOUSE_CODE AND PODT.PR_NO       = PRHD.PR_NO
+				
+				INNER JOIN ICOYPRDT PRDT ON PRHD.HOUSE_CODE = PRDT.HOUSE_CODE AND PRHD.PR_NO       = PRDT.PR_NO
+                                                           AND PODT.PR_NO       = PRDT.PR_NO   AND PODT.PR_SEQ  = PRDT.PR_SEQ
+                INNER JOIN ICOMOGIL OGIL ON PRDT.HOUSE_CODE = OGIL.HOUSE_CODE AND PRDT.DEMAND_DEPT = OGIL.DEPT
+				
+				INNER JOIN ICOYTXHD TXHD ON TRDT.HOUSE_CODE = TXHD.HOUSE_CODE AND TRDT.TAX_NO      = TXHD.TAX_NO
+				INNER JOIN ICOYTXDT TXDT ON TRDT.HOUSE_CODE = TXDT.HOUSE_CODE AND TRDT.TAX_NO      = TXDT.TAX_NO  AND TRDT.TAX_SEQ = TXDT.TAX_SEQ
+				INNER JOIN ICOMMTGL MTGL ON TRDT.HOUSE_CODE = MTGL.HOUSE_CODE AND TRDT.ITEM_NO     = MTGL.ITEM_NO
+								
+				INNER JOIN SALEEBILL BILL ON TRDT.TAX_NO    = BILL.RESSEQ
+				
+				WHERE TXHD.TAX_NO IN (					
+					                      SELECT
+			                                     DISTINCT TAX_NO 
+					                      FROM
+												(
+												   SELECT
+														TXHD.TAX_NO,
+														(
+															SELECT
+																COUNT(1)
+															FROM
+																SPY1LN PYLN
+															INNER JOIN SPY1GL PYGL ON PYLN.HOUSE_CODE = PYGL.HOUSE_CODE AND PYLN.PAY_SEND_NO = PYGL.PAY_SEND_NO
+															WHERE
+																PYLN.HOUSE_CODE = TXDT.HOUSE_CODE
+															AND
+																PYLN.TAX_NO     = TXDT.TAX_NO
+															AND
+																PYLN.TAX_SEQ    = TXDT.TAX_SEQ
+															AND
+																PYGL.DEL_YN     = 'N'
+														) AS PY_CNT					
+													FROM
+														ICOYTRHD TRHD
+													INNER JOIN ICOYTRDT TRDT ON TRHD.HOUSE_CODE = TRDT.HOUSE_CODE AND TRHD.PAY_NO      = TRDT.PAY_NO
+													INNER JOIN ICOYPODT PODT ON TRDT.HOUSE_CODE = PODT.HOUSE_CODE AND TRDT.PO_NO       = PODT.PO_NO   AND TRDT.PO_SEQ  = PODT.PO_SEQ
+													INNER JOIN ICOYPRHD PRHD ON PODT.HOUSE_CODE = PRHD.HOUSE_CODE AND PODT.PR_NO       = PRHD.PR_NO
+													
+													INNER JOIN ICOYPRDT PRDT ON PRHD.HOUSE_CODE = PRDT.HOUSE_CODE AND PRHD.PR_NO       = PRDT.PR_NO
+									                                                           AND PODT.PR_NO       = PRDT.PR_NO   AND PODT.PR_SEQ  = PRDT.PR_SEQ
+									                INNER JOIN ICOMOGIL OGIL ON PRDT.HOUSE_CODE = OGIL.HOUSE_CODE AND PRDT.DEMAND_DEPT = OGIL.DEPT
+													
+													INNER JOIN ICOYTXHD TXHD ON TRDT.HOUSE_CODE = TXHD.HOUSE_CODE AND TRDT.TAX_NO      = TXHD.TAX_NO
+													INNER JOIN ICOYTXDT TXDT ON TRDT.HOUSE_CODE = TXDT.HOUSE_CODE AND TRDT.TAX_NO      = TXDT.TAX_NO  AND TRDT.TAX_SEQ = TXDT.TAX_SEQ
+													INNER JOIN ICOMMTGL MTGL ON TRDT.HOUSE_CODE = MTGL.HOUSE_CODE AND TRDT.ITEM_NO     = MTGL.ITEM_NO
+																	
+													INNER JOIN SALEEBILL BILL ON TRDT.TAX_NO    = BILL.RESSEQ
+													
+													WHERE 
+														MTGL.MATERIAL_TYPE IN ('02', '04')
+													AND
+														TRHD.HOUSE_CODE  = ${session.HOUSE_CODE}
+													AND
+														TXHD.PROGRESS_CODE IN ('P', 'E')
+													AND
+														TXHD.KTGRM = '03'
+											<![CDATA[  
+													AND TXHD.TAX_NO       = ${h_tax_no}	
+											]]> 
+										)
+										WHERE
+				                        PY_CNT = 0  					
+									)	  
+			)
+			WHERE
+				PY_CNT = 0
+			ORDER BY
+				ADD_DATE DESC,
+				TAX_NO DESC
+	</method>
+	
+	<method name="bl_getPayBugetExpense">
+		SELECT DISTINCT 
+		    ADD_DATE,
+		    PROGRESS_CODE,
+		    PROGRESS_CODE_TXT,
+			TAX_NO,
+			PAY_NO,
+			VENDOR_CODE,
+			VENDOR_NAME,
+			SUP_IRS_NO,
+			TAX_DATE,
+		    TAX_APP_NO,
+			SUP_AMT,
+			TAX_AMT,
+			TOT_AMT,
+			PAY_DEMAND_DATE,
+			RECMEMNAME,
+			PUBCODE,
+			TAX_GUBUN,		
+			PY_CNT
+		FROM
+			(
+		        SELECT
+		            CONVERT_DATE(TRHD.ADD_DATE) AS ADD_DATE,
+		            TXHD.PROGRESS_CODE,
+		            GETICOMCODE1(TXHD.HOUSE_CODE,'M401',TXHD.PROGRESS_CODE) AS PROGRESS_CODE_TXT,
+			        TXHD.TAX_NO,
+			        TRHD.PAY_NO,
+			        TRHD.VENDOR_CODE,
+			        GETCOMPANYNAMELOC(TRHD.HOUSE_CODE,TRHD.VENDOR_CODE,'S') AS VENDOR_NAME,
+			        TXHD.SUP_IRS_NO,
+			        CONVERT_DATE(TXHD.TAX_DATE) AS TAX_DATE,
+			        CASE 
+			        	WHEN TXHD.TAX_APP_NO IS NULL THEN BILL.NTS_ISSUEID
+			        	ELSE TXHD.TAX_APP_NO
+			        END AS TAX_APP_NO,
+			        TXHD.SUP_AMT,
+					TXHD.VAT_AMT AS TAX_AMT,
+			        TXHD.SUP_AMT + TXHD.VAT_AMT AS TOT_AMT,
+			        TO_CHAR(TO_DATE(TXHD.PAY_DEMAND_DATE), 'YYYY/MM/DD') PAY_DEMAND_DATE,
+			        BILL.RECMEMNAME,
+			        BILL.PUBCODE,			        
+			        CASE 
+			        	WHEN TXHD.TAX_APP_NO IS NULL THEN 'RP'
+			        	ELSE 'P'
+			        END AS TAX_GUBUN,
+		            (
+						SELECT
+							COUNT(1)
+						FROM
+							SPY1LN PYLN
+						INNER JOIN SPY1GL PYGL ON PYLN.HOUSE_CODE = PYGL.HOUSE_CODE AND PYLN.PAY_SEND_NO = PYGL.PAY_SEND_NO
+						WHERE
+							PYLN.HOUSE_CODE = TXDT.HOUSE_CODE
+						AND
+							PYLN.TAX_NO     = TXDT.TAX_NO
+						AND
+							PYLN.TAX_SEQ    = TXDT.TAX_SEQ
+						AND
+							PYGL.DEL_YN     = 'N'
+					) AS PY_CNT		
+				FROM
+					ICOYTRHD TRHD
+				INNER JOIN ICOYTRDT TRDT ON TRHD.HOUSE_CODE = TRDT.HOUSE_CODE AND TRHD.PAY_NO      = TRDT.PAY_NO
+				INNER JOIN ICOYPODT PODT ON TRDT.HOUSE_CODE = PODT.HOUSE_CODE AND TRDT.PO_NO       = PODT.PO_NO   AND TRDT.PO_SEQ  = PODT.PO_SEQ
+				INNER JOIN ICOYPRHD PRHD ON PODT.HOUSE_CODE = PRHD.HOUSE_CODE AND PODT.PR_NO       = PRHD.PR_NO
+				
+				INNER JOIN ICOYPRDT PRDT ON PRHD.HOUSE_CODE = PRDT.HOUSE_CODE AND PRHD.PR_NO       = PRDT.PR_NO
+                                                           AND PODT.PR_NO       = PRDT.PR_NO   AND PODT.PR_SEQ  = PRDT.PR_SEQ
+                INNER JOIN ICOMOGIL OGIL ON PRDT.HOUSE_CODE = OGIL.HOUSE_CODE AND PRDT.DEMAND_DEPT = OGIL.DEPT
+				
+				INNER JOIN ICOYTXHD TXHD ON TRDT.HOUSE_CODE = TXHD.HOUSE_CODE AND TRDT.TAX_NO      = TXHD.TAX_NO
+				INNER JOIN ICOYTXDT TXDT ON TRDT.HOUSE_CODE = TXDT.HOUSE_CODE AND TRDT.TAX_NO      = TXDT.TAX_NO  AND TRDT.TAX_SEQ = TXDT.TAX_SEQ
+				INNER JOIN ICOMMTGL MTGL ON TRDT.HOUSE_CODE = MTGL.HOUSE_CODE AND TRDT.ITEM_NO     = MTGL.ITEM_NO
+								
+				INNER JOIN SALEEBILL BILL ON TRDT.TAX_NO    = BILL.RESSEQ
+				
+				WHERE TXHD.TAX_NO IN (					
+					                      SELECT
+			                                     DISTINCT TAX_NO 
+					                      FROM
+												(
+												   SELECT
+														TXHD.TAX_NO,
+														(
+															SELECT
+																COUNT(1)
+															FROM
+																SPY1LN PYLN
+															INNER JOIN SPY1GL PYGL ON PYLN.HOUSE_CODE = PYGL.HOUSE_CODE AND PYLN.PAY_SEND_NO = PYGL.PAY_SEND_NO
+															WHERE
+																PYLN.HOUSE_CODE = TXDT.HOUSE_CODE
+															AND
+																PYLN.TAX_NO     = TXDT.TAX_NO
+															AND
+																PYLN.TAX_SEQ    = TXDT.TAX_SEQ
+															AND
+																PYGL.DEL_YN     = 'N'
+														) AS PY_CNT					
+													FROM
+														ICOYTRHD TRHD
+													INNER JOIN ICOYTRDT TRDT ON TRHD.HOUSE_CODE = TRDT.HOUSE_CODE AND TRHD.PAY_NO      = TRDT.PAY_NO
+													INNER JOIN ICOYPODT PODT ON TRDT.HOUSE_CODE = PODT.HOUSE_CODE AND TRDT.PO_NO       = PODT.PO_NO   AND TRDT.PO_SEQ  = PODT.PO_SEQ
+													INNER JOIN ICOYPRHD PRHD ON PODT.HOUSE_CODE = PRHD.HOUSE_CODE AND PODT.PR_NO       = PRHD.PR_NO
+													
+													INNER JOIN ICOYPRDT PRDT ON PRHD.HOUSE_CODE = PRDT.HOUSE_CODE AND PRHD.PR_NO       = PRDT.PR_NO
+									                                                           AND PODT.PR_NO       = PRDT.PR_NO   AND PODT.PR_SEQ  = PRDT.PR_SEQ
+									                INNER JOIN ICOMOGIL OGIL ON PRDT.HOUSE_CODE = OGIL.HOUSE_CODE AND PRDT.DEMAND_DEPT = OGIL.DEPT
+													
+													INNER JOIN ICOYTXHD TXHD ON TRDT.HOUSE_CODE = TXHD.HOUSE_CODE AND TRDT.TAX_NO      = TXHD.TAX_NO
+													INNER JOIN ICOYTXDT TXDT ON TRDT.HOUSE_CODE = TXDT.HOUSE_CODE AND TRDT.TAX_NO      = TXDT.TAX_NO  AND TRDT.TAX_SEQ = TXDT.TAX_SEQ
+													INNER JOIN ICOMMTGL MTGL ON TRDT.HOUSE_CODE = MTGL.HOUSE_CODE AND TRDT.ITEM_NO     = MTGL.ITEM_NO
+																	
+													INNER JOIN SALEEBILL BILL ON TRDT.TAX_NO    = BILL.RESSEQ
+													
+													WHERE 
+														MTGL.MATERIAL_TYPE IN ('02', '04')
+													AND
+														TRHD.HOUSE_CODE  = ${session.HOUSE_CODE}
+													AND
+														TXHD.PROGRESS_CODE IN ('P', 'E')
+													AND
+														TXHD.KTGRM = '03'
+											<![CDATA[  
+													AND TXHD.COMPANY_CODE = $S{vendor_code}										
+												    AND TXHD.TAX_NO       = $S{tax_no}								
+										      	    AND TXHD.TAX_DATE 	BETWEEN $S{inv_start_date}
+												    	AND $S{inv_end_date}          
+												    AND TXHD.PROGRESS_CODE       = $S{progress_code}
+												    AND MTGL.MATERIAL_TYPE       = $S{MATERIAL_TYPE}
+													AND (MTGL.MATERIAL_CTRL_TYPE = $S{MATERIAL_CTRL_TYPE} OR MTGL.MATERIAL_CTRL_TYPE = MTGL.MATERIAL_TYPE ||'000')
+													AND MTGL.MATERIAL_CLASS1     = $S{MATERIAL_CLASS1}
+													AND MTGL.MATERIAL_CLASS2     = $S{MATERIAL_CLASS2}
+													AND BILL.RECMEMNAME          = TRIM($S{purchase_name})
+											]]> 
+										)
+										WHERE
+				                        PY_CNT = 0  					
+									)	  
+			)
+			WHERE
+				PY_CNT = 0
+			ORDER BY
+				ADD_DATE DESC,
+				TAX_NO DESC
+	</method>
+	
+	<method name="updateSpy1glDelYn">
+		UPDATE
+			SPY1GL
+		SET
+			STATUS_CD      = '99',
+			DEL_YN         = 'Y',
+			CHANGE_DATE    = TO_CHAR(SYSDATE, 'YYYYMMDD'),
+			CHANGE_TIME    = TO_CHAR(SYSDATE, 'HH24MISS'),
+			CHANGE_USER_ID = ${CHANGE_USER_ID}
+		WHERE
+			HOUSE_CODE  = ${HOUSE_CODE}
+		AND
+			PAY_SEND_NO = ${PAY_SEND_NO}
+		AND
+			DEL_YN      = 'N'
+	</method>
+	
+	<method name="selectSpy1glInfo">
+		SELECT
+			GL.HOUSE_CODE,   GL.PAY_SEND_NO,           GL.VENDOR_CODE,   GL.DEPOSITOR_NAME,    GL.BANK_CODE,
+			GL.BANK_ACCT,    GL.PAY_AMT,               GL.SIGNER_FLAG,   GL.SIGNER_NO,         GL.SIGNER_BIO,
+			GL.WORK_KIND,    GL.BMSBMSYY,              GL.SOGSOGCD,      GL.ASTASTGB,          GL.MNGMNGNO,
+			GL.BSSBSSNO,     GL.APPAPPYY,              GL.BMSSRLNO,      GL.APPAPPNO,          GL.APPAPPAM,
+			GL.JUMJUM_CD,    GL.IGJM_CD,               GL.BDSBDSCD,      GL.BDSBDSNM,          GL.USE_KIND,
+			GL.DEAL_AREA,    GL.DURABLE_YEAR,          GL.DEAL_DEBT,     GL.ACCOUNTKIND,       GL.DEAL_KIND,
+			GL.TRM_RTN_SQNO, GL.USER_TRM_NO,           GL.STATUS_CD,     GL.ADD_DATE,          GL.ADD_TIME,
+			GL.ADD_USER_ID,  GL.CHANGE_DATE,           GL.CHANGE_TIME,   GL.CHANGE_USER_ID,    GL.TCP_STATE,
+			GL.WEB_STATE,    GL.MANUAL_ACCOUNT_KIND,   GL.DEL_YN,        GL.ACC_NUM,           SC.TEXT3,             
+			SC.TEXT4,        SC.TEXT5,                 SC.TEXT6,         GL.BEFORE_SIGN_NO,
+			GL.TRN_LOG_KEY_VAL,  -- TOBE 2017-07-01 추가 로그키값
+			VNGL.VENDOR_NAME_LOC, -- TOBE 2017-07-01 추가 공급업체명
+			VNGL.IRS_NO,           -- TOBE 2021-01-01 추가 공급엄체사업자번호
+			GL.CCLT_RSN_DSCD,
+			GL.CCLT_RSN_CNTN,
+			CASE WHEN EXE_TRY_DT IS NULL THEN
+				90
+			ELSE
+				(SYSDATE-TO_DATE(EXE_TRY_DT,'YYYY-MM-DD HH24:MI:SS'))*24*60*60
+			END EXE_TRY_TERM,
+			CASE WHEN CCLT_TRY_DT IS NULL THEN
+				90
+			ELSE
+				(SYSDATE-TO_DATE(CCLT_TRY_DT,'YYYY-MM-DD HH24:MI:SS'))*24*60*60
+			END CCLT_TRY_TERM			
+		FROM
+			SPY1GL GL, (SELECT * FROM SCODE WHERE TYPE = 'M814') SC,
+			ICOMVNGL VNGL -- TOBE 2017-07-01 추가 업체일반정보
+		WHERE
+			GL.HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			GL.PAY_SEND_NO = ${PAY_SEND_NO}
+		AND GL.HOUSE_CODE   = SC.HOUSE_CODE
+		AND GL.WORK_KIND   = SC.CODE
+		AND GL.HOUSE_CODE  = VNGL.HOUSE_CODE   -- TOBE 2017-07-01 추가 업체일반정보/서비스구분코드
+		AND GL.VENDOR_CODE = VNGL.VENDOR_CODE  -- TOBE 2017-07-01 추가 업체일반정보/업체코드
+		    
+	</method>
+	
+	<method name="selectSpy1lnList">
+		SELECT
+			HOUSE_CODE,  PAY_SEND_NO, PAY_SEND_SEQ,   TAX_NO,   TAX_SEQ,
+			JUMJUJMCD,   IGJMCD,      PMKPMKCD,       CNT,      AMT,
+			APPAPPAM,    DOSUNQNO,    ADD_DATE,       ADD_TIME, ADD_USER_ID,
+			CHANGE_DATE, CHANGE_TIME, CHANGE_USER_ID, MODEL_NO
+		FROM
+			SPY1LN
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			PAY_SEND_NO = ${PAY_SEND_NO}
+	</method>
+	
+	<method name="updateSpy1glWebState">
+		UPDATE
+			SPY1GL
+		SET
+			WEB_STATE = 'Y',
+			STATUS_CD = ${STATUS_CD}
+		WHERE
+			HOUSE_CODE  = ${HOUSE_CODE}
+		AND
+			PAY_SEND_NO = ${PAY_SEND_NO}
+		AND
+			DEL_YN      = 'N'
+	</method>
+	
+	<method name="updateSpy1glWebStateVer2">
+		UPDATE
+			SPY1GL
+		SET
+			WEB_STATE = 'Y',
+			STATUS_CD = ${STATUS_CD},
+			CHANGE_DATE    = TO_CHAR(SYSDATE, 'YYYYMMDD'),
+			CHANGE_TIME    = TO_CHAR(SYSDATE, 'HH24MISS'),
+			CHANGE_USER_ID = ${CHANGE_USER_ID}
+		WHERE
+			HOUSE_CODE  = ${HOUSE_CODE}
+		AND
+			PAY_SEND_NO = ${PAY_SEND_NO}
+		AND
+			DEL_YN      = 'N'
+	</method>
+	
+	<method name="updateSpy1glWebStateR">
+		UPDATE
+			SPY1GL
+		SET
+			WEB_STATE = 'N',
+			STATUS_CD = ${STATUS_CD}
+		WHERE
+			HOUSE_CODE  = ${HOUSE_CODE}
+		AND
+			PAY_SEND_NO = ${PAY_SEND_NO}
+		AND
+			DEL_YN      = 'N'
+	</method>
+	
+	<method name="updateSpy1glCancelback">
+		UPDATE
+			SPY1GL
+		SET
+			STATUS_CD      = '30',
+			CHANGE_DATE    = TO_CHAR(SYSDATE, 'YYYYMMDD'),
+			CHANGE_TIME    = TO_CHAR(SYSDATE, 'HH24MISS'),
+			CHANGE_USER_ID = ${CHANGE_USER_ID}
+		WHERE
+			HOUSE_CODE  = ${HOUSE_CODE}
+		AND
+			PAY_SEND_NO = ${PAY_SEND_NO}
+		AND
+			DEL_YN      = 'N'
+	</method>
+	
+	<method name="updateIcoytxdtSpycheck">
+		UPDATE
+			ICOYTXDT
+		SET
+			SPY_CHECK = ${SPY_CHECK}
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			TAX_NO     = ${TAX_NO}
+		AND
+			TAX_SEQ    = ${TAX_SEQ}
+	</method>
+	
+	<method name="selectIcoytxdtSpyCheckList">
+		SELECT DISTINCT
+			SPY_CHECK
+		FROM
+			ICOYTXDT
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			TAX_NO     = ${TAX_NO}
+	</method>
+	
+	<method name="updateIcoytxhdProgressCodes">	
+		UPDATE
+			ICOYTXHD
+		SET
+			CHANGE_DATE    = TO_CHAR(SYSDATE,'YYYYMMDD'),
+			CHANGE_TIME    = TO_CHAR(SYSDATE,'HH24MISS'),
+			CHANGE_USER_ID = ${CHANGE_USER_ID},  
+			PROGRESS_CODE  = ${PROGRESS_CODE}		  
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}   
+		AND
+			TAX_NO = ${TAX_NO}	  		
+	</method>
+</service>

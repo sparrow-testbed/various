@@ -1,0 +1,328 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<service>
+	<method name="ma012DoSelect">
+		SELECT
+			A.C_ITEM_NO,
+			B.DESCRIPTION_LOC,
+			B.SPECIFICATION,
+			B.BASIC_UNIT,
+			A.BOM_STANDARD_QTY,
+			CONVERT_DATE(A.ADD_DATE) AS ADD_DATE,
+			C.USER_NAME_LOC
+		FROM
+			SBOMLN A
+		INNER JOIN ICOMMTGL B ON A.C_ITEM_NO   = B.ITEM_NO
+		INNER JOIN ICOMLUSR C ON A.ADD_USER_ID = C.USER_ID
+		WHERE
+			A.HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			A.P_ITEM_NO  = ${P_ITEM_NO}
+		AND
+			A.SEQ        = ${SEQ}
+	</method>
+	
+	<method name="ma012DoInsertSeq">
+		SELECT
+			NVL(MAX(SEQ), 0) + 1 AS SEQ
+		FROM
+			SBOMGL
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			P_ITEM_NO  = ${P_ITEM_NO}
+	</method>
+	
+	<method name="ma012InsertGl">
+		INSERT INTO SBOMGL(
+			HOUSE_CODE, P_ITEM_NO,   SEQ,         BOM_NAME,    ADD_DATE,
+			ADD_TIME,   ADD_USER_ID, CHANGE_DATE, CHANGE_TIME, CHANGE_USER_ID
+		)
+		VALUES(
+			${HOUSE_CODE},
+			${P_ITEM_NO},
+			${SEQ},
+			${BOM_NAME},
+			TO_CHAR(SYSDATE, 'YYYYMMDD'),
+			
+			TO_CHAR(SYSDATE, 'HH24MISS'),
+			${ADD_USER_ID},
+			TO_CHAR(SYSDATE, 'YYYYMMDD'),
+			TO_CHAR(SYSDATE, 'HH24MISS'),
+			${ADD_USER_ID}
+		)
+
+	</method>
+	
+	<method name="ma012InsertLn">
+		INSERT INTO SBOMLN(
+			HOUSE_CODE,    P_ITEM_NO, SEQ,         C_ITEM_NO,   BOM_STANDARD_QTY,
+			ADD_DATE,      ADD_TIME,  ADD_USER_ID, CHANGE_DATE, CHANGE_TIME,
+			CHANGE_USER_ID
+		)
+		VALUES(
+			${HOUSE_CODE},
+			${P_ITEM_NO},
+			${SEQ},
+			${C_ITEM_NO},
+			${BOM_STANDARD_QTY},
+			
+			TO_CHAR(SYSDATE, 'YYYYMMDD'),
+			TO_CHAR(SYSDATE, 'HH24MISS'),
+			${ADD_USER_ID},
+			TO_CHAR(SYSDATE, 'YYYYMMDD'),
+			TO_CHAR(SYSDATE, 'HH24MISS'),
+			
+			${ADD_USER_ID}
+		)
+	</method>
+	
+	<method name="ma012UpdateGl">
+		UPDATE
+			SBOMGL
+		SET
+			BOM_NAME       = ${BOM_NAME},
+			CHANGE_DATE    = TO_CHAR(SYSDATE, 'YYYYMMDD'),
+			CHANGE_TIME    = TO_CHAR(SYSDATE, 'HH24MISS'),
+			CHANGE_USER_ID = ${CHANGE_USER_ID}
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			P_ITEM_NO  = ${P_ITEM_NO}
+		AND
+			SEQ        = ${SEQ}
+	</method>
+	
+	<method name="ma012DeleteLn">
+		DELETE FROM
+			SBOMLN
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			P_ITEM_NO  = ${P_ITEM_NO}
+		AND
+			SEQ        = ${SEQ}
+	</method>
+	
+	<method name="ma012selectGl">
+		SELECT
+			A.SEQ,
+			A.BOM_NAME,
+			B.DESCRIPTION_LOC,
+			B.SPECIFICATION,
+			B.BASIC_UNIT,
+			B.ITEM_NO
+		FROM
+			SBOMGL A
+		INNER JOIN ICOMMTGL B ON A.P_ITEM_NO = B.ITEM_NO
+		WHERE
+			A.HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			A.P_ITEM_NO  = ${P_ITEM_NO}
+		AND
+			A.SEQ        = ${SEQ}
+	</method>
+	
+	<method name="ma012SelectGlList">
+		SELECT
+			A.P_ITEM_NO,
+			B.DESCRIPTION_LOC,
+			B.SPECIFICATION,
+			B.BASIC_UNIT,
+			A.SEQ,
+			A.BOM_NAME
+		FROM
+			SBOMGL A
+		INNER JOIN ICOMMTGL B ON A.P_ITEM_NO   = B.ITEM_NO
+		WHERE
+			A.HOUSE_CODE = ${HOUSE_CODE}
+		AND A.P_ITEM_NO = $S{P_ITEM_NO}
+		AND (A.HOUSE_CODE, A.P_ITEM_NO, A.SEQ) IN (SELECT HOUSE_CODE, P_ITEM_NO, SEQ FROM SBOMLN WHERE HOUSE_CODE = A.HOUSE_CODE AND C_ITEM_NO = $S{C_ITEM_NO})
+		AND (A.HOUSE_CODE, A.P_ITEM_NO, A.SEQ) IN (SELECT HOUSE_CODE, P_ITEM_NO, MAX(SEQ) FROM SBOMGL GROUP BY HOUSE_CODE,P_ITEM_NO)
+	</method>
+	
+	<method name="ma012SelectLnList">
+		<![CDATA[			 
+		SELECT
+			A.C_ITEM_NO,
+			B.IMAGE_FILE_PATH,
+			B.DESCRIPTION_LOC,
+			B.SPECIFICATION,
+			B.MAKER_CODE,
+			NVL(
+				CTRL.CTRL_CODE,
+        		'P01'
+			) AS CTRL_CODE,
+			'' AS QTY,
+			B.ITEM_GROUP,
+			(
+				SELECT
+					replace( '(' || DELY_ZIP_CODE || ') ' , '() ' , '') || DELY_ADDRESS_LOC
+				FROM
+					ICOMADDR
+   		        WHERE
+   		        	HOUSE_CODE = A.HOUSE_CODE
+   		        AND
+   		        	CODE_NO = ${ID}
+   		        AND
+   		        	CODE_TYPE = '3'
+			) AS DELY_TO_ADDRESS,
+		    '' AS UNIT_PRICE,
+			B.MAKER_NAME,
+			B.BASIC_UNIT,
+			B.MATERIAL_TYPE,
+			B.KTGRM,
+			A.P_ITEM_NO,
+			A.SEQ,
+			INFO.UNIT_PRICE AS C_UNIT_PRICE,
+			B.MAKE_AMT_CODE,
+			GETICOMCODE2(B.HOUSE_CODE,'M799', B.MAKE_AMT_CODE) AS MAKE_AMT_NAME,
+            GETCODETEXT3('M799', B.MAKE_AMT_CODE,'KO') AS MAKE_AMT_UNIT,
+    		OMGL.DESCRIPTION_LOC AS P_DESCRIPTION_LOC,
+    		OMGL.BOM_NAME AS P_BOM_NAME,
+    		B.WID,
+    		B.HGT    		
+		FROM
+			SBOMLN A,
+			( SELECT
+                  DISTINCT  BACP.CTRL_PERSON_ID,
+                  MCPM.HOUSE_CODE,
+                  MCPM.MATERIAL_CLASS1,
+                  MCPM.CTRL_CODE,
+                  NVL(BAPR.PURCHASE_LOCATION,'00') AS PURCHASE_LOCATION,
+                  BAPR.PR_LOCATION,
+                  MCPM.CTRL_TYPE
+              FROM   ICOMMCPM MCPM,
+                     ICOMBACP BACP,
+                     ICOMBAPR BAPR,
+                     SCODE    CODE
+              WHERE    BAPR.HOUSE_CODE        =  ${HOUSE_CODE}
+                  AND  BAPR.PR_LOCATION       =  ${PR_LOCATION}
+                  AND  MCPM.HOUSE_CODE        =  BAPR.HOUSE_CODE
+                  AND  MCPM.PURCHASE_LOCATION =  BAPR.PURCHASE_LOCATION
+                  AND  BACP.HOUSE_CODE        =  MCPM.HOUSE_CODE
+                  AND  MCPM.CTRL_CODE         =  BACP.CTRL_CODE
+                  AND  MCPM.CTRL_TYPE         =  BACP.CTRL_TYPE
+                  AND  BAPR.STATUS            IN ('C','R')
+                  AND  MCPM.STATUS            IN ('C','R')
+                  AND  BACP.STATUS            IN ('C','R')
+                  AND  CODE.HOUSE_CODE        =  ${HOUSE_CODE}
+                  AND  CODE.TYPE              =  'M122'
+                  AND  MCPM.MATERIAL_CLASS1   =  CODE.CODE
+                  AND ROWNUM = 1
+            ) CTRL,
+			ICOMMTGL B
+			, (
+		      SELECT
+		       A.HOUSE_CODE
+		       , B.ITEM_NO
+		       , A.SEQ
+		       , B.DESCRIPTION_LOC
+		       , A.BOM_NAME
+		       , ( 
+		        SELECT
+		         COUNT(1)
+		        FROM SBOMLN
+		        WHERE HOUSE_CODE = A.HOUSE_CODE
+		         AND P_ITEM_NO = A.P_ITEM_NO
+		         AND SEQ = A.SEQ
+		       ) AS CNT
+		      FROM SBOMGL A
+		      INNER JOIN ICOMMTGL B 
+		       ON A.P_ITEM_NO = B.ITEM_NO
+		    ) OMGL
+		   ,(
+		     SELECT
+		      HOUSE_CODE 
+		      ,ITEM_NO
+		      ,UNIT_PRICE 
+		     FROM ICOYINFO 
+			 WHERE VENDOR_CODE = ${VENDOR_CODE}
+			 AND STATUS = 'C' 
+			 AND VALID_FROM_DATE <= TO_CHAR(SYSDATE,'YYYYMMDD')
+			 AND VALID_TO_DATE >= TO_CHAR(SYSDATE,'YYYYMMDD')			    
+			 ) INFO
+		WHERE
+			A.HOUSE_CODE      = ${HOUSE_CODE}
+		AND
+			A.P_ITEM_NO       = ${P_ITEM_NO}
+		AND
+			A.SEQ             = ${SEQ}
+		AND
+			B.HOUSE_CODE      = CTRL.HOUSE_CODE(+)
+		AND
+			B.MATERIAL_CLASS2 = CTRL.MATERIAL_CLASS1(+)
+		AND
+			A.C_ITEM_NO       = B.ITEM_NO
+	 	AND A.HOUSE_CODE  = OMGL.HOUSE_CODE(+)
+    	AND A.P_ITEM_NO  = OMGL.ITEM_NO(+) 	
+        AND A.HOUSE_CODE   =  INFO.HOUSE_CODE
+    	AND A.C_ITEM_NO   =  INFO.ITEM_NO    	
+    	 ]]>
+	</method>
+	
+	<method name="ma012SelectSoslnList">
+		SELECT
+			A.ITEM_NO
+			, A.UNIT_MEASURE AS BASIC_UNIT
+			, CONVERT_DATE(A.RD_DATE) AS RD_DATE
+			, A.OSQ_QTY AS PR_QTY
+			, A.OSQ_AMT AS INFO_UNIT_PRICE
+			, A.PR_NO
+			, A.PR_SEQ
+			, A.DELY_TO_ADDRESS
+			, A.DELY_TO_DEPT AS DELY_TO_ADDRESS_CD
+			, GETFILEATTCOUNT(A.ATTACH_NO) AS ATTACH_COUNT
+			, A.ATTACH_NO
+			, A.SPECIFICATION
+			, A.MAKE_AMT_CODE
+			, GETCODETEXT2('M799', A.MAKE_AMT_CODE, 'KO') AS MAKE_AMT_NAME
+			, A.Z_REMARK AS REMARK
+			, B.VENDOR_CODE
+			, D.VENDOR_NAME_LOC AS VENDOR_NAME
+			, C.DESCRIPTION_LOC
+			--, NVL(E.PURCHASE_LOCATION, '01') AS PURCHASE_LOCATION
+			, '' AS PURCHASE_LOCATION
+			, A.P_ITEM_NO
+			, OMGL.DESCRIPTION_LOC AS P_DESCRIPTION_LOC
+		    , OMGL.BOM_NAME AS P_BOM_NAME
+		FROM SOSLN A
+		INNER JOIN SOSSE    B 
+		  	ON A.HOUSE_CODE = B.HOUSE_CODE  
+		  		AND A.OSQ_NO = B.OSQ_NO 
+		  		AND A.OSQ_COUNT = B.OSQ_COUNT 
+		  		AND A.OSQ_SEQ = B.OSQ_SEQ
+		INNER JOIN ICOMMTGL C 
+		  	ON A.ITEM_NO = C.ITEM_NO
+		INNER JOIN ICOMVNGL D 
+			ON B.VENDOR_CODE = D.VENDOR_CODE
+		--INNER JOIN ICOYPRDT E 
+		--	ON E.HOUSE_CODE = E.HOUSE_CODE  
+		--		AND A.PR_NO = E.PR_NO  
+		--		AND A.PR_SEQ = E.PR_SEQ
+		LEFT OUTER JOIN (
+						SELECT
+							A.HOUSE_CODE
+							, B.ITEM_NO
+							, A.SEQ
+							, B.DESCRIPTION_LOC
+							, A.BOM_NAME
+							, ( 
+								SELECT
+									COUNT(1)
+								FROM SBOMLN
+								WHERE HOUSE_CODE = A.HOUSE_CODE
+									AND P_ITEM_NO = A.P_ITEM_NO
+									AND SEQ = A.SEQ
+							) AS CNT
+						FROM SBOMGL A
+						INNER JOIN ICOMMTGL B 
+							ON A.P_ITEM_NO = B.ITEM_NO
+						) OMGL
+			ON A.HOUSE_CODE = OMGL.HOUSE_CODE
+				AND A.P_ITEM_NO = OMGL.ITEM_NO 
+		WHERE A.HOUSE_CODE = ${HOUSE_CODE}
+		AND A.OSQ_NO = ${OSQ_NO}
+		AND A.OSQ_COUNT = ${OSQ_COUNT}
+		ORDER BY A.OSQ_SEQ
+	</method>
+</service>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+<service>
+	<method name="selectUserList">
+		SELECT USER_ID
+		     , USER_NAME_LOC
+		     , EMPLOYEE_NO
+		     , DEPT
+		  FROM ICOMLUSR_ICT
+		 WHERE 1=1
+		   AND HOUSE_CODE   = ${HOUSE_CODE}
+		   AND COMPANY_CODE = ${companyCd}
+		   AND DEPT          LIKE '%' || $S{deptCd}        || '%'
+		   AND USER_ID       LIKE '%' || $S{USER_ID}       || '%'
+		   AND USER_NAME_LOC LIKE '%' || $S{USER_NAME_LOC} || '%'
+		   AND STATUS IN ('C','R')
+	</method>
+</service>

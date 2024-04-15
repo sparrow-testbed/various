@@ -1,0 +1,323 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+<service>
+<method name="getContractInsert">
+	<![CDATA[
+   	INSERT INTO SCPGL2 (
+		 CONT_NO
+		,CONT_GL_SEQ
+		,SUBJECT
+		,SG_LEV1
+		,SG_LEV2
+		,SELLER_CODE
+		,SIGN_PERSON_ID
+		,SIGN_PERSON_NAME
+		,CONT_FROM
+		,CONT_TO
+		,CONT_DATE
+		,CONT_ADD_DATE
+		,CONT_TYPE
+		,ELE_CONT_FLAG
+		,ASSURE_FLAG
+		,CONT_PROCESS_FLAG
+		,CONT_AMT
+		,CONT_ASSURE_PERCENT
+		,CONT_ASSURE_AMT
+		,FAULT_INS_PERCENT
+		,FAULT_INS_AMT
+		,FAULT_INS_TERM
+		,BD_NO
+		,BD_COUNT
+		,AMT_GUBUN
+		,TEXT_NUMBER
+		,DELAY_CHARGE
+		,REMARK
+		,CTRL_DEMAND_DEPT
+		,CT_FLAG
+		,CTRL_CODE
+		,COMPANY_CODE
+		,RFQ_TYPE
+		,ADD_USER_ID
+		,ADD_DATE
+		,ADD_TIME
+		,CHANGE_USER_ID
+		,CHANGE_DATE
+		,CHANGE_TIME
+		,DEL_FLAG
+		,CONT_TYPE1_TEXT
+		,CONT_TYPE2_TEXT
+		,TTL_ITEM_QTY
+		,DELV_PLACE
+		,ADD_TAX_FLAG
+		,ITEM_TYPE
+		,RD_DATE
+		,CONT_TOTAL_GUBUN
+		,CONT_PRICE
+		,EXEC_NO
+		,REQ_DEPT
+		,REQ_DEPT_NAME
+		,APP_DATE
+		,PREV_SIGN_PERSON_ID
+		,PREV_SIGN_PERSON_NAME
+		,APP_AMT
+		,PR_DATE
+		,BUDGET_AMT
+		,PAY_DATE
+		,IN_PRICE_AMT
+		,BE_PRICE_AMT
+		,APP_REMARK
+		,AUTO_EXTEND_FLAG
+		,ITEM_QTY
+		,IN_ATTACH_NO
+		,MANUAL_GUBUN
+	) VALUES (
+		 ${cont_no}
+		,TO_CHAR(1, 'FM000')
+		,${subject}
+		,${sg_type1}
+		,${sg_type2}
+		,${seller_code}
+		,${sign_person_id}
+		,${sign_person_name}
+		,replace(${cont_from},'/','')
+		,replace(${cont_to},'/','')
+		,replace(${cont_date},'/','')
+		,replace(${cont_add_date},'/','')
+		,${cont_type}
+		,${ele_cont_flag}
+		,${assure_flag}
+		,${cont_process_flag}
+		,replace(${cont_amt},',','')
+		,${cont_assure_percent}
+		,replace(${cont_assure_amt},',','')
+		,${fault_ins_percent}
+		,replace(${fault_ins_amt},',','')
+		,replace(${hdn_fault_ins_term},',','')
+		,${bd_no}
+		,${bd_count}
+		,${amt_gubun}
+		,${text_number}
+		,${delay_charge}
+		,${remark}
+		,${ctrl_demand_dept}
+		,'CT'
+		,${ctrl_code}
+		,${company_code}
+		,${rfq_type}
+		,${add_user_id}
+		,${add_date}
+		,${add_time}
+		,${change_user_id}
+		,${change_date}
+		,${change_time}
+		,'N'
+		,${cont_type1_text}
+		,${cont_type2_text}
+		,${x_purchase_qty}
+		,${delv_place}
+		,${add_tax_flag_value}
+		,${item_type}
+		,replace(${rd_date},'/','')
+		,${cont_total_gubun}
+		,replace(${cont_price},',','')
+		,${exec_no}		
+		,${req_dept}
+		,${req_dept_name}
+		,${app_date}
+		,${prev_sign_person_id}
+		,${prev_sign_person_name}
+		,replace(${app_amt},',','')
+		,replace(${pr_date},'/','')
+		,replace(${budget_amt},',','')
+		,replace(${pay_date},'/','')
+		,replace(${in_price_amt},',','')
+		,replace(${be_price_amt},',','')
+		,${app_remark}
+		,${auto_extend_flag}
+		,replace(${item_qty},',','')
+		,${in_attach_no}
+		,'Y'
+	)
+	]]>
+</method>
+
+
+<method name="getContractUpdate">
+	<![CDATA[
+	UPDATE SCPGL2 SET
+		 SUBJECT           = ${subject}
+		,SG_LEV1           = ${sg_type1}
+		,SG_LEV2           = ${sg_type2}
+		,SELLER_CODE       = ${seller_code}
+		,SIGN_PERSON_ID    = ${sign_person_id}
+		,SIGN_PERSON_NAME  = ${sign_person_name}
+		,CONT_FROM         = replace(${cont_from},'/','')
+		,CONT_TO           = replace(${cont_to},'/','')
+		,CONT_DATE         = replace(${cont_date},'/','')
+		,CONT_ADD_DATE     = replace(${cont_add_date},'/','')
+		,CONT_TYPE         = ${cont_type}
+		,ELE_CONT_FLAG     = ${ele_cont_flag}
+		,ASSURE_FLAG       = ${assure_flag}
+		,CONT_PROCESS_FLAG = ${cont_process_flag}
+		,CONT_AMT          = replace(${cont_amt},',','')
+		,CONT_ASSURE_PERCENT = ${cont_assure_percent}
+		,CONT_ASSURE_AMT   = replace(${cont_assure_amt},',','')
+		,FAULT_INS_PERCENT = ${fault_ins_percent}
+		,FAULT_INS_AMT     = replace(${fault_ins_amt},',','')
+		,FAULT_INS_TERM    = replace(${hdn_fault_ins_term},',','')
+		,BD_NO             = ${bd_no}
+		,BD_COUNT          = ${bd_count}
+		,AMT_GUBUN         = ${amt_gubun}
+		,TEXT_NUMBER       = ${text_number}
+		,DELAY_CHARGE      = ${delay_charge}
+		,REMARK            = ${remark}
+		,CTRL_DEMAND_DEPT  = ${ctrl_demand_dept}
+		,CTRL_CODE         = ${ctrl_code}
+		,RFQ_TYPE          = ${rfq_type}
+		,CHANGE_USER_ID    = ${change_user_id}
+		,CHANGE_DATE       = ${change_date}
+		,CHANGE_TIME       = ${change_time}
+		,CONT_TYPE1_TEXT   = ${cont_type1_text}
+		,CONT_TYPE2_TEXT   = ${cont_type2_text}
+		,TTL_ITEM_QTY      = ${x_purchase_qty}
+		,DELV_PLACE        = ${delv_place}
+		,ADD_TAX_FLAG      = ${add_tax_flag}
+		,ITEM_TYPE         = ${item_type}
+		,RD_DATE           = replace(${rd_date},'/','')
+		,CONT_TOTAL_GUBUN  = ${cont_total_gubun}
+		,CONT_PRICE        = ${cont_price}
+		,EXEC_NO           = ${exec_no}
+		,REQ_DEPT          = ${req_dept}
+		,REQ_DEPT_NAME     = ${req_dept_name}
+		,APP_DATE          = ${app_date}
+		,PREV_SIGN_PERSON_ID = ${prev_sign_person_id}
+		,PREV_SIGN_PERSON_NAME = ${prev_sign_person_name}
+		,APP_AMT           = replace(${app_amt},',','')
+		,PR_DATE           = replace(${pr_date},'/','')
+		,BUDGET_AMT        = replace(${budget_amt},',','')
+		,PAY_DATE          = replace(${pay_date},'/','')
+		,IN_PRICE_AMT      = replace(${in_price_amt},',','')
+		,BE_PRICE_AMT      = replace(${be_price_amt},',','')
+		,APP_REMARK        = ${app_remark}
+		,AUTO_EXTEND_FLAG  = ${auto_extend_flag}
+		,ITEM_QTY          = replace(${item_qty},',','')
+		,IN_ATTACH_NO      = ${in_attach_no}
+   WHERE CONT_NO = ${cont_no}
+	 AND CONT_GL_SEQ = '001'
+	]]>
+</method>
+
+<method name="setDelete">
+    <![CDATA[
+    		DELETE FROM SCPGL2 WHERE 1=1
+    		AND CONT_NO = ${CONT_NO}
+    		AND CONT_GL_SEQ = ${CONT_GL_SEQ}
+		]]>
+</method>
+<method name="getContractList">
+    
+		SELECT  A.CONT_NO                           
+	    ,		A.CONT_GL_SEQ                       
+	    ,       A.SUBJECT                           
+	    ,       A.SELLER_CODE                       
+	    ,       GETCOMPANYNAMELOC('000', A.SELLER_CODE, 'S') AS SELLER_CODE_TEXT	
+	    ,       A.CT_FLAG		
+	    ,       GETCODETEXT2('M286', A.CT_FLAG, 'KO') AS CT_NAME 		
+	    ,       A.CONT_AMT       
+	    ,       TO_CHAR(TO_DATE(A.CONT_DATE), 'YYYY/MM/DD') AS CONT_ADD_DATE                     
+	    ,       A.SIGN_PERSON_ID                    
+	    ,       A.SIGN_PERSON_NAME                  
+	    ,       A.CONT_FROM                         
+	    ,       A.CONT_TO                           
+	    ,       A.CONT_DATE                         
+	    ,       A.CONT_TYPE                         
+	    ,       A.ELE_CONT_FLAG                     
+	    ,       A.ASSURE_FLAG                       
+	    ,       A.START_START_INS_FLAG              
+	    ,       A.CONT_PROCESS_FLAG                 
+	    ,       A.CONT_ASSURE_PERCENT               
+	    ,       A.CONT_ASSURE_AMT                   
+	    ,       A.FAULT_INS_PERCENT                 
+	    ,       A.FAULT_INS_AMT                     
+	    ,       A.PAY_DIV_FLAG                      
+	    ,       A.FAULT_INS_TERM                    
+	    ,       A.BD_NO                             
+	    ,       A.BD_COUNT                          
+	    ,       A.AMT_GUBUN                         
+	    ,       A.TEXT_NUMBER                       
+	    ,       A.DELAY_CHARGE                      
+	    ,       A.DELV_PLACE                        
+	    ,       A.REMARK                            
+	    ,       A.CTRL_DEMAND_DEPT                  
+	    ,       A.CTRL_CODE                         
+	    ,       A.COMPANY_CODE                      
+	    ,       A.ACCOUNT_CODE                      
+	    ,       A.ACCOUNT_NAME                      
+	    ,       A.REJECT_REASON                      
+	    ,       A.RFQ_TYPE                          
+	    ,       A.CONT_TYPE1_TEXT                   
+	    ,       A.CONT_TYPE2_TEXT                   
+	    ,		(                                        
+	         		SELECT MAX( CONT_GL_SEQ )              
+	         		FROM   SCPGL                           
+	         		WHERE  CONT_NO            = A.CONT_NO  
+	         		AND    NVL(DEL_FLAG, 'N') = 'N'        
+	       		) AS MAX_CONT_GL_SEQ		  
+	    ,		A.DELV_PLACE                             
+	    ,       A.SG_LEV1      	                      
+	    ,       A.SG_LEV2	                              
+	    ,       A.ADD_TAX_FLAG	                          
+	    ,       A.ITEM_TYPE	                          
+	    ,       A.RD_DATE	                          
+	    ,       A.CONT_TOTAL_GUBUN	                          
+	    ,       A.CONT_PRICE	                          
+	    ,       A.BEFORE_CONT_FROM	                          
+	    ,       A.BEFORE_CONT_TO	                          
+	    ,       A.BEFORE_CONT_AMT	                          
+	    ,       A.BEFORE_ITEM_TYPE	                           
+	    ,       A.TTL_ITEM_QTY	   
+	    ,		A.EXEC_NO     
+		,		A.CONT_FORM_NO      
+	    FROM 	SCPGL2 A                     
+    	WHERE 	A.DEL_FLAG = 'N'
+    	AND 	A.CONT_ADD_DATE BETWEEN $S{from_cont_date}
+    	AND 	$S{to_cont_date}
+    	
+    	<if test="${sg_type1}" operator="ne" value="">
+			AND  A.SG_LEV1  = ${sg_type1} 
+		</if>
+		<if test="${sg_type2}" operator="ne" value="">
+			AND  A.SG_LEV2  = ${sg_type2} 
+		</if>
+		
+		<if test="${cont_process_flag}" operator="ne" value="">
+			AND  A.CONT_PROCESS_FLAG = ${cont_process_flag} 
+		</if>
+		
+		<if test="${seller_code}" operator="ne" value="">
+			AND  A.SELLER_CODE = ${seller_code} 
+		</if>
+		
+		<if test="${cont_type1_text}" operator="ne" value="">
+			AND  A.CONT_TYPE1_TEXT = ${cont_type1_text} 
+		</if>
+		
+		<if test="${cont_type2_text}" operator="ne" value="">
+			AND  A.CONT_TYPE2_TEXT = ${cont_type2_text} 
+		</if>
+		
+    	
+    	AND 	UPPER(A.SUBJECT) LIKE '%'|| UPPER($S{subject}) ||'%'
+    	AND 	A.SIGN_PERSON_ID = $S{ctrl_person_id}
+    	AND     A.MANUAL_GUBUN = 'Y'
+    	ORDER BY A.ADD_DATE DESC , A.ADD_TIME DESC
+
+</method>
+<method name="getContractDelete">
+<![CDATA[
+	DELETE FROM SCPGL2 WHERE 1=1
+	AND CONT_NO = ${CONT_NO}
+	AND CONT_GL_SEQ = ${CONT_GL_SEQ}
+]]>
+</method>
+ 
+</service>

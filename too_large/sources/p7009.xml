@@ -1,0 +1,289 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+ ========================================================
+ Copyright(c) 2015 SepoaSoft
+
+ @File       : p7009.xml
+
+ @FileName   : 간판설치현황관리
+
+ Open Issues : 
+
+ Change history  :
+ @LastModifyDate : 2015. 02. 12
+ @LastModifier   : next1210
+ @LastVersion    : V 1.0.0
+ =========================================================
+ -->
+
+<service>
+<!-- //업체정보 조회   -->	
+	<method name="getSignDate">
+		<![CDATA[
+              	SELECT 
+					MAGL.BRANCHES_CODE
+					, GETDEPTNAMELOC(MAGL.HOUSE_CODE, 'WOORI', MAGL.BRANCHES_CODE) AS BRANCHES_NAME
+					, MAGL.ITEM_NO
+					, (SELECT A.DESCRIPTION_LOC FROM ICOMMTGL A WHERE A.ITEM_NO = MAGL.ITEM_NO) AS ITEM_NAME
+					, MAGL.IO_NUMBER
+					, MAGL.SPECIFICATION
+					, MAGL.SIGNFORM_CODE AS SIGNFORM
+					, MAGL.INSTALL_DATE
+					, MAGL.CONFIRM_DATE_FROM
+					, MAGL.CONFIRM_DATE_TO
+					, MAGL.STICK_LOCATION
+					, MAGL.INSTALL_STORE
+					, (
+				     	SELECT
+				 			GL.VENDOR_NAME_LOC
+				  		FROM ICOMVNGL GL
+				  		RIGHT OUTER JOIN ICOMADDR DR 
+				  			ON DR.HOUSE_CODE = GL.HOUSE_CODE 
+				  			AND DR.CODE_NO = GL.VENDOR_CODE 
+				  		WHERE GL.HOUSE_CODE = '000'
+						AND GL.STATUS IN ('C','R') 
+				  		AND GL.JOB_STATUS = 'E'  
+				  		AND	DR.CODE_TYPE = '2' 
+				 		AND GL.PURCHASE_BLOCK_FLAG != 'Y'
+				 		AND GL.VENDOR_CODE = MAGL.INSTALL_STORE
+				     ) AS INSTALL_STORE_NAME
+					, MAGL.INSTALL_STORE_PHONE
+					, MAGL.ATTACH_NO
+					, MAGL.REMOVE_FLAG
+					, MAGL.REMARK
+				FROM SMAGL MAGL
+				WHERE HOUSE_CODE =  ${house_code}
+				AND KEY_NO =  ${key_no}
+				AND BRANCHES_CODE =  ${branches_code}
+				AND ITEM_NO =  ${item_no}
+				AND IO_NUMBER =  ${io_number}
+		]]>
+	</method>
+<!-- //업체정보 조회   -->	
+	<method name="getCheckDataSign">
+		<![CDATA[
+              	SELECT 
+					NVL(MAX(TO_NUMBER(IO_NUMBER)), 0) + 1 AS IO_NUMBER_NEW
+				FROM SMAGL
+				WHERE HOUSE_CODE =  ${house_code}
+				AND KEY_NO =  ${key_no}
+				AND BRANCHES_CODE =  ${branches_code}
+				AND ITEM_NO =  ${item_no}
+		]]>
+	</method>
+<!-- //간판저장   -->	
+	<method name="insertSignData">
+		<![CDATA[
+		 INSERT INTO SMAGL  													
+						 (  																		
+						 HOUSE_CODE  															
+						 , KEY_NO  																
+						 , BRANCHES_CODE  															
+						 , ITEM_NO  														
+						 , IO_NUMBER  															
+						 , SPECIFICATION  																
+						 , SIGNFORM_CODE  																
+						 , INSTALL_DATE  															
+						 , CONFIRM_DATE_FROM														
+						 , CONFIRM_DATE_TO  															
+						 , STICK_LOCATION  														
+						 , INSTALL_STORE  															
+						 , INSTALL_STORE_PHONE
+						 , ATTACH_NO																															
+						 , REMOVE_FLAG  															
+						 , REMARK
+					     , ADD_DATE
+					     , ADD_TIME
+					     , ADD_USER_ID
+					     , CHANGE_DATE
+					     , CHANGE_TIME
+					     , CHANGE_USER_ID 
+					     , DEL_FLAG
+				 ) VALUES (  
+				 		$S{house_code}												
+						,$S{key_no}												
+						,$S{branches_code}													
+						,$S{item_no}											
+						,$S{io_number}												
+						,$S{specification}														
+						,$S{signform}														
+						,replace($S{install_date}, '/', '')													
+						,replace($S{confirm_from_date}, '/', '')													
+						,replace($S{confirm_to_date}, '/', '')														
+						,$S{stick_location}												
+						,$S{install_store}													
+						,$S{install_store_phone}																														
+						,$S{attach_no}																														
+						,$S{remove_flag}													
+						,$S{remark}
+					    ,$S{add_date}
+					    ,$S{add_time}
+					    ,$S{add_user_id}
+					    ,$S{change_date}
+					    ,$S{change_time}
+					    ,$S{change_user_id}
+					    ,$S{del_flag}
+					 )   	
+	  
+		]]>
+	</method>
+	
+	<!-- //공급업체 간판설치현황리스트 조회 가능여부 체크  -->	
+	<method name="et_checkVendor">
+		<![CDATA[
+        	SELECT
+--			  INFO.VENDOR_CODE
+--			 ,INFO.ITEM_NO
+--			 ,INFO.HOUSE_CODE
+--			 ,INFO.COMPANY_CODE
+--			 ,INFO.PURCHASE_LOCATION
+--			 ,MTGL.MATERIAL_TYPE
+--			 ,MTGL.MATERIAL_CTRL_TYPE
+			 COUNT(*) AS CNT
+			FROM ICOYINFO INFO
+			JOIN ICOMMTGL MTGL
+			ON INFO.HOUSE_CODE = MTGL.HOUSE_CODE
+			AND INFO.ITEM_NO = MTGL.ITEM_NO
+			WHERE 1 = 1
+			AND INFO.VENDOR_CODE = ${vendor_code}
+			AND ( MTGL.MATERIAL_TYPE = '06' OR MTGL.MATERIAL_CTRL_TYPE = '02005' )
+		]]>
+	</method>
+	
+	<!-- //간판설치현황리스트 조회   -->	
+	<method name="getSmaglList">
+		<![CDATA[
+              	SELECT
+					GRGL.IO_NUMBER
+					, GRGL.IO_NUMBER AS NO
+					, GRGL.KEY_NO
+					, GRGL.BRANCHES_CODE
+					, GETDEPTNAMELOC(GRGL.HOUSE_CODE, 'WOORI', GRGL.BRANCHES_CODE) AS BRANCHES_NAME
+					, GRGL.ITEM_NO AS ITEM_CODE
+					, (SELECT A.DESCRIPTION_LOC FROM ICOMMTGL A WHERE A.ITEM_NO = GRGL.ITEM_NO) AS ITEM_NAME
+					, MAGL.SPECIFICATION
+					, CONVERT_DATE(MAGL.INSTALL_DATE) AS INSTALL_DATE
+					, '' AS IMAGE
+					, MAGL.ATTACH_NO
+					, CONVERT_DATE(MAGL.CONFIRM_DATE_FROM) AS CONFIRM_DATE_FROM
+					, CONVERT_DATE(MAGL.CONFIRM_DATE_TO) AS CONFIRM_DATE_TO
+					, MAGL.INSTALL_STORE
+					, (
+				     	SELECT
+				 			GL.VENDOR_NAME_LOC
+				  		FROM ICOMVNGL GL
+				  		RIGHT OUTER JOIN ICOMADDR DR 
+				  			ON DR.HOUSE_CODE = GL.HOUSE_CODE 
+				  			AND DR.CODE_NO = GL.VENDOR_CODE 
+				  		WHERE GL.HOUSE_CODE = '000'
+						AND GL.STATUS IN ('C','R') 
+				  		AND GL.JOB_STATUS = 'E'  
+				  		AND	DR.CODE_TYPE = '2' 
+				 		AND GL.PURCHASE_BLOCK_FLAG != 'Y'
+				 		AND GL.VENDOR_CODE = MAGL.INSTALL_STORE
+				     ) AS INSTALL_STORE_NAME
+					, GRGL.HOUSE_CODE
+					, CASE WHEN MAGL.REMOVE_FLAG = 'Y' THEN '설치중' WHEN MAGL.REMOVE_FLAG = 'N' THEN '철거완료' ELSE '' END AS REMOVE_FLAG_TEXT
+					, MAGL.REMOVE_FLAG
+					, MAGL.REMARK AS REMARK_IMAGE
+					, MAGL.REMARK
+					, MAGL.SIGNFORM_CODE
+					, GETCODETEXT1('M659', MAGL.SIGNFORM_CODE, 'KO') AS SIGNFORM_NAME
+					, MAGL.STICK_LOCATION
+				FROM (
+					SELECT 
+						HOUSE_CODE
+						, KEY_NO
+						, BRANCHES_CODE
+						, ITEM_NO
+						, MAX(IO_NUMBER) AS IO_NUMBER
+					FROM SMAGL
+					GROUP BY HOUSE_CODE, KEY_NO, BRANCHES_CODE, ITEM_NO
+				) GRGL
+				LEFT OUTER JOIN SMAGL MAGL
+				ON GRGL.HOUSE_CODE = MAGL.HOUSE_CODE
+				AND GRGL.KEY_NO = MAGL.KEY_NO
+				AND GRGL.BRANCHES_CODE = MAGL.BRANCHES_CODE
+				AND GRGL.ITEM_NO = MAGL.ITEM_NO
+				AND GRGL.IO_NUMBER = MAGL.IO_NUMBER
+				WHERE 1=1
+				AND GRGL.BRANCHES_CODE >=  $S{branches_from_code}
+				AND GRGL.BRANCHES_CODE <=  $S{branches_to_code}
+				AND MAGL.CONFIRM_DATE_TO >= $S{confirm_from_date}
+				AND MAGL.CONFIRM_DATE_TO <= $S{confirm_to_date}
+				AND ITEM_NO =  $S{item_no}
+				AND INSTALL_STORE LIKE '%' || $S{install_store} || '%'
+				AND SIGNFORM_CODE =  $S{signform}
+				AND REMOVE_FLAG =  $S{remove_flag}
+		]]>
+	</method>
+	<!-- //간판설치현황히스토리 조회   -->	
+	<method name="getSmaglListHistory">
+		<![CDATA[
+              	SELECT
+					MAGL.IO_NUMBER AS NO
+					, MAGL.IO_NUMBER
+					, MAGL.KEY_NO
+					, MAGL.BRANCHES_CODE
+					, GETDEPTNAMELOC(MAGL.HOUSE_CODE, 'WOORI', MAGL.BRANCHES_CODE) AS BRANCHES_NAME
+					, MAGL.ITEM_NO AS ITEM_CODE
+					, (SELECT A.DESCRIPTION_LOC FROM ICOMMTGL A WHERE A.ITEM_NO = MAGL.ITEM_NO) AS ITEM_NAME
+					, MAGL.SPECIFICATION
+					, CONVERT_DATE(MAGL.INSTALL_DATE) AS INSTALL_DATE
+					, '' AS IMAGE
+					, MAGL.ATTACH_NO
+					, CONVERT_DATE(MAGL.CONFIRM_DATE_FROM) AS CONFIRM_DATE_FROM
+					, CONVERT_DATE(MAGL.CONFIRM_DATE_TO) AS CONFIRM_DATE_TO
+					, MAGL.INSTALL_STORE
+					, (
+				     	SELECT
+				 			GL.VENDOR_NAME_LOC
+				  		FROM ICOMVNGL GL
+				  		RIGHT OUTER JOIN ICOMADDR DR 
+				  			ON DR.HOUSE_CODE = GL.HOUSE_CODE 
+				  			AND DR.CODE_NO = GL.VENDOR_CODE 
+				  		WHERE GL.HOUSE_CODE = '000'
+						AND GL.STATUS IN ('C','R') 
+				  		AND GL.JOB_STATUS = 'E'  
+				  		AND	DR.CODE_TYPE = '2' 
+				 		AND GL.PURCHASE_BLOCK_FLAG != 'Y'
+				 		AND GL.VENDOR_CODE = MAGL.INSTALL_STORE
+				     ) AS INSTALL_STORE_NAME
+					, MAGL.HOUSE_CODE
+					, CASE WHEN MAGL.REMOVE_FLAG = 'Y' THEN '설치중' WHEN MAGL.REMOVE_FLAG = 'N' THEN '철거완료' ELSE '' END AS REMOVE_FLAG_TEXT
+					, MAGL.REMOVE_FLAG
+					, MAGL.REMARK AS REMARK_IMAGE
+					, MAGL.REMARK
+					, MAGL.SIGNFORM_CODE
+					, GETCODETEXT1('M659', MAGL.SIGNFORM_CODE, 'KO') AS SIGNFORM_NAME
+					, MAGL.STICK_LOCATION
+				FROM SMAGL MAGL
+				WHERE MAGL.HOUSE_CODE = ${house_code}
+				AND MAGL.KEY_NO =  ${key_no}
+				AND MAGL.BRANCHES_CODE =  ${branches_code}
+				AND MAGL.ITEM_NO LIKE ${item_no}
+				AND MAGL.IO_NUMBER NOT IN (
+					SELECT 
+						MAX(IO_NUMBER)
+					FROM SMAGL
+					WHERE HOUSE_CODE = ${house_code}
+					AND KEY_NO =  ${key_no}
+					AND BRANCHES_CODE =  ${branches_code}
+					AND ITEM_NO LIKE ${item_no}	
+				)
+				ORDER BY MAGL.IO_NUMBER DESC
+		]]>
+	</method>
+<!-- //간판설치현황 삭제   -->	
+	<method name="doDelete">
+	<![CDATA[
+		 	DELETE FROM SMAGL 		 
+			WHERE HOUSE_CODE =  ${HOUSE_CODE}
+				AND KEY_NO =  ${KEY_NO}
+				AND BRANCHES_CODE =  ${BRANCHES_CODE}
+				AND ITEM_NO =  ${ITEM_CODE}
+				AND IO_NUMBER =  ${IO_NUMBER}
+	]]>
+	</method>
+</service>

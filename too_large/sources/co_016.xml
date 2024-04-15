@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+<service>
+	<method name="selectItemList">
+		SELECT
+			CODE,
+			TEXT1 AS TEXT
+		FROM
+			SCODE
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			TYPE = 'M720'
+		AND
+			USE_FLAG = 'Y'
+		AND CODE  = $S{CODE}
+		AND TEXT1 LIKE '%' || $S{TEXT1} || '%'
+		ORDER BY
+			SORT_SEQ
+	</method>
+</service>

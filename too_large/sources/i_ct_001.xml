@@ -1,0 +1,655 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<service>
+	<method name="getCtBzList">
+	<![CDATA[
+			SELECT
+			    BZ.PUM_NO,
+			    BZ.BIZ_NO,
+				BZ.BIZ_NM,
+				BZ.BIZ_STATUS,
+				(SELECT TEXT1 FROM SCODE WHERE TYPE = 'M660_ICT' AND DEL_FLAG = 'N' AND USE_FLAG = 'Y' AND CODE = BZ.BIZ_STATUS) AS BIZ_STATUS_TEXT,
+				BZ.CT_USER_ID,
+				BZ.CT_USER_NAME,
+				BZ.ADD_USER_ID,
+				BZ.ADD_USER_NAME,
+				BZ.ADD_DATE,
+				BZ.ADD_TIME,
+				BZ.CHANGE_USER_ID,
+				BZ.CHANGE_USER_NAME,
+				BZ.CHANGE_DATE,
+				BZ.CHANGE_TIME
+			FROM ICOYRQBZ_ICT BZ
+			WHERE BZ.STATUS IN ('C', 'R')    
+			AND BZ.PUM_NO LIKE '%' || $S{pum_no} || '%' 
+			AND BZ.ADD_DATE  BETWEEN   $S{add_date_start} 
+			AND $S{add_date_end}   
+			AND BZ.BIZ_NM LIKE '%' || $S{biz_nm} || '%'                                                                               
+			AND BZ.BIZ_NO LIKE '%' || $S{biz_no} || '%'                                                                               
+			AND BZ.ADD_USER_ID = $S{ctrl_person_id}   
+			ORDER BY BZ.PUM_NO DESC, BZ.BIZ_NM                      
+	]]>			
+	</method>
+	
+	<method name="getCtResultList">
+		<![CDATA[ 
+         SELECT   'C'                                                                                                           AS CU
+                 ,BZ.PUM_NO                                                                                                     AS PUM_NO
+                 ,decode(substr(HD.ANN_NO,1,2),'BD',HD.BID_NO,HD.ANN_NO)														AS ANN_NO
+                 ,PG.VOTE_COUNT                                                                                                 AS VOTE_COUNT
+                 ,HD.ANN_ITEM                                                                                                   AS CT_NM
+                 ,(SELECT Z.VENDOR_CODE
+                     FROM ICOYBDVO_ICT Z
+                    WHERE Z.HOUSE_CODE = PG.HOUSE_CODE
+                      AND Z.BID_NO     = PG.BID_NO
+                      AND Z.BID_COUNT  = PG.BID_COUNT
+                      AND Z.VOTE_COUNT = PG.VOTE_COUNT
+                      AND Z.BID_CANCEL = 'N'
+                      AND Z.BID_STATUS = 'SB'
+                      AND Z.STATUS IN ('C', 'R')
+                  )																												AS VENDOR_CODE
+                 ,(SELECT Z.VENDOR_NAME_LOC
+        		     FROM ICOMVNGL_ICT Z
+        		    WHERE Z.HOUSE_CODE = PG.HOUSE_CODE
+        		      AND Z.VENDOR_CODE = (SELECT Z1.VENDOR_CODE
+        		      						 FROM ICOYBDVO_ICT Z1
+        		      						WHERE Z1.HOUSE_CODE = PG.HOUSE_CODE
+        		      						  AND Z1.BID_NO     = PG.BID_NO
+        		      						  AND Z1.BID_COUNT  = PG.BID_COUNT
+        		      						  AND Z1.VOTE_COUNT = PG.VOTE_COUNT
+        		      						  AND Z1.BID_CANCEL = 'N'
+        		      						  AND Z1.BID_STATUS = 'SB'
+        		      						  AND Z1.STATUS IN ('C', 'R')
+                                          )
+                  )																												AS VENDOR_NAME
+                 , NVL((SELECT Z.BID_AMT
+                          FROM ICOYBDVO_ICT Z
+                         WHERE Z.HOUSE_CODE = HD.HOUSE_CODE
+                           AND Z.BID_NO     = HD.BID_NO
+                           AND Z.BID_COUNT  = HD.BID_COUNT
+                           AND Z.STATUS IN ('C', 'R')
+                           AND Z.BID_CANCEL = 'N'
+                           AND Z.BID_STATUS = 'SB'
+                       ), '')																									AS SETTLE_AMT  
+                 , ''	                                                                                                        AS CT_ATTACH_NO	 			
+			     , 0                                                                                                            AS CT_ATTACH_CNT              
+			     , ''                                                                                                           AS CT_ATTACH_NO_H                
+                 , HD.BID_NO                                                                                                    AS BID_NO
+                 , HD.BID_COUNT                                                                                                 AS BID_COUNT
+                 , CASE WHEN HD.ANN_VERSION IS NULL THEN (SELECT CODE FROM SCODE WHERE TYPE = 'VR001_ICT')
+                  		 ELSE HD.ANN_VERSION
+                  	END																											AS ANN_VERSION
+                 , HD.BID_TYPE                                                                                                  AS BID_TYPE
+                 , HD.BIZ_NO                                                                                                    AS BIZ_NO
+                 , NULL                                                                                                         AS BIZ_SEQ
+				 , HD.MATERIAL_CLASS1                                                                                           AS MATERIAL_CLASS1  
+		         , HD.MATERIAL_CLASS2                                                                                           AS MATERIAL_CLASS2		         		                                       
+         FROM  ICOYBDHD_ICT HD
+             , ICOYBDPG_ICT PG
+             , ICOYRQBZ_ICT BZ
+         WHERE PG.HOUSE_CODE  = HD.HOUSE_CODE
+         AND   HD.HOUSE_CODE  = ${session.HOUSE_CODE}
+         AND   PG.BID_NO      = HD.BID_NO
+         AND   PG.BID_COUNT   = HD.BID_COUNT
+         AND   HD.BIZ_NO      = BZ.BIZ_NO         
+         AND   HD.ES_FLAG     = 'E'
+		 AND   HD.BIZ_NO = ${biz_no}
+		 AND   NOT EXISTS (SELECT  BIZ_NO 
+		                   FROM    ICOYCTIV_ICT CT2
+		                   WHERE   CT2.BID_NO = HD.BID_NO
+		                   AND     CT2.BID_COUNT = HD.BID_COUNT
+		                   AND     CT2.STATUS IN ('C','R'))
+         ]]>         
+		<![CDATA[
+         AND   HD.BID_STATUS  IN ('SB')
+         AND   HD.SIGN_STATUS  IN ('C')
+         AND   HD.STATUS IN ('C' ,'R')
+         AND   PG.STATUS IN ('C' ,'R')
+         AND   HD.ADD_USER_DEPT = ${session.DEPARTMENT}
+         ]]>
+         <![CDATA[
+         --ORDER BY HD.BID_NO, HD.BID_COUNT, PG.VOTE_COUNT
+		]]>
+		<![CDATA[
+		UNION 
+         SELECT   ''                                                                                                            AS CU
+                 ,BZ2.PUM_NO                                                                                                     AS PUM_NO
+                 ,''														                                                    AS ANN_NO
+                 ,NULL                                                                                                            AS VOTE_COUNT
+                 ,CT2.CT_NM                                                                                                      AS CT_NM
+                 ,CT2.VENDOR_CODE																								AS VENDOR_CODE
+                 ,NVL((SELECT Z2.VENDOR_NAME_LOC
+        		     FROM ICOMVNGL_ICT Z2
+        		    WHERE Z2.HOUSE_CODE = ${session.HOUSE_CODE}
+        		      AND Z2.VENDOR_CODE = CT2.VENDOR_CODE
+                  ),VENDOR_NAME_LOC)																							AS VENDOR_NAME
+                 , NVL((SELECT Z2.BID_AMT
+                          FROM ICOYBDVO_ICT Z2
+                         WHERE Z2.HOUSE_CODE = ${session.HOUSE_CODE}
+                           AND Z2.BID_NO     = CT2.BID_NO
+                           AND Z2.BID_COUNT  = CT2.BID_COUNT
+                           AND Z2.STATUS IN ('C', 'R')
+                           AND Z2.BID_CANCEL = 'N'
+                           AND Z2.BID_STATUS = 'SB'
+                       ), '')																									AS SETTLE_AMT  
+                 , CT2.CT_ATTACH_NO	                                                                                            AS CT_ATTACH_NO	 			
+			     , GETFILEATTCOUNT(CT2.CT_ATTACH_NO)                                                                             AS CT_ATTACH_CNT              
+			     , CT2.CT_ATTACH_NO                                                                                              AS CT_ATTACH_NO_H                
+                 , CT2.BID_NO                                                                                                    AS BID_NO
+                 , CT2.BID_COUNT                                                                                                 AS BID_COUNT
+                 , ''										                                                                    AS ANN_VERSION
+                 , ''                                                                                                           AS BID_TYPE
+                 , CT2.BIZ_NO                                                                                                    AS BIZ_NO
+                 , CT2.BIZ_SEQ                                                                                                   AS BIZ_SEQ
+				 , CT2.MATERIAL_CLASS1                                                                                           AS MATERIAL_CLASS1  
+		         , CT2.MATERIAL_CLASS2                                                                                           AS MATERIAL_CLASS2		                                    
+         FROM  ICOYCTIV_ICT CT2  
+             , ICOYRQBZ_ICT BZ2         
+         WHERE CT2.BIZ_NO      = BZ2.BIZ_NO         
+         AND   CT2.BIZ_NO      = ${biz_no}
+         AND   CT2.STATUS      IN ('C','R')
+		 ]]>
+		 <![CDATA[
+         ORDER BY CT_NM
+		]]>
+	</method>
+	
+	
+	
+	
+	
+	<method name="et_saveBzList_rqbzSelect">
+	<![CDATA[
+		  SELECT COUNT(*) cnt
+		  FROM ICOYRQBZ_ICT
+		  WHERE STATUS IN ('C','R')
+<OPT=F,S> AND PUM_NO = ? </OPT>
+	]]>
+    </method>
+    
+    <method name="et_saveBzList_rqbzSelect2">
+	<![CDATA[
+		  SELECT COUNT(*) cnt
+		  FROM ICOYRQBZ_ICT
+		  WHERE STATUS IN ('C','R')
+<OPT=F,S> AND BIZ_NO <> ? </OPT>
+<OPT=F,S> AND PUM_NO = ? </OPT>
+	]]>
+    </method>
+    
+    
+    
+    
+	
+	<method name="et_insertBz">
+	<![CDATA[
+	   insert into ICOYRQBZ_ICT 
+		( 
+		    PUM_NO                ,    --품의번호
+		    BIZ_NO                ,    --사업번호
+			BIZ_NM                ,   --사업명
+			STATUS                ,     --상태
+			CT_USER_ID            ,     --계약자 
+			CT_USER_NAME          ,     --계약자
+			BIZ_STATUS            ,     --사업상태  (T작성중,P진행중,E종료)
+			ADD_USER_ID           ,    --생성자ID
+			ADD_USER_NAME         ,    --생성자명
+			ADD_DATE              ,     --생성일자
+			ADD_TIME              ,     --생성시간
+			CHANGE_USER_ID        ,    --변경자ID
+			CHANGE_USER_NAME      ,    --변경자명
+			CHANGE_DATE           ,     --변경일자
+			CHANGE_TIME                 --변경시간
+		) values (
+		    ?           , 
+		    ?           ,
+			?           ,
+			'C'         ,	 
+			?           ,
+			?           ,	 
+			?           ,	 
+			?,
+			(SELECT USER_NAME_LOC FROM ICOMLUSR_ICT WHERE USER_ID = ?),    	 
+			TO_CHAR(SYSDATE,'YYYYMMDD'),
+			TO_CHAR(SYSDATE,'HH24MISS'), 
+		    ?,
+			(SELECT USER_NAME_LOC FROM ICOMLUSR_ICT WHERE USER_ID = ?),    	 
+		    TO_CHAR(SYSDATE,'YYYYMMDD'),
+			TO_CHAR(SYSDATE,'HH24MISS')           
+		)	 
+	]]>
+    </method>
+    
+     <method name="et_updateBz">
+	<![CDATA[
+        update ICOYRQBZ_ICT set
+            PUM_NO           = ?,
+        	STATUS           = 'R',          	
+            BIZ_NM           = ?,
+            CT_USER_ID       = ?, 
+            CT_USER_NAME     = ?,     	
+            BIZ_STATUS       = ?,
+            CHANGE_USER_ID   = ?,
+            CHANGE_USER_NAME = (SELECT USER_NAME_LOC FROM ICOMLUSR_ICT WHERE USER_ID = ?),
+            CHANGE_DATE      = TO_CHAR(SYSDATE,'YYYYMMDD'),
+            CHANGE_TIME      = TO_CHAR(SYSDATE,'HH24MMSS')        
+        where BIZ_NO = ?       
+	]]>
+    </method>
+    
+    <method name="et_deleteBzList_ctivSelect">
+	<![CDATA[
+		  SELECT COUNT(*) cnt
+		  FROM ICOYCTIV_ICT
+		  WHERE STATUS IN ('C','R')
+<OPT=F,S> AND BIZ_NO = ? </OPT>
+	]]>
+    </method>
+	
+	 <method name="et_deleteBzList_bdhdSelect">
+	<![CDATA[
+		  SELECT COUNT(*) cnt
+		  FROM ICOYBDHD_ICT
+		  WHERE STATUS IN ('C','R')
+<OPT=F,S> AND BIZ_NO = ? </OPT>
+	]]>
+    </method>
+    
+    <method name="et_deleteBzList_rqhdselect">
+	<![CDATA[
+		  SELECT COUNT(*) cnt
+		  FROM ICOYRQHD_ICT
+		  WHERE STATUS IN ('C','R')
+		  AND SIGN_STATUS IN ('P','E')
+		  AND RFQ_STATUS IN ('B','E')
+<OPT=F,S> AND BIZ_NO = ? </OPT>
+	]]>
+    </method>
+    
+    <method name="et_deleteRfgBz">
+	<![CDATA[
+        update ICOYRQBZ_ICT set
+        	STATUS           = 'D',          	
+            CHANGE_USER_ID   = ?,
+            CHANGE_USER_NAME = (SELECT USER_NAME_LOC FROM ICOMLUSR_ICT WHERE USER_ID = ?),
+            CHANGE_DATE      = TO_CHAR(SYSDATE,'YYYYMMDD'),
+            CHANGE_TIME      = TO_CHAR(SYSDATE,'HH24MMSS')        
+        where BIZ_NO = ?       
+	]]>
+    </method>
+    
+    
+    <method name="et_maxBizseq_ctivSelect">
+	<![CDATA[
+		  SELECT NVL(MAX(BIZ_SEQ), 0) + 1 AS BIZ_SEQ
+		  FROM ICOYCTIV_ICT
+		  WHERE 1 = 1
+<OPT=F,S> AND BIZ_NO = ? </OPT>
+	]]>
+    </method>
+    
+    <method name="et_insertCt">
+	<![CDATA[
+	   insert into ICOYCTIV_ICT 
+		( 
+		    BIZ_NO                ,    --사업번호
+			BIZ_SEQ               ,    --사업상세순번
+			STATUS                ,    --상태
+			MATERIAL_CLASS1       ,    --품목분류1
+			MATERIAL_CLASS2       ,    --품목분류2
+			CT_NM                 ,    --게약명
+			VENDOR_CODE           ,    --계약업체
+			BID_NO                ,    --입찰번호
+			BID_COUNT             ,    --입찰차수
+			ADD_USER_ID           ,    --등록자ID
+			ADD_USER_NAME         ,    --등록자명
+			ADD_DATE              ,    --등록일자
+			ADD_TIME              ,    --등록시각
+			VENDOR_NAME_LOC            --계약업체
+		) values (
+		    ?           , 
+		    ?           ,
+			'C'         ,	 
+			?           ,
+			?           ,	 
+			?           ,	 
+			?           ,
+			?           ,
+			?           ,
+			?           ,
+			(SELECT USER_NAME_LOC FROM ICOMLUSR_ICT WHERE USER_ID = ?),    	 
+			TO_CHAR(SYSDATE,'YYYYMMDD'),
+			TO_CHAR(SYSDATE,'HH24MISS'),
+			?		               
+		)
+	]]>
+    </method>
+    
+     <method name="et_updateCt">
+	<![CDATA[
+        update ICOYCTIV_ICT set
+            STATUS           = 'R',          	
+            MATERIAL_CLASS1  = ?,
+            MATERIAL_CLASS2  = ?, 
+            CT_NM            = ?,     	
+            VENDOR_CODE      = ?,
+            BID_NO           = ?,
+			BID_COUNT        = ?,
+            CHANGE_USER_ID   = ?,
+            CHANGE_USER_NAME = (SELECT USER_NAME_LOC FROM ICOMLUSR_ICT WHERE USER_ID = ?),
+            CHANGE_DATE      = TO_CHAR(SYSDATE,'YYYYMMDD'),
+            CHANGE_TIME      = TO_CHAR(SYSDATE,'HH24MMSS'),
+            VENDOR_NAME_LOC  = ?        
+        where BIZ_NO  = ? 
+        and   BIZ_SEQ = ?       
+	]]>
+    </method>
+    
+     <method name="et_deleteCt">
+	<![CDATA[
+        update ICOYCTIV_ICT set
+        	STATUS           = 'D',          	
+            CHANGE_USER_ID   = ?,
+            CHANGE_USER_NAME = (SELECT USER_NAME_LOC FROM ICOMLUSR_ICT WHERE USER_ID = ?),
+            CHANGE_DATE      = TO_CHAR(SYSDATE,'YYYYMMDD'),
+            CHANGE_TIME      = TO_CHAR(SYSDATE,'HH24MMSS')        
+        where BIZ_NO = ?
+        and   BIZ_SEQ = ?       
+	]]>
+    </method>
+    
+    <!-- ICT 사용 -->  
+	<method name="getCtInfo">
+		<![CDATA[
+         SELECT
+                 CT_ATTACH_NO                     AS CT_ATTACH_NO
+               , GETFILEATTCOUNT(CT_ATTACH_NO)    AS CT_ATTACH_CNT        
+           FROM	ICOYCTIV_ICT
+          WHERE BIZ_NO     = ${BIZ_NO}
+            AND BIZ_SEQ    = ${BIZ_SEQ}        
+		]]>
+	</method>
+	
+	<method name="et_delCtSubmit">
+	<![CDATA[
+		DELETE 	FROM ICOYCTIV_ICT
+		 WHERE BIZ_NO     = ${BIZ_NO}
+           AND BIZ_SEQ    = ${BIZ_SEQ}
+    ]]>       
+	</method>  	
+	
+	<method name="et_insertCtSubmit">
+	<![CDATA[
+		INSERT INTO ICOYCTIV_ICT(
+			BIZ_NO
+		,	BIZ_SEQ
+		,	STATUS
+		,	MATERIAL_CLASS1
+		,	MATERIAL_CLASS2
+		,	CT_NM
+		,	VENDOR_CODE
+		,	BID_NO
+		,	BID_COUNT
+		,	ADD_USER_ID
+		,	ADD_USER_NAME
+		,	ADD_DATE
+		,	ADD_TIME
+		,	CT_ATTACH_NO
+		,	CT_USER_ID
+		,	CT_USER_NAME
+		,	CT_DATE
+		,	CT_TIME
+		,	VENDOR_NAME_LOC
+		)VALUES(
+			${BIZ_NO         }
+		,	${BIZ_SEQ        }
+		,	'C'
+		,	${MATERIAL_CLASS1}
+		,	${MATERIAL_CLASS2}
+		,	${CT_NM          }
+		,	${VENDOR_CODE    }
+		,	${BID_NO         }
+		,	${BID_COUNT      }
+		,	${ID    }
+		,	(SELECT USER_NAME_LOC FROM ICOMLUSR_ICT WHERE USER_ID = ${ID    })
+		,	TO_CHAR(SYSDATE,'YYYYMMDD')
+		,	TO_CHAR(SYSDATE,'HH24MISS')
+		,	${ATTACH_NO   }
+		,	${ID     }
+		,	(SELECT USER_NAME_LOC FROM ICOMLUSR_ICT WHERE USER_ID = ${ID     })
+		,	TO_CHAR(SYSDATE,'YYYYMMDD')
+		,	TO_CHAR(SYSDATE,'HH24MISS')
+		,	${VENDOR_NAME    }
+		)
+	]]>                       	
+	</method>
+	
+	<method name="et_updateCtSubmit">
+	<![CDATA[
+		UPDATE ICOYCTIV_ICT
+		SET 
+		    STATUS = 'R'
+		    ,CT_USER_ID       = ${ID    }
+			,CT_USER_NAME     = (SELECT USER_NAME_LOC FROM ICOMLUSR_ICT WHERE USER_ID = ${ID    })
+			,CT_DATE          = TO_CHAR(SYSDATE,'YYYYMMDD')
+			,CT_TIME          = TO_CHAR(SYSDATE,'HH24MISS')
+			,CT_ATTACH_NO     =	${ATTACH_NO   }
+			,CHANGE_USER_ID   = ${ID     }
+			,CHANGE_USER_NAME =	(SELECT USER_NAME_LOC FROM ICOMLUSR_ICT WHERE USER_ID = ${ID     })
+			,CHANGE_DATE      = TO_CHAR(SYSDATE,'YYYYMMDD')
+			,CHANGE_TIME      = TO_CHAR(SYSDATE,'HH24MISS')
+		 WHERE BIZ_NO         = ${BIZ_NO         }
+	     AND   BIZ_SEQ        = ${BIZ_SEQ        }
+	]]>                       	
+	</method>
+	
+	<method name="et_updateCtSubmit_bakup_20200326">
+	<![CDATA[
+		UPDATE ICOYCTIV_ICT
+		SET 
+		    STATUS = 'R'
+		    ,MATERIAL_CLASS1  = ${MATERIAL_CLASS1}
+			,MATERIAL_CLASS2  = ${MATERIAL_CLASS2}
+			,CT_NM            = ${CT_NM          }
+			,VENDOR_CODE      = ${VENDOR_CODE    }
+			,CT_USER_ID       = ${ID    }
+			,CT_USER_NAME     = (SELECT USER_NAME_LOC FROM ICOMLUSR_ICT WHERE USER_ID = ${ID    })
+			,CT_DATE          = TO_CHAR(SYSDATE,'YYYYMMDD')
+			,CT_TIME          = TO_CHAR(SYSDATE,'HH24MISS')
+			,CT_ATTACH_NO     =	${ATTACH_NO   }
+			,CHANGE_USER_ID   = ${ID     }
+			,CHANGE_USER_NAME =	(SELECT USER_NAME_LOC FROM ICOMLUSR_ICT WHERE USER_ID = ${ID     })
+			,CHANGE_DATE      = TO_CHAR(SYSDATE,'YYYYMMDD')
+			,CHANGE_TIME      = TO_CHAR(SYSDATE,'HH24MISS')
+		 WHERE BIZ_NO         = ${BIZ_NO         }
+	     AND   BIZ_SEQ        = ${BIZ_SEQ        }
+	]]>                       	
+	</method>  
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	<method name="getIvResultList">
+		<![CDATA[ 
+         SELECT   'C'                                                                                                           AS CU
+                 ,BZ.PUM_NO                                                                                                     AS PUM_NO
+                 ,decode(substr(HD.ANN_NO,1,2),'BD',HD.BID_NO,HD.ANN_NO)														AS ANN_NO
+                 ,PG.VOTE_COUNT                                                                                                 AS VOTE_COUNT
+                 ,HD.ANN_ITEM                                                                                                   AS CT_NM
+                 ,(SELECT Z.VENDOR_CODE
+                     FROM ICOYBDVO_ICT Z
+                    WHERE Z.HOUSE_CODE = PG.HOUSE_CODE
+                      AND Z.BID_NO     = PG.BID_NO
+                      AND Z.BID_COUNT  = PG.BID_COUNT
+                      AND Z.VOTE_COUNT = PG.VOTE_COUNT
+                      AND Z.BID_CANCEL = 'N'
+                      AND Z.BID_STATUS = 'SB'
+                      AND Z.STATUS IN ('C', 'R')
+                  )																												AS VENDOR_CODE
+                 ,(SELECT Z.VENDOR_NAME_LOC
+        		     FROM ICOMVNGL_ICT Z
+        		    WHERE Z.HOUSE_CODE = PG.HOUSE_CODE
+        		      AND Z.VENDOR_CODE = (SELECT Z1.VENDOR_CODE
+        		      						 FROM ICOYBDVO_ICT Z1
+        		      						WHERE Z1.HOUSE_CODE = PG.HOUSE_CODE
+        		      						  AND Z1.BID_NO     = PG.BID_NO
+        		      						  AND Z1.BID_COUNT  = PG.BID_COUNT
+        		      						  AND Z1.VOTE_COUNT = PG.VOTE_COUNT
+        		      						  AND Z1.BID_CANCEL = 'N'
+        		      						  AND Z1.BID_STATUS = 'SB'
+        		      						  AND Z1.STATUS IN ('C', 'R')
+                                          )
+                  )																												AS VENDOR_NAME
+                 , NVL((SELECT Z.BID_AMT
+                          FROM ICOYBDVO_ICT Z
+                         WHERE Z.HOUSE_CODE = HD.HOUSE_CODE
+                           AND Z.BID_NO     = HD.BID_NO
+                           AND Z.BID_COUNT  = HD.BID_COUNT
+                           AND Z.STATUS IN ('C', 'R')
+                           AND Z.BID_CANCEL = 'N'
+                           AND Z.BID_STATUS = 'SB'
+                       ), '')																									AS SETTLE_AMT                   
+                 , ''	                                                                                                        AS CT_ATTACH_NO	 			
+			     , 0                                                                                                            AS CT_ATTACH_CNT              
+			     , ''                                                                                                           AS CT_ATTACH_NO_H                			           
+                 , ''	                                                                                                        AS IV_ATTACH_NO	 			
+			     , 0                                                                                                            AS IV_ATTACH_CNT              
+			     , ''                                                                                                           AS IV_ATTACH_NO_H                
+                 , HD.BID_NO                                                                                                    AS BID_NO
+                 , HD.BID_COUNT                                                                                                 AS BID_COUNT
+                 , CASE WHEN HD.ANN_VERSION IS NULL THEN (SELECT CODE FROM SCODE WHERE TYPE = 'VR001_ICT')
+                  		 ELSE HD.ANN_VERSION
+                  	END																											AS ANN_VERSION
+                 , HD.BID_TYPE                                                                                                  AS BID_TYPE
+                 , HD.BIZ_NO                                                                                                    AS BIZ_NO
+                 , NULL                                                                                                         AS BIZ_SEQ
+				 , HD.MATERIAL_CLASS1                                                                                           AS MATERIAL_CLASS1  
+		         , HD.MATERIAL_CLASS2                                                                                           AS MATERIAL_CLASS2		         		                                       
+         FROM  ICOYBDHD_ICT HD
+             , ICOYBDPG_ICT PG
+             , ICOYRQBZ_ICT BZ
+         WHERE PG.HOUSE_CODE  = HD.HOUSE_CODE
+         AND   HD.HOUSE_CODE  = ${session.HOUSE_CODE}
+         AND   PG.BID_NO      = HD.BID_NO
+         AND   PG.BID_COUNT   = HD.BID_COUNT
+         AND   HD.BIZ_NO      = BZ.BIZ_NO         
+         AND   HD.ES_FLAG     = 'E'
+		 AND   HD.BIZ_NO = ${biz_no}
+		 AND   NOT EXISTS (SELECT  BIZ_NO 
+		                   FROM    ICOYCTIV_ICT CT2
+		                   WHERE   CT2.BID_NO = HD.BID_NO
+		                   AND     CT2.BID_COUNT = HD.BID_COUNT
+		                   AND     CT2.STATUS IN ('C','R'))
+         ]]>         
+		<![CDATA[
+         AND   HD.BID_STATUS  IN ('SB')
+         AND   HD.SIGN_STATUS  IN ('C')
+         AND   HD.STATUS IN ('C' ,'R')
+         AND   PG.STATUS IN ('C' ,'R')
+         AND   HD.ADD_USER_DEPT = ${session.DEPARTMENT}
+         ]]>
+         <![CDATA[
+         --ORDER BY HD.BID_NO, HD.BID_COUNT, PG.VOTE_COUNT
+		]]>
+		<![CDATA[
+		UNION 
+         SELECT   ''                                                                                                            AS CU
+                 ,BZ2.PUM_NO                                                                                                     AS PUM_NO
+                 ,''														                                                    AS ANN_NO
+                 ,NULL                                                                                                            AS VOTE_COUNT
+                 ,CT2.CT_NM                                                                                                      AS CT_NM
+                 ,CT2.VENDOR_CODE																								AS VENDOR_CODE
+                 ,(SELECT Z2.VENDOR_NAME_LOC
+        		     FROM ICOMVNGL_ICT Z2
+        		    WHERE Z2.HOUSE_CODE = ${session.HOUSE_CODE}
+        		      AND Z2.VENDOR_CODE = CT2.VENDOR_CODE
+                  )																												AS VENDOR_NAME
+                 , NVL((SELECT Z2.BID_AMT
+                          FROM ICOYBDVO_ICT Z2
+                         WHERE Z2.HOUSE_CODE = ${session.HOUSE_CODE}
+                           AND Z2.BID_NO     = CT2.BID_NO
+                           AND Z2.BID_COUNT  = CT2.BID_COUNT
+                           AND Z2.STATUS IN ('C', 'R')
+                           AND Z2.BID_CANCEL = 'N'
+                           AND Z2.BID_STATUS = 'SB'
+                       ), '')																									AS SETTLE_AMT  
+                 , CT2.CT_ATTACH_NO	                                                                                            AS CT_ATTACH_NO	 			
+			     , GETFILEATTCOUNT(CT2.CT_ATTACH_NO)                                                                             AS CT_ATTACH_CNT              
+			     , CT2.CT_ATTACH_NO                                                                                              AS CT_ATTACH_NO_H                
+                 , CT2.IV_ATTACH_NO	                                                                                            AS IV_ATTACH_NO	 			
+			     , GETFILEATTCOUNT(CT2.IV_ATTACH_NO)                                                                             AS IV_ATTACH_CNT              
+			     , CT2.IV_ATTACH_NO                                                                                              AS IV_ATTACH_NO_H                
+                 , CT2.BID_NO                                                                                                    AS BID_NO
+                 , CT2.BID_COUNT                                                                                                 AS BID_COUNT
+                 , ''										                                                                    AS ANN_VERSION
+                 , ''                                                                                                           AS BID_TYPE
+                 , CT2.BIZ_NO                                                                                                    AS BIZ_NO
+                 , CT2.BIZ_SEQ                                                                                                   AS BIZ_SEQ
+				 , CT2.MATERIAL_CLASS1                                                                                           AS MATERIAL_CLASS1  
+		         , CT2.MATERIAL_CLASS2                                                                                           AS MATERIAL_CLASS2		                                    
+         FROM  ICOYCTIV_ICT CT2  
+             , ICOYRQBZ_ICT BZ2         
+         WHERE CT2.BIZ_NO      = BZ2.BIZ_NO         
+         AND   CT2.BIZ_NO      = ${biz_no}
+         AND   CT2.STATUS      IN ('C','R')
+		 ]]>
+		 <![CDATA[
+         ORDER BY CT_NM
+		]]>
+	</method>	 
+	
+	<!-- ICT 사용 -->  
+	<method name="getIvInfo">
+		<![CDATA[
+         SELECT
+                 IV_ATTACH_NO                     AS IV_ATTACH_NO
+               , GETFILEATTCOUNT(IV_ATTACH_NO)    AS IV_ATTACH_CNT        
+           FROM	ICOYCTIV_ICT
+          WHERE BIZ_NO     = ${BIZ_NO}
+            AND BIZ_SEQ    = ${BIZ_SEQ}        
+		]]>
+	</method>	
+	
+	<method name="et_updateIvSubmit">
+	<![CDATA[
+		UPDATE ICOYCTIV_ICT
+		SET 
+		    STATUS = 'R'
+		    ,IV_USER_ID       = ${ID    }
+			,IV_USER_NAME     = (SELECT USER_NAME_LOC FROM ICOMLUSR_ICT WHERE USER_ID = ${ID    })
+			,IV_DATE          = TO_CHAR(SYSDATE,'YYYYMMDD')
+			,IV_TIME          = TO_CHAR(SYSDATE,'HH24MISS')
+			,IV_ATTACH_NO     =	${ATTACH_NO   }
+			,CHANGE_USER_ID   = ${ID     }
+			,CHANGE_USER_NAME =	(SELECT USER_NAME_LOC FROM ICOMLUSR_ICT WHERE USER_ID = ${ID     })
+			,CHANGE_DATE      = TO_CHAR(SYSDATE,'YYYYMMDD')
+			,CHANGE_TIME      = TO_CHAR(SYSDATE,'HH24MISS')
+		 WHERE BIZ_NO         = ${BIZ_NO         }
+	     AND   BIZ_SEQ        = ${BIZ_SEQ        }
+	]]>                       	
+	</method>  	 	
+    
+</service>
+	
+

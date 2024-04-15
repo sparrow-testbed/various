@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<service>
+	<method name="et_ev_bd_lis1">
+	<![CDATA[
+		SELECT                                                  		
+		       EV_NO                                                          
+		     , SUBJECT                                                	
+		     , GETCODETEXT1( 'M216',SHEET_KIND,'KO') as SHEET_KIND    	
+		     , GETSGNAME2(SG_KIND) AS SG_KIND         					
+		     , GETCODETEXT1( 'M220',SHEET_STATUS,'KO') AS SHEET_STATUS_LOC   
+		     , SHEET_STATUS        										
+		     , USE_FLAG                                                      
+		     , ACCEPT_VALUE                                                  
+		     , CONVERT_DATE(ST_DATE) AS ST_DATE                                                       
+		     , CONVERT_DATE(END_DATE) AS END_DATE                                               	
+		     , EV_YEAR                                                       
+		     , ADD_USER_ID                                                   
+		     , CONVERT_DATE(ADD_DATE) AS ADD_DATE                                                     
+		     , CONVERT_DATE(CHANGE_DATE) AS CHANGE_DATE                                                   
+		     , GETCODETEXT1( 'M218',PERIOD,'KO') AS PERIOD                  
+		FROM   SEVGL                                                         
+		WHERE  1=1                                                   	
+		  AND  DEL_FLAG = 'N'                                                 
+		  AND  SHEET_KIND = $S{sheet_kind} 							
+		  AND  SG_KIND =$S{sg_kind} 								
+		  AND  USE_FLAG =$S{use_flag}  								
+		  AND  EV_YEAR = $S{ev_year}      
+		  AND  SUBJECT like '%' || $S{subject}  || '%'				
+		  AND  SHEET_STATUS = $S{sheet_status} 					      	
+		ORDER BY 1															
+		 ]]>
+	</method>
+	<method name="et_getSEVGL_detail">
+	<![CDATA[
+		 SELECT                                               
+		         SEQ	                 --대분류 순서  		                  
+		       , EV_M_ITEM	             --대분류평가항목  		          
+		       , EV_D_ITEM	             --중분류평가항목   		          
+		       , EV_ITEM_DESC			 --평가요소            
+		       , EV_POINT				 --배점                
+		       , EV_POINT				 --배점                
+		       , EV_SEQ				     --상세분류항번            
+		       , EV_DSEQ				 --세분류항번          
+		       , EV_REMARK				 --비고                
+		 FROM (		
+		 
+		       SELECT                            			                                
+		              TO_NUMBER(SUBSTR(EV_M_ITEM,3)) SEQ                                   
+		            , GETEV_M_ITEMEXT1('EV001',EV_M_ITEM) AS EV_M_ITEM                           --대분류평가항목
+		            , GETEV_M_ITEMEXT1(EV_M_ITEM,EV_D_ITEM) AS EV_D_ITEM                         --중분류평가항목  
+		            , EV_ITEM_DESC                                                               --평가요소                                           			
+		            , EV_POINT                                                                   --배점                                                   			
+		            , EV_REMARK                                                                  --비고                                                  			
+		            , A.EV_SEQ EV_SEQ                                                            --상세분류항번                                     			
+		            , B.EV_DSEQ EV_DSEQ                                                          --세분류항번                                     			
+		       FROM   SEVLN A
+                      LEFT OUTER JOIN SEVDT B ON A.EV_NO = B.EV_NO AND A.EV_SEQ = B.EV_SEQ
+                      LEFT OUTER JOIN SCODE C ON A.EV_M_ITEM = C.CODE AND C.TYPE='EV001'                                    
+		       WHERE  A.EV_NO  = $S{ev_no}											
+		         AND  A.EV_YEAR = $S{ev_year}										
+		         AND A.DEL_FLAG = 'N'                                                   
+		         AND C.TYPE='EV001'                                                     
+		         AND NVL(C.DEL_FLAG,'N') = 'N'                                          
+		         AND EV_M_ITEM = C.CODE                                                 
+		    ORDER BY  TO_NUMBER(C.SORT_SEQ) , B.EV_DSEQ                   		    
+		 )		
+		 ]]>
+	</method>
+	<method name="et_getsevgl_list">
+	    SELECT A.SG_REFITEM, A.VENDOR_CODE, B.VENDOR_NAME_LOC		           
+	    FROM   SSGVN A,ICOMVNGL B		                               
+	    WHERE  1=1 				 					                   
+	      AND  A.VENDOR_CODE = B.VENDOR_CODE 				           
+	      AND A.sg_refitem in (#sg_refitem#) 				           
+	      AND A.del_flag='N' 				 				           
+	      AND A.apply_flag='Y'				 				           
+	      AND SUBSTR(A.ADD_DATE,1,4)= $S{ev_year}                       
+	</method>
+	<method name="et_setInsert_sevgl">
+	 INSERT INTO SEVGL (         
+		 		 EV_NO          
+		 		,EV_YEAR        
+		 		,SUBJECT        
+		 		,SHEET_KIND     
+		 		,SG_KIND        
+		 		,PERIOD          
+		 		,USE_FLAG       
+		 		,ACCEPT_VALUE   
+		 		,ST_DATE        
+		 		,END_DATE       
+		 		,ADD_DATE        
+		 		,ADD_USER_ID    
+		 		,CHANGE_DATE    
+		 		,CHANGE_USER_ID 
+		 		,DEL_FLAG       
+		 		,SHEET_STATUS   		
+		 ) VALUES (              
+		       $S{EV_NO}                        
+		      ,$S{ev_year}                                                  
+		      ,$S{subject}                                                  
+		      ,$S{sheet_kind}                                               
+		      ,$S{sg_kind}                                                  
+		      ,$S{period}                                                   
+		      ,$S{use_flag}                                                 
+		      ,$S{accept_value}                                             
+		      ,$S{st_date}                                                  
+		      ,$S{end_date}                                                 
+		      ,TO_CHAR(SYSDATE,'YYYYMMDD')                          
+		      ,${USER_ID}                                   
+		      ,TO_CHAR(SYSDATE,'YYYYMMDD')                          
+		      ,${USER_ID}                              
+		      ,'N'                         
+		      ,'W'                         
+			)                         
+	</method>
+	<method name="et_setUpdate_sevgl">
+	    UPDATE SEVGL             
+		SET	  
+		       SUBJECT            =  $S{subject}
+		      ,SHEET_KIND         =  $S{sheet_kind}
+		      ,SG_KIND            =  $S{sg_kind}
+		      ,PERIOD             =  $S{period}
+		      ,USE_FLAG           =  $S{use_flag}
+		      ,ACCEPT_VALUE       =  $S{accept_value}
+		      ,ST_DATE            =  $S{st_date}
+		      ,END_DATE           =  $S{end_date}
+		      ,CHANGE_DATE        =  TO_CHAR(SYSDATE,'YYYYMMDD')
+		      ,CHANGE_USER_ID     =  $S{USER_ID}
+	    <if test="sheet_status" operator="ne" value="R">
+	          ,SHEET_STATUS = 'W'   	                                                            
+        </if>                                                                                                       
+		WHERE  
+		       EV_NO              =  ${ev_no}    
+          AND  EV_YEAR            =  ${ev_year}                       
+	</method>
+	<method name="et_setDelete_sevgl">
+	    DELETE FROM SEVGL             
+		WHERE  
+		       EV_NO              =  ${ev_no}    
+          AND  EV_YEAR            =  ${ev_year}                       
+	</method>
+	<method name="et_setDelete_sevvn">
+	    DELETE FROM SEVVN             
+		WHERE  
+		       EV_NO              =  ${ev_no}    
+          AND  EV_YEAR            =  ${ev_year}                       
+	</method>
+	<method name="et_setInsert_sevvn">
+		INSERT INTO SEVVN (         
+			 EV_NO          	
+			,EV_YEAR        	
+			,SG_REGITEM        	
+			,SELLER_CODE     	
+		) VALUES (                  
+		     ${EV_NO}            
+		     ,${EV_YEAR}                     
+		     ,${SG_REFITEM}                     
+		     ,${VENDOR_CODE}                     
+		)                           
+	</method>	
+</service>	

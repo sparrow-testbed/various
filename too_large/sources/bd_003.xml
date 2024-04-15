@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<service>
+	<method name="getBdExpList">
+ <![CDATA[
+ SELECT                                                                                         
+        ANN_NO                                                                                  
+        , ANN_ITEM                                                                              
+        , ANN_DATE                                                                              
+        , GETICOMCODE2(BDHD.HOUSE_CODE, 'M974', CONT_TYPE1) AS CONT_TYPE1_TEXT                  
+        , GETICOMCODE2(BDHD.HOUSE_CODE, 'M973', CONT_TYPE2) AS CONT_TYPE2_TEXT                  
+        , ANNOUNCE_DATE                                                                         
+        , ANNOUNCE_FLAG                                                                         
+        , BDHD.CHANGE_USER_ID                                                                   
+        , BDHD.CHANGE_USER_NAME_LOC                                                             
+        , BDHD.BID_STATUS                                                                       
+        , GETICOMCODE2(BDHD.HOUSE_CODE,'M935',DECODE(BDHD.BID_STATUS||BDHD.SIGN_STATUS, 'ART', 'RT', 'URT', 'RT', 'CRT', 'RT', 'ARP', 'RP', 'URP', 'RP', 'CRP', 'RP', 'AJP', 'RP', 'UJP', 'RP', 'CJP', 'RP', 'ARC', 'RC', 'URC', 'RC', 'CRC', 'RC', 'AJB', 'RR', 'UJB', 'RR', 'CJB', 'RR', 'AJT', 'RR', 'UJT', 'RR', 'CJT', 'RR', 'CCC', 'CX',  
+          (                                                                                                                                                                                                                                                                                                                                         
+              CASE                                                                                                                                                                                                                                                                                                                                  
+                  WHEN TO_NUMBER(TO_CHAR(SYSDATE,'YYYYMMDD')) >= TO_NUMBER(BDHD.ANN_DATE)                                                                                                                                                                                                                                                           
+                      AND                                                                                                                                                                                                                                                                                                                           
+                      (                                                                                                                                                                                                                                                                                                                             
+                          TO_NUMBER(TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')) < TO_NUMBER(PG.BID_END_DATE||PG.BID_END_TIME)                                                                                                                                                                                                                              
+                          OR PG.BID_END_DATE IS NULL                                                                                                                                                                                                                                                                                                
+                      )                                                                                                                                                                                                                                                                                                                             
+                  THEN 'XX'                                                                                                                                                                                                                                                                                                                         
+                  WHEN TO_NUMBER(TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')) > TO_NUMBER(PG.BID_END_DATE||PG.BID_END_TIME)                                                                                                                                                                                                                                 
+                  THEN 'CE'                                                                                                                                                                                                                                                                                                                         
+                  ELSE 'CC'                                                                                                                                                                                                                                                                                                                         
+              END                                                                                                                                                                                                                                                                                                                                   
+          )                                                                                                                                                                                                                                                                                                                                         
+          ) ) AS BID_STATUS_TEXT                                                                                                                                                                                                                                                                                                                    
+        , CASE (SELECT COUNT(VENDOR_CODE)                                                                                                                                                                                                                                                                                                           
+                FROM ICOYBDCR                                                                                   
+                WHERE HOUSE_CODE = ${house_code}                                          
+                  AND HOUSE_CODE = BDHD.HOUSE_CODE                                                              
+                  AND BID_NO = BDHD.BID_NO                                                                      
+                  AND BID_COUNT = BDHD.BID_COUNT)                                                               
+            WHEN 0 THEN 'N'                                                                                     
+            ELSE 'Y'                                                                                            
+            END AS INS_STATUS                                                                                   
+        , BDHD.BID_NO                                                                                           
+        , BDHD.BID_COUNT                                                                                        
+          , (SELECT SUM(PR_AMT)                                                                                 
+            	FROM ICOYBDDT                                                                                   
+            	WHERE HOUSE_CODE = ${house_code}                                          
+               AND BID_NO = BDHD.BID_NO                                                                         
+               AND BID_COUNT = BDHD.BID_COUNT) AS SUM_AMT                                                       
+          , (SELECT CUR                                                                                         
+            	FROM ICOYBDDT                                                                                   
+            	WHERE HOUSE_CODE = ${house_code}                                          
+               AND BID_NO = BDHD.BID_NO                                                                         
+               AND BID_COUNT = BDHD.BID_COUNT                                                                   
+               AND ROWNUM < 2) AS CUR                                                                           
+          , BDHD.CTRL_CODE                                                                                      
+ FROM ICOYBDHD BDHD, ICOYBDPG PG                                                                                
+ WHERE BDHD.HOUSE_CODE 		= ${house_code}                                           
+   AND BDHD.ANNOUNCE_DATE 	IS NOT NULL                                                                     
+   AND BDHD.STATUS 			IN ('C','R')                                                            
+   AND PG.HOUSE_CODE 		= BDHD.HOUSE_CODE 				                                			 
+   AND PG.BID_NO 			= BDHD.BID_NO 				                                                                       
+   AND PG.BID_COUNT 		= BDHD.BID_COUNT 				                                                                       
+   AND PG.STATUS 			IN ('C','R')                                                                                                   
+   AND   BDHD.ANN_DATE BETWEEN ${START_ANNOUNCE_DATE}
+   AND ${END_ANNOUNCE_DATE}                                                                           
+   AND   BDHD.ANN_NO      = $S{ANN_NO}                                                                                                
+   AND   BDHD.ANN_ITEM  LIKE  '%'||$S{ANN_ITEM}||'%'                                                                                              
+   AND   BDHD.CHANGE_USER_ID  =  $S{CHANGE_USER}                                                                        
+   #addSql#	                                                                                              
+   AND BDHD.BID_STATUS IN ((SELECT CODE                                                                                                                
+                            FROM SCODE                                                               
+                            WHERE HOUSE_CODE = ${house_code}                      
+                              AND TYPE = 'M962'                                                         
+                              AND USE_FLAG = 'Y'
+                              AND NVL(DEL_FLAG, 'N') = 'N'                                                        
+                              --AND STATUS IN ('C','R')                                                   
+                              AND TEXT3 BETWEEN '3' AND '5'))                                           
+   --AND BDHD.BID_TYPE IN ('D')                                                                           
+   ORDER BY ANN_DATE DESC                                                                       
+	]]> 
+	</method>
+</service>

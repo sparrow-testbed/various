@@ -1,0 +1,76 @@
+<html>
+<head>
+<title>우리은행 전자구매시스템 접속 안내</title>
+<meta http-equiv="Content-Type" content="text/html; charset=euc-kr">
+</head>
+<script LANGUAGE="JavaScript">
+/*
+    function closewin()
+    {
+		var s = "EPRO[popup01]"
+
+		if (document.forms[0].chkClose.checked) 
+			setCookie(s,"true", 1);
+		else 
+			clearCookie(s);
+
+		window.close();
+    }
+
+	function setCookie(name, value, expire) 
+	{
+		var expire_date = new Date();
+		expire_date = new Date(expire_date.getTime() + 60*60*24*1000);
+		document.cookie = name + "=" + escape(value) + "; expires=" + expire_date.toGMTString() +"; path=/"; 
+	}
+	
+	function clearCookie(name)
+	{
+		var today = new Date()
+		var expire_date = new Date(today.getTime() - 60*60*24*1000)
+		document.cookie = name + "= " + "; expires=" + expire_date.toGMTString()
+	}
+*/
+
+function setCookie(name, value, expiredays) {
+	var today = new Date();
+	today.setDate( today.getDate() + expiredays );
+	document.cookie = name + "=" + escape( value ) + "; path=/; expires=" + today.toGMTString() + ";";
+}
+
+function closeWin() {
+	if( document.frmPopUp01.chkClose.checked ) {
+		setCookie("notice04", "no", 1);
+	}
+	window.close();
+}
+
+</script>
+
+<body bgcolor="#FFFFFF" text="#000000">
+	<form id="frmPopUp01" name="frmPopUp01">
+	<table align="center">
+		<tr>
+			<td><br><br>
+				<span style="font-size:18px; font-weight:bold; color:black">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;■ 우리은행 전자구매시스템 접속 안내</span><br><br><br><br>
+				&nbsp;&nbsp;&nbsp;○ 전자입찰 메뉴 : 전자입찰을 위한 전용 메뉴<br><br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- 아이디 / 패스워드 로 로그인 가능<br><br><br><br>
+				&nbsp;&nbsp;&nbsp;○ 전자구매 메뉴 : 전자계약, 수주/검수 , 대금정산등을 위한 메뉴 <br><br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- 공인인증서로만 로그인 가능<br><br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="manual.ppt"><font color="blue"><b>☞ 전자구매 메뉴 접속방법 보기 (매뉴얼 다운로드)</b></font></a>
+			</td>
+		</tr>
+		<!--
+		<tr>
+			<td>
+				<br><br>
+				<input type="checkbox" name="chkClose" id="chkClose" onclick="javascript:closeWin();" value="T" >
+				<span style="font-size:12px; color:black">1일동안 열지 않음</span>
+			</td>
+		</tr>
+		-->
+	</table>
+</body>
+
+</html>
+

@@ -1,0 +1,661 @@
+2023-01-11 15:48:22.281 INFO                            
+2023-01-11 15:48:22.297 INFO  PHPCHK                    + [!] PHPCHK powered by SPARROW Synz - Syntactic Engine Framework (Version: 3.5.0, Released at: 2022-12-05)
+2023-01-11 15:48:22.297 INFO  PHPCHK                    |  + Version: 2.4.7
+2023-01-11 15:48:22.297 INFO  PHPCHK                    |  + Released at: 2022-12-05
+2023-01-11 15:48:22.297 INFO                            
+2023-01-11 15:48:22.297 INFO  PROPERTY_MAP              |  + [P] The property used ===>>>
+2023-01-11 15:48:22.298 INFO  PROPERTY_MAP              |  |  + analysis.advanced.interfile: false
+2023-01-11 15:48:22.298 INFO  PROPERTY_MAP              |  |  + checker.is_all_used: false
+2023-01-11 15:48:22.298 INFO  PROPERTY_MAP              |  |  + checker.list.file.encoding: UTF-8
+2023-01-11 15:48:22.298 INFO  PROPERTY_MAP              |  |  + checker.list.file.name: D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\option_files\checkers_phpchk
+2023-01-11 15:48:22.298 INFO  PROPERTY_MAP              |  |  + condition.max_depth: 5
+2023-01-11 15:48:22.298 INFO  PROPERTY_MAP              |  |  + condition.max_width: 32
+2023-01-11 15:48:22.298 INFO  PROPERTY_MAP              |  |  + constrainable.generation.timeout: 50000
+2023-01-11 15:48:22.298 INFO  PROPERTY_MAP              |  |  + constrainable.max_constraint: 3000
+2023-01-11 15:48:22.298 INFO  PROPERTY_MAP              |  |  + constrainable.solver.max_node: 50
+2023-01-11 15:48:22.298 INFO  PROPERTY_MAP              |  |  + constrainable.solver.timeout: 500
+2023-01-11 15:48:22.298 INFO  PROPERTY_MAP              |  |  + det.legacy: false
+2023-01-11 15:48:22.298 INFO  PROPERTY_MAP              |  |  + expression.evaluation.timeout: 500
+2023-01-11 15:48:22.299 INFO  PROPERTY_MAP              |  |  + log.directory.path: D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\log_files
+2023-01-11 15:48:22.299 INFO  PROPERTY_MAP              |  |  + log.encoding: UTF-8
+2023-01-11 15:48:22.299 INFO  PROPERTY_MAP              |  |  + log.file.name: phpchk.log
+2023-01-11 15:48:22.299 INFO  PROPERTY_MAP              |  |  + log.level: info
+2023-01-11 15:48:22.299 INFO  PROPERTY_MAP              |  |  + log.time.prefix: false
+2023-01-11 15:48:22.299 INFO  PROPERTY_MAP              |  |  + option.directory.path: D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\option_files\checker_option\phpchk
+2023-01-11 15:48:22.299 INFO  PROPERTY_MAP              |  |  + php.version: php72
+2023-01-11 15:48:22.299 INFO  PROPERTY_MAP              |  |  + project.name: phpchk
+2023-01-11 15:48:22.299 INFO  PROPERTY_MAP              |  |  + source.encoding: UTF-8
+2023-01-11 15:48:22.299 INFO  PROPERTY_MAP              |  |  + taint.all.multi.value: false
+2023-01-11 15:48:22.299 INFO  PROPERTY_MAP              |  |  + target.list.file.encoding: UTF-8
+2023-01-11 15:48:22.300 INFO  PROPERTY_MAP              |  |  + target.list.file.name: D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\map_files\phpchk
+2023-01-11 15:48:22.300 INFO  PROPERTY_MAP              |  |  + target.list.order: SORTED
+2023-01-11 15:48:22.300 INFO  PROPERTY_MAP              |  |  + timeout.disabled: false
+2023-01-11 15:48:22.300 INFO  PROPERTY_MAP              |  |  + value.max_events: 50
+2023-01-11 15:48:22.300 INFO  PROPERTY_MAP              |  |  + value.max_sub_value: 256
+2023-01-11 15:48:22.300 INFO  PROPERTY_MAP              |  |  + workspace.cleaner: before
+2023-01-11 15:48:22.300 INFO  PROPERTY_MAP              |  |  + workspace.path: D:\sparrow\sparrow5\data\temp\etc\phpchk_temp_1673419701671
+2023-01-11 15:48:22.300 INFO  PROPERTY_MAP              |  |  + xml.directory.path: D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\xml_files
+2023-01-11 15:48:22.300 INFO  PROPERTY_MAP              |  |  + xml.encoding: utf-8
+2023-01-11 15:48:22.300 INFO  PROPERTY_MAP              |  |  + xml.grouping_threshold: 100
+2023-01-11 15:48:22.300 INFO  PROPERTY_MAP              |  |  + xml.is_no_xml: false
+2023-01-11 15:48:22.300 INFO  PROPERTY_MAP              |  + [P] <<<=== End of the property
+2023-01-11 15:48:22.301 INFO                            
+2023-01-11 15:48:22.369 INFO  MESSAGE_INFO              |  + [M] The message information used ===>>>
+2023-01-11 15:48:22.370 INFO  MESSAGE_INFO              |  |  + Engine name: phpchk
+2023-01-11 15:48:22.370 INFO  MESSAGE_INFO              |  |  + Total 1 message resources -
+2023-01-11 15:48:22.370 INFO  MESSAGE_INFO              |  |  |  + com/fasoo/phpchk/alarm/message/phpchk_en.properties
+2023-01-11 15:48:22.370 INFO  MESSAGE_INFO              |  + [M] <<<=== End of the message information
+2023-01-11 15:48:22.375 INFO                            
+2023-01-11 15:48:22.375 INFO  CHECKER                   |  + [C] Initialize checkers ===>>>
+2023-01-11 15:48:22.620 INFO  CHECKER                   |  |  + Load option of the checker PASSWORD_IN_COMMENT.PHP ===>>>
+2023-01-11 15:48:22.651 INFO  CHECKER                   |  |  + <<<=== Option loading finished
+2023-01-11 15:48:22.655 INFO  CHECKER                   |  |  + Load option of the checker LDAP_INJECTION.PHP ===>>>
+2023-01-11 15:48:22.657 INFO  CHECKER                   |  |  + <<<=== Option loading finished
+2023-01-11 15:48:22.674 INFO  CHECKER                   |  |  + Load option of the checker WEAK_ENCRYPTION.HASH.PHP ===>>>
+2023-01-11 15:48:22.676 INFO  CHECKER                   |  |  + <<<=== Option loading finished
+2023-01-11 15:48:22.680 INFO  CHECKER                   |  |  + Load option of the checker WEAK_ENCRYPTION.RISKY_ALGORITHM.PHP ===>>>
+2023-01-11 15:48:22.682 INFO  CHECKER                   |  |  + <<<=== Option loading finished
+2023-01-11 15:48:22.683 INFO  CHECKER                   |  |  + Load option of the checker COMMAND_INJECTION.PHP ===>>>
+2023-01-11 15:48:22.684 INFO  CHECKER                   |  |  + <<<=== Option loading finished
+2023-01-11 15:48:22.689 INFO  CHECKER                   |  |  + Load option of the checker XQUERY_INJECTION.PHP ===>>>
+2023-01-11 15:48:22.691 INFO  CHECKER                   |  |  + <<<=== Option loading finished
+2023-01-11 15:48:22.693 INFO  CHECKER                   |  |  + Load option of the checker HARD_CODED.PASSWORD.PHP ===>>>
+2023-01-11 15:48:22.694 INFO  CHECKER                   |  |  + <<<=== Option loading finished
+2023-01-11 15:48:22.696 INFO  CHECKER                   |  |  + Load option of the checker FILE_PERMISSION_MANIPULATION.PHP ===>>>
+2023-01-11 15:48:22.697 INFO  CHECKER                   |  |  + <<<=== Option loading finished
+2023-01-11 15:48:22.703 INFO  CHECKER                   |  |  + Load option of the checker REMOTE_CODE_EXECUTION.PHP ===>>>
+2023-01-11 15:48:22.705 INFO  CHECKER                   |  |  + <<<=== Option loading finished
+2023-01-11 15:48:22.709 INFO  CHECKER                   |  |  + Load option of the checker XSS.PHP ===>>>
+2023-01-11 15:48:22.710 INFO  CHECKER                   |  |  + <<<=== Option loading finished
+2023-01-11 15:48:22.711 INFO  CHECKER                   |  |  + Load option of the checker BAD_CALL.FORBIDDEN.PHP ===>>>
+2023-01-11 15:48:22.713 INFO  CHECKER                   |  |  + <<<=== Option loading finished
+2023-01-11 15:48:22.724 INFO  CHECKER                   |  |  + Load option of the checker LOG_FORGING.PHP ===>>>
+2023-01-11 15:48:22.726 INFO  CHECKER                   |  |  + <<<=== Option loading finished
+2023-01-11 15:48:22.727 INFO  CHECKER                   |  |  + Load option of the checker HTTP_RESPONSE_SPLITTING.PHP ===>>>
+2023-01-11 15:48:22.728 INFO  CHECKER                   |  |  + <<<=== Option loading finished
+2023-01-11 15:48:22.732 INFO  CHECKER                   |  |  + Load option of the checker FORMAT_STRING.PHP ===>>>
+2023-01-11 15:48:22.733 INFO  CHECKER                   |  |  + <<<=== Option loading finished
+2023-01-11 15:48:22.734 INFO  CHECKER                   |  |  + Load option of the checker UNRESTRICTED_UPLOAD.FILE.PHP ===>>>
+2023-01-11 15:48:22.735 INFO  CHECKER                   |  |  + <<<=== Option loading finished
+2023-01-11 15:48:22.736 INFO  CHECKER                   |  |  + Load option of the checker LEFTOVER_DEBUG_CODE.PHP ===>>>
+2023-01-11 15:48:22.737 INFO  CHECKER                   |  |  + <<<=== Option loading finished
+2023-01-11 15:48:22.738 INFO  CHECKER                   |  |  + Load option of the checker MISSING_AUTHENTICATION.CRITICAL_FUNCTION.PHP ===>>>
+2023-01-11 15:48:22.739 INFO  CHECKER                   |  |  + <<<=== Option loading finished
+2023-01-11 15:48:22.740 INFO  CHECKER                   |  |  + Load option of the checker WEAK_ENCRYPTION.INSUFFICIENT_KEY_SIZE.PHP ===>>>
+2023-01-11 15:48:22.741 INFO  CHECKER                   |  |  + <<<=== Option loading finished
+2023-01-11 15:48:22.742 INFO  CHECKER                   |  |  + Load option of the checker BAD_COOKIE.PATH.PHP ===>>>
+2023-01-11 15:48:22.743 INFO  CHECKER                   |  |  + <<<=== Option loading finished
+2023-01-11 15:48:22.743 INFO  CHECKER                   |  |  + Load option of the checker SQL_INJECTION.PHP ===>>>
+2023-01-11 15:48:22.744 INFO  CHECKER                   |  |  + <<<=== Option loading finished
+2023-01-11 15:48:22.745 INFO  CHECKER                   |  |  + Load option of the checker BAD_INI.PERSISTENT_COOKIE.PHP ===>>>
+2023-01-11 15:48:22.746 INFO  CHECKER                   |  |  + <<<=== Option loading finished
+2023-01-11 15:48:22.746 INFO  CHECKER                   |  |  + Load option of the checker SERVER_SIDE_REQUEST_FORGERY.PHP ===>>>
+2023-01-11 15:48:22.747 INFO  CHECKER                   |  |  + <<<=== Option loading finished
+2023-01-11 15:48:22.749 INFO  CHECKER                   |  |  + Load option of the checker LEAK.ERROR_INFORMATION.PHP ===>>>
+2023-01-11 15:48:22.750 INFO  CHECKER                   |  |  + <<<=== Option loading finished
+2023-01-11 15:48:22.751 INFO  CHECKER                   |  |  + Load option of the checker HEADER_MANIPULATION.PHP ===>>>
+2023-01-11 15:48:22.753 INFO  CHECKER                   |  |  + <<<=== Option loading finished
+2023-01-11 15:48:22.753 INFO  CHECKER                   |  |  + Load option of the checker WEAK_PASSWORD_REQUIREMENTS.PHP ===>>>
+2023-01-11 15:48:22.755 INFO  CHECKER                   |  |  + <<<=== Option loading finished
+2023-01-11 15:48:22.756 INFO  CHECKER                   |  |  + Load option of the checker HARD_CODED.CRYPTOGRAPHIC_KEY.PHP ===>>>
+2023-01-11 15:48:22.757 INFO  CHECKER                   |  |  + <<<=== Option loading finished
+2023-01-11 15:48:22.758 INFO  CHECKER                   |  |  + Load option of the checker LEAK.DEBUG_INFORMATION.CAKEPHP.PHP ===>>>
+2023-01-11 15:48:22.759 INFO  CHECKER                   |  |  + <<<=== Option loading finished
+2023-01-11 15:48:22.760 INFO  CHECKER                   |  |  + Load option of the checker FORBIDDEN.COOKIE.PHP ===>>>
+2023-01-11 15:48:22.761 INFO  CHECKER                   |  |  + <<<=== Option loading finished
+2023-01-11 15:48:22.762 INFO  CHECKER                   |  |  + Load option of the checker XPATH_INJECTION.PHP ===>>>
+2023-01-11 15:48:22.764 INFO  CHECKER                   |  |  + <<<=== Option loading finished
+2023-01-11 15:48:22.764 INFO  CHECKER                   |  |  + Load option of the checker EXCESSIVE_SESSION_TIMEOUT.CAKEPHP.PHP ===>>>
+2023-01-11 15:48:22.765 INFO  CHECKER                   |  |  + <<<=== Option loading finished
+2023-01-11 15:48:22.770 INFO  CHECKER                   |  |  + Load option of the checker PATH_MANIPULATION.PHP ===>>>
+2023-01-11 15:48:22.772 INFO  CHECKER                   |  |  + <<<=== Option loading finished
+2023-01-11 15:48:22.774 INFO  CHECKER                   |  |  + Load option of the checker MISSING_LOGIN_CONTROL.PHP ===>>>
+2023-01-11 15:48:22.775 INFO  CHECKER                   |  |  + <<<=== Option loading finished
+2023-01-11 15:48:22.776 INFO  CHECKER                   |  |  + Load option of the checker PLAIN_TEXT_STORING.SENSITIVE_INFORMATION.PHP ===>>>
+2023-01-11 15:48:22.777 INFO  CHECKER                   |  |  + <<<=== Option loading finished
+2023-01-11 15:48:22.778 INFO  CHECKER                   |  |  + Load option of the checker BAD_SECURITY_DECISION.DNS_LOOKUP.PHP ===>>>
+2023-01-11 15:48:22.779 INFO  CHECKER                   |  |  + <<<=== Option loading finished
+2023-01-11 15:48:22.780 INFO  CHECKER                   |  |  + Load option of the checker BAD_SECURITY_DECISION.UNTRUSTED_INPUT.PHP ===>>>
+2023-01-11 15:48:22.781 INFO  CHECKER                   |  |  + <<<=== Option loading finished
+2023-01-11 15:48:22.783 INFO  CHECKER                   |  |  + Load option of the checker OPEN_REDIRECT.PHP ===>>>
+2023-01-11 15:48:22.783 INFO  CHECKER                   |  |  + <<<=== Option loading finished
+2023-01-11 15:48:22.784 INFO  CHECKER                   |  |  + Load option of the checker DESERIALIZATION_OF_UNTRUSTED_DATA.PHP ===>>>
+2023-01-11 15:48:22.785 INFO  CHECKER                   |  |  + <<<=== Option loading finished
+2023-01-11 15:48:22.786 INFO  CHECKER                   |  |  + Load option of the checker PLAIN_TEXT_TRANSMISSION.SENSITIVE_INFORMATION.PHP ===>>>
+2023-01-11 15:48:22.787 INFO  CHECKER                   |  |  + <<<=== Option loading finished
+2023-01-11 15:48:22.789 INFO  CHECKER                   |  |  + 70 / 70 [100.00 %] checker(s) has(have) been initialized
+2023-01-11 15:48:22.789 INFO  CHECKER                   |  + [C] <<<=== All checkers have been initialized successfully
+2023-01-11 15:48:22.789 INFO                            
+2023-01-11 15:48:22.790 INFO  WORKSPACE                 |  + [W] Clean the workspace ===>>>
+2023-01-11 15:48:22.790 INFO  WORKSPACE                 |  |  + Skip workspace cleaning since the workspace is empty
+2023-01-11 15:48:22.791 INFO  WORKSPACE                 |  |  + Elapsed time: 0.00 s (1.00 ms)
+2023-01-11 15:48:22.791 INFO  WORKSPACE                 |  + [W] <<<=== The workspace has been cleaned
+2023-01-11 15:48:22.791 INFO                            
+2023-01-11 15:48:25.569 INFO  SUMMARIZER                |  + [-] Launch 24 targets ===>>>
+2023-01-11 15:48:25.570 INFO  SUMMARIZER                |  |  + [    1/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\xecure_header_1.php
+2023-01-11 15:48:25.571 INFO                            |  |  |  +  from D:\pcms_source\junsu\customer\eps\app\XecureObject\xecure_header.php
+2023-01-11 15:48:25.590 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\xecure_header_1.php with ISO-8859-1
+2023-01-11 15:48:25.679 INFO  SUMMARIZER                |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:25.730 INFO  SUMMARY                   |  |  |  + Summary [ pcms_source.junsu.shell.temp.20201246.eps.sparrow.sources.xecure_header_1.php ] has been created
+2023-01-11 15:48:25.730 INFO  SUMMARY                   |  |  |  + 0 item(s) has(have) been summarized
+2023-01-11 15:48:25.779 INFO  SUMMARIZER                |  |  |  + Elapsed time: 0.21 s (205.00 ms) for 12 line(s) / 0.02 s (17.08 ms) per line
+2023-01-11 15:48:25.780 INFO  SUMMARIZER                |  |  + [    2/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\adminfooter_1.inc
+2023-01-11 15:48:25.780 INFO                            |  |  |  +  from D:\pcms_source\junsu\customer\eps\app\axis2-web\include\adminfooter.inc
+2023-01-11 15:48:25.783 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\adminfooter_1.inc with ISO-8859-1
+2023-01-11 15:48:25.784 INFO  SUMMARIZER                |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:25.784 INFO  SUMMARY                   |  |  |  + Summary [ pcms_source.junsu.shell.temp.20201246.eps.sparrow.sources.adminfooter_1.inc ] has been created
+2023-01-11 15:48:25.784 INFO  SUMMARY                   |  |  |  + 0 item(s) has(have) been summarized
+2023-01-11 15:48:25.785 INFO  SUMMARIZER                |  |  |  + Elapsed time: 0.01 s (5.00 ms) for 23 line(s) / 0.00 s (0.22 ms) per line
+2023-01-11 15:48:25.786 INFO  SUMMARIZER                |  |  + [    3/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\adminheader.inc
+2023-01-11 15:48:25.786 INFO                            |  |  |  +  from D:\pcms_source\junsu\customer\eps\app\axis2-web\include\adminheader.inc
+2023-01-11 15:48:25.789 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\adminheader.inc with ISO-8859-1
+2023-01-11 15:48:25.790 INFO  SUMMARIZER                |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:25.791 INFO  SUMMARY                   |  |  |  + Summary [ pcms_source.junsu.shell.temp.20201246.eps.sparrow.sources.adminheader.inc ] has been created
+2023-01-11 15:48:25.791 INFO  SUMMARY                   |  |  |  + 0 item(s) has(have) been summarized
+2023-01-11 15:48:25.791 INFO  SUMMARIZER                |  |  |  + Elapsed time: 0.01 s (5.00 ms) for 28 line(s) / 0.00 s (0.18 ms) per line
+2023-01-11 15:48:25.792 INFO  SUMMARIZER                |  |  + [    4/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\footer_1.inc
+2023-01-11 15:48:25.792 INFO                            |  |  |  +  from D:\pcms_source\junsu\customer\eps\app\axis2-web\include\footer.inc
+2023-01-11 15:48:25.795 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\footer_1.inc with ISO-8859-1
+2023-01-11 15:48:25.796 INFO  SUMMARIZER                |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:25.796 INFO  SUMMARY                   |  |  |  + Summary [ pcms_source.junsu.shell.temp.20201246.eps.sparrow.sources.footer_1.inc ] has been created
+2023-01-11 15:48:25.796 INFO  SUMMARY                   |  |  |  + 0 item(s) has(have) been summarized
+2023-01-11 15:48:25.797 INFO  SUMMARIZER                |  |  |  + Elapsed time: 0.01 s (5.00 ms) for 37 line(s) / 0.00 s (0.14 ms) per line
+2023-01-11 15:48:25.798 INFO  SUMMARIZER                |  |  + [    5/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\header.inc
+2023-01-11 15:48:25.798 INFO                            |  |  |  +  from D:\pcms_source\junsu\customer\eps\app\axis2-web\include\header.inc
+2023-01-11 15:48:25.800 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\header.inc with ISO-8859-1
+2023-01-11 15:48:25.800 INFO  SUMMARIZER                |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:25.801 INFO  SUMMARY                   |  |  |  + Summary [ pcms_source.junsu.shell.temp.20201246.eps.sparrow.sources.header.inc ] has been created
+2023-01-11 15:48:25.802 INFO  SUMMARY                   |  |  |  + 0 item(s) has(have) been summarized
+2023-01-11 15:48:25.802 INFO  SUMMARIZER                |  |  |  + Elapsed time: 0.00 s (4.00 ms) for 29 line(s) / 0.00 s (0.14 ms) per line
+2023-01-11 15:48:25.802 INFO  SUMMARIZER                |  |  + [    6/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\link-footer.inc
+2023-01-11 15:48:25.802 INFO                            |  |  |  +  from D:\pcms_source\junsu\customer\eps\app\axis2-web\include\link-footer.inc
+2023-01-11 15:48:25.804 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\link-footer.inc with ISO-8859-1
+2023-01-11 15:48:25.805 INFO  SUMMARIZER                |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:25.805 INFO  SUMMARY                   |  |  |  + Summary [ pcms_source.junsu.shell.temp.20201246.eps.sparrow.sources.link-footer.inc ] has been created
+2023-01-11 15:48:25.805 INFO  SUMMARY                   |  |  |  + 0 item(s) has(have) been summarized
+2023-01-11 15:48:25.806 INFO  SUMMARIZER                |  |  |  + Elapsed time: 0.00 s (3.00 ms) for 23 line(s) / 0.00 s (0.13 ms) per line
+2023-01-11 15:48:25.806 INFO  SUMMARIZER                |  |  + [    7/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\xecure_header_3.php
+2023-01-11 15:48:25.806 INFO                            |  |  |  +  from D:\pcms_source\junsu\customer\eps\app\eps_src\WebContent\XecureObject\xecure_header.php
+2023-01-11 15:48:25.807 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\xecure_header_3.php with ISO-8859-1
+2023-01-11 15:48:25.808 INFO  SUMMARIZER                |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:25.809 INFO  SUMMARY                   |  |  |  + Summary [ pcms_source.junsu.shell.temp.20201246.eps.sparrow.sources.xecure_header_3.php ] has been created
+2023-01-11 15:48:25.809 INFO  SUMMARY                   |  |  |  + 0 item(s) has(have) been summarized
+2023-01-11 15:48:25.809 INFO  SUMMARIZER                |  |  |  + Elapsed time: 0.00 s (2.00 ms) for 12 line(s) / 0.00 s (0.17 ms) per line
+2023-01-11 15:48:25.810 INFO  SUMMARIZER                |  |  + [    8/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\adminfooter.inc
+2023-01-11 15:48:25.810 INFO                            |  |  |  +  from D:\pcms_source\junsu\customer\eps\app\eps_src\WebContent\axis2-web\include\adminfooter.inc
+2023-01-11 15:48:25.812 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\adminfooter.inc with ISO-8859-1
+2023-01-11 15:48:25.812 INFO  SUMMARIZER                |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:25.813 INFO  SUMMARY                   |  |  |  + Summary [ pcms_source.junsu.shell.temp.20201246.eps.sparrow.sources.adminfooter.inc ] has been created
+2023-01-11 15:48:25.813 INFO  SUMMARY                   |  |  |  + 0 item(s) has(have) been summarized
+2023-01-11 15:48:25.813 INFO  SUMMARIZER                |  |  |  + Elapsed time: 0.00 s (3.00 ms) for 23 line(s) / 0.00 s (0.13 ms) per line
+2023-01-11 15:48:25.814 INFO  SUMMARIZER                |  |  + [    9/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\adminheader_1.inc
+2023-01-11 15:48:25.814 INFO                            |  |  |  +  from D:\pcms_source\junsu\customer\eps\app\eps_src\WebContent\axis2-web\include\adminheader.inc
+2023-01-11 15:48:25.816 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\adminheader_1.inc with ISO-8859-1
+2023-01-11 15:48:25.817 INFO  SUMMARIZER                |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:25.817 INFO  SUMMARY                   |  |  |  + Summary [ pcms_source.junsu.shell.temp.20201246.eps.sparrow.sources.adminheader_1.inc ] has been created
+2023-01-11 15:48:25.817 INFO  SUMMARY                   |  |  |  + 0 item(s) has(have) been summarized
+2023-01-11 15:48:25.818 INFO  SUMMARIZER                |  |  |  + Elapsed time: 0.00 s (4.00 ms) for 28 line(s) / 0.00 s (0.14 ms) per line
+2023-01-11 15:48:25.818 INFO  SUMMARIZER                |  |  + [   10/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\footer.inc
+2023-01-11 15:48:25.818 INFO                            |  |  |  +  from D:\pcms_source\junsu\customer\eps\app\eps_src\WebContent\axis2-web\include\footer.inc
+2023-01-11 15:48:25.820 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\footer.inc with ISO-8859-1
+2023-01-11 15:48:25.821 INFO  SUMMARIZER                |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:25.821 INFO  SUMMARY                   |  |  |  + Summary [ pcms_source.junsu.shell.temp.20201246.eps.sparrow.sources.footer.inc ] has been created
+2023-01-11 15:48:25.821 INFO  SUMMARY                   |  |  |  + 0 item(s) has(have) been summarized
+2023-01-11 15:48:25.822 INFO  SUMMARIZER                |  |  |  + Elapsed time: 0.00 s (3.00 ms) for 37 line(s) / 0.00 s (0.08 ms) per line
+2023-01-11 15:48:25.823 INFO  SUMMARIZER                |  |  + [   11/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\header_1.inc
+2023-01-11 15:48:25.823 INFO                            |  |  |  +  from D:\pcms_source\junsu\customer\eps\app\eps_src\WebContent\axis2-web\include\header.inc
+2023-01-11 15:48:25.824 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\header_1.inc with ISO-8859-1
+2023-01-11 15:48:25.825 INFO  SUMMARIZER                |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:25.825 INFO  SUMMARY                   |  |  |  + Summary [ pcms_source.junsu.shell.temp.20201246.eps.sparrow.sources.header_1.inc ] has been created
+2023-01-11 15:48:25.825 INFO  SUMMARY                   |  |  |  + 0 item(s) has(have) been summarized
+2023-01-11 15:48:25.826 INFO  SUMMARIZER                |  |  |  + Elapsed time: 0.00 s (3.00 ms) for 29 line(s) / 0.00 s (0.10 ms) per line
+2023-01-11 15:48:25.826 INFO  SUMMARIZER                |  |  + [   12/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\link-footer_1.inc
+2023-01-11 15:48:25.826 INFO                            |  |  |  +  from D:\pcms_source\junsu\customer\eps\app\eps_src\WebContent\axis2-web\include\link-footer.inc
+2023-01-11 15:48:25.828 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\link-footer_1.inc with ISO-8859-1
+2023-01-11 15:48:25.829 INFO  SUMMARIZER                |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:25.829 INFO  SUMMARY                   |  |  |  + Summary [ pcms_source.junsu.shell.temp.20201246.eps.sparrow.sources.link-footer_1.inc ] has been created
+2023-01-11 15:48:25.829 INFO  SUMMARY                   |  |  |  + 0 item(s) has(have) been summarized
+2023-01-11 15:48:25.829 INFO  SUMMARIZER                |  |  |  + Elapsed time: 0.00 s (2.00 ms) for 23 line(s) / 0.00 s (0.09 ms) per line
+2023-01-11 15:48:25.830 INFO  SUMMARIZER                |  |  + [   13/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\upload_1.php
+2023-01-11 15:48:25.830 INFO                            |  |  |  +  from D:\pcms_source\junsu\customer\eps\app\imsi\xecureweb_ver7\demo\file\Upload.php
+2023-01-11 15:48:25.832 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\upload_1.php with ISO-8859-9
+2023-01-11 15:48:25.842 INFO  SUMMARIZER                |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.054 INFO  SUMMARY                   |  |  |  + Summary [ pcms_source.junsu.shell.temp.20201246.eps.sparrow.sources.upload_1.php ] has been created
+2023-01-11 15:48:26.054 INFO  SUMMARY                   |  |  |  + 3 item(s) has(have) been summarized
+2023-01-11 15:48:26.064 INFO  SUMMARIZER                |  |  |  + Elapsed time: 0.23 s (234.00 ms) for 68 line(s) / 0.00 s (3.44 ms) per line
+2023-01-11 15:48:26.065 INFO  SUMMARIZER                |  |  + [   14/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\file_download_1.php
+2023-01-11 15:48:26.065 INFO                            |  |  |  +  from D:\pcms_source\junsu\customer\eps\app\imsi\xecureweb_ver7\demo\file\file_download.php
+2023-01-11 15:48:26.066 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\file_download_1.php with ISO-8859-9
+2023-01-11 15:48:26.067 INFO  SUMMARIZER                |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.069 INFO  SUMMARY                   |  |  |  + Summary [ pcms_source.junsu.shell.temp.20201246.eps.sparrow.sources.file_download_1.php ] has been created
+2023-01-11 15:48:26.070 INFO  SUMMARY                   |  |  |  + 0 item(s) has(have) been summarized
+2023-01-11 15:48:26.070 INFO  SUMMARIZER                |  |  |  + Elapsed time: 0.01 s (5.00 ms) for 3 line(s) / 0.00 s (1.67 ms) per line
+2023-01-11 15:48:26.071 INFO  SUMMARIZER                |  |  + [   15/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\file_upload_1.php
+2023-01-11 15:48:26.071 INFO                            |  |  |  +  from D:\pcms_source\junsu\customer\eps\app\imsi\xecureweb_ver7\demo\file\file_upload.php
+2023-01-11 15:48:26.072 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\file_upload_1.php with ISO-8859-1
+2023-01-11 15:48:26.131 INFO  SUMMARIZER                |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.131 INFO  SUMMARIZER                |  |  |  + Skip analyzing since the root node is null
+2023-01-11 15:48:26.132 INFO  SUMMARIZER                |  |  |  + Elapsed time: 0.06 s (60.00 ms) for 47 line(s) / 0.00 s (1.28 ms) per line
+2023-01-11 15:48:26.132 INFO  SUMMARIZER                |  |  + [   16/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\file_upload1_1.php
+2023-01-11 15:48:26.132 INFO                            |  |  |  +  from D:\pcms_source\junsu\customer\eps\app\imsi\xecureweb_ver7\demo\file\file_upload1.php
+2023-01-11 15:48:26.133 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\file_upload1_1.php with ISO-8859-2
+2023-01-11 15:48:26.135 INFO  SUMMARIZER                |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.153 INFO  SUMMARY                   |  |  |  + Summary [ pcms_source.junsu.shell.temp.20201246.eps.sparrow.sources.file_upload1_1.php ] has been created
+2023-01-11 15:48:26.153 INFO  SUMMARY                   |  |  |  + 0 item(s) has(have) been summarized
+2023-01-11 15:48:26.154 INFO  SUMMARIZER                |  |  |  + Elapsed time: 0.02 s (21.00 ms) for 11 line(s) / 0.00 s (1.91 ms) per line
+2023-01-11 15:48:26.155 INFO  SUMMARIZER                |  |  + [   17/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\file_upload2.php
+2023-01-11 15:48:26.155 INFO                            |  |  |  +  from D:\pcms_source\junsu\customer\eps\app\imsi\xecureweb_ver7\demo\file\file_upload2.php
+2023-01-11 15:48:26.156 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\file_upload2.php with ISO-8859-2
+2023-01-11 15:48:26.157 INFO  SUMMARIZER                |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.169 INFO  SUMMARY                   |  |  |  + Summary [ pcms_source.junsu.shell.temp.20201246.eps.sparrow.sources.file_upload2.php ] has been created
+2023-01-11 15:48:26.169 INFO  SUMMARY                   |  |  |  + 3 item(s) has(have) been summarized
+2023-01-11 15:48:26.170 INFO  SUMMARIZER                |  |  |  + Elapsed time: 0.02 s (15.00 ms) for 13 line(s) / 0.00 s (1.15 ms) per line
+2023-01-11 15:48:26.171 INFO  SUMMARIZER                |  |  + [   18/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\xecure_header_2.php
+2023-01-11 15:48:26.171 INFO                            |  |  |  +  from D:\pcms_source\junsu\customer\eps\app\imsi\xecureweb_ver7\object\xecure_header.php
+2023-01-11 15:48:26.172 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\xecure_header_2.php with ISO-8859-1
+2023-01-11 15:48:26.172 INFO  SUMMARIZER                |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.173 INFO  SUMMARY                   |  |  |  + Summary [ pcms_source.junsu.shell.temp.20201246.eps.sparrow.sources.xecure_header_2.php ] has been created
+2023-01-11 15:48:26.173 INFO  SUMMARY                   |  |  |  + 0 item(s) has(have) been summarized
+2023-01-11 15:48:26.173 INFO  SUMMARIZER                |  |  |  + Elapsed time: 0.00 s (2.00 ms) for 12 line(s) / 0.00 s (0.17 ms) per line
+2023-01-11 15:48:26.174 INFO  SUMMARIZER                |  |  + [   19/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\upload.php
+2023-01-11 15:48:26.174 INFO                            |  |  |  +  from D:\pcms_source\junsu\customer\eps\app\xecureweb_ver7\demo\file\Upload.php
+2023-01-11 15:48:26.176 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\upload.php with ISO-8859-9
+2023-01-11 15:48:26.178 INFO  SUMMARIZER                |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.237 INFO  SUMMARY                   |  |  |  + Summary [ pcms_source.junsu.shell.temp.20201246.eps.sparrow.sources.upload.php ] has been created
+2023-01-11 15:48:26.237 INFO  SUMMARY                   |  |  |  + 3 item(s) has(have) been summarized
+2023-01-11 15:48:26.239 INFO  SUMMARIZER                |  |  |  + Elapsed time: 0.07 s (65.00 ms) for 68 line(s) / 0.00 s (0.96 ms) per line
+2023-01-11 15:48:26.240 INFO  SUMMARIZER                |  |  + [   20/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\file_download.php
+2023-01-11 15:48:26.240 INFO                            |  |  |  +  from D:\pcms_source\junsu\customer\eps\app\xecureweb_ver7\demo\file\file_download.php
+2023-01-11 15:48:26.241 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\file_download.php with ISO-8859-9
+2023-01-11 15:48:26.241 INFO  SUMMARIZER                |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.243 INFO  SUMMARY                   |  |  |  + Summary [ pcms_source.junsu.shell.temp.20201246.eps.sparrow.sources.file_download.php ] has been created
+2023-01-11 15:48:26.243 INFO  SUMMARY                   |  |  |  + 0 item(s) has(have) been summarized
+2023-01-11 15:48:26.244 INFO  SUMMARIZER                |  |  |  + Elapsed time: 0.00 s (3.00 ms) for 3 line(s) / 0.00 s (1.00 ms) per line
+2023-01-11 15:48:26.244 INFO  SUMMARIZER                |  |  + [   21/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\file_upload.php
+2023-01-11 15:48:26.244 INFO                            |  |  |  +  from D:\pcms_source\junsu\customer\eps\app\xecureweb_ver7\demo\file\file_upload.php
+2023-01-11 15:48:26.245 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\file_upload.php with ISO-8859-1
+2023-01-11 15:48:26.247 INFO  SUMMARIZER                |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.247 INFO  SUMMARIZER                |  |  |  + Skip analyzing since the root node is null
+2023-01-11 15:48:26.247 INFO  SUMMARIZER                |  |  |  + Elapsed time: 0.00 s (3.00 ms) for 47 line(s) / 0.00 s (0.06 ms) per line
+2023-01-11 15:48:26.248 INFO  SUMMARIZER                |  |  + [   22/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\file_upload1.php
+2023-01-11 15:48:26.248 INFO                            |  |  |  +  from D:\pcms_source\junsu\customer\eps\app\xecureweb_ver7\demo\file\file_upload1.php
+2023-01-11 15:48:26.249 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\file_upload1.php with ISO-8859-2
+2023-01-11 15:48:26.249 INFO  SUMMARIZER                |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.264 INFO  SUMMARY                   |  |  |  + Summary [ pcms_source.junsu.shell.temp.20201246.eps.sparrow.sources.file_upload1.php ] has been created
+2023-01-11 15:48:26.264 INFO  SUMMARY                   |  |  |  + 0 item(s) has(have) been summarized
+2023-01-11 15:48:26.264 INFO  SUMMARIZER                |  |  |  + Elapsed time: 0.02 s (16.00 ms) for 11 line(s) / 0.00 s (1.45 ms) per line
+2023-01-11 15:48:26.277 INFO  SUMMARIZER                |  |  + [   23/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\file_upload2_1.php
+2023-01-11 15:48:26.277 INFO                            |  |  |  +  from D:\pcms_source\junsu\customer\eps\app\xecureweb_ver7\demo\file\file_upload2.php
+2023-01-11 15:48:26.278 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\file_upload2_1.php with ISO-8859-2
+2023-01-11 15:48:26.279 INFO  SUMMARIZER                |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.287 INFO  SUMMARY                   |  |  |  + Summary [ pcms_source.junsu.shell.temp.20201246.eps.sparrow.sources.file_upload2_1.php ] has been created
+2023-01-11 15:48:26.287 INFO  SUMMARY                   |  |  |  + 3 item(s) has(have) been summarized
+2023-01-11 15:48:26.288 INFO  SUMMARIZER                |  |  |  + Elapsed time: 0.01 s (11.00 ms) for 13 line(s) / 0.00 s (0.85 ms) per line
+2023-01-11 15:48:26.289 INFO  SUMMARIZER                |  |  + [   24/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\xecure_header.php
+2023-01-11 15:48:26.289 INFO                            |  |  |  +  from D:\pcms_source\junsu\customer\eps\app\xecureweb_ver7\object\xecure_header.php
+2023-01-11 15:48:26.290 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\xecure_header.php with ISO-8859-1
+2023-01-11 15:48:26.290 INFO  SUMMARIZER                |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.290 INFO  SUMMARY                   |  |  |  + Summary [ pcms_source.junsu.shell.temp.20201246.eps.sparrow.sources.xecure_header.php ] has been created
+2023-01-11 15:48:26.290 INFO  SUMMARY                   |  |  |  + 0 item(s) has(have) been summarized
+2023-01-11 15:48:26.291 INFO  SUMMARIZER                |  |  |  + Elapsed time: 0.00 s (2.00 ms) for 12 line(s) / 0.00 s (0.17 ms) per line
+2023-01-11 15:48:26.292 INFO  SUMMARIZER                |  |  + Total number of line(s) processed: 612
+2023-01-11 15:48:26.292 INFO  SUMMARIZER                |  |  + Total elapsed time: 0.68 s (681.00 ms) [ Average: 28.38 ms, Stdev: 60.04 ms ]
+2023-01-11 15:48:26.292 INFO  SUMMARIZER                |  |  + Average elapsed time per line: 0.03 s (28.38 ms) [ Stdev: 3.38 ms ]
+2023-01-11 15:48:26.292 INFO  SUMMARIZER                |  + [-] <<<=== Analysis finished successfully
+2023-01-11 15:48:26.292 INFO                            
+2023-01-11 15:48:26.292 INFO  PRE_ANALYZER              |  + [-] Launch 24 targets ===>>>
+2023-01-11 15:48:26.292 INFO  PRE_ANALYZER              |  |  + [    1/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\xecure_header_1.php
+2023-01-11 15:48:26.292 INFO                            |  |  |  + from D:\pcms_source\junsu\customer\eps\app\XecureObject\xecure_header.php
+2023-01-11 15:48:26.293 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\xecure_header_1.php with ISO-8859-1
+2023-01-11 15:48:26.293 INFO  PRE_ANALYZER              |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.309 INFO  INVOCATION                |  |  |  + There is no invocation to be gathered
+2023-01-11 15:48:26.310 INFO  PRE_ANALYZER              |  |  |  + Elapsed time: 0.02 s (18.00 ms) for 12 line(s) / 0.00 s (1.50 ms) per line
+2023-01-11 15:48:26.310 INFO  PRE_ANALYZER              |  |  + [    2/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\adminfooter_1.inc
+2023-01-11 15:48:26.310 INFO                            |  |  |  + from D:\pcms_source\junsu\customer\eps\app\axis2-web\include\adminfooter.inc
+2023-01-11 15:48:26.311 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\adminfooter_1.inc with ISO-8859-1
+2023-01-11 15:48:26.312 INFO  PRE_ANALYZER              |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.313 INFO  INVOCATION                |  |  |  + There is no invocation to be gathered
+2023-01-11 15:48:26.313 INFO  PRE_ANALYZER              |  |  |  + Elapsed time: 0.00 s (3.00 ms) for 23 line(s) / 0.00 s (0.13 ms) per line
+2023-01-11 15:48:26.313 INFO  PRE_ANALYZER              |  |  + [    3/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\adminheader.inc
+2023-01-11 15:48:26.313 INFO                            |  |  |  + from D:\pcms_source\junsu\customer\eps\app\axis2-web\include\adminheader.inc
+2023-01-11 15:48:26.315 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\adminheader.inc with ISO-8859-1
+2023-01-11 15:48:26.315 INFO  PRE_ANALYZER              |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.315 INFO  INVOCATION                |  |  |  + There is no invocation to be gathered
+2023-01-11 15:48:26.316 INFO  PRE_ANALYZER              |  |  |  + Elapsed time: 0.00 s (1.00 ms) for 28 line(s) / 0.00 s (0.04 ms) per line
+2023-01-11 15:48:26.316 INFO  PRE_ANALYZER              |  |  + [    4/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\footer_1.inc
+2023-01-11 15:48:26.316 INFO                            |  |  |  + from D:\pcms_source\junsu\customer\eps\app\axis2-web\include\footer.inc
+2023-01-11 15:48:26.317 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\footer_1.inc with ISO-8859-1
+2023-01-11 15:48:26.318 INFO  PRE_ANALYZER              |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.318 INFO  INVOCATION                |  |  |  + There is no invocation to be gathered
+2023-01-11 15:48:26.318 INFO  PRE_ANALYZER              |  |  |  + Elapsed time: 0.00 s (2.00 ms) for 37 line(s) / 0.00 s (0.05 ms) per line
+2023-01-11 15:48:26.319 INFO  PRE_ANALYZER              |  |  + [    5/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\header.inc
+2023-01-11 15:48:26.319 INFO                            |  |  |  + from D:\pcms_source\junsu\customer\eps\app\axis2-web\include\header.inc
+2023-01-11 15:48:26.320 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\header.inc with ISO-8859-1
+2023-01-11 15:48:26.320 INFO  PRE_ANALYZER              |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.321 INFO  INVOCATION                |  |  |  + There is no invocation to be gathered
+2023-01-11 15:48:26.321 INFO  PRE_ANALYZER              |  |  |  + Elapsed time: 0.00 s (2.00 ms) for 29 line(s) / 0.00 s (0.07 ms) per line
+2023-01-11 15:48:26.321 INFO  PRE_ANALYZER              |  |  + [    6/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\link-footer.inc
+2023-01-11 15:48:26.321 INFO                            |  |  |  + from D:\pcms_source\junsu\customer\eps\app\axis2-web\include\link-footer.inc
+2023-01-11 15:48:26.322 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\link-footer.inc with ISO-8859-1
+2023-01-11 15:48:26.323 INFO  PRE_ANALYZER              |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.323 INFO  INVOCATION                |  |  |  + There is no invocation to be gathered
+2023-01-11 15:48:26.324 INFO  PRE_ANALYZER              |  |  |  + Elapsed time: 0.00 s (2.00 ms) for 23 line(s) / 0.00 s (0.09 ms) per line
+2023-01-11 15:48:26.324 INFO  PRE_ANALYZER              |  |  + [    7/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\xecure_header_3.php
+2023-01-11 15:48:26.324 INFO                            |  |  |  + from D:\pcms_source\junsu\customer\eps\app\eps_src\WebContent\XecureObject\xecure_header.php
+2023-01-11 15:48:26.325 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\xecure_header_3.php with ISO-8859-1
+2023-01-11 15:48:26.326 INFO  PRE_ANALYZER              |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.326 INFO  INVOCATION                |  |  |  + There is no invocation to be gathered
+2023-01-11 15:48:26.326 INFO  PRE_ANALYZER              |  |  |  + Elapsed time: 0.00 s (1.00 ms) for 12 line(s) / 0.00 s (0.08 ms) per line
+2023-01-11 15:48:26.326 INFO  PRE_ANALYZER              |  |  + [    8/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\adminfooter.inc
+2023-01-11 15:48:26.326 INFO                            |  |  |  + from D:\pcms_source\junsu\customer\eps\app\eps_src\WebContent\axis2-web\include\adminfooter.inc
+2023-01-11 15:48:26.327 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\adminfooter.inc with ISO-8859-1
+2023-01-11 15:48:26.328 INFO  PRE_ANALYZER              |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.328 INFO  INVOCATION                |  |  |  + There is no invocation to be gathered
+2023-01-11 15:48:26.328 INFO  PRE_ANALYZER              |  |  |  + Elapsed time: 0.00 s (1.00 ms) for 23 line(s) / 0.00 s (0.04 ms) per line
+2023-01-11 15:48:26.329 INFO  PRE_ANALYZER              |  |  + [    9/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\adminheader_1.inc
+2023-01-11 15:48:26.329 INFO                            |  |  |  + from D:\pcms_source\junsu\customer\eps\app\eps_src\WebContent\axis2-web\include\adminheader.inc
+2023-01-11 15:48:26.330 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\adminheader_1.inc with ISO-8859-1
+2023-01-11 15:48:26.330 INFO  PRE_ANALYZER              |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.331 INFO  INVOCATION                |  |  |  + There is no invocation to be gathered
+2023-01-11 15:48:26.331 INFO  PRE_ANALYZER              |  |  |  + Elapsed time: 0.00 s (2.00 ms) for 28 line(s) / 0.00 s (0.07 ms) per line
+2023-01-11 15:48:26.331 INFO  PRE_ANALYZER              |  |  + [   10/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\footer.inc
+2023-01-11 15:48:26.331 INFO                            |  |  |  + from D:\pcms_source\junsu\customer\eps\app\eps_src\WebContent\axis2-web\include\footer.inc
+2023-01-11 15:48:26.332 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\footer.inc with ISO-8859-1
+2023-01-11 15:48:26.333 INFO  PRE_ANALYZER              |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.333 INFO  INVOCATION                |  |  |  + There is no invocation to be gathered
+2023-01-11 15:48:26.333 INFO  PRE_ANALYZER              |  |  |  + Elapsed time: 0.00 s (2.00 ms) for 37 line(s) / 0.00 s (0.05 ms) per line
+2023-01-11 15:48:26.333 INFO  PRE_ANALYZER              |  |  + [   11/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\header_1.inc
+2023-01-11 15:48:26.333 INFO                            |  |  |  + from D:\pcms_source\junsu\customer\eps\app\eps_src\WebContent\axis2-web\include\header.inc
+2023-01-11 15:48:26.334 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\header_1.inc with ISO-8859-1
+2023-01-11 15:48:26.335 INFO  PRE_ANALYZER              |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.335 INFO  INVOCATION                |  |  |  + There is no invocation to be gathered
+2023-01-11 15:48:26.335 INFO  PRE_ANALYZER              |  |  |  + Elapsed time: 0.00 s (2.00 ms) for 29 line(s) / 0.00 s (0.07 ms) per line
+2023-01-11 15:48:26.335 INFO  PRE_ANALYZER              |  |  + [   12/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\link-footer_1.inc
+2023-01-11 15:48:26.335 INFO                            |  |  |  + from D:\pcms_source\junsu\customer\eps\app\eps_src\WebContent\axis2-web\include\link-footer.inc
+2023-01-11 15:48:26.336 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\link-footer_1.inc with ISO-8859-1
+2023-01-11 15:48:26.337 INFO  PRE_ANALYZER              |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.337 INFO  INVOCATION                |  |  |  + There is no invocation to be gathered
+2023-01-11 15:48:26.337 INFO  PRE_ANALYZER              |  |  |  + Elapsed time: 0.00 s (1.00 ms) for 23 line(s) / 0.00 s (0.04 ms) per line
+2023-01-11 15:48:26.338 INFO  PRE_ANALYZER              |  |  + [   13/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\upload_1.php
+2023-01-11 15:48:26.338 INFO                            |  |  |  + from D:\pcms_source\junsu\customer\eps\app\imsi\xecureweb_ver7\demo\file\Upload.php
+2023-01-11 15:48:26.339 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\upload_1.php with ISO-8859-9
+2023-01-11 15:48:26.340 INFO  PRE_ANALYZER              |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.382 INFO  INVOCATION                |  |  |  + There is no invocation to be gathered
+2023-01-11 15:48:26.382 INFO  PRE_ANALYZER              |  |  |  + Elapsed time: 0.04 s (44.00 ms) for 68 line(s) / 0.00 s (0.65 ms) per line
+2023-01-11 15:48:26.382 INFO  PRE_ANALYZER              |  |  + [   14/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\file_download_1.php
+2023-01-11 15:48:26.382 INFO                            |  |  |  + from D:\pcms_source\junsu\customer\eps\app\imsi\xecureweb_ver7\demo\file\file_download.php
+2023-01-11 15:48:26.383 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\file_download_1.php with ISO-8859-9
+2023-01-11 15:48:26.383 INFO  PRE_ANALYZER              |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.384 INFO  INVOCATION                |  |  |  + There is no invocation to be gathered
+2023-01-11 15:48:26.385 INFO  PRE_ANALYZER              |  |  |  + Elapsed time: 0.00 s (2.00 ms) for 3 line(s) / 0.00 s (0.67 ms) per line
+2023-01-11 15:48:26.385 INFO  PRE_ANALYZER              |  |  + [   15/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\file_upload_1.php
+2023-01-11 15:48:26.385 INFO                            |  |  |  + from D:\pcms_source\junsu\customer\eps\app\imsi\xecureweb_ver7\demo\file\file_upload.php
+2023-01-11 15:48:26.386 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\file_upload_1.php with ISO-8859-1
+2023-01-11 15:48:26.388 INFO  PRE_ANALYZER              |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.388 INFO  PRE_ANALYZER              |  |  |  + Skip analyzing since the root node is null
+2023-01-11 15:48:26.388 INFO  PRE_ANALYZER              |  |  |  + Elapsed time: 0.00 s (3.00 ms) for 47 line(s) / 0.00 s (0.06 ms) per line
+2023-01-11 15:48:26.388 INFO  PRE_ANALYZER              |  |  + [   16/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\file_upload1_1.php
+2023-01-11 15:48:26.388 INFO                            |  |  |  + from D:\pcms_source\junsu\customer\eps\app\imsi\xecureweb_ver7\demo\file\file_upload1.php
+2023-01-11 15:48:26.388 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\file_upload1_1.php with ISO-8859-2
+2023-01-11 15:48:26.389 INFO  PRE_ANALYZER              |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.394 INFO  INVOCATION                |  |  |  + There is no invocation to be gathered
+2023-01-11 15:48:26.394 INFO  PRE_ANALYZER              |  |  |  + Elapsed time: 0.01 s (6.00 ms) for 11 line(s) / 0.00 s (0.55 ms) per line
+2023-01-11 15:48:26.394 INFO  PRE_ANALYZER              |  |  + [   17/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\file_upload2.php
+2023-01-11 15:48:26.394 INFO                            |  |  |  + from D:\pcms_source\junsu\customer\eps\app\imsi\xecureweb_ver7\demo\file\file_upload2.php
+2023-01-11 15:48:26.395 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\file_upload2.php with ISO-8859-2
+2023-01-11 15:48:26.396 INFO  PRE_ANALYZER              |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.401 INFO  INVOCATION                |  |  |  + There is no invocation to be gathered
+2023-01-11 15:48:26.401 INFO  PRE_ANALYZER              |  |  |  + Elapsed time: 0.01 s (7.00 ms) for 13 line(s) / 0.00 s (0.54 ms) per line
+2023-01-11 15:48:26.401 INFO  PRE_ANALYZER              |  |  + [   18/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\xecure_header_2.php
+2023-01-11 15:48:26.401 INFO                            |  |  |  + from D:\pcms_source\junsu\customer\eps\app\imsi\xecureweb_ver7\object\xecure_header.php
+2023-01-11 15:48:26.403 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\xecure_header_2.php with ISO-8859-1
+2023-01-11 15:48:26.403 INFO  PRE_ANALYZER              |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.403 INFO  INVOCATION                |  |  |  + There is no invocation to be gathered
+2023-01-11 15:48:26.403 INFO  PRE_ANALYZER              |  |  |  + Elapsed time: 0.00 s (1.00 ms) for 12 line(s) / 0.00 s (0.08 ms) per line
+2023-01-11 15:48:26.404 INFO  PRE_ANALYZER              |  |  + [   19/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\upload.php
+2023-01-11 15:48:26.404 INFO                            |  |  |  + from D:\pcms_source\junsu\customer\eps\app\xecureweb_ver7\demo\file\Upload.php
+2023-01-11 15:48:26.405 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\upload.php with ISO-8859-9
+2023-01-11 15:48:26.407 INFO  PRE_ANALYZER              |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.426 INFO  INVOCATION                |  |  |  + There is no invocation to be gathered
+2023-01-11 15:48:26.427 INFO  PRE_ANALYZER              |  |  |  + Elapsed time: 0.02 s (23.00 ms) for 68 line(s) / 0.00 s (0.34 ms) per line
+2023-01-11 15:48:26.427 INFO  PRE_ANALYZER              |  |  + [   20/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\file_download.php
+2023-01-11 15:48:26.427 INFO                            |  |  |  + from D:\pcms_source\junsu\customer\eps\app\xecureweb_ver7\demo\file\file_download.php
+2023-01-11 15:48:26.428 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\file_download.php with ISO-8859-9
+2023-01-11 15:48:26.428 INFO  PRE_ANALYZER              |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.429 INFO  INVOCATION                |  |  |  + There is no invocation to be gathered
+2023-01-11 15:48:26.429 INFO  PRE_ANALYZER              |  |  |  + Elapsed time: 0.00 s (2.00 ms) for 3 line(s) / 0.00 s (0.67 ms) per line
+2023-01-11 15:48:26.429 INFO  PRE_ANALYZER              |  |  + [   21/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\file_upload.php
+2023-01-11 15:48:26.429 INFO                            |  |  |  + from D:\pcms_source\junsu\customer\eps\app\xecureweb_ver7\demo\file\file_upload.php
+2023-01-11 15:48:26.430 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\file_upload.php with ISO-8859-1
+2023-01-11 15:48:26.432 INFO  PRE_ANALYZER              |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.432 INFO  PRE_ANALYZER              |  |  |  + Skip analyzing since the root node is null
+2023-01-11 15:48:26.432 INFO  PRE_ANALYZER              |  |  |  + Elapsed time: 0.00 s (3.00 ms) for 47 line(s) / 0.00 s (0.06 ms) per line
+2023-01-11 15:48:26.433 INFO  PRE_ANALYZER              |  |  + [   22/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\file_upload1.php
+2023-01-11 15:48:26.433 INFO                            |  |  |  + from D:\pcms_source\junsu\customer\eps\app\xecureweb_ver7\demo\file\file_upload1.php
+2023-01-11 15:48:26.433 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\file_upload1.php with ISO-8859-2
+2023-01-11 15:48:26.434 INFO  PRE_ANALYZER              |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.437 INFO  INVOCATION                |  |  |  + There is no invocation to be gathered
+2023-01-11 15:48:26.438 INFO  PRE_ANALYZER              |  |  |  + Elapsed time: 0.00 s (4.00 ms) for 11 line(s) / 0.00 s (0.36 ms) per line
+2023-01-11 15:48:26.438 INFO  PRE_ANALYZER              |  |  + [   23/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\file_upload2_1.php
+2023-01-11 15:48:26.438 INFO                            |  |  |  + from D:\pcms_source\junsu\customer\eps\app\xecureweb_ver7\demo\file\file_upload2.php
+2023-01-11 15:48:26.438 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\file_upload2_1.php with ISO-8859-2
+2023-01-11 15:48:26.439 INFO  PRE_ANALYZER              |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.443 INFO  INVOCATION                |  |  |  + There is no invocation to be gathered
+2023-01-11 15:48:26.443 INFO  PRE_ANALYZER              |  |  |  + Elapsed time: 0.01 s (5.00 ms) for 13 line(s) / 0.00 s (0.38 ms) per line
+2023-01-11 15:48:26.443 INFO  PRE_ANALYZER              |  |  + [   24/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\xecure_header.php
+2023-01-11 15:48:26.443 INFO                            |  |  |  + from D:\pcms_source\junsu\customer\eps\app\xecureweb_ver7\object\xecure_header.php
+2023-01-11 15:48:26.444 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\xecure_header.php with ISO-8859-1
+2023-01-11 15:48:26.444 INFO  PRE_ANALYZER              |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.445 INFO  INVOCATION                |  |  |  + There is no invocation to be gathered
+2023-01-11 15:48:26.445 INFO  PRE_ANALYZER              |  |  |  + Elapsed time: 0.00 s (2.00 ms) for 12 line(s) / 0.00 s (0.17 ms) per line
+2023-01-11 15:48:26.446 INFO  PRE_ANALYZER              |  |  + Total number of line(s) processed: 612
+2023-01-11 15:48:26.446 INFO  PRE_ANALYZER              |  |  + Total elapsed time: 0.14 s (139.00 ms) [ Average: 5.79 ms, Stdev: 9.53 ms ]
+2023-01-11 15:48:26.446 INFO  PRE_ANALYZER              |  |  + Average elapsed time per line: 0.01 s (5.79 ms) [ Stdev: 0.34 ms ]
+2023-01-11 15:48:26.446 INFO  PRE_ANALYZER              |  + [-] <<<=== Pre-analysis finished successfully
+2023-01-11 15:48:26.446 INFO                            
+2023-01-11 15:48:26.446 INFO  ANALYZER                  |  + [-] Launch 24 targets ===>>>
+2023-01-11 15:48:26.446 INFO  ANALYZER                  |  |  + [    1/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\xecure_header_1.php
+2023-01-11 15:48:26.446 INFO                            |  |  |  +  from D:\pcms_source\junsu\customer\eps\app\XecureObject\xecure_header.php
+2023-01-11 15:48:26.447 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\xecure_header_1.php with ISO-8859-1
+2023-01-11 15:48:26.447 INFO  ANALYZER                  |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.449 INFO  ANALYZER                  |  |  |  + Elapsed time: 0.00 s (3.00 ms) for 12 line(s) / 0.00 s (0.25 ms) per line
+2023-01-11 15:48:26.449 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\xecure_header_1.php with ISO-8859-1
+2023-01-11 15:48:26.480 INFO  ANALYZER                  |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.481 INFO  ANALYZER                  |  |  |  + Elapsed time: 0.03 s (31.00 ms) for 12 line(s) / 0.00 s (2.58 ms) per line
+2023-01-11 15:48:26.481 INFO  ANALYZER                  |  |  + [    2/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\adminfooter_1.inc
+2023-01-11 15:48:26.481 INFO                            |  |  |  +  from D:\pcms_source\junsu\customer\eps\app\axis2-web\include\adminfooter.inc
+2023-01-11 15:48:26.482 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\adminfooter_1.inc with ISO-8859-1
+2023-01-11 15:48:26.482 INFO  ANALYZER                  |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.483 INFO  ANALYZER                  |  |  |  + Elapsed time: 0.00 s (2.00 ms) for 23 line(s) / 0.00 s (0.09 ms) per line
+2023-01-11 15:48:26.484 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\adminfooter_1.inc with ISO-8859-1
+2023-01-11 15:48:26.484 INFO  ANALYZER                  |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.485 INFO  ANALYZER                  |  |  |  + Elapsed time: 0.00 s (1.00 ms) for 23 line(s) / 0.00 s (0.04 ms) per line
+2023-01-11 15:48:26.485 INFO  ANALYZER                  |  |  + [    3/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\adminheader.inc
+2023-01-11 15:48:26.485 INFO                            |  |  |  +  from D:\pcms_source\junsu\customer\eps\app\axis2-web\include\adminheader.inc
+2023-01-11 15:48:26.486 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\adminheader.inc with ISO-8859-1
+2023-01-11 15:48:26.486 INFO  ANALYZER                  |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.487 INFO  ANALYZER                  |  |  |  + Elapsed time: 0.00 s (2.00 ms) for 28 line(s) / 0.00 s (0.07 ms) per line
+2023-01-11 15:48:26.488 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\adminheader.inc with ISO-8859-1
+2023-01-11 15:48:26.488 INFO  ANALYZER                  |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.489 INFO  ANALYZER                  |  |  |  + Elapsed time: 0.00 s (2.00 ms) for 28 line(s) / 0.00 s (0.07 ms) per line
+2023-01-11 15:48:26.489 INFO  ANALYZER                  |  |  + [    4/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\footer_1.inc
+2023-01-11 15:48:26.489 INFO                            |  |  |  +  from D:\pcms_source\junsu\customer\eps\app\axis2-web\include\footer.inc
+2023-01-11 15:48:26.490 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\footer_1.inc with ISO-8859-1
+2023-01-11 15:48:26.491 INFO  ANALYZER                  |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.491 INFO  ANALYZER                  |  |  |  + Elapsed time: 0.00 s (1.00 ms) for 37 line(s) / 0.00 s (0.03 ms) per line
+2023-01-11 15:48:26.493 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\footer_1.inc with ISO-8859-1
+2023-01-11 15:48:26.493 INFO  ANALYZER                  |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.494 INFO  ANALYZER                  |  |  |  + Elapsed time: 0.00 s (3.00 ms) for 37 line(s) / 0.00 s (0.08 ms) per line
+2023-01-11 15:48:26.494 INFO  ANALYZER                  |  |  + [    5/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\header.inc
+2023-01-11 15:48:26.494 INFO                            |  |  |  +  from D:\pcms_source\junsu\customer\eps\app\axis2-web\include\header.inc
+2023-01-11 15:48:26.495 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\header.inc with ISO-8859-1
+2023-01-11 15:48:26.495 INFO  ANALYZER                  |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.496 INFO  ANALYZER                  |  |  |  + Elapsed time: 0.00 s (2.00 ms) for 29 line(s) / 0.00 s (0.07 ms) per line
+2023-01-11 15:48:26.497 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\header.inc with ISO-8859-1
+2023-01-11 15:48:26.497 INFO  ANALYZER                  |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.498 INFO  ANALYZER                  |  |  |  + Elapsed time: 0.00 s (1.00 ms) for 29 line(s) / 0.00 s (0.03 ms) per line
+2023-01-11 15:48:26.498 INFO  ANALYZER                  |  |  + [    6/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\link-footer.inc
+2023-01-11 15:48:26.498 INFO                            |  |  |  +  from D:\pcms_source\junsu\customer\eps\app\axis2-web\include\link-footer.inc
+2023-01-11 15:48:26.499 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\link-footer.inc with ISO-8859-1
+2023-01-11 15:48:26.499 INFO  ANALYZER                  |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.500 INFO  ANALYZER                  |  |  |  + Elapsed time: 0.00 s (2.00 ms) for 23 line(s) / 0.00 s (0.09 ms) per line
+2023-01-11 15:48:26.500 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\link-footer.inc with ISO-8859-1
+2023-01-11 15:48:26.501 INFO  ANALYZER                  |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.501 INFO  ANALYZER                  |  |  |  + Elapsed time: 0.00 s (1.00 ms) for 23 line(s) / 0.00 s (0.04 ms) per line
+2023-01-11 15:48:26.502 INFO  ANALYZER                  |  |  + [    7/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\xecure_header_3.php
+2023-01-11 15:48:26.502 INFO                            |  |  |  +  from D:\pcms_source\junsu\customer\eps\app\eps_src\WebContent\XecureObject\xecure_header.php
+2023-01-11 15:48:26.503 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\xecure_header_3.php with ISO-8859-1
+2023-01-11 15:48:26.503 INFO  ANALYZER                  |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.503 INFO  ANALYZER                  |  |  |  + Elapsed time: 0.00 s (1.00 ms) for 12 line(s) / 0.00 s (0.08 ms) per line
+2023-01-11 15:48:26.504 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\xecure_header_3.php with ISO-8859-1
+2023-01-11 15:48:26.504 INFO  ANALYZER                  |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.505 INFO  ANALYZER                  |  |  |  + Elapsed time: 0.00 s (1.00 ms) for 12 line(s) / 0.00 s (0.08 ms) per line
+2023-01-11 15:48:26.505 INFO  ANALYZER                  |  |  + [    8/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\adminfooter.inc
+2023-01-11 15:48:26.505 INFO                            |  |  |  +  from D:\pcms_source\junsu\customer\eps\app\eps_src\WebContent\axis2-web\include\adminfooter.inc
+2023-01-11 15:48:26.506 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\adminfooter.inc with ISO-8859-1
+2023-01-11 15:48:26.506 INFO  ANALYZER                  |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.507 INFO  ANALYZER                  |  |  |  + Elapsed time: 0.00 s (2.00 ms) for 23 line(s) / 0.00 s (0.09 ms) per line
+2023-01-11 15:48:26.507 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\adminfooter.inc with ISO-8859-1
+2023-01-11 15:48:26.508 INFO  ANALYZER                  |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.508 INFO  ANALYZER                  |  |  |  + Elapsed time: 0.00 s (1.00 ms) for 23 line(s) / 0.00 s (0.04 ms) per line
+2023-01-11 15:48:26.509 INFO  ANALYZER                  |  |  + [    9/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\adminheader_1.inc
+2023-01-11 15:48:26.509 INFO                            |  |  |  +  from D:\pcms_source\junsu\customer\eps\app\eps_src\WebContent\axis2-web\include\adminheader.inc
+2023-01-11 15:48:26.510 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\adminheader_1.inc with ISO-8859-1
+2023-01-11 15:48:26.510 INFO  ANALYZER                  |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.510 INFO  ANALYZER                  |  |  |  + Elapsed time: 0.00 s (1.00 ms) for 28 line(s) / 0.00 s (0.04 ms) per line
+2023-01-11 15:48:26.511 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\adminheader_1.inc with ISO-8859-1
+2023-01-11 15:48:26.512 INFO  ANALYZER                  |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.512 INFO  ANALYZER                  |  |  |  + Elapsed time: 0.00 s (2.00 ms) for 28 line(s) / 0.00 s (0.07 ms) per line
+2023-01-11 15:48:26.512 INFO  ANALYZER                  |  |  + [   10/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\footer.inc
+2023-01-11 15:48:26.512 INFO                            |  |  |  +  from D:\pcms_source\junsu\customer\eps\app\eps_src\WebContent\axis2-web\include\footer.inc
+2023-01-11 15:48:26.513 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\footer.inc with ISO-8859-1
+2023-01-11 15:48:26.514 INFO  ANALYZER                  |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.514 INFO  ANALYZER                  |  |  |  + Elapsed time: 0.00 s (1.00 ms) for 37 line(s) / 0.00 s (0.03 ms) per line
+2023-01-11 15:48:26.515 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\footer.inc with ISO-8859-1
+2023-01-11 15:48:26.516 INFO  ANALYZER                  |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.516 INFO  ANALYZER                  |  |  |  + Elapsed time: 0.00 s (2.00 ms) for 37 line(s) / 0.00 s (0.05 ms) per line
+2023-01-11 15:48:26.516 INFO  ANALYZER                  |  |  + [   11/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\header_1.inc
+2023-01-11 15:48:26.516 INFO                            |  |  |  +  from D:\pcms_source\junsu\customer\eps\app\eps_src\WebContent\axis2-web\include\header.inc
+2023-01-11 15:48:26.517 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\header_1.inc with ISO-8859-1
+2023-01-11 15:48:26.518 INFO  ANALYZER                  |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.518 INFO  ANALYZER                  |  |  |  + Elapsed time: 0.00 s (2.00 ms) for 29 line(s) / 0.00 s (0.07 ms) per line
+2023-01-11 15:48:26.519 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\header_1.inc with ISO-8859-1
+2023-01-11 15:48:26.519 INFO  ANALYZER                  |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.520 INFO  ANALYZER                  |  |  |  + Elapsed time: 0.00 s (1.00 ms) for 29 line(s) / 0.00 s (0.03 ms) per line
+2023-01-11 15:48:26.520 INFO  ANALYZER                  |  |  + [   12/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\link-footer_1.inc
+2023-01-11 15:48:26.520 INFO                            |  |  |  +  from D:\pcms_source\junsu\customer\eps\app\eps_src\WebContent\axis2-web\include\link-footer.inc
+2023-01-11 15:48:26.521 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\link-footer_1.inc with ISO-8859-1
+2023-01-11 15:48:26.521 INFO  ANALYZER                  |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.522 INFO  ANALYZER                  |  |  |  + Elapsed time: 0.00 s (2.00 ms) for 23 line(s) / 0.00 s (0.09 ms) per line
+2023-01-11 15:48:26.523 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\link-footer_1.inc with ISO-8859-1
+2023-01-11 15:48:26.523 INFO  ANALYZER                  |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.524 INFO  ANALYZER                  |  |  |  + Elapsed time: 0.00 s (2.00 ms) for 23 line(s) / 0.00 s (0.09 ms) per line
+2023-01-11 15:48:26.524 INFO  ANALYZER                  |  |  + [   13/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\upload_1.php
+2023-01-11 15:48:26.524 INFO                            |  |  |  +  from D:\pcms_source\junsu\customer\eps\app\imsi\xecureweb_ver7\demo\file\Upload.php
+2023-01-11 15:48:26.525 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\upload_1.php with ISO-8859-9
+2023-01-11 15:48:26.527 INFO  ANALYZER                  |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.547 INFO  ANALYZER                  |  |  |  + Elapsed time: 0.02 s (23.00 ms) for 68 line(s) / 0.00 s (0.34 ms) per line
+2023-01-11 15:48:26.548 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\upload_1.php with ISO-8859-9
+2023-01-11 15:48:26.549 INFO  ANALYZER                  |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.549 INFO  ANALYZER                  |  |  |  + Elapsed time: 0.00 s (2.00 ms) for 68 line(s) / 0.00 s (0.03 ms) per line
+2023-01-11 15:48:26.550 INFO  ANALYZER                  |  |  + [   14/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\file_download_1.php
+2023-01-11 15:48:26.550 INFO                            |  |  |  +  from D:\pcms_source\junsu\customer\eps\app\imsi\xecureweb_ver7\demo\file\file_download.php
+2023-01-11 15:48:26.550 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\file_download_1.php with ISO-8859-9
+2023-01-11 15:48:26.551 INFO  ANALYZER                  |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.552 INFO  ANALYZER                  |  |  |  + Elapsed time: 0.00 s (2.00 ms) for 3 line(s) / 0.00 s (0.67 ms) per line
+2023-01-11 15:48:26.553 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\file_download_1.php with ISO-8859-9
+2023-01-11 15:48:26.553 INFO  ANALYZER                  |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.553 INFO  ANALYZER                  |  |  |  + Elapsed time: 0.00 s (1.00 ms) for 3 line(s) / 0.00 s (0.33 ms) per line
+2023-01-11 15:48:26.554 INFO  ANALYZER                  |  |  + [   15/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\file_upload_1.php
+2023-01-11 15:48:26.554 INFO                            |  |  |  +  from D:\pcms_source\junsu\customer\eps\app\imsi\xecureweb_ver7\demo\file\file_upload.php
+2023-01-11 15:48:26.554 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\file_upload_1.php with ISO-8859-1
+2023-01-11 15:48:26.556 INFO  ANALYZER                  |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.556 INFO  ANALYZER                  |  |  |  + Skip analyzing since the root node is null
+2023-01-11 15:48:26.556 INFO  ANALYZER                  |  |  |  + Elapsed time: 0.00 s (2.00 ms) for 47 line(s) / 0.00 s (0.04 ms) per line
+2023-01-11 15:48:26.557 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\file_upload_1.php with ISO-8859-1
+2023-01-11 15:48:26.557 INFO  ANALYZER                  |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.558 INFO  ANALYZER                  |  |  |  + Elapsed time: 0.00 s (1.00 ms) for 47 line(s) / 0.00 s (0.02 ms) per line
+2023-01-11 15:48:26.558 INFO  ANALYZER                  |  |  + [   16/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\file_upload1_1.php
+2023-01-11 15:48:26.558 INFO                            |  |  |  +  from D:\pcms_source\junsu\customer\eps\app\imsi\xecureweb_ver7\demo\file\file_upload1.php
+2023-01-11 15:48:26.558 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\file_upload1_1.php with ISO-8859-2
+2023-01-11 15:48:26.559 INFO  ANALYZER                  |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.563 INFO  ANALYZER                  |  |  |  + Elapsed time: 0.01 s (5.00 ms) for 11 line(s) / 0.00 s (0.45 ms) per line
+2023-01-11 15:48:26.563 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\file_upload1_1.php with ISO-8859-2
+2023-01-11 15:48:26.564 INFO  ANALYZER                  |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.564 INFO  ANALYZER                  |  |  |  + Elapsed time: 0.00 s (1.00 ms) for 11 line(s) / 0.00 s (0.09 ms) per line
+2023-01-11 15:48:26.564 INFO  ANALYZER                  |  |  + [   17/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\file_upload2.php
+2023-01-11 15:48:26.564 INFO                            |  |  |  +  from D:\pcms_source\junsu\customer\eps\app\imsi\xecureweb_ver7\demo\file\file_upload2.php
+2023-01-11 15:48:26.565 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\file_upload2.php with ISO-8859-2
+2023-01-11 15:48:26.566 INFO  ANALYZER                  |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.571 INFO  ANALYZER                  |  |  |  + Elapsed time: 0.01 s (7.00 ms) for 13 line(s) / 0.00 s (0.54 ms) per line
+2023-01-11 15:48:26.571 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\file_upload2.php with ISO-8859-2
+2023-01-11 15:48:26.572 INFO  ANALYZER                  |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.572 INFO  ANALYZER                  |  |  |  + Elapsed time: 0.00 s (1.00 ms) for 13 line(s) / 0.00 s (0.08 ms) per line
+2023-01-11 15:48:26.572 INFO  ANALYZER                  |  |  + [   18/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\xecure_header_2.php
+2023-01-11 15:48:26.572 INFO                            |  |  |  +  from D:\pcms_source\junsu\customer\eps\app\imsi\xecureweb_ver7\object\xecure_header.php
+2023-01-11 15:48:26.573 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\xecure_header_2.php with ISO-8859-1
+2023-01-11 15:48:26.573 INFO  ANALYZER                  |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.574 INFO  ANALYZER                  |  |  |  + Elapsed time: 0.00 s (1.00 ms) for 12 line(s) / 0.00 s (0.08 ms) per line
+2023-01-11 15:48:26.574 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\xecure_header_2.php with ISO-8859-1
+2023-01-11 15:48:26.575 INFO  ANALYZER                  |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.575 INFO  ANALYZER                  |  |  |  + Elapsed time: 0.00 s (1.00 ms) for 12 line(s) / 0.00 s (0.08 ms) per line
+2023-01-11 15:48:26.575 INFO  ANALYZER                  |  |  + [   19/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\upload.php
+2023-01-11 15:48:26.575 INFO                            |  |  |  +  from D:\pcms_source\junsu\customer\eps\app\xecureweb_ver7\demo\file\Upload.php
+2023-01-11 15:48:26.576 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\upload.php with ISO-8859-9
+2023-01-11 15:48:26.578 INFO  ANALYZER                  |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.596 INFO  ANALYZER                  |  |  |  + Elapsed time: 0.02 s (20.00 ms) for 68 line(s) / 0.00 s (0.29 ms) per line
+2023-01-11 15:48:26.596 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\upload.php with ISO-8859-9
+2023-01-11 15:48:26.597 INFO  ANALYZER                  |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.598 INFO  ANALYZER                  |  |  |  + Elapsed time: 0.00 s (2.00 ms) for 68 line(s) / 0.00 s (0.03 ms) per line
+2023-01-11 15:48:26.598 INFO  ANALYZER                  |  |  + [   20/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\file_download.php
+2023-01-11 15:48:26.598 INFO                            |  |  |  +  from D:\pcms_source\junsu\customer\eps\app\xecureweb_ver7\demo\file\file_download.php
+2023-01-11 15:48:26.599 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\file_download.php with ISO-8859-9
+2023-01-11 15:48:26.599 INFO  ANALYZER                  |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.600 INFO  ANALYZER                  |  |  |  + Elapsed time: 0.00 s (2.00 ms) for 3 line(s) / 0.00 s (0.67 ms) per line
+2023-01-11 15:48:26.600 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\file_download.php with ISO-8859-9
+2023-01-11 15:48:26.601 INFO  ANALYZER                  |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.601 INFO  ANALYZER                  |  |  |  + Elapsed time: 0.00 s (1.00 ms) for 3 line(s) / 0.00 s (0.33 ms) per line
+2023-01-11 15:48:26.601 INFO  ANALYZER                  |  |  + [   21/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\file_upload.php
+2023-01-11 15:48:26.601 INFO                            |  |  |  +  from D:\pcms_source\junsu\customer\eps\app\xecureweb_ver7\demo\file\file_upload.php
+2023-01-11 15:48:26.602 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\file_upload.php with ISO-8859-1
+2023-01-11 15:48:26.603 INFO  ANALYZER                  |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.604 INFO  ANALYZER                  |  |  |  + Skip analyzing since the root node is null
+2023-01-11 15:48:26.604 INFO  ANALYZER                  |  |  |  + Elapsed time: 0.00 s (3.00 ms) for 47 line(s) / 0.00 s (0.06 ms) per line
+2023-01-11 15:48:26.604 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\file_upload.php with ISO-8859-1
+2023-01-11 15:48:26.604 INFO  ANALYZER                  |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.605 INFO  ANALYZER                  |  |  |  + Elapsed time: 0.00 s (1.00 ms) for 47 line(s) / 0.00 s (0.02 ms) per line
+2023-01-11 15:48:26.605 INFO  ANALYZER                  |  |  + [   22/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\file_upload1.php
+2023-01-11 15:48:26.605 INFO                            |  |  |  +  from D:\pcms_source\junsu\customer\eps\app\xecureweb_ver7\demo\file\file_upload1.php
+2023-01-11 15:48:26.606 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\file_upload1.php with ISO-8859-2
+2023-01-11 15:48:26.606 INFO  ANALYZER                  |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.610 INFO  ANALYZER                  |  |  |  + Elapsed time: 0.01 s (5.00 ms) for 11 line(s) / 0.00 s (0.45 ms) per line
+2023-01-11 15:48:26.610 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\file_upload1.php with ISO-8859-2
+2023-01-11 15:48:26.611 INFO  ANALYZER                  |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.611 INFO  ANALYZER                  |  |  |  + Elapsed time: 0.00 s (1.00 ms) for 11 line(s) / 0.00 s (0.09 ms) per line
+2023-01-11 15:48:26.611 INFO  ANALYZER                  |  |  + [   23/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\file_upload2_1.php
+2023-01-11 15:48:26.611 INFO                            |  |  |  +  from D:\pcms_source\junsu\customer\eps\app\xecureweb_ver7\demo\file\file_upload2.php
+2023-01-11 15:48:26.612 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\file_upload2_1.php with ISO-8859-2
+2023-01-11 15:48:26.613 INFO  ANALYZER                  |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.618 INFO  ANALYZER                  |  |  |  + Elapsed time: 0.01 s (7.00 ms) for 13 line(s) / 0.00 s (0.54 ms) per line
+2023-01-11 15:48:26.618 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\file_upload2_1.php with ISO-8859-2
+2023-01-11 15:48:26.619 INFO  ANALYZER                  |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.619 INFO  ANALYZER                  |  |  |  + Elapsed time: 0.00 s (1.00 ms) for 13 line(s) / 0.00 s (0.08 ms) per line
+2023-01-11 15:48:26.619 INFO  ANALYZER                  |  |  + [   24/   24] Launch D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\xecure_header.php
+2023-01-11 15:48:26.619 INFO                            |  |  |  +  from D:\pcms_source\junsu\customer\eps\app\xecureweb_ver7\object\xecure_header.php
+2023-01-11 15:48:26.620 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\xecure_header.php with ISO-8859-1
+2023-01-11 15:48:26.620 INFO  ANALYZER                  |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.621 INFO  ANALYZER                  |  |  |  + Elapsed time: 0.00 s (1.00 ms) for 12 line(s) / 0.00 s (0.08 ms) per line
+2023-01-11 15:48:26.621 INFO  READER                    |  |  |  + Open D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\xecure_header.php with ISO-8859-1
+2023-01-11 15:48:26.622 INFO  ANALYZER                  |  |  |  + Number of parsing error(s): 0
+2023-01-11 15:48:26.622 INFO  ANALYZER                  |  |  |  + Elapsed time: 0.00 s (1.00 ms) for 12 line(s) / 0.00 s (0.08 ms) per line
+2023-01-11 15:48:26.622 INFO  ANALYZER                  |  |  + Total number of line(s) processed: 1224
+2023-01-11 15:48:26.622 INFO  ANALYZER                  |  |  + Total elapsed time: 0.16 s (161.00 ms) [ Average: 3.35 ms, Stdev: 5.79 ms ]
+2023-01-11 15:48:26.622 INFO  ANALYZER                  |  |  + Average elapsed time per line: 0.00 s (3.35 ms) [ Stdev: 0.39 ms ]
+2023-01-11 15:48:26.622 INFO  ANALYZER                  |  + [-] <<<=== Analysis finished successfully
+2023-01-11 15:48:26.622 INFO                            
+2023-01-11 15:48:26.623 INFO  ANALYZER                  |  + Value cache hit rate     : 94.19%
+2023-01-11 15:48:26.623 INFO  ANALYZER                  |  + Constraint cache hit rate: 0.00%
+2023-01-11 15:48:26.623 INFO  ANALYZER                  |  + Condition cache hit rate : 5.21%
+2023-01-11 15:48:26.623 INFO                            
+2023-01-11 15:48:26.628 INFO  ALARM_STORAGE             + (No alarm)
+2023-01-11 15:48:26.628 INFO                            

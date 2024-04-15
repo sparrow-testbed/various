@@ -1,0 +1,402 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+	<service>
+		<method name="setInsNoInsert">
+		    <![CDATA[
+		    		UPDATE SCTGL SET 
+					       INS_VENDOR_NO       = ${CONT_INS_VN}  
+					     , CONT_INS_NO         = ${CONT_INS_NO}  
+					     , ATTACH_CONT_INS_NO  = ${CONT_FILE_NO}  
+					     , FAULT_INS_NO        = ${FAULT_INS_NO}  
+					     , ATTACH_FAULT_INS_NO = ${FAULT_FILE_NO}  
+					     , PRE_INS_NO          = ${PRE_INS_NO}  
+					     , ATTACH_PRE_INS_NO   = ${PRE_FILE_NO} 
+					 WHERE 1=1
+					       AND CONT_NUMBER     = ${CONT_NO} 
+					       AND CONT_GL_SEQ     = ${CONT_GL_SEQ} 
+				]]>
+		</method>
+		<method name="getReceiveListSeller">
+		    <![CDATA[
+		    		SELECT 
+				       GL.CONT_NO AS CONT_NO  
+				     , GL.CONT_GL_SEQ  
+				     , GL.SUBJECT  
+				     , getCompanyNameLoc ( '000' , GL.SELLER_CODE , 'S' ) AS SELLER_CODE_TEXT  
+				     , GL.SELLER_CODE                                     AS SELLER_CODE  
+				     , GETCODETEXT1 ( 'M286' , GL.CT_FLAG , '#language#' )        AS CT_FLAG_TEXT  
+				     , GL.CT_FLAG  
+				     , GL.ADD_USER_ID AS SIGN_PERSON_ID  
+				     , GETUSERNAME ( '000' , GL.SIGN_PERSON_ID , 'LOC' ) AS SIGN_PERSON_NAME  
+				     , GL.CONT_AMT  
+				     --, GETDATEFORMAT ( GL.CONT_ADD_DATE ) AS CONT_ADD_DATE  
+				     , TO_CHAR(TO_DATE(GL.CONT_DATE), 'YYYY/MM/DD') AS CONT_ADD_DATE
+				     , GL.CONT_TYPE  
+				     , GETCODETEXT1 ( 'M125' , GL.CONT_TYPE , '#language#' ) AS CONT_TYPE_TEXT  
+				     --, GETCODETEXT1 ( 'M125' , GL.INS_VENDOR_NO , '#language#' ) AS CONT_INS_VN  
+				     --, GL.CONT_INS_NO  
+				     , GL.FAULT_INS_NO  
+				     , GL.CONT_FROM  
+				     , GL.CONT_TO  
+				     , GL.CONT_FORM_NO
+				     --, GL.CONT_REJECT_REASON AS REJECT_REASON  
+				     --, GL.CONT_REJECT_REASON AS REJECT_REASON_TEXT 
+				  FROM 
+				       SCPGL GL 
+				 WHERE 
+				       1 = 1 
+				       AND GL.DEL_FLAG = 'N' 
+				       AND GL.CT_FLAG IN ( 'CB' , '' ) 
+				       AND GL.CONT_DATE BETWEEN TO_CHAR(TO_DATE($S{from_cont_date}), 'YYYYMMDD') 
+				       AND TO_CHAR(TO_DATE($S{to_cont_date}), 'YYYYMMDD') 
+				       AND GL.SELLER_CODE = $S{company_code}
+				       AND UPPER ( GL.SUBJECT ) LIKE '%'|| UPPER ( $S{subject} ) ||'%' 
+				ORDER BY 
+				       GL.CONT_NO DESC 
+				     , GL.CONT_GL_SEQ DESC
+				]]>
+		</method>
+		
+		
+		<method name="getContractListSeller">
+		    <![CDATA[
+		    		SELECT 
+				       GL.CONT_NO AS CONT_NO  
+				     , GL.CONT_GL_SEQ  
+				     , GL.SUBJECT  
+				     , getCompanyNameLoc ( '000' , GL.SELLER_CODE , 'S' ) AS SELLER_CODE_TEXT  
+				     , GL.SELLER_CODE                                     AS SELLER_CODE  
+				     , GETCODETEXT1 ( 'M286' , GL.CT_FLAG , '#language#' )        AS CT_NAME  
+				     , GL.CT_FLAG  
+				     , GETCTRLCODENAME ( '000' , GL.COMPANY_CODE , 'P' , GL.SIGN_PERSON_ID ) AS SIGN_PERSON_NAME  
+				     , GL.SIGN_PERSON_ID  
+				     , GL.CONT_AMT  
+				     , TO_CHAR(TO_DATE(GL.CONT_DATE), 'YYYY/MM/DD') AS CONT_ADD_DATE
+				     , GL.CONT_TYPE  
+				     , GETCODETEXT1 ( 'M125' , GL.CONT_TYPE , '#language#' ) AS CONT_TYPE_TEXT  
+				     , GL.CONT_FROM  
+				     , GL.CONT_TO  
+				  FROM 
+				       SCPGL GL 
+				 WHERE 
+				       1 = 1 
+				       AND GL.DEL_FLAG = 'N' 
+				       AND GL.CT_FLAG IN ( 'CR', 'CC', 'CD', 'CE', 'CV', 'CL') 
+				       AND GL.CONT_DATE BETWEEN $S{from_cont_date} 
+				       AND $S{to_cont_date}  
+				       AND GL.SELLER_CODE = $S{company_code}
+				       AND UPPER ( GL.SUBJECT ) LIKE '%'|| UPPER ( $S{subject} ) ||'%' 
+				       AND GL.CT_FLAG = $S{ct_flag}
+				ORDER BY 
+				       GL.CONT_NO DESC 
+				     , GL.CONT_GL_SEQ DESC
+				]]>
+		</method>
+		
+		
+	<method name="createInfoData_0">
+		SELECT 	CNDT.HOUSE_CODE 
+		,		CNDT.COMPANY_CODE                      			
+		,		NVL(CNDT.PURCHASE_LOCATION, '01')      AS PURCHASE_LOCATION	
+		,		CNDT.ITEM_NO                           				
+		,		CNDT.VENDOR_CODE                       	
+		FROM	ICOYCNDT CNDT, ICOYPRDT PRDT, ICOYCNHD CNHD
+		WHERE 	CNDT.HOUSE_CODE = PRDT.HOUSE_CODE
+		AND		CNDT.PR_NO = PRDT.PR_NO
+		AND		CNDT.PR_SEQ = PRDT.PR_SEQ
+		AND		CNDT.HOUSE_CODE = CNHD.HOUSE_CODE
+		AND		CNDT.EXEC_NO = CNHD.EXEC_NO	
+		AND		CNDT.HOUSE_CODE = ${house_code}
+		AND		CNDT.EXEC_NO 	= ${exec_no}
+		AND		CNHD.PO_TYPE = 'U' -- 연간단가       
+		AND		CNHD.STATUS IN ('C', 'R')
+		AND   	CNDT.STATUS IN ('C', 'R')
+		AND		PRDT.STATUS IN ('C', 'R')	
+	</method>
+	
+	<method name="createInfoData_del1">
+		DELETE 
+		FROM 	ICOYINFO
+		WHERE	COMPANY_CODE 		= ${COMPANY_CODE}
+		AND		PURCHASE_LOCATION 	= ${PURCHASE_LOCATION}
+		AND		ITEM_NO 			= ${ITEM_NO}
+		AND		VENDOR_CODE 		= ${VENDOR_CODE}
+	</method>
+	
+	<method name="createInfoData_del2">
+		DELETE 
+		FROM 	ICOYINDR
+		WHERE	COMPANY_CODE 		= ${COMPANY_CODE}
+		AND		PURCHASE_LOCATION 	= ${PURCHASE_LOCATION}
+		AND		ITEM_NO 			= ${ITEM_NO}
+		AND		VENDOR_CODE 		= ${VENDOR_CODE}
+	</method>
+
+	<method name="createInfoData_1">
+		<![CDATA[
+
+		 INSERT INTO ICOYINFO(
+								 HOUSE_CODE			
+								,COMPANY_CODE		
+								,PURCHASE_LOCATION	
+								,ITEM_NO			
+								,VENDOR_CODE		
+								,STATUS				
+								,ADD_DATE			
+								,ADD_TIME			
+								,ADD_USER_ID		
+								,CHANGE_DATE		
+								,CHANGE_TIME		
+								,CHANGE_USER_ID		
+								,SHIPPER_TYPE		
+								,VENDOR_ITEM_NO		
+								,MAKER_CODE			
+								,MAKER_NAME			
+								,BASIC_UNIT			
+								,DELIVERY_LT		
+								,VALID_FROM_DATE	
+								,VALID_TO_DATE		
+								,DELY_TERMS			
+								,DELY_TEXT			
+								,PAY_TERMS			
+								,PAY_TEXT			
+								,PRICE_TYPE			
+								,EXEC_NO			
+								,EXEC_QTY			
+								,EXEC_SEQ			
+								,TTL_CHARGE			
+								,NET_AMT			
+								,EXEC_TTL_AMT		
+								,PURCHASE_HOLD_FLAG	
+								,CHARGE_FLAG		
+								,GR_BASE_FLAG		
+								,UNIT_PRICE			
+								,CUR				
+								,MOLDING_CHARGE		
+								,AUTO_PO_FLAG		
+								,PURCHASE_LEVEL		
+								,PURCHASE_UNIT		
+								,PURCHASE_CONV_RATE	
+								,PURCHASE_CONV_QTY	
+								,FOB_CHARGE			
+								,TRANS_CHARGE		
+								,MOLDING_QTY		
+								,CTRL_CODE			
+								,APP_TAX_CODE		
+								,ARRIVAL_PORT		
+								,ARRIVAL_PORT_NAME	
+								,DEPART_PORT		
+								,DEPART_PORT_NAME	
+								,TOD_1				
+								,TOD_2				
+								,TOD_3				
+								,SHIPPING_METHOD	
+								,NOTIFY				
+								,TARIFF_TAX_RATE	
+								,YEAR_QTY			
+								,CUSTOMER_PRICE		
+								,DISCOUNT			
+								,MAGIN_RATE			
+								,PREV_UNIT_PRICE	
+								,YEAR_TTL_REQ_QTY	
+								,MIN_ORDER_QTY		
+								,PROCESS_TYPE		
+								,LIST_PRICE			
+								,ACCOUNT_TYPE		
+							)
+		
+		SELECT   CNDT.HOUSE_CODE						-- HOUSE_CODE			
+		        ,CNDT.COMPANY_CODE                      -- COMPANY_CODE			
+		        ,NVL(CNDT.PURCHASE_LOCATION, '01')      -- PURCHASE_LOCATION	
+		        ,CNDT.ITEM_NO                           -- ITEM_NO				
+		        ,CNDT.VENDOR_CODE                       -- VENDOR_CODE			
+		        ,'C'                                    -- STATUS				
+		        ,CNDT.ADD_DATE                          -- ADD_DATE				
+		        ,CNDT.ADD_TIME                          -- ADD_TIME				
+		        ,CNDT.ADD_USER_ID                       -- ADD_USER_ID			
+		        ,CNDT.CHANGE_DATE                       -- CHANGE_DATE			
+		        ,CNDT.CHANGE_TIME                       -- CHANGE_TIME			
+		        ,CNDT.CHANGE_USER_ID                    -- CHANGE_USER_ID		
+		        ,DECODE(CNDT.CUR, 'KRW', 'D', 'O')      -- SHIPPER_TYPE			
+		        ,''                                     -- VENDOR_ITEM_NO		
+		        ,PRDT.MAKER_CODE                        -- MAKER_CODE			
+		        ,PRDT.MAKER_NAME                        -- MAKER_NAME			
+		        ,PRDT.UNIT_MEASURE                      -- BASIC_UNIT			
+		        ,''                                     -- DELIVERY_LT			
+		        ,CNDT.VALID_FROM_DATE                   -- VALID_FROM_DATE		
+		        ,CNDT.VALID_TO_DATE                     -- VALID_TO_DATE		
+		        ,CNHD.DELY_TERMS                        -- DELY_TERMS			
+		        ,GETICOMCODE2(CNHD.HOUSE_CODE,'M009',CNHD.DELY_TERMS)                                     -- DELY_TEXT			
+		        ,CNHD.PAY_TERMS                         -- PAY_TERMS			
+		        ,GETICOMCODE2(CNHD.HOUSE_CODE,'M134',CNHD.PAY_TERMS)                                     -- PAY_TEXT				
+		        ,''                                     -- PRICE_TYPE			
+		        ,CNDT.EXEC_NO                           -- EXEC_NO				
+		        ,CNDT.SETTLE_QTY                        -- EXEC_QTY				
+		        ,CNDT.EXEC_SEQ                          -- EXEC_SEQ				
+		        ,'0'                                    -- TTL_CHARGE			
+		        ,CNDT.ITEM_AMT                          -- NET_AMT				
+		        ,CNHD.EXEC_AMT_KRW                      -- EXEC_TTL_AMT			
+		        ,'N'                                    -- PURCHASE_HOLD_FLAG	
+		        ,'0'                                    -- CHARGE_FLAG			
+		        ,''                                     -- GR_BASE_FLAG			
+		        ,CNDT.UNIT_PRICE                        -- UNIT_PRICE			
+		        ,CNDT.CUR                               -- CUR					
+		        ,CNDT.MOLDING_CHARGE                    -- MOLDING_CHARGE		
+		        ,CNDT.AUTO_PO_FLAG                      -- AUTO_PO_FLAG			
+-- 		        ,(SELECT TEXT4 FROM SCODE WHERE HOUSE_CODE='000' AND type='M039' AND CODE=CNDT.PURCHASE_LOCATION)                                     -- PURCHASE_LEVEL		 -->
+		        ,''		
+		        ,''                                     -- PURCHASE_UNIT		
+		        ,CNDT.PURCHASE_CONV_RATE                -- PURCHASE_CONV_RATE	
+		        ,CNDT.PURCHASE_CONV_QTY                 -- PURCHASE_CONV_QTY	
+		        ,'0'                                    -- FOB_CHARGE			
+		        ,'0'                                    -- TRANS_CHARGE			
+		        ,CNDT.SETTLE_QTY                        -- MOLDING_QTY			
+		        ,CNHD.CTRL_CODE                         -- CTRL_CODE			
+		        ,''                                     -- APP_TAX_CODE			
+		        ,''                                     -- ARRIVAL_PORT			
+		        ,''                                     -- ARRIVAL_PORT_NAME	
+		        ,''                                     -- DEPART_PORT			
+		        ,''                                     -- DEPART_PORT_NAME		
+		        ,''                                     -- TOD_1				
+		        ,''                                     -- TOD_2				
+		        ,''                                     -- TOD_3				
+		        ,''                                     -- SHIPPING_METHOD		
+		        ,''                                     -- NOTIFY				
+		        ,'0'                                    -- TARIFF_TAX_RATE		
+		        ,CNDT.YEAR_QTY                          -- YEAR_QTY				
+		        ,CNDT.CUSTOMER_PRICE                    -- CUSTOMER_PRICE		
+		        ,CNDT.DISCOUNT                          -- DISCOUNT				
+		        ,''                                     -- MAGIN_RATE			
+		        ,''                                     -- PREV_UNIT_PRICE		
+		        ,''                                     -- YEAR_TTL_REQ_QTY		
+		        ,''                                     -- MIN_ORDER_QTY		
+		        ,''                                     -- PROCESS_TYPE			
+		        ,''                                     -- LIST_PRICE			
+		        ,''                                     -- ACCOUNT_TYPE			
+		FROM ICOYCNDT CNDT, ICOYPRDT PRDT, ICOYCNHD CNHD
+		WHERE 	CNDT.HOUSE_CODE = PRDT.HOUSE_CODE
+		  AND	CNDT.PR_NO = PRDT.PR_NO
+		  AND	CNDT.PR_SEQ = PRDT.PR_SEQ
+		  AND	CNDT.HOUSE_CODE = CNHD.HOUSE_CODE
+		  AND	CNDT.EXEC_NO = CNHD.EXEC_NO	
+		  AND	CNDT.HOUSE_CODE = ${house_code}
+		  AND	CNDT.EXEC_NO 	= ${exec_no}
+		  AND	CNHD.PO_TYPE = 'U' -- 연간단가       
+		  AND	CNHD.STATUS IN ('C', 'R')
+		  AND   CNDT.STATUS IN ('C', 'R')
+		  AND	PRDT.STATUS IN ('C', 'R')                                                      
+		]]>
+	</method>
+   
+	<method name="createInfoData_2">
+		<![CDATA[
+		 INSERT INTO ICOYINDR                                     
+		 (                                                        
+		   HOUSE_CODE                                             
+		 , COMPANY_CODE                                           
+		 , PURCHASE_LOCATION                                      
+		 , ITEM_NO                                                
+		 , VENDOR_CODE                                            
+		 , STATUS                                                 
+		 , ADD_DATE                                               
+		 , ADD_TIME                                               
+		 , ADD_USER_ID                                            
+		 , CHANGE_DATE                                            
+		 , CHANGE_TIME                                            
+		 , CHANGE_USER_ID                                         
+		 , EXEC_NO                                                
+		 , EXEC_QTY                                               
+		 , EXEC_SEQ                                               
+		 , CUM_PO_QTY                                             
+		 , QUOTA_PERCENT                                          
+		 , QUOTA_QTY                                              
+		 , PURCHASE_LEVEL                                         
+		 ) (                                                      
+		 SELECT                                                   
+		    CD.HOUSE_CODE        --HOUSE_CODE                     
+		 ,  CD.COMPANY_CODE      --COMPANY_CODE                       
+		 , NVL(CD.PURCHASE_LOCATION, '01')      -- PURCHASE_LOCATION
+		 ,  CD.ITEM_NO           --ITEM_NO                        
+		 ,  CD.VENDOR_CODE       --VENDOR_CODE                    
+		 ,  'C'                  --STATUS                         
+		 ,  CD.ADD_DATE       	 --ADD_DATE                                    
+		 ,  CD.ADD_TIME       	 --ADD_TIME                                    
+		 ,  CD.ADD_USER_ID       --ADD_USER_ID                                 
+		 ,  CD.CHANGE_DATE       --CHANGE_DATE                                 
+		 ,  CD.CHANGE_TIME       --CHANGE_TIME                                 
+		 ,  CD.CHANGE_USER_ID    --CHANGE_USER_ID                             
+		 ,  CD.EXEC_NO           --EXEC_NO                        
+		 ,  CD.SETTLE_QTY        --EXEC_QTY                       
+		 ,  CD.EXEC_SEQ          --EXEC_SEQ                       
+		 ,  0                    --CUM_PO_QTY                     
+		 ,  CD.QUOTA_PERCENT     --QUOTA_PERCENT                  
+		 ,  CD.SETTLE_QTY        --QUOTA_QTY                      
+		 --,(SELECT TEXT4 FROM SCODE WHERE HOUSE_CODE=CD.HOUSE_CODE AND type='M039' AND CODE=CD.PURCHASE_LOCATION)                  -- PURCHASE_LEVEL 
+		 ,''                 
+		 FROM ICOYCNHD CH                                         
+		    , ICOYCNDT CD                                                                                        
+		 WHERE CH.HOUSE_CODE	= ${house_code}                                 
+		   AND CH.EXEC_NO      	= ${exec_no}                                
+		   AND CH.STATUS IN ('C','R')                               
+		   AND CD.HOUSE_CODE   = CH.HOUSE_CODE                      
+		   AND CD.EXEC_NO      = CH.EXEC_NO                         
+		   AND CD.SETTLE_FLAG  = 'Y'                                
+		   AND CD.STATUS IN ('C','R')          
+		   AND CH.PO_TYPE = 'U' -- 연간단가                     
+		 )                                                        
+		]]>
+	</method>			
+	<method name="bl_SCPGL_CNT">
+	<![CDATA[
+	   SELECT DECODE(SUM(CNT),1,'C',2,'D','0') FLAG
+       FROM 
+       (	
+			SELECT COUNT(CONT_NO) CNT
+		  	  FROM SCPGL
+<OPT=S,S>	 WHERE CONT_NO     = ?					</OPT>
+<OPT=S,S>	   AND CONT_GL_SEQ = ?					</OPT>
+			   AND CT_FLAG     = 'CC'
+			   AND SIGN_STATUS IS NULL
+			UNION ALL
+			SELECT COUNT(CONT_NO) CNT
+		  	  FROM SCPGL
+<OPT=S,S>	 WHERE CONT_NO     = ?					</OPT>
+<OPT=S,S>	   AND CONT_GL_SEQ = ?					</OPT>
+			   AND CT_FLAG     = 'CC'
+			   AND SIGN_STATUS IN ('D','R')   
+			UNION ALL
+			SELECT DECODE(COUNT(CONT_NO),1,2,0) CNT
+		  	  FROM SCPGL
+<OPT=S,S>	 WHERE CONT_NO     = ?					</OPT>
+<OPT=S,S>	   AND CONT_GL_SEQ = ?					</OPT>
+			   AND CT_FLAG             = 'CV'
+		)
+	]]>
+	</method>
+	<method name="in_SCPGL_update">
+			UPDATE SCPGL
+  			   SET CT_FLAG             = DECODE(CT_FLAG,'CV','CR','CC','CB')
+  			      ,SIGN_STATUS         = NULL 
+      	  		  ,SE_ATTACH_NO        = NULL
+      		  	  ,SELLER_CONFRIM_DATE = NULL
+      		  	  ,CHANGE_USER_ID      = NULL
+      		  	  ,CHANGE_DATE         = NULL
+      		  	  ,CHANGE_TIME         = NULL
+      		  	  ,CONT_DD_FLAG        = NULL
+      		  	  ,FAULT_DD_FLAG       = NULL
+ 			 WHERE CONT_NO             = '#cont_no#'
+   			   AND CONT_GL_SEQ         = '#cont_gl_seq#'
+	</method>
+	<method name="in_SSIGN_delete">
+			DELETE
+		      FROM SSIGN 
+ 			 WHERE CONT_NO    = '#cont_no#' 
+   			   AND CONT_COUNT = '#cont_gl_seq#'
+   			   AND SIGN_HASH  = '#flag#'   			   
+	</method>
+	<method name="in_SCOTX_delete">
+			DELETE
+		      FROM SCOTX 
+ 			 WHERE CONT_NO    = '#cont_no#' 
+   			   AND CONT_COUNT = '#cont_gl_seq#'
+	</method>
+</service>

@@ -1,0 +1,396 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+<!-- 
+ ========================================================                                                                                                                                    
+ Copyright(c) 2010 ICOMPIA 솔루션사업부                                                                                                                                                      
+                                                                                                                                                                                             
+ @File       : s6030.xml                                                                                                                                                         
+                                                                                                                                                                                             
+ @FileName   :  사용자 현황 & 사용자 수정                                                                                                                                                              
+                                                                                                                                                                                             
+ Open Issues :                                                                                                                                                                               
+                                                                                                                                                                                             
+ Change history  :                                                                                                                                                                           
+ @LastModifyDate : 2010. 03. 10                                                                                                                                                              
+ @LastModifier   : GyuHyun Bark  박규현                                                                                                                                                      
+ @LastVersion    : V 1.0.0                                                                                                                                                                   
+ =========================================================                                                                                                                                   
+ -->
+
+<service>
+
+	<!-- ICT 사용 : 사용자등록 - 중복확인 버튼-->	
+	<method name="Check_Duplicate">
+			 select count(A1.USER_ID)
+			       +NVL( sum( (select count(Z.USER_ID) as ID_CNT
+			                from ICOMLUSR_ICT Z
+			               where Z.HOUSE_CODE = A1.HOUSE_CODE
+			                 and Z.USER_ID    = A1.USER_ID
+			             ) ),0) as ID_CNT
+			   from ICOMLUSR A1
+			 <![CDATA[ 
+				 <OPT=F,S> where A1.HOUSE_CODE = ? </OPT>  
+				 <OPT=F,S>   and A1.USER_ID    = ? </OPT> 
+			 ]]>
+	</method>
+	
+	
+<!-- 사용자등록 - 등록 버튼 (N13) _01 -->
+	<method name="et_setInsert_01">
+	INSERT INTO ICOMLUSR               
+		(                                  
+		  HOUSE_CODE                       
+		, USER_ID                            
+		, PASSWORD                           
+		, USER_NAME_LOC                    
+		, USER_NAME_ENG                    
+		
+		, COMPANY_CODE                     
+		, DEPT                              
+		, RESIDENT_NO                      
+		, EMPLOYEE_NO                      
+		, EMAIL                            
+		
+		, POSITION                         
+		, LANGUAGE                         
+		, TIME_ZONE                        
+		, COUNTRY                          
+		, CITY_CODE                        
+		
+		, PR_LOCATION                      
+		, MANAGER_POSITION                   
+		, USER_TYPE                        
+		, WORK_TYPE                        
+		, STATUS                           
+		
+		, SIGN_STATUS                      
+		, ADD_DATE                         
+		, ADD_TIME                         
+		, ADD_USER_ID                      
+		, CHANGE_USER_ID                   
+		
+		, MENU_PROFILE_CODE   
+		, LOGIN_NCY          		
+		) VALUES (                         
+		  '#house_code#'                  
+		, ?                                   
+		, ?	                         	    	  
+		, ?                                
+		, ?                                
+		                                   
+		, ?                                   	
+		, ?                                   	
+		, ?                                   	
+		, ?                                   	
+		, ?                                   	
+		                                      	         	
+		, ?                                   	
+		, ?                                   	
+		, ?                                   	
+		, ?                                   	
+		, ?                                   	
+		                                      	         	
+		, ?                                   	
+		, ?                                   	
+		, ?                                   	
+		, ?                                   	
+		, '#status#'                        	
+		
+		, 'R'                                     
+		, '#add_date#'                          
+		, '#add_time#'                          
+		, '#userId#'                            
+		, '#userId#'                            
+		
+		, GET_MENU_PROFILE_NM('#house_code#','#str_0_4#') 
+		,'Y'
+		)
+		
+	</method>
+	
+	
+<!-- 사용자등록 - 등록 버튼 (N13) _02 -->	
+	<method name="et_setInsert_02">
+	 INSERT INTO ICOMADDR              
+	 (                                 
+	   HOUSE_CODE                      
+	 , CODE_NO                         
+	 , CODE_TYPE                       
+	 , ZIP_CODE                        
+	 , PHONE_NO1                       
+	 , FAX_NO                          
+	 , HOMEPAGE                        
+	 , ADDRESS_LOC                     
+	 , ADDRESS_ENG                     
+	 , CEO_NAME_LOC                    
+	 , CEO_NAME_ENG                    
+	 , EMAIL                           
+	 , ZIP_BOX_NO                      
+	 , PHONE_NO2                       
+	 ) VALUES (                        
+	   '#house_code#'               	
+	 , ?   --user_id                   
+	 , ?   --code_type                 
+	 , ?   --ZIP_CODE                  
+	 , ?   --PHONE_NO1                 
+	 , ?   --FAX_NO                    
+	 , ?   --HOMEPAGE                  
+	 , ?   --ADDRESS_LOC               
+	 , ?   --ADDRESS_ENG               
+	 , ?   --CEO_NAME_LOC              
+	 , ?   --CEO_NAME_ENG              
+	 , ?   --EMAIL                     
+	 , ?   --ZIP_BOX_NO                
+	 , ?   --PHONE_NO2                 
+	 )                     
+	</method>
+	
+
+<!-- 사용자현황-조회 (A76)  
+SELECT HOUSE_CODE
+	 		, USER_ID
+	 		, USER_NAME_LOC
+	 		, COMPANY_NAME 
+	 		, TEXT_WORK_TYPE 
+	 		, DEPT, POSTION
+	 		, MANAGER_POSITION 
+	 		, getTelno(PHONE_NO) AS PHONE_NO
+	 		, MENU_NAME
+	 		, MENU_PROFILE_CODE
+	 		, SIGN_STATUS
+	 		, WORK_TYPE  
+	 FROM  USER_LIST_VW  
+ -->
+	<method name="et_getMainternace">
+
+	 SELECT HOUSE_CODE
+	 		, USER_ID
+	 		, USER_NAME_LOC
+	 		, COMPANY_NAME AS COMPANY
+	 		, TEXT_WORK_TYPE 
+	 		, DEPT
+	 		, POSITION
+	 		, MANAGER_POSITION 
+	 		, PHONE_NO
+	 		, MENU_NAME
+	 		, MENU_PROFILE_CODE
+	 		, SIGN_STATUS
+	 		, WORK_TYPE  
+	 FROM  USER_LIST_VW  
+	 <![CDATA[
+	 WHERE HOUSE_CODE = ${session.HOUSE_CODE}
+	 AND USER_ID LIKE '%' || $S{user_id} || '%' 
+	 AND USER_NAME_LOC LIKE '%' || UPPER($S{user_name_loc}) || '%'  
+	 AND COMPANY_CODE = ${session.COMPANY_CODE}
+	 AND DEPT = $S{dept} 
+	 AND USER_TYPE = $S{user_type}
+	 AND WORK_TYPE = $S{work_type}  
+	 ]]>
+	<if test="${sign_status}"  operator="eq" value="R">
+		AND SIGN_STATUS = 'R'
+	</if>
+	<if test="${sign_status}"  operator="eq" value="A">
+		AND SIGN_STATUS = 'A'
+	</if>
+	<if test="${sign_status}"  operator="eq" value="AR">
+		AND SIGN_STATUS IN ('A','R')
+	</if>
+
+	</method>
+	
+
+	<!-- 사용자 계정 타입  USER_LIST_VW 으로 교체해아함.-->
+	<method name="et_getWokrType">
+	 SELECT WORK_TYPE  
+	   FROM 
+	   ICOMLUSR
+	 <![CDATA[
+	 <OPT=F,S> WHERE HOUSE_CODE = ? </OPT> 
+	 <OPT=S,S> AND USER_ID = ? </OPT> 
+	 <OPT=S,S> AND COMPANY_CODE = ? </OPT>  
+	 <OPT=S,S> AND SIGN_STATUS = ?  </OPT>  
+	 ]]>
+
+	</method>
+
+<!-- //사용자현황-수정(A76) 수정화면에 뿌려줄 데이터 조회  -->	
+	<method name="et_getDisplay">
+	  SELECT L.HOUSE_CODE,  
+	         L.PASSWORD, 
+	         L.USER_ID,  
+	         L.USER_NAME_LOC,  
+	         L.USER_NAME_ENG,  
+	         L.COMPANY_CODE,  
+	         L.DEPT,  
+	         B.DEPT_NAME_LOC DEPT_NAME,  
+	         L.RESIDENT_NO,  
+	         L.EMPLOYEE_NO,  
+	         L.EMAIL,  
+	         L.POSITION,  
+	         L.LANGUAGE,  
+	         L.TIME_ZONE,  
+	         L.COUNTRY,  
+	         L.CITY_CODE,  
+	         L.PR_LOCATION,  
+	         L.MANAGER_POSITION,  
+	         L.USER_TYPE,  
+	         L.WORK_TYPE,
+	         --GETICOMCODE1(L.HOUSE_CODE, 'M104', L.WORK_TYPE) AS USER_TYPE,  
+	         A.CODE_TYPE,  
+	         A.ZIP_CODE,  
+	         A.PHONE_NO1,  
+	         A.FAX_NO,  
+	         A.HOMEPAGE,  
+	         A.ADDRESS_LOC,  
+	         A.ADDRESS_ENG,  
+	         A.CEO_NAME_LOC,  
+	         A.CEO_NAME_ENG,  
+	         A.EMAIL,  
+	         A.ZIP_BOX_NO,  
+	         A.PHONE_NO2  
+	    FROM ICOMLUSR L,  
+	         ICOMADDR A,
+	         ICOMOGDP B  
+	   WHERE L.USER_ID = A.CODE_NO   -- L.COMPANY_CODE 수정
+	     AND L.HOUSE_CODE = A.HOUSE_CODE 
+	     AND A.CODE_TYPE = '3' --사용자정보를 수정하는 경우는 CODE_TYPE = '3'
+	     AND L.HOUSE_CODE = B.HOUSE_CODE(+)
+      	 AND L.COMPANY_CODE = B.COMPANY_CODE(+)
+         AND L.DEPT = B.DEPT(+)
+		<![CDATA[
+		<OPT=F,S> AND L.HOUSE_CODE = ? </OPT>
+		<OPT=F,S> AND L.USER_ID = ? </OPT>
+		]]>
+	  
+	</method>
+	
+	
+<!-- //  사용자현황-수정()버튼누른후 사용자수정(팝업)-수정 A77    -->	
+	<method name="et_setUpdate_01">
+	 UPDATE ICOMLUSR SET                             	
+	   HOUSE_CODE      	=   '#houseCode#'          	
+		<if test="${passwd}"  operator="ne" value="">
+			, PASSWORD      = ${str1}		
+			, PW_RESET_DATE = '#add_date#'
+		</if>
+		<if test="${passwd}"  operator="eq" value="">
+			, LINK_DEPT           = ${str1}	
+		</if>
+	 , USER_NAME_LOC       = ${str2}                          
+	 , USER_NAME_ENG       = ${str3}                         
+	 , COMPANY_CODE        = ${str4}                         
+	 , DEPT                = ${str5}                          
+	 , RESIDENT_NO         = ${str6}                          
+	 , EMPLOYEE_NO         = ${str7}                          
+	 , EMAIL               = ${str8}                         
+	 , POSITION            = ${str9}                        
+	 , LANGUAGE            = ${str10}                          
+	 , TIME_ZONE           = ${str11}                         
+	 , COUNTRY             = ${str12}                         
+	 , CITY_CODE           = ${str13}                        
+	 , PR_LOCATION         = NVL(${str14}, '01')                          
+	 , MANAGER_POSITION    = ${str15}                     
+	 , USER_TYPE           = ${str16}                        
+		<if test="${verifier_key}"  operator="ne" value="">
+			, VERIFIER_KEY           = ${str17}	
+		</if>
+		<if test="${verifier_key}"  operator="eq" value="">
+			, VERIFIER_KEY           = ${str17}
+		</if>
+	 , STATUS              =     '#status#'                        
+	 , ADD_DATE            =      '#add_date#'        
+	 , ADD_TIME            =      '#add_time#'        
+	 , ADD_USER_ID         =      '#userId#'          
+	 , CHANGE_USER_ID      =      '#userId#'          
+	   where house_code    =      '#houseCode#'
+	     and user_id       = ${str18}
+ 	     and PASSWORD      = ${str19}
+	      
+	</method>
+	
+
+<!-- //  사용자현황-수정()버튼누른후 사용자수정(팝업)-수정 A77    UPDATE 조건수정 : WHERE CODE_NO = lpad(?, 10, '0')-->	
+	<method name="et_setUpdate_02">
+		UPDATE ICOMADDR SET                 	 
+		  HOUSE_CODE      = '#house_code#'  
+		, CODE_TYPE       = ${str1}                
+		, ZIP_CODE        = ${str2}                 
+		, PHONE_NO1       = ${str3}                
+		, FAX_NO          = ${str4}                 
+		, ADDRESS_LOC     = ${str5}                
+		, ADDRESS_ENG     = ${str6}                
+		, EMAIL           = ${str7}               
+		, ZIP_BOX_NO      = ${str8}               
+		, PHONE_NO2       = ${str9}               
+		where house_code = '#house_code#' 
+		  and CODE_NO = ${str10}
+		  and CODE_TYPE = '#code_type#'		
+	</method>
+
+<!--  //  사용자현황& 승인-삭제 A77 -->	
+	<method name="et_setDelete">
+		UPDATE ICOMLUSR  
+		SET STATUS = 'D',
+			DEL_FLAG ='Y',  
+		    CHANGE_USER_ID = $S{change_user_id},
+			CHANGE_DATE    = TO_CHAR(SYSDATE, 'YYYYMMDD'),
+			CHANGE_TIME    = TO_CHAR(SYSDATE, 'HH24MISS')          
+		WHERE HOUSE_CODE = ${session.HOUSE_CODE}  
+		AND USER_ID = ${USER_ID}  
+	</method>
+	
+	
+	<method name="et_setStatusD_01">
+		UPDATE ICOMLUSR  
+		SET STATUS = 'D',  
+		 CHANGE_DATE = '#add_date#',   
+		 CHANGE_TIME = '#add_time#',   
+		 CHANGE_USER_ID = '#user_id#'                  
+		WHERE HOUSE_CODE = ?  
+		AND USER_ID = ?  
+	</method>
+	
+	<method name="et_setStatusD_02">
+		DELETE FROM ICOMRULR  
+		WHERE HOUSE_CODE = ?  
+		AND USER_ID = ?  
+	</method>
+	
+	<method name="et_setStatusD_03">
+		 DELETE FROM ICOMRULR       
+		 WHERE HOUSE_CODE = ?       
+		 AND NEXT_SIGN_USER_ID = ?  
+	</method>
+<!--  //  사용자현황-삭제 A77 End  -->	
+	
+	<method name="et_setApproval">
+		<![CDATA[    
+			UPDATE ICOMLUSR  
+        	   SET SIGN_STATUS = 'A',  
+                   MENU_PROFILE_CODE = $S{menu_profile_code},  
+                   CHANGE_DATE = $S{add_date},   
+                   CHANGE_TIME = $S{add_time},   
+                   CHANGE_USER_ID = ${id}               
+             WHERE HOUSE_CODE = ${session.HOUSE_CODE}  
+              AND USER_ID =   ${USER_ID}
+		]]>	
+	</method>
+	<method name="setLogin_Pwd_History">
+		<![CDATA[    
+			INSERT INTO ICOMPWDL  
+        	(
+	           HOUSE_CODE 
+			 , USER_ID    
+			 , PASSWORD   
+			 , ADD_DATE   
+        	)
+        	VALUES
+        	(
+        	 ${house_code}      
+        	 , upper(${user_id})           
+        	 , ${password}        
+        	 , TO_CHAR(SYSDATE, 'YYYY/MM/DD HH24:MI:SS')
+        	)
+		]]>	
+	</method>
+</service>
+

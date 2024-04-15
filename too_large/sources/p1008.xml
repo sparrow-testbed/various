@@ -1,0 +1,1845 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- 
+ ========================================================                                                                                                                                    
+ Copyright(c) 2010 ICOMPIA 솔루션사업부                                                                                                                                                      
+                                                                                                                                                                                             
+ @File       : p1008.xml                                                                                                                                                         
+                                                                                                                                                                                             
+ @FileName   :  역경매                                                                                                                                                              
+                                                                                                                                                                                             
+ Open Issues :                                                                                                                                                                               
+                                                                                                                                                                                             
+ Change history  :                                                                                                                                                                           
+ @LastModifyDate : 2010. 05. 03                                                                                                                                                              
+ @LastModifier   : 김대형                                                                                                                                         
+ @LastVersion    : V 1.0.0                                                                                                                                                                   
+ =========================================================                                                                                                                                   
+ -->
+
+<service>
+
+<!-- 역경매 조회 -->	
+	<method name="et_getratbdlis1_2">
+	<![CDATA[    
+		SELECT                                                                                                     
+               RAHD.RA_NO     
+              ,RAHD.RA_COUNT                                                                                       
+              ,RAHD.ANN_NO                                                                                         
+              ,RAHD.SUBJECT                                                                                        
+              ,ra_vv.STATUS                                                                                        
+              ,decode(ra_vv.STATUS                                                                                 
+                     			,'RT', '작성중'
+                     			,'RP', '결재중'
+                     			,'RR', '결재반려' 
+                     			,'RC' ,'결재완료'
+                     			,'CC' ,'공고확정'                                                                     
+                     		    ,'RA' ,'공고중'
+                     		    ,'BP' ,'역경매진행'
+                     		    ,'RF' ,'역경매종료'                                         
+                     ,'') STATUS_TEXT                                                                              
+              ,TO_CHAR(ra_vv.bid_end_date,'YYYY/MM/DD HH24:MI') END_DATETIME                                       
+              ,(SELECT COUNT(DISTINCT VENDOR_CODE) FROM ICOYRQSE                                                   
+                     WHERE RFQ_NO       = RAHD.RA_NO                                                                    
+                       AND RFQ_COUNT    = RAHD.RA_COUNT 
+                       AND BID_FLAG = 'N'                                                        
+                ) BID_COUNT                                                                                      
+              ,RAHD.CURRENT_PRICE                                                                                  
+              ,RAHD.RESERVE_PRICE                                                                                  
+              --,RAHD.PR_NO                                                                                          
+              ,RAHD.CTRL_CODE                                                                                      
+              ,RAHD.CHANGE_USER_ID                                                                                 
+              ,RAHD.ATTACH_NO                                                                                      
+              ,RAHD.RA_FLAG                                                                                        
+              ,RAHD.SIGN_STATUS                                                                                    
+              ,(select NVL(count(*),0) from icomatch where doc_no = RAHD.ATTACH_NO ) ATTACH_COUNT
+              ,ra_vv.PR_NO
+              ,ra_vv.PR_SEQ
+              ,ra_vv.ADD_USER_ID
+              ,ra_vv.DEMAND_DEPT
+              ,ra_vv.DEMAND_DEPT_NAME
+              ,ra_vv.TEL_NO
+              ,ra_vv.CUST_CODE
+              ,ra_vv.CUST_NAME
+              ,GETUSERNAMELOC(RAHD.HOUSE_CODE, ra_vv.ADD_USER_ID) AS ADD_USER_NAME
+              ,PRDT.WBS_NO
+              /* ,PRDT.WBS_TXT */
+              ,PRDT.WBS_NAME AS WBS_TXT  
+              ,ra_vv.REQ_TYPE
+              ,ra_vv.REQ_TYPE_NAME                   
+          FROM ICOYRAHD RAHD, ICOYPRDT PRDT                                                                                   
+              ,(SELECT                                                                                             
+                       ra_v.HOUSE_CODE                                                                             
+                      ,ra_v.RA_NO                                                                                  
+                      ,ra_v.RA_COUNT                                                                               
+                      ,decode(ra_v.SIGN_STATUS                                                                     
+                              ,'T', 'RT'  -- 작성중                                                                         
+                              ,'P', 'RP'  -- 결재중
+                              ,'R', 'RR'  -- 결재반려
+                              ,'E', 'RC'  -- 결재완료
+                              ,(case when (SYSDATE < ra_v.ann_date) then 'CC' --공고확정                                      
+                                    when (ra_v.ann_date <= SYSDATE and SYSDATE < ra_v.bid_start_date) then 'RA' --공고중   
+                                    when (ra_v.bid_start_date <= SYSDATE and SYSDATE < ra_v.bid_end_date) then 'BP' --역경매진행
+                                    else 'RF' --역경매종료                                                                      
+                              end)                                                                                 
+                             ) STATUS
+
+                      ,ra_v.bid_end_date
+                      ,ra_v.PR_NO
+                      ,ra_v.PR_SEQ
+                      ,ra_v.ADD_USER_ID
+                      ,ra_v.DEMAND_DEPT
+                      ,ra_v.DEMAND_DEPT_NAME
+                      ,ra_v.TEL_NO
+                      ,ra_v.CUST_CODE
+                      ,ra_v.CUST_NAME   
+                      ,ra_v.REQ_TYPE  
+                      ,ra_v.REQ_TYPE_NAME                                                         
+                  FROM (SELECT                                                                                     
+                               hd.HOUSE_CODE                                                                       
+                              ,hd.RA_NO                                                                            
+                              ,hd.RA_COUNT                                                                         
+                              ,TO_DATE(hd.ANN_DATE||hd.ANN_TIME, 'YYYYMMDDHH24MISS')     ann_date                  
+                              ,TO_DATE(hd.START_DATE||hd.START_TIME, 'YYYYMMDDHH24MISS') bid_start_date            
+                              ,CASE WHEN RA_FLAG = 'D' THEN NULL ELSE TO_DATE(hd.END_DATE||hd.END_TIME, 'YYYYMMDDHH24MISS') END  bid_end_date              
+                              ,hd.SIGN_STATUS
+                              ,DT.PR_NO
+                              ,DT.PR_SEQ
+                              ,PRHD.ADD_USER_ID
+                              ,PRHD.DEMAND_DEPT
+                              ,PRHD.DEMAND_DEPT_NAME
+                              ,PRHD.TEL_NO
+                              ,PRHD.CUST_CODE
+                              ,getCustNameLoc(PRHD.CUST_CODE) AS CUST_NAME  
+                              ,DECODE(PRHD.REQ_TYPE, 'P','구매요청','사전지원') AS REQ_TYPE_NAME
+                              ,PRHD.REQ_TYPE
+                          FROM ICOYRAHD hd, ICOYRADT dt, ICOYPRHD PRHD                                                            
+                         WHERE hd.HOUSE_CODE = dt.HOUSE_CODE
+                           AND PRHD.HOUSE_CODE = hd.HOUSE_CODE
+                           AND PRHD.HOUSE_CODE = dt.HOUSE_CODE                                                     
+                           AND hd.RA_NO      = dt.RA_NO                                                            
+                           AND hd.RA_COUNT   = dt.RA_COUNT
+                           AND PRHD.PR_NO = dt.PR_NO                                                         
+                           AND hd.HOUSE_CODE = ${house_code}                                               
+                           AND hd.CTRL_CODE  = $S{ctrl_code}                                                
+                           AND hd.TYPE    = 'R'                                                                    
+                           AND hd.STATUS <> 'D'                                                                    
+                           AND dt.STATUS <> 'D'                                                                    
+                           AND dt.RA_SEQ  = '000001'                                                                    
+                           AND dt.SETTLE_FLAG = 'P'                                                                
+                           AND hd.ADD_DATE BETWEEN $S{start_change_date}                                               
+                           AND $S{end_change_date}                                               
+                           AND hd.ANN_NO = $S{ann_no}
+                       ) ra_v                                                                                      
+               ) ra_vv                                                                                             
+         WHERE RAHD.HOUSE_CODE = ra_vv.HOUSE_CODE                                                                  
+           AND RAHD.HOUSE_CODE = PRDT.HOUSE_CODE                                                                  
+           AND ra_vv.HOUSE_CODE = PRDT.HOUSE_CODE                                                                  
+           AND RAHD.RA_NO      = ra_vv.RA_NO
+           AND RAHD.RA_COUNT   = ra_vv.RA_COUNT
+           AND ra_vv.PR_NO = PRDT.PR_NO
+           AND ra_vv.PR_SEQ = PRDT.PR_SEQ                                            
+           AND ra_vv.STATUS  NOT IN('RF')              
+           AND ra_vv.STATUS = $S{bid_flag}                                                                   
+           AND   RAHD.CHANGE_USER_NAME_LOC  LIKE  '%'||$S{CHANGE_USER_NAME}||'%'                                    
+           AND   RAHD.SUBJECT  LIKE  '%'||$S{r_subject}||'%'                                        				
+         ORDER BY RAHD.ANN_NO DESC                                                                                 	
+		]]>	 
+	</method>
+	
+<!-- 역경매 삭제 -->		
+	
+	<method name="et_setPRDT">
+	<![CDATA[    
+		  /*정정공고, 취소공고 확정되기 전에 삭제를 하는경우 진행되고 있는 공고건이 있으므로 PR_PROCEEDING_FLAG를 업데이트 하면 안된다. */
+				UPDATE ICOYPRDT SET                                                
+                        PR_PROCEEDING_FLAG  = 'P'                                 	
+                       ,BID_STATUS          = 'PR'                                 
+                  WHERE HOUSE_CODE          = $S{house_code}
+                    AND (PR_NO, PR_SEQ) IN (
+                    							SELECT PR_NO, PR_SEQ                                      
+             									FROM ICOYRADT                                             
+             									WHERE HOUSE_CODE = ${HOUSE_CODE}    
+               									  AND RA_NO 	 = ${RA_NO}                               
+               									  AND RA_COUNT   = ${RA_COUNT} 
+               									--  AND RA_COUNT   = '1'
+                    						)                            	
+		]]>	 
+	</method>
+	
+	<method name="et_setPRDT_1">
+	<![CDATA[    
+		  SELECT PR_NO, PR_SEQ                                       
+             FROM ICOYRADT                                              
+             WHERE HOUSE_CODE = '#house_code#'     
+               AND RA_NO = '#ra_no#'                         
+               AND RA_COUNT = '#ra_count#'                      	
+		]]>	 
+	</method>
+	
+	<method name="et_setPRDT_2">
+	<![CDATA[    
+		 UPDATE ICOYPRDT SET                                                
+                       BID_STATUS           = 'PR'                               
+                  WHERE HOUSE_CODE          = '#house_code#'   
+                    AND PR_NO               = ?                                     
+                    AND PR_SEQ              = ?                                     	
+		]]>	 
+	</method>
+	
+	<method name="et_setRaDelete_1">
+	<![CDATA[    
+		 UPDATE ICOYRADT SET                                                
+                   STATUS              = 'D'                                   
+              WHERE HOUSE_CODE         = ${HOUSE_CODE}                                     
+                AND RA_NO              = ${RA_NO}                                      
+                AND RA_COUNT           = ${RA_COUNT}                                      	
+		]]>	 
+	</method>
+	
+	<method name="et_setRaDelete_2">
+	<![CDATA[    
+		  UPDATE ICOYRAHD SET                                                
+                   STATUS              = 'D'                                   
+              WHERE HOUSE_CODE         = ${HOUSE_CODE}                                     
+                AND RA_NO              = ${RA_NO}                                      
+                AND RA_COUNT           = ${RA_COUNT}                                       	
+		]]>	 
+	</method>
+	
+	<method name="et_setRaDelete_3">
+	<![CDATA[    
+		  UPDATE ICOYRQSE SET                                                
+                   STATUS               = 'D'                                   
+              WHERE HOUSE_CODE          = ${HOUSE_CODE}                                       
+                AND RFQ_NO              = ${RFQ_NO}                                     
+                AND RFQ_COUNT           = ${RFQ_COUNT}                                     	
+		]]>	 
+	</method>
+	
+	<method name="et_getRAHDDisplay">
+	<![CDATA[    
+		 SELECT   
+           RAHD.ANN_NO, 
+           RAHD.ANN_DATE, 
+           RAHD.SUBJECT, 
+           RAHD.REMARK, 
+           RADT.PR_NO, 
+           RAHD.RA_TYPE1, 
+           RAHD.CHANGE_DATE, 
+           RAHD.RESERVE_PRICE AS TOTAL_PRICE
+         FROM   
+         ICOYRAHD RAHD,ICOYRADT RADT   
+         WHERE   
+         RAHD.RA_NO='#ra_no#'    
+         AND RAHD.RA_COUNT='#ra_count#' 
+         AND RAHD.HOUSE_CODE=RADT.HOUSE_CODE  
+         AND RAHD.RA_NO=RADT.RA_NO   	
+         AND RAHD.RA_COUNT=RADT.RA_COUNT
+		]]>	 
+	</method>
+
+<!-- 역경매 취소공지 -->		
+	<method name="et_setRAHDCancelCreate">
+	<![CDATA[    
+		    INSERT INTO ICOYRAHD (                                                        --1
+                            HOUSE_CODE              ,                                     --2
+                            RA_NO                   ,                                     --3
+                            RA_COUNT                ,                                     --4
+                            COMPANY_CODE            ,                                     --5
+                            STATUS                  ,                                     --6
+                            ADD_DATE                ,                                     --7
+                            ADD_TIME                ,                                     --8
+                            ADD_USER_ID             ,                                     --9
+                            ADD_USER_NAME_LOC       ,                                     --10
+                            ADD_USER_NAME_ENG       ,                                     --11
+                            ADD_USER_DEPT           ,                                     --12
+                            CHANGE_DATE             ,                                     --13
+                            CHANGE_TIME             ,                                     --14
+                            CHANGE_USER_ID          ,                                     --15
+                            CHANGE_USER_NAME_LOC    ,                                     --16
+                            CHANGE_USER_NAME_ENG    ,                                     --17
+                            CHANGE_USER_DEPT        ,                                     --18
+                            SIGN_PERSON_ID          ,                                     --19
+                            SIGN_PERSON_NAME        ,                                     --20
+                            SIGN_DATE               ,                                     --21
+                            SIGN_STATUS             ,                                     --22
+                            RA_TYPE1                ,                                     --24
+                            RA_TYPE2                ,                                     --25
+                            ANN_NO                  ,                                     --27
+                            ANN_DATE                ,                                     --28
+                            SUBJECT                ,                                     --29
+                            START_DATE          ,                                           --30
+                            START_TIME          ,                                           --31
+                            END_DATE            ,                                           --32
+                            END_TIME            ,                                           --33
+                            RA_FLAG                 ,                                     --34
+                            PR_NO                   ,                                     --35
+                            CTRL_CODE               ,                                     --36
+                            REMARK                  ,                                     --36
+                            TYPE                                                      --37
+            )(                                                                            --38
+            SELECT                                                                        
+                            HOUSE_CODE              ,                                     --1
+                            '#RA_NO#',                              --2                            
+                            '#maxRaCount#'  ,      --3
+                            '#company_code#'   ,                     --4
+                            'C'                     ,                                     --5
+                            TO_CHAR(SYSDATE,'YYYYMMDD'),                                  --6
+                            TO_CHAR(SYSDATE,'HH24MISS'),                                  --7
+                            '#user_id#'   ,                     --8
+                            '#name_loc#'   ,                     --9
+                            '#name_eng#'   ,                     --10
+                            '#department#'   ,                     --11
+                            TO_CHAR(SYSDATE,'YYYYMMDD'),                                  --12
+                            TO_CHAR(SYSDATE,'HH24MISS'),                                  --13
+                            '#user_id#'   ,                     --14
+                            '#name_loc#'   ,                     --15
+                            '#name_eng#'   ,                     --16
+                            '#department#'   ,                     --17
+                            ''          ,                                                 --18
+                            ''        ,                                                   --19
+                            ''               ,                                            --20
+                            '#SIGN_STATUS#',                               --21
+                            RA_TYPE1              ,                                     --23
+                            RA_TYPE2              ,                                     --24
+                            '#ANN_NO#',                               --26
+                            TO_CHAR(TO_DATE('#ANN_DATE#'), 'YYYYMMDD'),                               --27
+                            '#ANN_ITEM#',                               --28
+                            START_DATE          ,                                           --30
+                            START_TIME          ,                                           --31
+                            END_DATE            ,                                           --32
+                            END_TIME            ,                                           --33
+                            '#RA_FLAG#',                               --33
+                            PR_NO                   ,                                     --34
+                            '000000'                    ,                                  --36
+                            '#BID_ETC# '          ,                                  --36
+                            'R'                                                      --36
+            FROM ICOYRAHD                                                                 --37
+            WHERE HOUSE_CODE = '#house_code#'                        
+            AND   RA_NO     = '#RA_NO#'                                               
+            AND   RA_COUNT  = '#RA_COUNT#'                                            
+            )                                                                             	
+		]]>	 
+	</method>
+	
+	<method name="et_setRADTCancelCreate">
+	<![CDATA[    
+		     INSERT INTO ICOYRADT (                                                         
+                                HOUSE_CODE           ,                                     
+                                RA_NO               ,                                     
+                                RA_COUNT            ,                                     
+                                RA_SEQ             ,                                     
+                                STATUS               ,                                    
+                                ADD_DATE             ,                                     
+                                ADD_TIME             ,                                     
+                                ADD_USER_ID          ,                                     
+                                ADD_USER_NAME_LOC    ,                                     
+                                ADD_USER_NAME_ENG    ,                                     
+                                ADD_USER_DEPT        ,                                     
+                                CHANGE_DATE          ,                                     
+                                CHANGE_TIME          ,                                     
+                                CHANGE_USER_ID       ,                                     
+                                CHANGE_USER_NAME_LOC ,                                     
+                                CHANGE_USER_NAME_ENG ,                                     
+                                CHANGE_USER_DEPT     ,                                     
+                                BUYER_ITEM_NO        ,                                     
+                                DESCRIPTION_LOC      ,                                     
+                                UNIT_MEASURE         ,                                     
+                                RA_QTY               ,                                     
+                                CUR                  ,                                     
+                                UNIT_PRICE           ,                                    
+        --                        PR_AMT                                                    
+        --                        SBID_PRICE           ,                                     
+        --                        SBID_AMT                                                   
+                                PR_NO                ,                                   
+                                PR_SEQ               ,                                    
+                                COMPANY_CODE         ,                                    
+                                SETTLE_FLAG                                               
+            ) (                                                                            
+            SELECT                                                                         
+                                HOUSE_CODE           ,                                     
+                                RA_NO               ,                                        
+                                '#maxRaCount#',
+                                RA_SEQ             ,                                     
+                                'C'                  ,                                     
+                                TO_CHAR(SYSDATE,'YYYYMMDD'),                               
+                                TO_CHAR(SYSDATE,'HH24MISS'),                               
+                                '#user_id#'   ,                  
+                                '#name_loc#'   ,                  
+                                '#name_eng#'   ,                  
+                                '#department#'   ,                  
+                                TO_CHAR(SYSDATE,'YYYYMMDD'),                               
+                                TO_CHAR(SYSDATE,'HH24MISS'),                               
+                                '#user_id#'   ,                  
+                                '#name_loc#'   ,                  
+                                '#name_eng#'   ,                  
+                                '#department#'   ,                  
+                                BUYER_ITEM_NO        ,                                     
+                                DESCRIPTION_LOC      ,                                     
+                                UNIT_MEASURE         ,                                     
+                                RA_QTY               ,                                     
+                                CUR                  ,                                     
+                                UNIT_PRICE           ,                                     
+        --                        PR_AMT               ,                                     
+        --                        SBID_PRICE           ,                                     
+        --                        SBID_AMT                                                   
+                                PR_NO                   ,                                    
+                                PR_SEQ                   ,                                
+                                COMPANY_CODE             ,                                
+                                SETTLE_FLAG                                     
+            FROM ICOYRADT                                                                  
+            WHERE HOUSE_CODE = '#house_code#'                         
+            AND   RA_NO     = '#RA_NO#'                                                
+            AND   RA_COUNT  = '#RA_COUNT#'                                             
+            AND   STATUS     IN ('C', 'R')                                                 
+            )                                                                              	
+		]]>	 
+	</method>
+	
+	<method name="et_setRARQCancelCreate">
+	<![CDATA[    
+		 INSERT INTO ICOYRQSE (                                                    
+                            HOUSE_CODE        ,                                    
+                            RFQ_NO            ,                                    
+                            RFQ_COUNT         ,                                    
+                            RFQ_SEQ           ,                                    
+                            VENDOR_CODE       ,                                    
+                            COMPANY_CODE       ,                                    
+                            STATUS            ,                                    
+                            ADD_DATE          ,                                    
+                            ADD_TIME          ,                                    
+                            ADD_USER_ID
+         ) (                                                                       
+         SELECT                                                                    
+                            '#HOUSE_CODE#'        ,                                             
+                            '#RA_NO#'            ,                                                                                     
+                            '#maxRaCount#'  ,
+                            RFQ_SEQ           ,                                    
+                            VENDOR_CODE       ,                                    
+                            COMPANY_CODE       ,                                    
+                            'C'            ,                                       
+                            TO_CHAR(SYSDATE,'YYYYMMDD'),   -- ADD_DATE             
+                            TO_CHAR(SYSDATE,'HH24MISS'),   -- ADD_TIME             
+                            '#ADD_USER_ID#'                             -- ADD_USER_ID          
+         FROM ICOYRQSE                                                             
+         WHERE HOUSE_CODE = '#HOUSE_CODE#'                                                      
+         AND   RFQ_NO     = '#RA_NO#'                                                      
+         AND   RFQ_COUNT  = '#RA_COUNT#'                                                      
+         AND   STATUS     IN ('C', 'R')                                            
+         )                                                                         	
+		]]>	 
+	</method>
+	
+	<method name="et_setratbdins1_1_RAHD">
+	<![CDATA[    
+		INSERT INTO ICOYRAHD (                 
+                       STATUS                      
+                      ,ADD_DATE                    
+                      ,ADD_TIME                    
+                      ,CHANGE_DATE                 
+                      ,CHANGE_TIME                 
+                      ,HOUSE_CODE                  
+                      ,RA_NO                       
+                      ,RA_COUNT                    
+                      ,COMPANY_CODE                
+                      ,ADD_USER_ID                 
+                      ,ADD_USER_NAME_LOC           
+                      ,ADD_USER_NAME_ENG           
+                      ,ADD_USER_DEPT               
+                      ,CHANGE_USER_ID              
+                      ,CHANGE_USER_NAME_LOC        
+                      ,CHANGE_USER_NAME_ENG        
+                      ,CHANGE_USER_DEPT            
+                      ,SUBJECT                     
+                      ,SIGN_STATUS                 
+                      ,START_DATE                  
+                      ,START_TIME                  
+                      ,END_DATE                    
+                      ,END_TIME                    
+                      ,RA_FLAG                     
+                      ,CREATE_TYPE                 
+                      ,REMARK                      
+                      ,RESERVE_PRICE               
+                      ,CURRENT_PRICE               
+                      ,BID_DEC_AMT                 
+                      ,CUR                         
+                      ,SHIPPER_TYPE                
+                      ,PR_NO                       
+                      ,CTRL_CODE                   
+                      ,RA_TYPE1                    
+                      ,RA_TYPE2                    
+                      ,BID_COUNT                   
+                      ,TYPE                         --R:역경매, A:경매
+                      ,ANN_NO                      
+                      ,ANN_DATE                    
+                      ,LIMIT_CRIT                  
+                      ,PROM_CRIT_TYPE                   
+                      ,ATTACH_NO                   
+
+                      ,CONT_TYPE_TEXT                   
+                      ,CONT_PLACE                   
+                      ,BID_PAY_TEXT                   
+                      ,BID_CANCEL_TEXT                   
+                      ,BID_JOIN_TEXT                   
+                      ,RA_ETC                   
+                      ,FROM_LOWER_BND                   
+                      ,DELY_PLACE                   
+                      ,OPEN_REQ_FROM_DATE             
+                      ,OPEN_REQ_TO_DATE                   
+                      ,PROM_CRIT                   
+
+             ) VALUES (                            
+                       'C'                         
+                      ,TO_CHAR(SYSDATE,'YYYYMMDD') 
+                      ,TO_CHAR(SYSDATE,'HH24MISS') 
+                      ,TO_CHAR(SYSDATE,'YYYYMMDD') 
+                      ,TO_CHAR(SYSDATE,'HH24MISS') 
+					  ,${house_code}
+					  ,${RA_NO}
+					  ,${RA_COUNT}
+					  ,${company_code}
+					  ,${user_id}
+					  ,${name_loc}
+					  ,${name_eng}
+					  ,${department}
+					  ,${user_id}
+					  ,${name_loc}
+					  ,${name_eng}
+					  ,${department}
+					  ,${SUBJECT}
+					  ,${SIGN_STATUS}
+					  ,TO_CHAR(TO_DATE(${START_DATE}), 'YYYYMMDD')
+					  ,${START_TIME_HOUR_MINUTE}
+					  ,TO_CHAR(TO_DATE(${END_DATE}), 'YYYYMMDD')
+					  ,${END_TIME_HOUR_MINUTE}
+					  ,${RA_FLAG}
+					  ,${CREATE_TYPE}
+					  ,${REMARK}
+					  ,${RESERVE_PRICE}
+					  ,${RESERVE_PRICE}
+					  ,${BID_DEC_AMT}
+					  ,${CUR}
+					  ,${shipper_type}
+					  ,${PR_NO}
+					  ,${CTRL_CODE}
+					  ,${RA_TYPE1}
+					  ,${RA_TYPE2}
+					  ,${BID_COUNT}
+					  ,${type}
+					  ,${ANN_NO}
+					  ,TO_CHAR(TO_DATE(${ANN_DATE}), 'YYYYMMDD')
+					  ,${LIMIT_CRIT}
+					  ,${PROM_CRIT_TYPE}
+					  ,${attach_no}
+					  ,${CONT_TYPE_TEXT}
+					  ,${CONT_PLACE}
+					  ,${BID_PAY_TEXT}
+					  ,${BID_CANCEL_TEXT}
+					  ,${BID_JOIN_TEXT}
+					  ,${RA_ETC}
+					  ,${FROM_LOWER_BND}
+					  ,${DELY_PLACE}
+					  ,TO_CHAR(TO_DATE(${open_req_from_date}), 'YYYYMMDD')
+					  ,TO_CHAR(TO_DATE(${open_req_to_date}), 'YYYYMMDD')
+					  ,${PROM_CRIT}                      
+             )                                     	
+		]]>	 
+	</method>
+	
+	<method name="et_setratbdins1_1_PRDT">
+	<![CDATA[    
+		 UPDATE  ICOYPRDT SET                                           
+               BID_STATUS = 'PR'                                           
+              WHERE PR_NO || '^#^' || PR_SEQ    IN                         
+                   (SELECT PR_NO || '^#^' || PR_SEQ FROM ICOYRADT          
+                     WHERE RA_NO =  '#RA_NO#' )                	
+		]]>	 
+	</method>
+	
+	<method name="et_setratbdins1_1_RADT">
+	<![CDATA[    
+		INSERT INTO ICOYRADT (                    
+                       HOUSE_CODE                     
+                      ,RA_NO                          
+                      ,RA_COUNT                       
+                      ,COMPANY_CODE                   
+                      ,STATUS                         
+                      ,ADD_DATE                       
+                      ,ADD_TIME                       
+                      ,ADD_USER_ID                    
+                      ,ADD_USER_NAME_LOC              
+                      ,ADD_USER_NAME_ENG              
+                      ,ADD_USER_DEPT                  
+                      ,CHANGE_DATE                    
+                      ,CHANGE_TIME                    
+                      ,CHANGE_USER_ID                 
+                      ,CHANGE_USER_NAME_LOC           
+                      ,CHANGE_USER_NAME_ENG           
+                      ,CHANGE_USER_DEPT               
+                      ,RA_SEQ                         
+                      ,DESCRIPTION_LOC                
+                      ,RA_QTY                         
+                      ,UNIT_MEASURE                   
+                      ,CUR                            
+                      ,UNIT_PRICE                     
+                      ,PR_NO                          
+                      ,PR_SEQ                         
+                      ,SETTLE_FLAG                    
+                      ,BUYER_ITEM_NO                  
+                      ,SPECIFICATION
+                      ,RD_DATE
+                      ,MAKER_CODE
+                      ,MAKER_NAME                  
+             ) VALUES (                                                                             
+                         ${house_code} ,                               -- HOUSE_CODE                           
+                         ${RA_NO} ,    	                            -- RA_NO                                
+                         ${RA_COUNT} ,     	                        -- RA_COUNT                             
+                         '#company_code#',            					-- COMPANY_CODE                         
+                         'C' ,                              			-- STATUS                               
+                         TO_CHAR(SYSDATE,'YYYYMMDD'),       			-- ADD_DATE                             
+                         TO_CHAR(SYSDATE,'HH24MISS'),       			-- ADD_TIME                             
+                         ${user_id} ,                                	-- ADD_USER_ID                          
+                         ${name_loc} ,                                	-- ADD_USER_NAME_LOC                    
+                         ${name_eng} ,                                	-- ADD_USER_NAME_ENG                    
+                         ${department} ,                               -- ADD_USER_DEPT                        
+                         TO_CHAR(SYSDATE,'YYYYMMDD'),       			-- CHANGE_DATE                          
+                         TO_CHAR(SYSDATE,'HH24MISS'),       			-- CHANGE_TIME                          
+                         ${user_id} ,                                  -- CHANGE_USER_ID                       
+                         ${name_loc} ,                                 -- CHANGE_USER_NAME_LOC                 
+                         ${name_eng} ,                                 -- CHANGE_USER_NAME_ENG                 
+                         ${department} ,                               -- CHANGE_USER_DEPT                     
+                         LPAD($S{RA_SEQ},6,0),                       	-- RA_SEQ                               
+                         ${DESCRIPTION_LOC} ,                          -- DESCRIPTION_LOC                      
+                         ${QTY} ,                           			-- RA_QTY                               
+                         ${UNIT_MEASURE} ,                             -- UNIT_MEASURE                         
+                         ${CUR} ,                                		-- CUR                                  
+                         ${UNIT_PRICE} ,                               -- UNIT_PRICE                           
+                         ${PR_NO} ,                                	-- PR_NO            
+                         ${PR_SEQ} ,                                	-- PR_SEQ           
+                         'P' ,                               			-- SETTLE_FLAG      
+                      	 ${ITEM_NO} ,                                  --BUYER_ITEM_NO     
+                      	 ${SPECIFICATION} ,                            --SPECIFICATION
+                      	 TO_CHAR(TO_DATE($S{RD_DATE}, 'YYYY/MM/DD'), 'YYYYMMDD'),--RD_DATE
+                      	 ${MAKER_CODE} ,                               --MAKER_CODE
+                      	 ${MAKER_NAME}                                 --MAKER_NAME
+             )                                                                                       --SETTLE_FLAG 개찰시 Y/N	
+		]]>	 
+	</method>
+	
+	<method name="et_setratbdins1_1_RQSE">
+	<![CDATA[    
+		INSERT INTO ICOYRQSE               
+                (                                  
+                   HOUSE_CODE,                     
+                   VENDOR_CODE,                    
+                   RFQ_NO,                         
+                   RFQ_COUNT,                      
+                   RFQ_SEQ,                        
+                   COMPANY_CODE,                   
+                   STATUS,                         
+                   ADD_DATE,                       
+                   ADD_TIME,                       
+                   ADD_USER_ID,                    
+                   CHANGE_DATE,                    
+                   CHANGE_TIME,                    
+                   CHANGE_USER_ID,                 
+                   BID_FLAG                        
+                )                                  
+                VALUES                             
+                (                                  
+                   ${house_code}                  --HOUSE_CODE,
+                  ,${vendor_code}                 --VENDOR_CODE,
+                  ,${RA_NO}                       --RFQ_NO,
+                  ,${RA_COUNT}                    --RFQ_COUNT,
+                  ,LPAD(1,6,0)                     --RFQ_SEQ,
+                  ,${company_code}                 --COMPANY_CODE,
+                  ,'C'                             --STATUS,
+                  ,TO_CHAR(SYSDATE,'YYYYMMDD')     --ADD_DATE,
+                  ,TO_CHAR(SYSDATE,'HH24MISS')     --ADD_TIME,
+                  ,$S{user_id}                     --ADD_USER_ID,
+                  ,TO_CHAR(SYSDATE,'YYYYMMDD')     --CHANGE_DATE,
+                  ,TO_CHAR(SYSDATE,'HH24MISS')     --CHANGE_TIME,
+                  ,${user_id}                     --CHANGE_USER_ID,
+                  ,'N'                             --BID_FLAG
+                 )                                 	
+		]]>	 
+	</method>
+	
+	<method name="et_setratbdins1_1_BDRC">
+	<![CDATA[    
+		 INSERT INTO ICOYBDRC (                                                        
+		                                 HOUSE_CODE             ,                             
+		                                 BID_NO                 ,                             
+		                                 BID_COUNT              ,                             
+		                                 RC_CODE             	,                             
+		                                 RC_NAME                ,                             
+		                                 ADD_DATE               ,                             
+		                                 ADD_TIME               ,                             
+		                                 ADD_USER_ID            ,                             
+		                                 ADD_USER_NAME_LOC      ,                             
+		                                 ADD_USER_NAME_ENG      ,                             
+		                                 ADD_USER_DEPT          ,                             
+		                                 CHANGE_DATE            ,                             
+		                                 CHANGE_TIME            ,                             
+		                                 CHANGE_USER_ID         ,                             
+		                                 CHANGE_USER_NAME_LOC   ,                             
+		                                 CHANGE_USER_NAME_ENG   ,                             
+		                                 CHANGE_USER_DEPT                                           
+		         ) VALUES (                                                                    
+		                                 ${house_code},                                                    
+		                                 ${RA_NO},                                                    
+		                                 ${RA_COUNT},                                            
+		                                 ${code},                                                    
+		                                 ${name},                                                   
+		                                 TO_CHAR(SYSDATE,'YYYYMMDD'),   -- ADD_DATE            
+		                                 TO_CHAR(SYSDATE,'HH24MISS'),   -- ADD_TIME            
+		                                 '#user_id#'                ,   -- ADD_USER_ID         
+		                                 '#name_loc#'               ,   -- ADD_USER_NAME_LOC   
+		                                 '#name_eng#'               ,   -- ADD_USER_NAME_ENG   
+		                                 '#department#'             ,   -- ADD_USER_DEPT       
+		                                 TO_CHAR(SYSDATE,'YYYYMMDD'),   -- ADD_DATE            
+		                                 TO_CHAR(SYSDATE,'HH24MISS'),   -- ADD_TIME            
+		                                 '#user_id#'             	,   -- ADD_USER_ID         
+		                                 '#name_loc#'             	,   -- ADD_USER_NAME_LOC   
+		                                 '#name_eng#'             	,   -- ADD_USER_NAME_ENG   
+		                                 '#department#'                 -- ADD_USER_DEPT       
+		         )                                                                             	
+		]]>	 
+	</method>
+	
+	<method name="et_setratbdins1_1_PRDT_2">
+	<![CDATA[    
+		UPDATE ICOYPRDT                             
+               SET PR_PROCEEDING_FLAG='C'    -- R:역경매
+                   ,BID_STATUS = 'AR'           
+         WHERE  HOUSE_CODE =  ${house_code}                      
+           AND  PR_NO      =  ${PR_NO}                      
+           AND  PR_SEQ     =  ${PR_SEQ}                       	
+		]]>	 
+	</method>
+	
+	<method name="et_delRADT">
+	<![CDATA[    
+		 DELETE  FROM ICOYRADT                                             
+              WHERE HOUSE_CODE          = ${house_code}                                   
+                AND RA_NO               = ${RA_NO}                                    
+                AND RA_COUNT            = ${RA_COUNT}                                    	
+		]]>	 
+	</method>
+	
+	<method name="et_delRASE">
+	<![CDATA[    
+		 DELETE  FROM ICOYRQSE                                             
+              WHERE HOUSE_CODE           = ${house_code}                                
+                AND RFQ_NO               = ${RA_NO}                                     
+                AND RFQ_COUNT            = ${RA_COUNT}                                  	
+		]]>	 
+	</method>
+	
+	<method name="et_delRAHD">
+	<![CDATA[    
+		 DELETE  FROM ICOYRAHD                                            
+              WHERE HOUSE_CODE          = ${house_code}                                    
+                AND RA_NO               = ${RA_NO}                                          
+                AND RA_COUNT            = ${RA_COUNT}                                       	
+		]]>	 
+	</method>
+	
+	<method name="et_getratbdupd1_1">
+	<![CDATA[    
+		SELECT                                                                        
+                   RAHD.ANN_NO                                                             
+                  ,RAHD.ANN_DATE                                                           
+                  ,RAHD.SUBJECT                                                            
+                  ,RAHD.RA_TYPE1                                                           
+                  ,(select count(*)                                                        
+                      from icoyrqse rqse                                                   
+                     where rqse.house_code = RAHD.HOUSE_CODE                               
+                       and rqse.rfq_no     = RAHD.RA_NO                                    
+                       and rqse.rfq_count  = RAHD.RA_COUNT                                 
+                       and rqse.status    != 'D'                                           
+                   ) VENDOR_COUNT                                                          
+                  ,RAHD.START_DATE                                                         
+                  ,NVL(RAHD.START_TIME, '0000') AS  START_TIME                                                        
+                   ,SUBSTR(START_TIME, 0, 2) AS APP_BEGIN_TIME_HOUR                         
+                   ,SUBSTR(START_TIME, 3, 2) AS APP_BEGIN_TIME_MINUTE                       
+                  ,RAHD.END_DATE                                                           
+                  ,NVL(RAHD.END_TIME, '0000') AS  END_TIME                                                           
+                   ,SUBSTR(END_TIME, 0, 2) AS APP_END_TIME_HOUR                            
+                   ,SUBSTR(END_TIME, 3, 2) AS APP_END_TIME_MINUTE                          
+                  ,RAHD.CUR                                                                
+                  ,RAHD.RESERVE_PRICE                                                      
+                  ,RAHD.BID_DEC_AMT                                                        
+                  ,RAHD.LIMIT_CRIT                                                         
+                  ,RAHD.PROM_CRIT                                                          
+                  ,RAHD.REMARK                                                             
+                   ,(select NVL(count(*),0)                                                 
+                      from sfile where doc_no = RAHD.ATTACH_NO                           
+                   ) ATTACH_COUNT                                                          
+                  ,RAHD.ATTACH_NO                                     
+                  ,GETVENDORS2(RAHD.HOUSE_CODE, RAHD.RA_NO, RAHD.RA_COUNT) VENDOR_SELECT   
+                  ,RAHD.CONT_TYPE_TEXT                                                     
+                  ,RAHD.CONT_PLACE                                                         
+                  ,RAHD.BID_PAY_TEXT                                                       
+                  ,RAHD.BID_CANCEL_TEXT                                                    
+                  ,RAHD.BID_JOIN_TEXT                                                      
+                  ,RAHD.RA_ETC                                                             
+                  ,RAHD.FROM_LOWER_BND                                                             
+	                ,(SELECT COUNT(*) FROM ICOYBDRC                      
+	                 WHERE HOUSE_CODE = '#house_code#'                   
+	                 AND   HOUSE_CODE = RAHD.HOUSE_CODE                       
+	                 AND   BID_NO     = RAHD.RA_NO                       
+	                 AND   BID_COUNT  = RAHD.RA_COUNT) AS LOCATION_CNT         
+	                ,GETLOCATIONS(RAHD.HOUSE_CODE, RAHD.RA_NO, RAHD.RA_COUNT) AS LOCATION_VALUES         
+
+                  ,CONVERT_DATE(RAHD.RD_DATE) AS RD_DATE                                                             
+                  ,RAHD.DELY_PLACE                                                             
+                  ,RAHD.OPEN_REQ_FROM_DATE                                                             
+                  ,RAHD.OPEN_REQ_TO_DATE                                                             
+                  ,RAHD.PROM_CRIT_TYPE                                                             
+				  ,GETICOMCODE2(HOUSE_CODE, 'M937', RAHD.PROM_CRIT_TYPE) AS PROM_CRIT_TYPE_NAME
+              FROM ICOYRAHD RAHD                                                           
+              WHERE RAHD.HOUSE_CODE = '#house_code#'                                 
+                AND RAHD.RA_NO      = '#RA_NO#'                                      
+                AND RAHD.RA_COUNT   = '#RA_COUNT#'                                   	
+		]]>	 
+	</method>
+	
+	<method name="et_getGonggoIsValid">
+	<![CDATA[    
+				 SELECT DECODE(NVL(COUNT(RA_COUNT), 0), 0, 'Y', 1, 'Y', 'N')       
+           		   FROM ICOYRAHD                                                      
+        <OPT=F,S> WHERE HOUSE_CODE = ?  </OPT>                             
+          <OPT=S,S> AND   RA_NO     = ?  </OPT>                             
+                    AND STATUS IN ('C', 'R')                                           	
+		]]>	 
+	</method>
+	
+	<method name="et_getratbdRegList">
+	<![CDATA[    
+		SELECT                                                                                                    
+               RAHD.RA_NO                                                                                         
+              ,RAHD.ANN_NO --공고번호
+              ,RAHD.RA_COUNT as VOTE_COUNT--차수                                                                                      
+              ,RAHD.SUBJECT as ANN_ITEM --역경매건명                                                                                       
+              ,TO_CHAR(ra_vv.bid_start_date,'YYYY/MM/DD HH24:MI') BID_BEGIN_DATE --입찰시작일시                                      
+              ,TO_CHAR(ra_vv.bid_end_date,'YYYY/MM/DD HH24:MI') BID_END_DATE --입찰마감일시    
+              ,RAHD.CHANGE_USER_NAME_LOC --구매담당자
+              ,decode(ra_vv.STATUS                                                                                 
+                     ,'RT', '작성중','RP', '결재중','RC','결재완료','CC','공고확정'                                                                     
+                     ,'RA', '공고중','BP','역경매진행','RF', '역경매종료'                                         
+                     ,'') STATUS_TEXT --진행상황
+              ,RAHD.SIGN_PERSON_ID --결재자ID
+              ,RAHD.SIGN_STATUS
+              ,RAHD.CHANGE_USER_ID
+              ,ra_vv.STATUS
+              ,ra_vv.PR_NO
+              ,ra_vv.bid_end_date AS BID_END_DATE_VALUE
+              ,RAHD.CTRL_CODE
+              ,RAHD.ANN_DATE
+              ,RAHD.ATTACH_NO                                                                                     
+              ,RAHD.RA_FLAG
+              ,RAHD.RA_TYPE1
+              ,RAHD.OPEN_REQ_FROM_DATE
+              ,RAHD.OPEN_REQ_TO_DATE                                                                                       
+          FROM ICOYRAHD RAHD                                                                                      
+              ,(SELECT                                                                                            
+                       ra_v.HOUSE_CODE                                                                            
+                      ,ra_v.RA_NO                                                                                 
+                      ,ra_v.RA_COUNT                                                                              
+                      ,decode(ra_v.SIGN_STATUS                                                                     
+                              ,'T', 'RT'  -- 작성중                                                                         
+                              ,'P', 'RP'  -- 결재중
+                              ,'E', 'RC'  -- 결재완료
+                              ,(case when (SYSDATE < ra_v.ann_date) then 'CC' --공고확정                                      
+                                    when (ra_v.ann_date <= SYSDATE and SYSDATE < ra_v.bid_start_date) then 'RA' --공고중   
+                                    when (ra_v.bid_start_date <= SYSDATE and SYSDATE < ra_v.bid_end_date) then 'BP' --역경매진행
+                                    else 'RF' --역경매종료                                                                      
+                              end)                                                                                 
+                             ) STATUS                                                                               
+                      ,ra_v.bid_end_date
+                      ,ra_v.bid_start_date
+                      ,ra_v.PR_NO                                                                          
+                  FROM (SELECT                                                                                    
+                               hd.HOUSE_CODE                                                                      
+                              ,hd.RA_NO                                                                           
+                              ,hd.RA_COUNT                                                                        
+                              ,TO_DATE(hd.ANN_DATE||hd.ANN_TIME, 'YYYYMMDDHH24MISS')     ann_date                 
+                              ,TO_DATE(hd.START_DATE||hd.START_TIME, 'YYYYMMDDHH24MISS') bid_start_date           
+                              ,CASE WHEN RA_FLAG = 'D' THEN NULL ELSE TO_DATE(hd.END_DATE||hd.END_TIME, 'YYYYMMDDHH24MISS') END  bid_end_date             
+                              ,hd.SIGN_STATUS
+                              ,dt.PR_NO                                                                     
+                          FROM ICOYRAHD hd, ICOYRADT dt                                                           
+                         WHERE hd.HOUSE_CODE = dt.HOUSE_CODE                                                      
+                           AND hd.RA_NO      = dt.RA_NO                                                           
+                           AND hd.RA_COUNT   = dt.RA_COUNT                                                        
+                           AND hd.HOUSE_CODE = ${house_code}                                              
+                           AND hd.TYPE    = 'R'                                                                   
+                           AND hd.STATUS <> 'D'                                                                   
+                           AND dt.STATUS <> 'D'                                                                   
+                           AND dt.RA_SEQ  = '000001'                                                                   
+                           AND dt.SETTLE_FLAG = 'P'                                                               
+                           AND hd.ADD_DATE BETWEEN TO_CHAR(TO_DATE($S{start_change_date}), 'YYYYMMDD')                                               
+                           AND TO_CHAR(TO_DATE($S{end_change_date}), 'YYYYMMDD')
+                           AND hd.ANN_NO = $S{ann_no}
+                           AND hd.SUBJECT LIKE '%'||$S{ann_item}||'%'
+                       ) ra_v                                                                                     
+               ) ra_vv                                                                                            
+         WHERE RAHD.HOUSE_CODE = ra_vv.HOUSE_CODE                                                                 
+           AND RAHD.RA_NO      = ra_vv.RA_NO                                                                      
+           AND RAHD.RA_COUNT   = ra_vv.RA_COUNT                                                                   
+           AND ra_vv.STATUS NOT IN('RF')
+           AND RAHD.RA_FLAG NOT IN('D') --취소공고 안나오게
+           --AND ra_vv.STATUS IN('CC','RA','BP')                                           
+           AND ra_vv.STATUS = $S{bid_flag}                                                                  
+           AND RAHD.CHANGE_USER_NAME_LOC  LIKE  '%'||$S{CHANGE_USER_NAME}||'%'
+         ORDER BY RAHD.ANN_NO DESC                                                                                
+		]]>	 
+	</method>
+	
+	<method name="et_getJoinVendorList">
+	<![CDATA[    
+		 SELECT VNGL.VENDOR_NAME_LOC
+		       ,ADDR.CEO_NAME_LOC
+		       ,RQSE.VENDOR_CODE
+		       ,RQSE.JOIN_FLAG
+		       ,RQSE.REG_FLAG
+		       ,RQSE.CHANGE_FLAG
+          FROM ICOYRQSE RQSE, ICOMVNGL VNGL, ICOMADDR ADDR
+         WHERE RQSE.HOUSE_CODE = VNGL.HOUSE_CODE
+           AND RQSE.HOUSE_CODE = ADDR.HOUSE_CODE
+           AND VNGL.HOUSE_CODE = ADDR.HOUSE_CODE
+           AND RQSE.VENDOR_CODE = VNGL.VENDOR_CODE
+           AND RQSE.VENDOR_CODE = ADDR.CODE_NO
+           AND VNGL.VENDOR_CODE = ADDR.CODE_NO
+           AND RQSE.HOUSE_CODE = '#house_code#'
+           AND RQSE.COMPANY_CODE = '#company_code#'
+           AND ADDR.CODE_TYPE = '2'
+           AND RQSE.RFQ_NO = '#RA_NO#'
+           AND RQSE.RFQ_COUNT = '#RA_COUNT#'
+           AND RQSE.BID_FLAG = 'N' 	
+		]]>	 
+	</method>
+	
+	<method name="et_setJoinVendorUpd">
+	<![CDATA[    
+		 UPDATE ICOYRQSE SET
+           JOIN_FLAG = $S{JOIN_FLAG}, CHANGE_FLAG = 'Y'
+         WHERE HOUSE_CODE       = $S{HOUSE_CODE}
+           AND COMPANY_CODE     = $S{COMPANY_CODE}
+           AND RFQ_NO           = $S{RFQ_NO}
+           AND RFQ_COUNT        = $S{RFQ_COUNT}
+           AND CHANGE_USER_ID   = $S{CHANGE_USER_ID}
+           AND VENDOR_CODE      = $S{VENDOR_CODE}	
+		]]>	 
+	</method>
+	
+	<method name="et_getratbddis1_1">
+	<![CDATA[
+		SELECT																																										
+		         RADT.BUYER_ITEM_NO                                	  AS ITEM_NO,	                                                                                                
+		         PRDT.DESCRIPTION_LOC                                 AS DESCRIPTION_LOC,                                                                                          
+		         PRDT.SPECIFICATION                                   AS SPECIFICATION,                                                                                            
+		         RADT.UNIT_MEASURE                                    AS UNIT_MEASURE,                                                                                             
+		         CONVERT_DATE(RADT.RD_DATE)                           AS RD_DATE,
+		         PRDT.DELY_TO_ADDRESS AS DELY_TO_LOCATION_NAME,                                                                                                  
+		 				(CASE                                                                                                                                                       
+		 				 	 		 WHEN PRDT.STR_FLAG = 'S' THEN '' --GETSTORAGENAME(PRDT.HOUSE_CODE, PRDT.COMPANY_CODE, PRDT.PLANT_CODE, PRDT.DELY_TO_LOCATION, 'LOC' )               
+		 				 	 		 WHEN PRDT.STR_FLAG = 'D' THEN GETDEPTNAME(PRDT.HOUSE_CODE, PRDT.COMPANY_CODE, PRDT.DELY_TO_LOCATION, 'LOC' )                                   
+		 				 	 		 ELSE PRDT.DELY_TO_LOCATION                                                                                                                     
+		 				 	  END                                                                                                                                                   
+		 				 	 ), 																								                               
+		 				RADT.PR_NO																					 AS PR_NO,                                                      
+		 				RADT.PR_SEQ																					 AS PR_SEQ,                                                     
+		 				PRDT.PURCHASE_LOCATION															 AS PURCHASE_LOCATION,                                                      
+		         PRDT.DELY_TO_LOCATION                                AS DELY_TO_LOCATION,                                                                                         
+		         RAHD.RA_NO 																				 AS RA_NO,                                                              
+		         RADT.RA_SEQ 																				 AS RA_SEQ,                                                             
+		         PRDT.SHIPPER_TYPE																		 AS SHIPPER_TYPE,                                                           
+		         RAHD.SUBJECT                                         AS SUBJECT,                                                                                                  
+		         GETUSERNAME(RAHD.HOUSE_CODE, RAHD.CHANGE_USER_ID, 'LOC') AS CHANGE_NAME_LOC,                                                                                      
+		         RAHD.TEL_NO                                          AS TEL,                                                                                                      
+		         RAHD.EMAIL                                           AS EMAIL,                                                                                                    
+		         RAHD.START_DATE                                      AS FROM_DATE,                                                                                                
+		         SUBSTR(RAHD.START_TIME,0,2)                          AS START_TIME,                                                                                               
+		         SUBSTR(RAHD.START_TIME,3,2)                          AS START_MINUTE,                                                                                             
+		         RAHD.END_DATE                                  AS TO_DATE,                                                                                                  
+		         SUBSTR(RAHD.END_TIME,0,2)                      AS END_TIME,                                                                                                 
+		         SUBSTR(RAHD.END_TIME,3,2)                      AS END_MINUTE,                                                                                               
+		         --GETICOMCODE2(RAHD.HOUSE_CODE,'M009',RAHD.DELY_TERMS) AS DELY_TERMS_TEXT,                                                                                          
+		         --GETICOMCODE2(RAHD.HOUSE_CODE,'M010',RAHD.PAY_TERMS)  AS PAY_TERMS_TEXT,                                                                                           
+		         RADT.CUR                                             AS CUR,                                                                                                      
+		         RAHD.RESERVE_PRICE                                   AS RESERVE_PRICE,                                                                                            
+		         RAHD.BID_DEC_AMT                                     AS BID_DEC_AMT,                                                                                              
+		         (SELECT COUNT(*)                                                                                                                                                  
+		         FROM ICOYRQSE RQSE                                                                                                                                                
+		         WHERE RQSE.HOUSE_CODE  = RADT.HOUSE_CODE                                                                                                                          
+		         AND RQSE.RFQ_NO        = RADT.RA_NO                                                                                                                              
+		         AND RQSE.RFQ_COUNT     = RADT.RA_COUNT                                                                                                                           
+		         AND RQSE.RFQ_SEQ       = RADT.RA_SEQ                                                                                                                             
+		         AND STATUS <> 'D')                                   AS VENDOR_COUNT,                                                                                             
+		         (SELECT NVL(COUNT(*),0) FROM ICOMATCH                                                                                                                             
+		         WHERE DOC_NO = RADT.ATTACH_NO)                       AS ATTACH_COUNT,                                                                                             
+		         RADT.ATTACH_NO                                       AS ATTACH_NO,                                                                                                
+		         RAHD.REMARK                                          AS REMARK,                                                                                                   
+		         RADT.COMPANY_CODE                                    AS COMPANY_CODE                                                                                              
+		         --RAHD.Z_SMS_SEND_FLAG                                 AS Z_SMS_SEND_FLAG                                                                                           
+		       	 --,PRDT.Z_CODE1 ||' / '|| GETZCODE(PRDT.HOUSE_CODE,PRDT.Z_CODE1,'Z_CODE1') AS Z_CODE1                                                                                 
+		  FROM    ICOYRAHD RAHD, ICOYRADT RADT , ICOYPRDT PRDT                                                                                                                     
+		  WHERE RAHD.HOUSE_CODE    = ${house_code}                                                                                                                     
+		  AND   RAHD.HOUSE_CODE    = RADT.HOUSE_CODE                                                                                                                      
+		  AND   RAHD.RA_NO         = RADT.RA_NO                                                                                                                         
+		  AND   RAHD.RA_COUNT      = RADT.RA_COUNT                                                                                                                      
+		  AND   RAHD.RA_NO         = ${RA_NO}                                                                                                                          
+		  AND   RAHD.RA_COUNT      = ${RA_SEQ}                                                                                                                           
+		   		AND   RADT.HOUSE_CODE = PRDT.HOUSE_CODE                                                                                                                         
+		   		AND   RADT.PR_NO = PRDT.PR_NO                                                                                                                                   
+		   		AND   RADT.PR_SEQ = PRDT.PR_SEQ                                                                                                                                 
+
+		]]>	 
+	</method>
+	
+	<method name="et_getRaSEDisplay">
+	<![CDATA[    
+		 SELECT distinct                                                        
+		     rqse.VENDOR_CODE,                                                  
+		     vngl.VENDOR_NAME_LOC,                                                     
+		      'N'                                                               
+		 FROM ICOYRQSE rqse, ICOMVNGL vngl                                      
+		         WHERE rqse.HOUSE_CODE = ${house_code}           					
+				   AND rqse.HOUSE_CODE = vngl.HOUSE_CODE                                
+				   AND rqse.VENDOR_CODE = vngl.VENDOR_CODE                              
+				   AND rqse.RFQ_NO = ${RA_NO}                               
+				   AND rqse.RFQ_COUNT = ${RA_SEQ}                              
+				   AND rqse.STATUS != 'D'                  	
+		]]>	 
+	</method>
+	
+	<method name="et_getratbdlis1_1">
+	<![CDATA[    
+		SELECT                                                                                                     
+                   RAHD.RA_NO                                                                                          
+                  ,RAHD.RA_COUNT                                                                                       
+                  ,RAHD.ANN_NO                                                                                         
+                  ,RAHD.SUBJECT                                                                                        
+                  ,ra_vv.STATUS
+                  ,ra_vv.SIGN_STATUS                                                                                        
+                  ,decode(ra_vv.STATUS                                                                                 
+                     ,'RT', '작성중','RP', '결재중','RC','결재완료','CC','공고확정'                                                                     
+                     ,'RA', '공고중','BP','역경매진행','RF', '역경매종료'                                         
+                     ,'') STATUS_TEXT                                                                              
+                  ,TO_CHAR(ra_vv.bid_end_date,'YYYY/MM/DD HH24:MI') END_DATETIME                                       
+                  ,(SELECT COUNT(DISTINCT VENDOR_CODE) FROM ICOYRQSE                                                   
+                     WHERE RFQ_NO       = RAHD.RA_NO                                                                    
+                       AND RFQ_COUNT    = RAHD.RA_COUNT 
+                       AND BID_FLAG = 'N'                                                        
+                    ) BID_COUNT                                                                                        
+                  ,RAHD.CURRENT_PRICE                                                                                  
+                  ,RAHD.RESERVE_PRICE                                                                                  
+                  ,RAHD.CTRL_CODE                                                                                      
+                  ,RAHD.CHANGE_USER_ID                                                                                 
+                  ,RAHD.ATTACH_NO                                                                                      
+                  ,RAHD.RA_FLAG                                                                                        
+                  ,(select NVL(count(*),0) from icomatch where doc_no = RAHD.ATTACH_NO ) ATTACH_COUNT
+                  ,ra_vv.PR_NO AS PR_NO
+                  ,DECODE(RAHD.EVAL_FLAG, null, '평가 미선택', 'N', '평가제외', 'T', '평가대기중', 'P', '평가진행중', 'C', '평가완료') AS EVAL_FLAG_DESC
+                  ,RAHD.EVAL_FLAG
+		          ,RAHD.EVAL_REFITEM        
+		          ,PRHD.REQ_TYPE
+		          ,DECODE(PRHD.REQ_TYPE, 'P','구매요청','사전지원') AS REQ_TYPE_NAME     
+		          --,GETICOMCODE2(PRHD.HOUSE_CODE, 'M164', PRHD.REQ_TYPE) AS REQ_TYPE_NAME     
+		          ,RAHD.RA_TYPE1
+		          ,RAHD.CHANGE_USER_ID
+		          ,GETUSERNAMELOC(RAHD.HOUSE_CODE, RAHD.CHANGE_USER_ID) AS CHANGE_USER_NAME
+		          ,DECODE(PRHD.REQ_TYPE, 'P','구매요청','사전지원') AS REQ_TYPE   
+		          ,TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') AS SERVER_TIME
+              FROM ICOYRAHD RAHD                                                                                       
+                  ,(SELECT                                                                                             
+                           ra_v.HOUSE_CODE                                                                             
+                          ,ra_v.RA_NO                                                                                  
+                          ,ra_v.RA_COUNT  
+                          ,ra_v.SIGN_STATUS                                                                             
+                          ,decode(ra_v.SIGN_STATUS                                                                     
+                              ,'T', 'RT'  -- 작성중                                                                         
+                              ,'P', 'RP'  -- 결재중
+                              ,'E', 'RC'  -- 결재완료
+                              ,(case when (SYSDATE < ra_v.ann_date) then 'CC' --공고확정                                      
+                                    when (ra_v.ann_date <= SYSDATE and SYSDATE < ra_v.bid_start_date) then 'RA' --공고중   
+                                    when (ra_v.bid_start_date <= SYSDATE and SYSDATE < ra_v.bid_end_date) then 'BP' --역경매진행
+                                    else 'RF' --역경매종료                                                                      
+                              end)                                                                                 
+                             ) STATUS
+                          ,ra_v.bid_end_date
+                          ,ra_v.PR_NO                                                                           
+                      FROM (SELECT                                                                                     
+                                   hd.HOUSE_CODE                                                                       
+                                  ,hd.RA_NO                                                                            
+                                  ,hd.RA_COUNT                                                                         
+                                  ,TO_DATE(hd.ANN_DATE||hd.ANN_TIME, 'YYYYMMDDHH24MISS')     ann_date                  
+                                  ,TO_DATE(hd.START_DATE||hd.START_TIME, 'YYYYMMDDHH24MISS') bid_start_date            
+                                  ,TO_DATE(hd.END_DATE||hd.END_TIME, 'YYYYMMDDHH24MISS')     bid_end_date              
+                                  ,hd.SIGN_STATUS                                                                      
+                                  ,hd.RA_FLAG  as ra_flag
+                                  ,dt.PR_NO                                                              
+                              FROM ICOYRAHD hd, ICOYRADT dt                                                            
+                             WHERE hd.HOUSE_CODE = dt.HOUSE_CODE                                                       
+                               AND hd.RA_NO      = dt.RA_NO                                                            
+                               AND hd.RA_COUNT   = dt.RA_COUNT                                                         
+                               AND hd.HOUSE_CODE = ${house_code}
+                               AND hd.TYPE    = 'R'                                                                    
+                               AND hd.STATUS <> 'D'                                                                    
+                               AND dt.STATUS <> 'D'                                                                    
+                               AND dt.RA_SEQ  = '000001'                                                                    
+                               AND dt.SETTLE_FLAG = 'P'                
+                               AND hd.ADD_DATE BETWEEN TO_CHAR(TO_DATE($S{from_date}), 'YYYYMMDD') 
+                               AND TO_CHAR(TO_DATE($S{to_date}), 'YYYYMMDD')
+                               AND hd.ANN_NO = $S{ANN_NO}                                                
+                           ) ra_v                                                                                      
+                   ) ra_vv          
+                   , ICOYPRHD PRHD                                                                                   
+             WHERE RAHD.HOUSE_CODE = ra_vv.HOUSE_CODE                                                                  
+               AND RAHD.RA_NO      = ra_vv.RA_NO                                                                       
+               AND RAHD.RA_COUNT   = ra_vv.RA_COUNT            
+               AND ra_vv.HOUSE_CODE = PRHD.HOUSE_CODE
+               AND ra_vv.PR_NO      = PRHD.PR_NO                                                        
+               AND ra_vv.STATUS  NOT IN('RT','RP','RC')
+               AND RAHD.RA_FLAG NOT IN('D')
+               AND RAHD.SIGN_STATUS NOT IN ('D','R')
+               AND ra_vv.STATUS = $S{bid_flag}
+               AND RAHD.RA_NO = $S{ann_no}
+               AND RAHD.CHANGE_USER_NAME_LOC LIKE '%'||$S{CHANGE_USER_NAME}||'%'
+             ORDER BY RAHD.ANN_NO DESC                                                                                 	
+		]]>	 
+	</method>
+	 
+	<method name="et_gstRatTableData">
+	<![CDATA[    
+		select ROWNUM                                                      
+                     ,ra.*                                                         
+                 FROM (SELECT                                                      
+                              RABD.VENDOR_CODE                                     
+                             ,VNGL.VENDOR_NAME_LOC                                        
+                             ,AD.CEO_NAME_LOC                                    
+                             ,AD.ZIP_CODE||' '||AD.ADDRESS_LOC VNGL_ADDRESS   
+                             ,SUM(RABD.BID_AMT) AS BID_PRICE                       
+                             ,max((SELECT SETTLE_FLAG                              
+                                     FROM ICOYRADT                                 
+                                    WHERE HOUSE_CODE = RABD.HOUSE_CODE             
+                                      AND RA_NO      = RABD.RA_NO                  
+                                      AND RA_COUNT   = RABD.RA_COUNT               
+                                      AND RA_SEQ     = RABD.RA_SEQ                 
+                                      AND STATUS <> 'D'                            
+                                  ))  SETTLE_FLAG
+                             ,RABD.CHANGE_USER_ID
+                             ,RABD.CHANGE_USER_NAME_LOC
+                             ,AD.PHONE_NO2
+                             , VD.EVAL_SCORE
+                         FROM ICOYRABD RABD, ICOMVNGL VNGL,ICOMADDR AD,( SELECT HOUSE_CODE, RA_NO, RA_COUNT, VENDOR_CODE, MAX(TO_NUMBER(BID_SEQ)) BID_SEQ
+                            											   FROM ICOYRABD
+                           												  WHERE 1=1 
+																	      AND HOUSE_CODE = ${HOUSE_CODE}
+                             								    		  AND RA_NO = ${RA_NO}
+                             											  AND RA_COUNT = ${RA_COUNT}
+                            											  GROUP BY HOUSE_CODE, RA_NO, RA_COUNT, VENDOR_CODE ) CH      
+                            											, (
+                                                        					SELECT VD.HOUSE_CODE, VH.DOC_NO, VH.DOC_COUNT,VD.VENDOR_CODE, VD.EVAL_SCORE
+                                                        					FROM ICOMVEVH VH, ICOMVEVD VD
+                                                        					WHERE   VH.HOUSE_CODE = VD.HOUSE_CODE
+                                                          					  AND VH.HOUSE_CODE  = VD.HOUSE_CODE
+                                                          					  AND VH.EVAL_REFITEM= VD.EVAL_REFITEM     
+                                                    						) VD
+     					WHERE RABD.HOUSE_CODE   = VNGL.HOUSE_CODE                  
+                          AND RABD.VENDOR_CODE  = VNGL.VENDOR_CODE                 
+                          AND VNGL.HOUSE_CODE  = AD.HOUSE_CODE 
+                          AND VNGL.VENDOR_CODE = AD.CODE_NO
+                          AND RABD.HOUSE_CODE = CH.HOUSE_CODE
+                          AND RABD.VENDOR_CODE = CH.VENDOR_CODE
+                          AND RABD.RA_COUNT = CH.RA_COUNT
+                          AND RABD.BID_SEQ = CH.BID_SEQ    
+						  AND CH.HOUSE_CODE  = VD.HOUSE_CODE (+)
+     					  AND CH.RA_NO       = VD.DOC_NO     (+)
+     					  AND CH.RA_COUNT    = VD.DOC_COUNT  (+)
+     					  AND CH.VENDOR_CODE = VD.VENDOR_CODE(+)
+                          AND AD.CODE_TYPE     = '2'           
+                          AND RABD.STATUS       <> 'D'   
+                          AND VNGL.STATUS       <> 'D'
+                          
+					      AND RABD.HOUSE_CODE = ${HOUSE_CODE}
+						  AND RABD.RA_NO = ${RA_NO}
+	                	  AND RABD.RA_COUNT = ${RA_COUNT}                          
+                       GROUP BY RABD.VENDOR_CODE, VNGL.VENDOR_NAME_LOC, AD.CEO_NAME_LOC, RABD.CHANGE_USER_ID, RABD.CHANGE_USER_NAME_LOC, AD.PHONE_NO2
+                                ,AD.ZIP_CODE||' '||AD.ADDRESS_LOC , VD.EVAL_SCORE   
+                       ORDER BY BID_PRICE  
+                       ) ra   	
+		]]>	 
+	</method>
+	
+	<method name="et_getratbdins4_1">
+	<![CDATA[    
+		SELECT                                                
+                   RAHD.ANN_NO                                    
+                  ,RAHD.SUBJECT                                   
+                  ,RAHD.RA_TYPE1                                  
+                  ,(select text2                                  
+                      from scode                               
+                     where house_code = RAHD.HOUSE_CODE           
+                       and type       = 'M989'                    
+                       and code       = RAHD.RA_TYPE1             
+                       and use_flag   = 'Y'                       
+                       and nvl(del_flag, 'N') = 'N'                    
+                   ) RA_TYPE1_TEXT,NVL(ATTACH_NO,'XXX') ATTACH_NO  
+                  ,RAHD.RESERVE_PRICE,TO_CHAR(TO_DATE(ANN_DATE,'YYYYMMDD'),'YYYY/MM/DD') ANN_DATE   
+              FROM ICOYRAHD RAHD                                  
+              WHERE RAHD.HOUSE_CODE 	= '#house_code#'           
+              AND RAHD.RA_NO      		= '#ra_no#'           
+              AND RAHD.RA_COUNT   		= '#ra_count#'           	
+		]]>	 
+	</method>
+	
+	<method name="et_getratbdins4_2">
+	<![CDATA[    
+	select ROWNUM                                                      
+                     ,ra.*                                                         
+                 FROM (SELECT                                                      
+                              RABD.VENDOR_CODE                                     
+                             ,VNGL.VENDOR_NAME_LOC                                        
+                             ,AD.CEO_NAME_LOC                                    
+                             ,AD.ZIP_CODE||' '||AD.ADDRESS_LOC vngl_address   
+                             ,SUM(RABD.BID_AMT) AS BID_PRICE                       
+                             ,MAX(RABD.SETTLE_FLAG) SETTLE_FLAG
+                             ,CH.BID_SEQ
+                         FROM ICOYRABD RABD, ICOMVNGL VNGL,ICOMADDR AD,( SELECT HOUSE_CODE, RA_NO, RA_COUNT, VENDOR_CODE, MAX(TO_NUMBER(BID_SEQ)) BID_SEQ
+                            											   FROM ICOYRABD
+                           												  WHERE 1=1 
+																	    	 AND HOUSE_CODE = '#house_code#' 
+                             								       			 AND RA_NO = '#ra_no#'	
+                             									   			 AND RA_COUNT = '#ra_count#'	
+                            											  GROUP BY HOUSE_CODE, RA_NO, RA_COUNT, VENDOR_CODE ) CH             
+                        WHERE RABD.HOUSE_CODE   = VNGL.HOUSE_CODE                  
+                          AND RABD.VENDOR_CODE  = VNGL.VENDOR_CODE                 
+                          AND VNGL.HOUSE_CODE  = AD.HOUSE_CODE 
+                          AND VNGL.VENDOR_CODE = AD.CODE_NO
+                          AND RABD.HOUSE_CODE = CH.HOUSE_CODE
+                          AND RABD.VENDOR_CODE = CH.VENDOR_CODE
+                          AND RABD.RA_COUNT = CH.RA_COUNT
+                          AND RABD.BID_SEQ = CH.BID_SEQ    
+                          AND AD.CODE_TYPE     = '2'           
+                          AND RABD.STATUS       <> 'D'   
+                          AND VNGL.STATUS       <> 'D'
+                 		  AND RABD.HOUSE_CODE = '#house_code#'     
+                 		  AND RABD.RA_NO      = '#ra_no#'	
+                 		  AND RABD.RA_COUNT   = '#ra_count#'	
+                       GROUP BY RABD.VENDOR_CODE, VNGL.VENDOR_NAME_LOC, AD.CEO_NAME_LOC
+                                ,AD.ZIP_CODE||' '||AD.ADDRESS_LOC, CH.BID_SEQ  
+                       ORDER BY BID_PRICE  
+                       ) ra   	
+		]]>	 
+	</method>
+	
+	<method name="et_getRADTDisplay">
+	<![CDATA[    
+		 SELECT
+                STATUS                  ,  
+                ADD_DATE                ,  
+                ADD_TIME                ,  
+                ADD_USER_ID             ,  
+                ADD_USER_NAME_LOC       ,  
+                ADD_USER_NAME_ENG       ,  
+                ADD_USER_DEPT           ,  
+                CHANGE_DATE             ,  
+                CHANGE_TIME             ,  
+                CHANGE_USER_ID          ,  
+                CHANGE_USER_NAME_LOC    ,  
+                CHANGE_USER_NAME_ENG    ,  
+                CHANGE_USER_DEPT        ,  
+                BUYER_ITEM_NO           ,  
+                DESCRIPTION_LOC         ,  
+                UNIT_MEASURE            ,
+                SPECIFICATION			, 
+                RA_QTY  AS QTY          ,   
+                RA_QTY                  ,   
+                CUR                     ,                       
+                UNIT_PRICE              ,                       
+                (RA_QTY*UNIT_PRICE) AS PR_AMT,                  
+                PR_NO ,                                         
+                PR_SEQ,
+                CONVERT_DATE(RD_DATE) AS RD_DATE,
+                MAKER_CODE,
+                MAKER_NAME                                  
+         FROM ICOYRADT                                          
+         WHERE HOUSE_CODE = '#HOUSE_CODE#' 
+         AND   RA_NO     = '#RA_NO#'                          
+         AND   RA_COUNT  = '#RA_COUNT#'                       
+         AND   STATUS IN ('C', 'R')                             	
+		]]>	 
+	</method>
+	
+	<method name="et_getDBTime">
+	<![CDATA[    
+		 SELECT to_char(sysdate, 'YYYYMMDDHH24MISS') AS SERVER_TIME               
+           FROM dual                                              
+		]]>	 
+	</method>
+	
+	<method name="getPRNO">
+	<![CDATA[    
+		 SELECT PR_NO,  PR_SEQ                          
+              FROM ICOYRADT                                
+             WHERE HOUSE_CODE = '#house_code#'       
+               AND RA_NO      = '#ra_no#'       
+               AND RA_COUNT   = '#ra_count#'       		
+		]]>	 
+	</method>
+	
+	<method name="et_setratbdins4_1_PRDT">
+	<![CDATA[    
+		UPDATE ICOYPRDT                           
+                  SET  BID_STATUS = ${BID_STATUS}
+                       ,PR_PROCEEDING_FLAG = ${PR_PROCEEDING_FLAG}     
+             WHERE HOUSE_CODE = ${HOUSE_CODE}                   
+               AND PR_NO      = ${PR_NO}                    
+               AND PR_SEQ     = ${PR_SEQ}                     	
+		]]>	 
+	</method>
+	
+	<method name="et_setratbdins4_1_RAHD">
+	<![CDATA[    
+		UPDATE ICOYRAHD                                                        
+                  SET  RA_FLAG              = ${RA_FLAG}                                    
+                      ,CHANGE_DATE          = TO_CHAR(SYSDATE,'YYYYMMDD')          
+                      ,CHANGE_TIME          = TO_CHAR(SYSDATE,'HH24MISS')          
+                      ,CHANGE_USER_ID       = ${user_id}                                    
+                      ,CHANGE_USER_NAME_LOC = ${name_loc}                                    
+                      ,CHANGE_USER_NAME_ENG = ${name_eng}                                    
+                      ,CHANGE_USER_DEPT     = ${department}                                    
+                      ,NB_REASON            = ${NB_REASON}                                    
+                      ,SR_ATTACH_NO         = ${sr_attach_no}                                    
+             WHERE HOUSE_CODE = ${HOUSE_CODE}                                                 
+               AND RA_NO      = ${RA_NO}                                                      
+               AND RA_COUNT   = ${RA_COUNT}                                                     	
+		]]>	 
+	</method>
+	
+	<method name="et_setratbdins4_1_RADT">
+	<![CDATA[    
+		UPDATE ICOYRADT                                                        
+                  SET  SETTLE_FLAG          = ${settle_flag}                                    
+                      ,CHANGE_DATE          = TO_CHAR(SYSDATE,'YYYYMMDD')          
+                      ,CHANGE_TIME          = TO_CHAR(SYSDATE,'HH24MISS')          
+                      ,CHANGE_USER_ID       = ${user_id}                                         
+                      ,CHANGE_USER_NAME_LOC = ${name_loc}                                        
+                      ,CHANGE_USER_NAME_ENG = ${name_eng}                                        
+                      ,CHANGE_USER_DEPT     = ${department}                                      
+             WHERE HOUSE_CODE = ${HOUSE_CODE}                                                  
+               AND RA_NO      = ${RA_NO}                                                       
+               AND RA_COUNT   = ${RA_COUNT}                                                      	
+		]]>	 
+	</method>
+	
+	<method name="et_setratbdins4_1_RABD">
+	<![CDATA[    
+		UPDATE ICOYRABD                           
+                      SET  SETTLE_FLAG          = ${settle_flag}      
+                          ,CHANGE_DATE          = TO_CHAR(SYSDATE,'YYYYMMDD')        
+                          ,CHANGE_TIME          = TO_CHAR(SYSDATE,'HH24MISS')        
+                 WHERE HOUSE_CODE  = ${HOUSE_CODE}                    
+                   AND VENDOR_CODE = ${VENDOR_CODE}                   
+                   AND RA_NO       = ${RA_NO}                    
+                   AND RA_COUNT    = ${RA_COUNT}
+                   AND BID_SEQ     = ${BID_SEQ}                    	
+		]]>	 
+	</method>
+	
+	<method name="setMail_B">
+	<![CDATA[    
+		 SELECT (SELECT EMAIL                                               
+                    FROM ICOMVNCP                                               
+                    WHERE HOUSE_CODE='#house_code#'                           
+                      AND VENDOR_CODE = RABD.VENDOR_CODE) AS VENDOR_EMAIL       
+                    , (SELECT VENDOR_NAME_LOC                                   
+                      FROM ICOMVNGL                                             
+                      WHERE HOUSE_CODE='#house_code#'                         
+                        AND VENDOR_CODE = RABD.VENDOR_CODE) AS VENDOR_NAME      
+             FROM ICOYRABD RABD                                                 
+             WHERE HOUSE_CODE = '#house_code#'                                
+               AND RA_NO = '#RA_NO#'                                        
+               AND RA_COUNT = '#RA_COUNT#'                                  
+		]]>		
+			<if test="${TYPE}" operator="eq" value="R02">
+				AND SETTLE_FLAG = 'Y'
+			</if>
+				
+	</method>
+	
+	<method name="RFQ_SMS_send2_1">
+	<![CDATA[    
+		 SELECT (SELECT REPLACE(MOBILE_NO, '-', '')                                               
+                    FROM ICOMVNCP                                               
+                    WHERE HOUSE_CODE='#house_code#'                           
+                      AND VENDOR_CODE = RABD.VENDOR_CODE) AS SMS_RECEIVE_NO     
+                    , (SELECT NAME_LOC                                          
+                      FROM ICOMVNGL                                             
+                      WHERE HOUSE_CODE='#house_code#'                         
+                        AND VENDOR_CODE = RABD.VENDOR_CODE) AS VENDOR_NAME      
+             FROM ICOYRABD RABD                                                 
+             WHERE HOUSE_CODE = '#house_code#'                                
+               AND RA_NO = '#RA_NO#'                                        
+               AND RA_COUNT = '#RA_COUNT#'
+]]>	                                   
+            <if test="${sms_code}" operator="eq" value="R02">
+			   AND SETTLE_FLAG = 'Y'
+			</if>
+<![CDATA[  
+               AND ROWNUM < 2     ]]>				                                  	
+
+	</method>
+	
+	<method name="RFQ_SMS_send2_2">
+	<![CDATA[    
+		SELECT 
+                REPLACE(MOBILE_NO, '-', '') AS SMS_SEND_NO 
+            FROM 
+                ICOMLUSR 
+            WHERE 
+                HOUSE_CODE = '#house_code#' 
+                AND USER_ID = '#user_id#' 	
+		]]>	 
+	</method>
+	
+	<method name="et_getratbdlis2_1">
+	<![CDATA[    
+		SELECT                                                                                                     
+                   RAHD.RA_NO                                                                                          
+                  ,RAHD.RA_COUNT                                                                                       
+                  ,RAHD.ANN_NO                                                                                         
+                  ,RAHD.SUBJECT                                                                                        
+                  ,TO_CHAR(hd_vv.bid_end_date,'YYYY/MM/DD HH24:MI') END_DATETIME                                       
+                  ,(SELECT COUNT(DISTINCT VENDOR_CODE) FROM ICOYRABD                                                   
+                     WHERE RA_NO       = RAHD.RA_NO                                                                    
+                       AND RA_COUNT    = RAHD.RA_COUNT                                                                 
+                    ) BID_COUNT                                                                                        
+                  ,case when hd_vv.ra_flag = 'D' then '취소' 
+                        else DECODE(bd_v.SETTLE_FLAG, 'Y', '낙찰', '유찰') 
+                   end SETTLE_FLAG
+                  ,DECODE(bd_v.SETTLE_FLAG, 'Y', 'Y', 'N') SETTLE_HIDDEN_FLAG                                                 
+                  ,(select VENDOR_NAME_LOC                                                                                    
+                      from icomvngl                                                                                    
+                     where house_code  = bd_v.HOUSE_CODE                                                               
+                       and vendor_code = bd_v.VENDOR_CODE                                                              
+                       and status      <> 'D'                                                                          
+                   ) NAME_LOC                                                                                          
+                  ,RAHD.CURRENT_PRICE                                                                                  
+                  ,RAHD.RESERVE_PRICE                                                                                  
+                  ,bd_v.BID_PRICE                                                                                      
+                  ,RAHD.PR_NO                                                                                          
+                  ,RAHD.ATTACH_NO                                                                                      
+                  ,(select NVL(count(*),0) from icomatch where doc_no = RAHD.ATTACH_NO ) ATTACH_COUNT                  
+                  ,bd_v.VENDOR_CODE                                                                                    
+                  ,RAHD.NB_REASON
+                  ,hd_vv.PROCEEDING_FLAG                                                                                    
+              FROM ICOYRAHD RAHD                                                                                       
+                  ,(SELECT                                                                                             
+                           hd_v.HOUSE_CODE                                                                             
+                          ,hd_v.RA_NO                                                                                  
+                          ,hd_v.RA_COUNT                                                                               
+                          ,decode(hd_v.SIGN_STATUS                                                                     
+                                  ,'T', 'RT'  -- 작성중                                                                         
+                              	  ,'P', 'RP'  -- 결재중
+                              	  ,'E', 'RC'  -- 결재완료
+                              	  ,(case when (SYSDATE < hd_v.ann_date) then 'CC' --공고확정                                      
+                                    when (hd_v.ann_date <= SYSDATE and SYSDATE < hd_v.bid_start_date) then 'RA' --공고중   
+                                    when (hd_v.bid_start_date <= SYSDATE and SYSDATE < hd_v.bid_end_date) then 'BP' --역경매진행
+                                    when hd_v.ra_flag = 'D' then 'RF' --역경매취소
+                                    else 'RF' --역경매종료                                                                      
+                                  end)                                                                                 
+                                 ) STATUS                                                                              
+                          ,hd_v.bid_end_date
+                          ,hd_v.PROCEEDING_FLAG 
+                          ,hd_v.ra_flag                                                                          
+                      FROM (SELECT                                                                                     
+                                   hd.HOUSE_CODE                                                                       
+                                  ,hd.RA_NO                                                                            
+                                  ,hd.RA_COUNT                                                                         
+                                  ,TO_DATE(hd.ANN_DATE||hd.ANN_TIME, 'YYYYMMDDHH24MISS')     ann_date                  
+                                  ,TO_DATE(hd.START_DATE||hd.START_TIME, 'YYYYMMDDHH24MISS') bid_start_date            
+                                  ,TO_DATE(hd.END_DATE||hd.END_TIME, 'YYYYMMDDHH24MISS')     bid_end_date              
+                                  ,hd.SIGN_STATUS
+                                  ,prdt.PR_PROCEEDING_FLAG PROCEEDING_FLAG  
+                                  ,hd.ra_flag                                                                    
+                              FROM ICOYRAHD hd, ICOYRADT dt, ICOYPRDT prdt                                                            
+                             WHERE hd.HOUSE_CODE = dt.HOUSE_CODE                                                       
+                               AND hd.RA_NO      = dt.RA_NO                                                            
+                               AND hd.RA_COUNT   = dt.RA_COUNT
+                               AND dt.HOUSE_CODE = prdt.HOUSE_CODE
+                               AND dt.PR_NO      = prdt.PR_NO
+                               AND dt.PR_SEQ     = prdt.PR_SEQ                                                         
+                               AND hd.HOUSE_CODE = ${HOUSE_CODE}                                               
+                               AND hd.TYPE    = 'R'                                                                    
+                               AND hd.STATUS <> 'D'                                                                    
+                               AND dt.STATUS <> 'D'                                                                    
+                               AND dt.RA_SEQ  = '000001'                                                               
+                               AND case 
+                               			when hd.ra_flag = 'D' then 'D'
+                               			else dt.SETTLE_FLAG 
+                               		end <> 'P'                                                               
+                              		AND case when hd.ra_flag = 'D' then 'D' else dt.SETTLE_FLAG end = $S{bid_flag}                                                   
+                              		AND hd.ADD_DATE BETWEEN $S{from_date}                                               
+                              		AND $S{to_date}                                               
+                              		AND hd.ANN_NO = $S{ann_no}                                               
+                           ) hd_v                                                                                      
+                   ) hd_vv                                                                                             
+                  ,(SELECT                                                                                             
+                           bd.HOUSE_CODE                                                                               
+                          ,bd.RA_NO                                                                                    
+                          ,bd.RA_COUNT                                                                                 
+                          ,bd.VENDOR_CODE                                                                              
+                          ,MIN(hd.CURRENT_PRICE) BID_PRICE                                                                 
+                          ,bd.SETTLE_FLAG                                                                              
+                      FROM ICOYRAHD hd, ICOYRABD bd                                                                    
+                      WHERE hd.HOUSE_CODE = ${HOUSE_CODE}                                                     
+                       AND hd.TYPE         = 'R'                                                                       
+                       AND hd.STATUS      <> 'D'                                                                       
+                       AND bd.HOUSE_CODE   = hd.HOUSE_CODE                                                             
+                       AND bd.RA_NO        = hd.RA_NO                                                                  
+                       AND bd.RA_COUNT     = hd.RA_COUNT                                                               
+                       AND bd.SETTLE_FLAG  = 'Y'                                                                       
+                       AND bd.STATUS      <> 'D'                                                                       
+                     GROUP BY bd.HOUSE_CODE ,bd.RA_NO ,bd.RA_COUNT ,bd.VENDOR_CODE ,bd.SETTLE_FLAG                     
+                   ) bd_v                                                                                              
+             WHERE hd_vv.HOUSE_CODE    = RAHD.HOUSE_CODE                                                               
+               AND hd_vv.RA_NO         = RAHD.RA_NO                                                                    
+               AND hd_vv.RA_COUNT      = RAHD.RA_COUNT                                                                 
+               AND hd_vv.STATUS        = 'RF'                                                                          
+               AND bd_v.HOUSE_CODE (+) = RAHD.HOUSE_CODE                                                               
+               AND bd_v.RA_NO      (+) = RAHD.RA_NO                                                                    
+               AND bd_v.RA_COUNT   (+) = RAHD.RA_COUNT                                                                 
+               AND RAHD.CHANGE_USER_NAME_LOC  LIKE  '%'||$S{CHANGE_USER_NAME}||'%'                                         
+             ORDER BY RAHD.ANN_NO DESC                                                                                 	
+		]]>	 
+	</method>
+	
+	<method name="et_getratpplis2_1">
+	<![CDATA[    
+		  
+		  SELECT ROWNUM AS NO, RAT.*  
+		  FROM (SELECT SUM(RABD.BID_AMT) AS BID_PRICE, RABD.VENDOR_CODE, RABD.CUR, VENDOR_NAME_LOC AS VENDOR_NAME
+                    ,TO_CHAR(TO_DATE(RABD.ADD_DATE,'YYYYMMDD'),'YYYY/MM/DD') || ' ' || TO_CHAR(TO_DATE(RABD.ADD_TIME,'HH24MISS'),'HH24:MI') AS BID_TIME          
+             FROM ICOYRABD RABD,(SELECT RA_COUNT, RA_NO, HOUSE_CODE, BID_SEQ, VENDOR_CODE, RA_SEQ 
+                                   FROM ICOYRABD 
+                                  WHERE HOUSE_CODE = '#house_code#' 
+                                    AND RA_NO = '#RA_NO#' 
+                                    AND RA_COUNT = '#RA_COUNT#' 
+                                  ORDER BY VENDOR_CODE, BID_SEQ) CH, ICOMVNGL VNGL  
+             WHERE RABD.HOUSE_CODE = CH.HOUSE_CODE
+               AND RABD.RA_NO = CH.RA_NO
+               AND RABD.RA_COUNT = CH.RA_COUNT
+               AND RABD.VENDOR_CODE = CH.VENDOR_CODE
+               AND RABD.BID_SEQ = CH.BID_SEQ
+               AND RABD.RA_SEQ = CH.RA_SEQ
+               AND RABD.HOUSE_CODE = VNGL.HOUSE_CODE
+               AND RABD.VENDOR_CODE = VNGL.VENDOR_CODE
+               <OPT=F,S>AND RABD.HOUSE_CODE = ? 	</OPT>
+               <OPT=F,S>AND RABD.RA_NO      = ?   </OPT>
+               <OPT=F,S>AND RABD.RA_COUNT   = ?	 </OPT>
+               GROUP BY RABD.RA_NO, RABD.BID_SEQ, RABD.VENDOR_CODE, RABD.CUR, RABD.ADD_DATE, RABD.ADD_TIME, VENDOR_NAME_LOC
+               ORDER BY BID_PRICE) RAT                     	
+		]]>	 
+	</method>
+	
+	 <method name="et_setCancelBid_PRDT">
+	<![CDATA[    
+		UPDATE ICOYPRDT                           
+                  SET  BID_STATUS = ${BID_STATUS}
+                      , PR_PROCEEDING_FLAG = ${PR_PROCEEDING_FLAG}       
+             WHERE HOUSE_CODE = ${HOUSE_CODE}                     
+               AND PR_NO      = ${RA_NO}                      
+               AND PR_SEQ     = ${RA_COUNT}                      	
+		]]>	 
+	</method>
+	
+	<method name="et_setCancelBid_RAHD">
+	<![CDATA[    
+		UPDATE ICOYRAHD                                                        
+                  SET  RA_FLAG              = ${RA_FLAG}                                    
+                      ,CHANGE_DATE          = TO_CHAR(SYSDATE,'YYYYMMDD')          
+                      ,CHANGE_TIME          = TO_CHAR(SYSDATE,'HH24MISS')          
+                      ,CHANGE_USER_ID       = ${USER_ID}                                    
+                      ,CHANGE_USER_NAME_LOC = ${NAME_LOC}                                    
+                      ,CHANGE_USER_NAME_ENG = ${NAME_ENG}                                    
+                      ,CHANGE_USER_DEPT     = ${DEPARTMENT}                                  
+                      ,NB_REASON     = ${NB_REASON}                                    
+             WHERE HOUSE_CODE = ${HOUSE_CODE}                                                    
+               AND RA_NO      = ${RA_NO}                                                  
+               AND RA_COUNT   = ${RA_COUNT}                                                  	
+		]]>	 
+	</method>
+	
+	<method name="et_setCancelBid_RADT">
+	<![CDATA[    
+		UPDATE ICOYRADT                                                        
+                  SET  SETTLE_FLAG          = ${SETTLE_FLAG}                                    
+                      ,CHANGE_DATE          = TO_CHAR(SYSDATE,'YYYYMMDD')          
+                      ,CHANGE_TIME          = TO_CHAR(SYSDATE,'HH24MISS')          
+                      ,CHANGE_USER_ID       = ${USER_ID}                                    
+                      ,CHANGE_USER_NAME_LOC = ${NAME_LOC}                                    
+                      ,CHANGE_USER_NAME_ENG = ${NAME_ENG}                                    
+                      ,CHANGE_USER_DEPT     = ${DEPARTMENT}  
+
+             WHERE HOUSE_CODE = ${HOUSE_CODE}                                                    
+               AND RA_NO      = ${RA_NO}                                                  
+               AND RA_COUNT   = ${RA_COUNT}                                        
+		]]>	 
+	</method>
+	
+	<method name="et_setCancelBid_RABD">
+	<![CDATA[    
+		UPDATE ICOYRABD                           
+                      SET  SETTLE_FLAG          = ${SETTLE_FLAG_N}       
+                          ,CHANGE_DATE          = TO_CHAR(SYSDATE,'YYYYMMDD')        
+                          ,CHANGE_TIME          = TO_CHAR(SYSDATE,'HH24MISS')        
+                 WHERE HOUSE_CODE  = ${HOUSE_CODE}                    
+                   AND VENDOR_CODE = ${VENDOR_CODE}                    
+               	   AND RA_NO       = ${RA_NO}                                                  
+               	   AND RA_COUNT    = ${RA_COUNT}                     	
+		]]>	 
+	</method>
+	
+	<method name="setApproval">
+	<![CDATA[
+		UPDATE    ICOYRAHD                                         	
+	]]>
+	<if test="${app_rtn}" operator="eq" value="E">
+			 SET    SIGN_STATUS    = 'E',	
+	</if>
+	<if test="${app_rtn}" operator="eq" value="R">
+			 SET       SIGN_STATUS    = 'R',                       
+--			             RA_FLAG     = 'N',                          	
+	</if>
+	<if test="${app_rtn}" operator="eq" value="D">
+			 SET   SIGN_STATUS    = 'D',                           
+--			        RA_FLAG        = 'N',                          	
+	</if>
+	<![CDATA[
+			        SIGN_DATE    = '#sign_date#',                    
+			        SIGN_PERSON_ID    = '#sign_user_id#'             
+			WHERE    HOUSE_CODE = '#house_code#'  
+			  AND    RA_NO = '#ra_no#'        
+			  AND	 RA_COUNT = '#ra_count#'                       	
+	]]>
+	</method>
+	
+	<method name="et_getRatBdCont">
+	<![CDATA[    
+		 		SELECT RA.RA_NO 
+		 		      ,RA.SUBJECT
+		 		      ,RA.RA_TYPE1 
+                      ,RA.START_DATE
+                      ,RA.START_TIME
+                      ,RA.END_DATE
+                      ,RA.END_TIME
+                      ,RA.LIMIT_CRIT
+                      ,RA.PROM_CRIT
+                      ,RA.DELY_PLACE
+                      ,RA.REMARK
+
+		 		      ,RA.CHANGE_USER_NAME_LOC 
+		 		      ,RA.TEL_NO 
+		 		      ,RA.EMAIL
+--          			   TO_CHAR(TO_DATE(RA.START_DATE||RA.START_TIME, 'YYYYMMDDHH24MISS'),'YYYY-MM-DD  HH24:MI') AS START_DATE,
+--          			   TO_CHAR(TO_DATE(RA.END_DATE||RA.END_TIME, 'YYYYMMDDHH24MISS'),'YYYY-MM-DD  HH24:MI') AS END_DATE,
+          			  ,'인도조건' AS D_CON
+          			  ,'결제조건' AS P_CON
+          			  ,RA.RESERVE_PRICE
+          			  ,RA.BID_DEC_AMT AS PRICE_DOWN
+          			  ,(SELECT COUNT(*)                                                                                                                                                  
+		         		  FROM ICOYRQSE RQSE                                                                                                                                                
+		         		 WHERE RQSE.HOUSE_CODE  = RA.HOUSE_CODE                                                                                                                          
+		         		   AND RQSE.RFQ_NO      = RA.RA_NO                                                                                                                              
+		         		   AND RQSE.RFQ_COUNT   = RA.RA_COUNT                                                                                                                           
+		         		   AND STATUS <> 'D') AS VENDOR_COUNT
+          			  ,'파일첩부' AS ATTACH_NO
+          			  ,(SELECT NVL(COUNT(*),0) FROM ICOMATCH                                                                                                                             
+		         		 WHERE DOC_NO = RA.ATTACH_NO) AS ATTACH_COUNT,                                                                                             
+		         		 RA.ATTACH_NO AS ATTACH_NO   
+          			  ,'SMS선택' AS SMS
+          			  ,RA.CUR
+          			  ,RA.COMPANY_CODE
+          			  ,RA.ANN_DATE
+          			  ,RA.RA_FLAG
+          			  ,RA.RA_ETC
+          			  ,GETICOMCODE2(RA.HOUSE_CODE, 'M937', RA.PROM_CRIT_TYPE) AS PROM_CRIT_TYPE_NAME
+     			   FROM ICOYRAHD RA
+    			  WHERE 1=1 
+          <OPT=F,S> AND RA.HOUSE_CODE = ?</OPT>
+ 		  <OPT=S,S> AND RA.RA_NO = ? </OPT>
+ 		  <OPT=S,S> AND RA.RA_COUNT = ? </OPT>	
+		]]>	 
+	</method>
+	
+	<method name="et_setStatusUpdateRAHD">
+	<![CDATA[    
+			UPDATE ICOYRAHD SET                                              		
+		        SIGN_STATUS           	= 'C'                                  	            
+		       ,STATUS                	= 'R'                                  	
+		       ,CHANGE_DATE           	= TO_CHAR(SYSDATE,'YYYYMMDD')          	
+		       ,CHANGE_TIME           	= TO_CHAR(SYSDATE,'HH24MISS')          	
+		       ,ANN_DATE				= TO_CHAR(TO_DATE(${ANN_DATE}), 'YYYYMMDD')								
+		       ,START_DATE				= TO_CHAR(TO_DATE(${START_DATE}), 'YYYYMMDD')					
+		       ,START_TIME				= ${START_TIME_HOUR_MINUTE}					
+		       ,END_DATE				= TO_CHAR(TO_DATE(${END_DATE}), 'YYYYMMDD')					
+		       ,END_TIME				= ${END_TIME_HOUR_MINUTE}					
+		       ,OPEN_REQ_FROM_DATE		= TO_CHAR(TO_DATE(${open_req_from_date}), 'YYYYMMDD')					
+		       ,OPEN_REQ_TO_DATE		= TO_CHAR(TO_DATE(${open_req_to_date}), 'YYYYMMDD')					                      				
+		  WHERE HOUSE_CODE		= ${house_code}                  								
+		    AND RA_NO       	= ${RA_NO}                       							
+		    AND RA_COUNT    	= ${RA_COUNT}                     						
+		]]>	 
+	</method>
+	
+	<method name="et_getMaxRaCount">
+	<![CDATA[	
+		SELECT	MAX(TO_NUMBER(RA_COUNT)) + 1 AS RA_COUNT
+		FROM	ICOYRAHD
+		WHERE	HOUSE_CODE  = '#HOUSE_CODE#'
+		  AND	RA_NO		= '#RA_NO#'  
+		
+	]]>
+	</method>
+	
+	<method name="et_getBeforRaCount">
+	<![CDATA[    
+		SELECT	RA_COUNT
+		FROM	ICOYRAHD
+		WHERE	HOUSE_CODE  = '#HOUSE_CODE#'
+		  AND	RA_NO		= '#RA_NO#'
+		  AND   STATUS IN ('C', 'R')  	
+		]]>	 
+	</method>
+	
+	<method name="et_setApprovalDelete_1">
+	<![CDATA[	
+		DELETE FROM  	ICOMSCTP
+		WHERE 1=1
+		  AND HOUSE_CODE	= ${HOUSE_CODE}
+  		  AND COMPANY_CODE	= ${COMPANY_CODE}
+  		  AND DOC_TYPE		= ${DOC_TYPE}
+  		  AND DOC_NO		= ${DOC_NO}
+  		  AND DOC_SEQ		= ${DOC_SEQ}
+		
+	]]>
+	</method>
+	
+	<method name="et_setApprovalDelete_2">
+	<![CDATA[	
+		DELETE FROM  	ICOMSCTM
+		WHERE 1=1
+		  AND HOUSE_CODE	= ${HOUSE_CODE}
+  		  AND COMPANY_CODE	= ${COMPANY_CODE}
+  		  AND DOC_TYPE		= ${DOC_TYPE}
+  		  AND DOC_NO		= ${DOC_NO}
+  		  AND DOC_SEQ		= ${DOC_SEQ}
+	]]>
+	</method>
+	
+	<method name="et_setStatusBeforeUpdateRAHD">
+	<![CDATA[	
+  UPDATE ICOYRAHD SET                                                 
+       STATUS                = 'D',                                  
+       CHANGE_USER_ID        = '#user_id#' ,                    
+       CHANGE_USER_DEPT      = '#department#' ,                 
+       CHANGE_USER_NAME_ENG  = '#name_eng#' ,                   
+       CHANGE_USER_NAME_LOC  = '#name_loc#' ,                   
+       CHANGE_DATE           = TO_CHAR(SYSDATE,'YYYYMMDD'),          
+       CHANGE_TIME           = TO_CHAR(SYSDATE,'HH24MISS')           
+  WHERE HOUSE_CODE           = '#house_code#'                   
+    AND RA_NO                = '#RA_NO#'                         
+    AND RA_COUNT            <= TO_NUMBER('#RA_COUNT#')  
+	]]>
+	</method>
+		
+
+
+	<method name="et_setPRDTUPDATE_Gonggo">
+		
+	UPDATE ICOYPRDT  SET
+	<if test="${RA_FLAG}" operator="eq" value="D">
+		BID_STATUS           = 'CC'   ,PR_PROCEEDING_FLAG='P'
+	</if>  
+	<if test="${RA_FLAG}" operator="ne" value="D">
+		BID_STATUS           = 'AC'   ,PR_PROCEEDING_FLAG='C'
+	</if>
+ 	WHERE  HOUSE_CODE          = '#house_code#'     
+      AND  (PR_NO, PR_SEQ)  IN (                       
+            SELECT  PR_NO, PR_SEQ  FROM  ICOYRADT  
+             WHERE  RA_NO    = '#RA_NO#'             
+               AND  RA_COUNT = '#RA_COUNT#'          
+            )          
+
+	</method>
+
+
+
+	<method name="et_getEvalTemplate">
+	<![CDATA[
+		SELECT TEXT3, TO_CHAR(SYSDATE, 'YYYYMMDD') FROMDATE, TO_CHAR(SYSDATE + 7, 'YYYYMMDD') TODATE 
+		FROM ICOMCODE
+		WHERE HOUSE_CODE = '#house_code#'
+         AND CODE = '#code#'
+         AND TYPE    	= 'M924'
+    ]]>
+	</method>
+	
+	<method name="et_getEvalCompany">
+	<![CDATA[
+		SELECT VENDOR_CODE 
+		FROM ICOYRABD
+		WHERE HOUSE_CODE = '#house_code#'
+		AND RA_NO = '#doc_no#'
+		AND RA_COUNT = '#doc_count#' 
+		AND STATUS IN ('C', 'R')
+		GROUP BY VENDOR_CODE
+	]]>
+	</method>
+	
+	<method name="et_getEvalUser">
+	<![CDATA[
+		SELECT DECODE(PROJECT_PM, NULL, DECODE(SALES_USER_ID, NULL, ADD_USER_ID, SALES_USER_ID), PROJECT_PM) PROJECT_PM 
+  				, DECODE(PROJECT_PM, NULL
+        				, DECODE(SALES_USER_ID, NULL, (SELECT DEPT FROM ICOMLUSR WHERE HOUSE_CODE = A.HOUSE_CODE AND USER_ID =A.ADD_USER_ID), SALES_USER_DEPT)
+        				, (SELECT DEPT FROM ICOMLUSR WHERE HOUSE_CODE = A.HOUSE_CODE AND USER_ID =A.PROJECT_PM)
+       			) PROJECT_DEPT   
+		FROM ICOYPRHD A
+		WHERE HOUSE_CODE = '#house_code#'
+		AND PR_NO = (
+						SELECT DISTINCT PR_NO 
+						FROM ICOYRADT
+						WHERE HOUSE_CODE = A.HOUSE_CODE
+						AND RA_NO = '#doc_no#'
+						AND RA_COUNT = '#doc_count#' 
+					)
+	]]>
+	</method>
+	
+	<method name="et_setEvalInert">
+	<![CDATA[
+		UPDATE ICOYRAHD
+		SET EVAL_FLAG    = '#eval_flag#'
+		   ,EVAL_REFITEM = '#eval_refitem#'
+		WHERE HOUSE_CODE = '#house_code#'
+		AND RA_NO = '#doc_no#'
+		AND RA_COUNT = '#doc_count#'
+		]]>
+	</method>
+	
+	<method name="getRaType1">
+	<![CDATA[
+		SELECT RA_TYPE1
+		  FROM ICOYRAHD
+		 WHERE HOUSE_CODE = '#HOUSE_CODE#'
+		   AND RA_NO      = '#RA_NO#'
+		   AND RA_COUNT   = '#RA_COUNT#'
+		]]>
+	</method>
+	
+
+</service>

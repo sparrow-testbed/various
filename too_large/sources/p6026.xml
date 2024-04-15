@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+<service>
+	<method name="et_autoDepCheck">
+	<![CDATA[
+		SELECT DOC_TYPE, AUTO_MANUAL_FLAG, STRATEGY_TYPE  						 
+		FROM ICOMRLDP                              
+		WHERE STATUS != 'D'                        
+		AND DOC_TYPE = $S{doc_type}          
+		AND DEPT =         ${dept_code}      
+		AND COMPANY_CODE = ${session.COMPANY_CODE}      
+		AND HOUSE_CODE =   ${session.HOUSE_CODE}     
+	]]>
+	</method>
+	
+	<method name="et_autoComCheck">
+	<![CDATA[
+		SELECT DOC_TYPE, AUTO_MANUAL_FLAG, STRATEGY_TYPE  								 
+		FROM ICOMRLCM                                      
+		WHERE STATUS != 'D'                                
+		<OPT=F,S> AND DOC_TYPE = ? </OPT>                  
+		<OPT=F,S> AND COMPANY_CODE = ? </OPT>              
+		<OPT=F,S> AND HOUSE_CODE = ? </OPT>               
+	]]>
+	</method>
+	
+	<method name="et_setCancel_1">
+	<![CDATA[
+		 DELETE FROM ICOMSCTM 		 
+		 		WHERE DOC_NO = ? 			 
+		 			 AND DOC_TYPE = ? 			 
+					 AND DOC_SEQ = ? 			 
+					 AND COMPANY_CODE = ? 		 
+					 AND HOUSE_CODE = ? 		 	
+	]]>
+	</method>
+	
+	<method name="et_setCancel_2">
+	<![CDATA[
+		 DELETE FROM ICOMSCTP 		 
+		 		WHERE DOC_NO = ? 			 
+					 AND DOC_TYPE = ? 			 
+					 AND DOC_SEQ = ? 				 
+					 AND COMPANY_CODE = ? 		 
+					 AND HOUSE_CODE = ? 			 
+	]]>
+	</method>
+	
+	<method name="">
+	
+	</method>
+	
+	<method name="">
+	
+	</method>
+	
+	<method name="">
+	
+	</method>
+	
+	<method name="">
+	
+	</method>
+	
+	<method name="">
+	
+	</method>
+	
+	<method name="">
+	
+	</method>
+	
+	<method name="">
+	
+	</method>
+	
+	<method name="">
+	
+	</method>
+	
+	<method name="">
+	
+	</method>
+	
+</service>

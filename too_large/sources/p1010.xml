@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+<service>
+	<method name="et_charge_transfer_doc_1">
+	<![CDATA[
+		SELECT
+			PURCHASER_ID,                       
+			PURCHASER_NAME,                     
+			CTRL_CODE                       	
+		FROM
+			ICOYPRDT                            
+		WHERE
+			HOUSE_CODE  = ${house_code}   
+		AND PR_NO       = $S{pr_no}   
+		AND PR_SEQ      = $S{pr_seq}
+	]]>
+	</method>
+	
+	<method name="et_charge_transfer_doc_2">
+		UPDATE
+			ICOYPRDT                     
+		SET
+			CTRL_CODE      = ${Transfer_id},
+			PURCHASER_ID   = ${Transfer_person_id},
+			PURCHASER_NAME = ${Transfer_person_name},
+			PURCHASE_DEPT  = getDeptCodeByID(
+				${house_code},
+				${company_code},
+				${Transfer_person_id}
+			),
+			PURCHASE_DEPT_NAME = getDeptName(
+				${house_code},
+				${company_code},
+				getDeptCodeByID(
+					${house_code},
+					${company_code},
+					${Transfer_person_id}
+				),
+				'LOC'
+			),
+			BEFORE_USER_ID   = ${purchaser_id},
+			BEFORE_USER_NAME = ${purchaser_name},
+			BEFORE_CTRL_CODE = ${purchaser_ctrl_code}       
+		WHERE
+			HOUSE_CODE = ${house_code}              
+		AND
+			PR_NO      = ${pr_no}     
+		AND
+			PR_SEQ     = ${pr_seq}            
+		
+	</method>
+	
+	<method name="et_reject_doc">
+		UPDATE
+			ICOYPRDT
+		SET
+			PR_PROCEEDING_FLAG = ${req_type},
+			RETURN_REASON_CODE = ${reason_code},
+			RETURN_REASON      = ${reason},
+			RETURN_DATE        = ${date},
+			CHANGE_DATE        = TO_CHAR(SYSDATE, 'YYYYMMDD'),
+			CHANGE_TIME        = TO_CHAR(SYSDATE, 'HH24MISS'),
+			CHANGE_USER_ID     = ${user_id}
+		WHERE
+			HOUSE_CODE = ${house_code}            
+		AND
+			PR_NO 	   = ${pr_no}
+		AND
+			PR_SEQ 	   = ${pr_seq}                        
+	</method>
+	
+	<method name="et_setKnttp">
+			 SELECT	NVL(SALES_TYPE,'') AS SALES_TYPE 							
+			   FROM ICOYPRHD 								
+			  WHERE HOUSE_CODE	= '100'						
+			 	AND PR_NO = '#pr_no#'						
+	</method>
+	
+	<method name="scms_interface_br_TB_SCM_BR_HEAD">
+		UPDATE 	TB_SCM_BR_HEAD
+		SET		BR_HEAD_STATUS = '3' -- 회신
+		WHERE 	BR_NO  = (SELECT PR_NO FROM ICOYPRDT WHERE HOUSE_CODE = '#house_code#' AND PR_NO = ? AND PR_SEQ = ? )
+	</method>
+	
+	<method name="scms_interface_br_TB_SCM_BR">
+		UPDATE /*+ BYPASS_UJVC*/
+		(
+		SELECT    
+		         PRDT.CONTRACT_DIV              EPRO_CONTRACT_DIV                  ,BRDT.CONTRACT_DIV           SCMS_CONTRACT_DIV   
+		        ,PRDT.DELY_TO_ADDRESS           EPRO_DELY_TO_ADDRESS               ,BRDT.DELY_TO_ADDRESS        SCMS_DELY_TO_ADDRESS
+		        ,PRDT.WARRANTY                  EPRO_WARRANTY                      ,BRDT.WARRANTY               SCMS_WARRANTY       
+		        ,PRDT.ITEM_NO                   EPRO_ITEM_NO                       ,BRDT.ITEM_NO                SCMS_ITEM_NO        
+		        ,PRDT.DESCRIPTION_LOC           EPRO_DESCRIPTION_LOC               ,BRDT.DISCRIPTION_LOC        SCMS_DISCRIPTION_LOC
+		        ,PRDT.MAKER_CODE                EPRO_MAKER_CODE                    ,BRDT.MAKER_CODE             SCMS_MAKER_CODE     
+		        ,PRDT.MAKER_NAME                EPRO_MAKER_NAME                    ,BRDT.MAKER_NAME             SCMS_MAKER_NAME     
+		        ,PRDT.SPECIFICATION             EPRO_SPECIFICATION                 ,BRDT.SPECIFICATION          SCMS_SPECIFICATION  
+		        ,PRDT.REC_VENDOR_CODE           EPRO_REC_VENDOR_CODE               ,BRDT.VENDOR_CODE            SCMS_VENDOR_CODE    
+		        ,PRDT.REC_VENDOR_NAME           EPRO_REC_VENDOR_NAME               ,BRDT.VENDOR_NAME            SCMS_VENDOR_NAME    
+		        ,PRDT.PR_QTY                    EPRO_PR_QTY                        ,BRDT.ITEM_QTY               SCMS_ITEM_QTY       
+		        ,PRDT.UNIT_MEASURE              EPRO_UNIT_MEASURE                  ,BRDT.UNIT_MEASURE           SCMS_UNIT_MEASURE   
+		        ,PRDT.UNIT_PRICE                EPRO_UNIT_PRICE                    ,BRDT.UNIT_PRICE             SCMS_UNIT_PRICE     
+		        ,PRDT.PR_AMT                    EPRO_PR_AMT                        ,BRDT.ITEM_AMT               SCMS_ITEM_AMT       
+		        ,PRDT.RD_DATE                   EPRO_RD_DATE                       ,BRDT.LIMIT_DATE             SCMS_LIMIT_DATE     
+		        ,TO_CHAR(SYSDATE, 'YYYYMMDD')   EPRO_SYSDATE                       ,BRDT.RESULT_DATE            SCMS_RESULT_DATE    
+		        ,PRDT.PURCHASER_ID              EPRO_PURCHASER_ID                  ,BRDT.PURCHASER_ID           SCMS_PURCHASER_ID   
+		        ,PRDT.RETURN_REASON             EPRO_RETURN_REASON                 ,BRDT.RETURN_REASON          SCMS_RETURN_REASON  
+		        ,PRDT.PR_PROCEEDING_FLAG        EPRO_PR_PROCEEDING_FLAG            ,BRDT.BR_STATUS              SCMS_BR_STATUS  
+		        ,PRDT.CHANGE_USER_ID            EPRO_CHANGE_USER_ID                ,BRDT.UPD_ID                 SCMS_UPD_ID
+		        ,PRDT.CHANGE_DATE || PRDT.CHANGE_TIME  EPRO_CHANGE_DATE_TIME  	   ,BRDT.UPD_DTTM               SCMS_UPD_DTTM        
+		        ,PRDT.CONFIRM_USER_ID           EPRO_CONFIRM_USER_ID
+		        ,GETICOMCODE2(PRDT.HOUSE_CODE, 'M147', PRDT.RETURN_REASON_CODE)	EPRO_RETURN_REASON_CODE_NAME                                                                      
+		FROM    ICOYPRDT PRDT, TB_SCM_BR BRDT
+		WHERE   1=1
+		  AND   PRDT.PR_NO      = BRDT.BR_NO
+		  AND   PRDT.PR_SEQ     = BRDT.BR_SEQ
+		  AND   PRDT.PR_NO  = ?
+		  AND   PRDT.PR_SEQ = ?       
+		  AND   'Y' = (SELECT IF_FLAG FROM ICOYPRHD WHERE HOUSE_CODE = PRDT.HOUSE_CODE AND PR_NO = PRDT.PR_NO)
+		)
+		SET       
+		/*
+		          SCMS_BR_NO             =     EPRO_PR_NO                   
+		         ,SCMS_BR_DIV            =     EPRO_CREATE_TYPE            
+		         ,SCMS_BR_DATE           =     EPRO_SIGN_DATE              
+		         ,SCMS_BR_USER_ID        =     EPRO_ADD_USER_ID            
+		         ,SCMS_BR_ORG_ID         =     EPRO_DEMAND_DEPT            
+		         ,SCMS_TITLE             =     EPRO_SUBJECT                
+		         ,SCMS_CONTENT           =     EPRO_REMARK                 
+		         ,SCMS_CUST_CODE         =     EPRO_CUST_CODE              
+		         ,SCMS_PJT_CODE          =     EPRO_ORDER_NO               
+		         ,SCMS_ATTACH_NO         =     EPRO_ATTACH_NO              
+		         ,SCMS_BR_HEAD_STATUS    =     EPRO_DEFAULT                 
+		         ,SCMS_CONTRACT_DIV      =     EPRO_CONTRACT_DIV          
+		         ,SCMS_DELY_TO_ADDRESS   =     EPRO_DELY_TO_ADDRESS       
+		         ,SCMS_WARRANTY          =     EPRO_WARRANTY              
+		         ,SCMS_ITEM_NO           =     EPRO_ITEM_NO               
+		         ,SCMS_DISCRIPTION_LOC   =     EPRO_DESCRIPTION_LOC       
+		         ,SCMS_MAKER_CODE        =     EPRO_MAKER_CODE            
+		         ,SCMS_MAKER_NAME        =     EPRO_MAKER_NAME            
+		         ,SCMS_SPECIFICATION     =     EPRO_SPECIFICATION         
+		         ,SCMS_VENDOR_CODE       =     EPRO_REC_VENDOR_CODE       
+		         ,SCMS_VENDOR_NAME       =     EPRO_REC_VENDOR_NAME       
+		         ,SCMS_ITEM_QTY          =     EPRO_PR_QTY                
+		         ,SCMS_UNIT_MEASURE      =     EPRO_UNIT_MEASURE          
+		         ,SCMS_UNIT_PRICE        =     EPRO_UNIT_PRICE            
+		         ,SCMS_ITEM_AMT          =     EPRO_PR_AMT                
+		         ,SCMS_LIMIT_DATE        =     EPRO_RD_DATE               
+		*/                  
+		          SCMS_RESULT_DATE       =     EPRO_SYSDATE                 
+		         ,SCMS_PURCHASER_ID      =     EPRO_PURCHASER_ID         		              
+		         ,SCMS_UPD_ID            =     EPRO_CHANGE_USER_ID
+		         ,SCMS_UPD_DTTM          =     EPRO_CHANGE_DATE_TIME
+				<if test="${flag}" operator="eq" value="A">	     
+			    ,SCMS_BR_STATUS         =	   '3'	-- 접수	                      	
+				</if>         
+		        <if test="${flag}" operator="eq" value="R">
+			    ,SCMS_RETURN_REASON     =      '[' || EPRO_RETURN_REASON_CODE_NAME || ']' || EPRO_RETURN_REASON	     
+			    ,SCMS_BR_STATUS         =	   '4'	-- 반려	                      	
+				</if>         
+
+	</method>
+	
+	<method name="scms_interface_pr_TB_SCM_PR_HEAD">
+		UPDATE 	TB_SCM_PR_HEAD
+		SET		PR_HEAD_STATUS = '3' -- 회신
+		WHERE 	PR_NO  = (SELECT PR_NO FROM ICOYPRDT WHERE HOUSE_CODE = '#house_code#' AND PR_NO = ? AND PR_SEQ = ? )
+	</method>
+	
+	<method name="scms_interface_pr_TB_SCM_PR">
+		UPDATE /*+ BYPASS_UJVC*/
+		(
+		SELECT    
+		         PRDT.CONTRACT_DIV              EPRO_CONTRACT_DIV                  ,BRDT.CONTRACT_DIV           SCMS_CONTRACT_DIV   
+		        ,PRDT.DELY_TO_ADDRESS           EPRO_DELY_TO_ADDRESS               ,BRDT.DELY_TO_ADDRESS        SCMS_DELY_TO_ADDRESS
+		        ,PRDT.WARRANTY                  EPRO_WARRANTY                      ,BRDT.WARRANTY               SCMS_WARRANTY       
+		        ,PRDT.ITEM_NO                   EPRO_ITEM_NO                       ,BRDT.ITEM_NO                SCMS_ITEM_NO        
+		        ,PRDT.DESCRIPTION_LOC           EPRO_DESCRIPTION_LOC               ,BRDT.DISCRIPTION_LOC        SCMS_DISCRIPTION_LOC
+		        ,PRDT.MAKER_CODE                EPRO_MAKER_CODE                    ,BRDT.MAKER_CODE             SCMS_MAKER_CODE     
+		        ,PRDT.MAKER_NAME                EPRO_MAKER_NAME                    ,BRDT.MAKER_NAME             SCMS_MAKER_NAME     
+		        ,PRDT.SPECIFICATION             EPRO_SPECIFICATION                 ,BRDT.SPECIFICATION          SCMS_SPECIFICATION  
+		        ,PRDT.REC_VENDOR_CODE           EPRO_REC_VENDOR_CODE               ,BRDT.VENDOR_CODE            SCMS_VENDOR_CODE    
+		        ,PRDT.REC_VENDOR_NAME           EPRO_REC_VENDOR_NAME               ,BRDT.VENDOR_NAME            SCMS_VENDOR_NAME    
+		        ,PRDT.PR_QTY                    EPRO_PR_QTY                        ,BRDT.ITEM_QTY               SCMS_ITEM_QTY       
+		        ,PRDT.UNIT_MEASURE              EPRO_UNIT_MEASURE                  ,BRDT.UNIT_MEASURE           SCMS_UNIT_MEASURE		        	
+		        ,PRDT.CUR						EPRO_CUR						   ,BRDT.CUR					SCMS_CUR	
+		        ,PRDT.EXCHANGE_RATE				EPRO_EXCHANGE_RATE				   ,BRDT.EXCHANGE_RATE			SCMS_EXCHANGE_RATE
+		        ,PRDT.UNIT_PRICE                EPRO_UNIT_PRICE                    ,BRDT.UNIT_PRICE             SCMS_UNIT_PRICE     
+		        ,PRDT.PR_AMT                    EPRO_PR_AMT                        ,BRDT.ITEM_AMT               SCMS_ITEM_AMT       
+		        ,PRDT.RD_DATE                   EPRO_RD_DATE                       ,BRDT.LIMIT_DATE             SCMS_LIMIT_DATE     
+		        ,TO_CHAR(SYSDATE, 'YYYYMMDD')   EPRO_SYSDATE                       ,BRDT.RESULT_DATE            SCMS_RESULT_DATE    
+		        ,PRDT.PURCHASER_ID              EPRO_PURCHASER_ID                  ,BRDT.PURCHASER_ID           SCMS_PURCHASER_ID   
+		        ,PRDT.RETURN_REASON             EPRO_RETURN_REASON                 ,BRDT.RETURN_REASON          SCMS_RETURN_REASON  
+		        ,PRDT.PR_PROCEEDING_FLAG        EPRO_PR_PROCEEDING_FLAG            ,BRDT.PR_STATUS              SCMS_PR_STATUS  
+		        ,PRDT.CHANGE_USER_ID            EPRO_CHANGE_USER_ID                ,BRDT.UPD_ID                 SCMS_UPD_ID
+		        ,PRDT.CHANGE_DATE || PRDT.CHANGE_TIME  EPRO_CHANGE_DATE_TIME  	   ,BRDT.UPD_DTTM               SCMS_UPD_DTTM        
+		        ,PRDT.CONFIRM_USER_ID           EPRO_CONFIRM_USER_ID                                                                      
+		FROM    ICOYPRDT PRDT, TB_SCM_PR BRDT
+		WHERE   1=1
+		  AND   PRDT.PR_NO      = BRDT.PR_NO
+		  AND   PRDT.PR_SEQ     = BRDT.PR_SEQ
+		  AND   PRDT.PR_NO  = ?
+		  AND   PRDT.PR_SEQ = ?       
+--		  AND   'Y' = (SELECT IF_FLAG FROM ICOYPRHD WHERE HOUSE_CODE = PRDT.HOUSE_CODE AND PR_NO = PRDT.PR_NO)
+		  AND   'P' = (SELECT REQ_TYPE FROM ICOYPRHD WHERE HOUSE_CODE = PRDT.HOUSE_CODE AND PR_NO = PRDT.PR_NO)
+		)
+		SET       
+		/*
+		          SCMS_BR_NO             =     EPRO_PR_NO                   
+		         ,SCMS_BR_DIV            =     EPRO_CREATE_TYPE            
+		         ,SCMS_BR_DATE           =     EPRO_SIGN_DATE              
+		         ,SCMS_BR_USER_ID        =     EPRO_ADD_USER_ID            
+		         ,SCMS_BR_ORG_ID         =     EPRO_DEMAND_DEPT            
+		         ,SCMS_TITLE             =     EPRO_SUBJECT                
+		         ,SCMS_CONTENT           =     EPRO_REMARK                 
+		         ,SCMS_CUST_CODE         =     EPRO_CUST_CODE              
+		         ,SCMS_PJT_CODE          =     EPRO_ORDER_NO               
+		         ,SCMS_ATTACH_NO         =     EPRO_ATTACH_NO              
+		         ,SCMS_BR_HEAD_STATUS    =     EPRO_DEFAULT                 
+		         ,SCMS_CONTRACT_DIV      =     EPRO_CONTRACT_DIV          
+		         ,SCMS_DELY_TO_ADDRESS   =     EPRO_DELY_TO_ADDRESS       
+		         ,SCMS_WARRANTY          =     EPRO_WARRANTY              
+		         ,SCMS_ITEM_NO           =     EPRO_ITEM_NO               
+		         ,SCMS_DISCRIPTION_LOC   =     EPRO_DESCRIPTION_LOC       
+		         ,SCMS_MAKER_CODE        =     EPRO_MAKER_CODE            
+		         ,SCMS_MAKER_NAME        =     EPRO_MAKER_NAME            
+		         ,SCMS_SPECIFICATION     =     EPRO_SPECIFICATION         
+		         ,SCMS_VENDOR_CODE       =     EPRO_REC_VENDOR_CODE       
+		         ,SCMS_VENDOR_NAME       =     EPRO_REC_VENDOR_NAME       
+		         ,SCMS_ITEM_QTY          =     EPRO_PR_QTY                
+		         ,SCMS_UNIT_MEASURE      =     EPRO_UNIT_MEASURE		         
+		         ,SCMS_CUR				 = 	   EPRO_CUR
+		         ,SCMS_EXCHANGE_RATE	 =     EPRO_EXCHANGE_RATE		                   
+		         ,SCMS_UNIT_PRICE        =     EPRO_UNIT_PRICE            
+		         ,SCMS_ITEM_AMT          =     EPRO_PR_AMT                
+		         ,SCMS_LIMIT_DATE        =     EPRO_RD_DATE               
+		*/                  
+		          SCMS_RESULT_DATE       =     EPRO_SYSDATE                 
+		         ,SCMS_PURCHASER_ID      =     EPRO_PURCHASER_ID         		              
+		         ,SCMS_UPD_ID            =     EPRO_CHANGE_USER_ID
+		         ,SCMS_UPD_DTTM          =     EPRO_CHANGE_DATE_TIME
+				<if test="${flag}" operator="eq" value="A">	     
+			    ,SCMS_PR_STATUS         =	   '3'	-- 접수	                      	
+				</if>         
+		        <if test="${flag}" operator="eq" value="R">
+			    ,SCMS_RETURN_REASON     =      EPRO_RETURN_REASON	     
+			    ,SCMS_PR_STATUS         =	   '4'	-- 반려	                      	
+				</if>         
+
+	</method>
+	
+	<method name="et_doConfirm">
+	<![CDATA[
+		UPDATE
+			ICOYPRDT
+		SET
+			CONFIRM_DATE 	= TO_CHAR(SYSDATE, 'YYYYMMDD'),
+			CONFIRM_TIME 	= TO_CHAR(SYSDATE, 'HH24MISS'),
+			CONFIRM_USER_ID = ${USER_ID},
+			CHANGE_DATE	    = TO_CHAR(SYSDATE, 'YYYYMMDD'),
+			CHANGE_TIME	    = TO_CHAR(SYSDATE, 'HH24MISS'),
+			CHANGE_USER_ID	= ${USER_ID}
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			PR_NO      = ${PR_NO}
+		AND
+			PR_SEQ     = ${PR_SEQ}
+	]]>
+	</method> 
+		
+	<method name="selectIcoyprhdPcflagInfo">
+		SELECT
+			PC_FLAG
+		FROM
+			ICOYPRHD
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			PR_NO      = ${PR_NO}
+	</method>
+	
+	<method name="updateIcoyprdtPcFlagInfo">
+		UPDATE
+			ICOYPRDT
+		SET
+			PR_PROCEEDING_FLAG = 'E',
+			PO_VENDOR_CODE     = REC_VENDOR_CODE,
+			PO_UNIT_PRICE      = UNIT_PRICE
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			PR_NO      = ${PR_NO}
+		AND
+			PR_SEQ     = ${PR_SEQ}
+	</method>
+	
+	<method name="">
+	
+	</method>
+	
+</service>

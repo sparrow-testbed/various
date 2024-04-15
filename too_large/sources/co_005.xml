@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+<service>
+	<method name="svcGetUserMenu">
+	<![CDATA[
+	SELECT P.module_type, P.MENU_OBJECT_CODE,P.ORDER_SEQ,P.MENU_NAME, 
+  (select muid.menu_link  
+   from smuid muid, smugl muhd  
+   where muid.screen_id = muhd.init_screen_id  
+     and muhd.MENU_OBJECT_CODE = P.MENU_OBJECT_CODE 
+     and NVL(muid.del_flag, 'N') = 'N' 
+     and NVL(muhd.del_flag, 'N') = 'N' 
+  and rownum <= 1)as  menu_link  
+  FROM  
+      (  
+          SELECT H.MODULE_TYPE,P.MENU_OBJECT_CODE,P.ORDER_SEQ,P.MENU_NAME  
+          FROM smupd P, smugl  H  
+          WHERE P.MENU_OBJECT_CODE = H.MENU_OBJECT_CODE  
+            AND H.USE_FLAG = 'Y'  
+    and NVL(p.del_flag, 'N') = 'N' 
+    and NVL(h.del_flag, 'N') = 'N' 
+   <OPT=F,S> AND P.MENU_PROFILE_CODE = ?</OPT>         
+             ) P, 
+         (SELECT CODE, TO_NUMBER(NVL(SORT_SEQ, '999')) SORT_SEQ 
+          FROM SCODE 
+          WHERE TYPE = 'M998' 
+  and language = 'KO' 
+            AND NVL(DEL_FLAG, 'N') = 'N' 
+ ) C 
+      WHERE P.MODULE_TYPE = C.CODE 
+     ORDER BY C.SORT_SEQ
+	]]>
+	</method>
+
+</service>

@@ -1,0 +1,403 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<service>
+	<method name="getHandList">
+		<![CDATA[
+		SELECT
+					 A.CRUD
+					,A.HD_GB
+					,A.BIZ_NO
+					,A.BIZ_NM
+					,A.ANN_NO
+					,A.VOTE_COUNT     
+					,A.ANN_ITEM
+					,A.VENDOR_CODE 
+					,A.VENDOR_NAME
+					,A.SETTLE_AMT              
+					,A.ATTACH_NO
+					,A.SUBMIT_DATE_TIME
+					,A.CONFIRM_FLAG             
+					,A.NFIT_RSN               
+					,NVL(A.ATTACH_CNT,0) AS ATTACH_CNT               
+					,A.ATTACH_NO_H                
+					,A.BID_NO     
+					,A.BID_COUNT 
+					,A.ANN_VERSION
+					,A.BID_TYPE  
+					,A.CONFIRM_FLAG_H
+					,A.BID_OPEN_DATE_VALUE
+					,A.VENDOR_CODE AS H_VENDOR_CODE
+					,NVL(A.ATTACH_CNT2,0) AS ATTACH_CNT2
+					,NVL(A.ATTACH_CNT3,0) AS ATTACH_CNT3 
+	    FROM
+		(          
+			SELECT
+						'U' AS CRUD
+						,HNDG.HD_GB
+						,HNDG.BIZ_NO
+						,(SELECT BIZ_NM FROM ICOYRQBZ_ICT WHERE BIZ_NO = HNDG.BIZ_NO ) BIZ_NM
+						,HNDG.ANN_NO
+						,NULL                                            AS VOTE_COUNT     
+						,HNDG.ANN_ITEM
+						,HNDG.VENDOR_CODE 
+						,(SELECT Z.VENDOR_NAME_LOC
+	        		        FROM ICOMVNGL_ICT Z
+	        		       WHERE Z.HOUSE_CODE = HNDG.HOUSE_CODE
+	        		            AND Z.VENDOR_CODE =  HNDG.VENDOR_CODE
+	                   )																												AS VENDOR_NAME
+						,HNDG.SETTLE_AMT              
+						,QT.ATTACH_NO AS ATTACH_NO
+						, TO_CHAR(TO_DATE(QT.SUBMIT_DATE||QT.SUBMIT_TIME, 'YYYYMMDDHH24MISS'),'YYYY/MM/DD HH24:MI') AS SUBMIT_DATE_TIME
+						,QT.CONFIRM_FLAG	 AS CONFIRM_FLAG             
+						, QT.NFIT_RSN AS NFIT_RSN               
+						, GETFILEATTCOUNT(QT.ATTACH_NO)  AS ATTACH_CNT               
+						,QT.ATTACH_NO AS ATTACH_NO_H                
+						,HNDG.BID_NO     
+						,HNDG.BID_COUNT 
+						,''                                         AS ANN_VERSION
+						,'' AS BID_TYPE  
+						,QT.CONFIRM_FLAG	 AS CONFIRM_FLAG_H
+						,HNDG.ADD_DATE||HNDG.ADD_TIME                     AS BID_OPEN_DATE_VALUE
+						,(SELECT  GETFILEATTCOUNT(CT2.ATTACH_NO) 
+						  FROM ICOYBDCT2_ICT CT2
+						  WHERE CT2.HOUSE_CODE = HNDG.HOUSE_CODE
+						  AND CT2.BID_NO = HNDG.BID_NO
+						  AND CT2.BID_COUNT = HNDG.BID_COUNT
+						  AND CT2.STATUS IN ('C' ,'R') )  AS ATTACH_CNT2
+						 ,(SELECT  GETFILEATTCOUNT(PY.ATTACH_NO) 
+						  FROM ICOYBDPY_ICT PY
+						  WHERE PY.HOUSE_CODE = HNDG.HOUSE_CODE
+						  AND PY.BID_NO = HNDG.BID_NO
+						  AND PY.BID_COUNT = HNDG.BID_COUNT
+						  AND PY.STATUS IN ('C' ,'R') )  AS ATTACH_CNT3					  					                      		     			   	 																		
+	         FROM  ICOYHNDG_ICT HNDG , ICOYBDQT_ICT QT
+	         WHERE   HNDG.HOUSE_CODE = QT.HOUSE_CODE(+)
+	         AND   HNDG.BID_NO = QT.BID_NO(+)
+	         AND   HNDG.BID_COUNT = QT.BID_COUNT(+)
+	         AND   HNDG.STATUS IN ('C' ,'R')         
+	         AND   HNDG.ADD_DATE BETWEEN ${START_CHANGE_DATE}
+	         AND     ${END_CHANGE_DATE}
+	         AND   HNDG.ANN_NO LIKE  '%'|| $S{ann_no} ||'%'
+	         AND   HNDG.ANN_ITEM  LIKE  '%'|| $S{ann_item} ||'%'
+         ) A
+         ORDER BY A.BID_OPEN_DATE_VALUE DESC
+         ]]>
+	</method>
+	
+	<method name="getBdQtConfirmList">
+		<![CDATA[
+		SELECT
+					 A.CRUD
+					,A.HD_GB
+					,(SELECT TEXT1 FROM SCODE WHERE TYPE = 'M700_ICT' AND CODE = A.HD_GB) AS HD_GB_TEXT			
+					,A.BIZ_NO
+					,A.BIZ_NM
+					,A.ANN_NO
+					,A.VOTE_COUNT     
+					,A.ANN_ITEM
+					,A.VENDOR_CODE 
+					,A.VENDOR_NAME
+					,A.SETTLE_AMT              
+					,A.ATTACH_NO
+					,A.SUBMIT_DATE_TIME
+					,A.CONFIRM_FLAG             
+					,A.NFIT_RSN               
+					,NVL(A.ATTACH_CNT,0) AS ATTACH_CNT               
+					,A.ATTACH_NO_H                
+					,A.BID_NO     
+					,A.BID_COUNT 
+					,A.ANN_VERSION
+					,A.BID_TYPE  
+					,A.CONFIRM_FLAG_H
+					,A.BID_OPEN_DATE_VALUE
+					,A.VENDOR_CODE AS H_VENDOR_CODE
+					,NVL(A.ATTACH_CNT2,0) AS ATTACH_CNT2
+					,NVL(A.ATTACH_CNT3,0) AS ATTACH_CNT3 
+	    FROM
+		( 
+         SELECT
+                 DISTINCT
+                   'R' AS CRUD
+                 , 'B' AS HD_GB	
+			     , HD.BIZ_NO
+			     , (SELECT BIZ_NM FROM ICOYRQBZ_ICT WHERE BIZ_NO = HD.BIZ_NO ) BIZ_NM					     
+                 , decode(substr(HD.ANN_NO,1,2),'BD',HD.BID_NO,HD.ANN_NO)														AS ANN_NO
+                 , PG.VOTE_COUNT                              
+                 , HD.ANN_ITEM
+                 ,(SELECT Z.VENDOR_CODE
+                     FROM ICOYBDVO_ICT Z
+                    WHERE Z.HOUSE_CODE = PG.HOUSE_CODE
+                      AND Z.BID_NO     = PG.BID_NO
+                      AND Z.BID_COUNT  = PG.BID_COUNT
+                      AND Z.VOTE_COUNT = PG.VOTE_COUNT
+                      AND Z.BID_CANCEL = 'N'
+                      AND Z.BID_STATUS = 'SB'
+                      AND Z.STATUS IN ('C', 'R')
+                  )																												AS VENDOR_CODE
+                 ,(SELECT Z.VENDOR_NAME_LOC
+        		     FROM ICOMVNGL_ICT Z
+        		    WHERE Z.HOUSE_CODE = PG.HOUSE_CODE
+        		      AND Z.VENDOR_CODE = (SELECT Z1.VENDOR_CODE
+        		      						 FROM ICOYBDVO_ICT Z1
+        		      						WHERE Z1.HOUSE_CODE = PG.HOUSE_CODE
+        		      						  AND Z1.BID_NO     = PG.BID_NO
+        		      						  AND Z1.BID_COUNT  = PG.BID_COUNT
+        		      						  AND Z1.VOTE_COUNT = PG.VOTE_COUNT
+        		      						  AND Z1.BID_CANCEL = 'N'
+        		      						  AND Z1.BID_STATUS = 'SB'
+        		      						  AND Z1.STATUS IN ('C', 'R')
+                                          )
+                  )																												AS VENDOR_NAME
+                 , NVL((SELECT Z.BID_AMT
+                          FROM ICOYBDVO_ICT Z
+                         WHERE Z.HOUSE_CODE = HD.HOUSE_CODE
+                           AND Z.BID_NO     = HD.BID_NO
+                           AND Z.BID_COUNT  = HD.BID_COUNT
+                           AND Z.STATUS IN ('C', 'R')
+                           AND Z.BID_CANCEL = 'N'
+                           AND Z.BID_STATUS = 'SB'
+                       ), '')																									AS SETTLE_AMT  
+                       
+                 , QT.ATTACH_NO AS ATTACH_NO
+                 , TO_CHAR(TO_DATE(QT.SUBMIT_DATE||QT.SUBMIT_TIME, 'YYYYMMDDHH24MISS'),'YYYY/MM/DD HH24:MI') AS SUBMIT_DATE_TIME
+                 , QT.CONFIRM_FLAG	
+                 , QT.NFIT_RSN
+                 , GETFILEATTCOUNT(QT.ATTACH_NO) ATTACH_CNT          
+                 , QT.ATTACH_NO AS ATTACH_NO_H      
+                 , HD.BID_NO
+                 , HD.BID_COUNT
+                 , CASE WHEN HD.ANN_VERSION IS NULL THEN (SELECT CODE FROM SCODE WHERE TYPE = 'VR001_ICT')
+                  		 ELSE HD.ANN_VERSION
+                  	END																											AS ANN_VERSION
+                  	
+                 
+			     , QT.CONFIRM_FLAG	 AS CONFIRM_FLAG_H
+                 , HD.BID_TYPE
+                 , PG.OPEN_DATE||PG.OPEN_TIME                     AS BID_OPEN_DATE_VALUE 
+                 ,(SELECT  GETFILEATTCOUNT(CT2.ATTACH_NO) 
+				   FROM ICOYBDCT2_ICT CT2
+			       WHERE CT2.HOUSE_CODE = HD.HOUSE_CODE
+			       AND CT2.BID_NO = HD.BID_NO
+			       AND CT2.BID_COUNT = HD.BID_COUNT
+			       AND CT2.STATUS IN ('C' ,'R') )  AS ATTACH_CNT2
+			     ,(SELECT  GETFILEATTCOUNT(PY.ATTACH_NO) 
+			       FROM ICOYBDPY_ICT PY
+			       WHERE PY.HOUSE_CODE = HD.HOUSE_CODE
+			       AND PY.BID_NO = HD.BID_NO
+			       AND PY.BID_COUNT = HD.BID_COUNT
+			       AND PY.STATUS IN ('C' ,'R') )  AS ATTACH_CNT3			      						     			     	     		     			   	 																		
+         FROM  ICOYBDHD_ICT HD
+             , ICOYBDPG_ICT PG
+             , ICOYBDDT_ICT BDDT
+             , ICOYBDES_ICT BDES
+             , ICOYBDQT_ICT QT
+         WHERE PG.HOUSE_CODE  = HD.HOUSE_CODE
+         AND   HD.HOUSE_CODE  = ${HOUSE_CODE}
+         AND   PG.BID_NO      = HD.BID_NO
+         AND   PG.BID_COUNT   = HD.BID_COUNT
+         AND   HD.HOUSE_CODE  = BDDT.HOUSE_CODE
+         AND   HD.BID_NO      = BDDT.BID_NO
+         AND   HD.BID_COUNT   = BDDT.BID_COUNT
+         AND   HD.HOUSE_CODE  = BDES.HOUSE_CODE
+         AND   HD.BID_NO      = BDES.BID_NO
+         AND   HD.BID_COUNT   = BDES.BID_COUNT
+         
+         AND   HD.HOUSE_CODE = QT.HOUSE_CODE(+)
+         AND   HD.BID_NO = QT.BID_NO(+)
+         AND   HD.BID_COUNT = QT.BID_COUNT(+)
+         
+		 AND   HD.ES_FLAG     = 'E'
+         AND  (PG.BID_END_DATE BETWEEN ${START_CHANGE_DATE}
+         				       AND     ${END_CHANGE_DATE}
+               OR  PG.BID_END_DATE IS NULL
+              )
+         AND   (HD.ANN_NO LIKE  '%'|| $S{ann_no} ||'%'
+                or HD.BID_NO    LIKE  '%'|| $S{ann_no} ||'%')
+
+         AND   HD.ANN_ITEM  LIKE  '%'|| $S{ann_item} ||'%'        
+         AND   HD.BID_STATUS  IN ('SB')
+         AND   HD.SIGN_STATUS  IN ('C')
+         AND   HD.STATUS IN ('C' ,'R')
+         AND   PG.STATUS IN ('C' ,'R')
+		 AND   HD.ADD_USER_DEPT = '020325'
+         AND   HD.CHANGE_USER_ID    =  $S{contact_user}
+         AND   HD.BID_STATUS  = 'SB' AND NVL(PREFERRED_BIDDER, 'N') != 'Y'
+		 
+		UNION ALL
+		
+		SELECT
+					'U' AS CRUD
+					,HNDG.HD_GB
+					,HNDG.BIZ_NO
+					,(SELECT BIZ_NM FROM ICOYRQBZ_ICT WHERE BIZ_NO = HNDG.BIZ_NO ) BIZ_NM
+					,HNDG.ANN_NO
+					,NULL                                            AS VOTE_COUNT     
+					,HNDG.ANN_ITEM
+					,HNDG.VENDOR_CODE 
+					,(SELECT Z.VENDOR_NAME_LOC
+        		        FROM ICOMVNGL_ICT Z
+        		       WHERE Z.HOUSE_CODE = HNDG.HOUSE_CODE
+        		            AND Z.VENDOR_CODE =  HNDG.VENDOR_CODE
+                   )																												AS VENDOR_NAME
+					,HNDG.SETTLE_AMT              
+					,QT.ATTACH_NO AS ATTACH_NO
+					, TO_CHAR(TO_DATE(QT.SUBMIT_DATE||QT.SUBMIT_TIME, 'YYYYMMDDHH24MISS'),'YYYY/MM/DD HH24:MI') AS SUBMIT_DATE_TIME
+					,QT.CONFIRM_FLAG	 AS CONFIRM_FLAG             
+					, QT.NFIT_RSN AS NFIT_RSN               
+					, GETFILEATTCOUNT(QT.ATTACH_NO)  AS ATTACH_CNT               
+					,QT.ATTACH_NO AS ATTACH_NO_H                
+					,HNDG.BID_NO     
+					,HNDG.BID_COUNT 
+					,''                                         AS ANN_VERSION
+					,'' AS BID_TYPE  
+					,QT.CONFIRM_FLAG	 AS CONFIRM_FLAG_H
+					,HNDG.ADD_DATE||HNDG.ADD_TIME                     AS BID_OPEN_DATE_VALUE
+					,(SELECT  GETFILEATTCOUNT(CT2.ATTACH_NO) 
+					  FROM ICOYBDCT2_ICT CT2
+					  WHERE CT2.HOUSE_CODE = HNDG.HOUSE_CODE
+					  AND CT2.BID_NO = HNDG.BID_NO
+					  AND CT2.BID_COUNT = HNDG.BID_COUNT
+					  AND CT2.STATUS IN ('C' ,'R') )  AS ATTACH_CNT2
+					 ,(SELECT  GETFILEATTCOUNT(PY.ATTACH_NO) 
+					  FROM ICOYBDPY_ICT PY
+					  WHERE PY.HOUSE_CODE = HNDG.HOUSE_CODE
+					  AND PY.BID_NO = HNDG.BID_NO
+					  AND PY.BID_COUNT = HNDG.BID_COUNT
+					  AND PY.STATUS IN ('C' ,'R') )  AS ATTACH_CNT3					  					                      		     			   	 																		
+         FROM  ICOYHNDG_ICT HNDG , ICOYBDQT_ICT QT
+         WHERE   HNDG.HOUSE_CODE = QT.HOUSE_CODE(+)
+         AND   HNDG.BID_NO = QT.BID_NO(+)
+         AND   HNDG.BID_COUNT = QT.BID_COUNT(+)
+         AND   HNDG.STATUS IN ('C' ,'R')         
+         AND   HNDG.ADD_DATE BETWEEN ${START_CHANGE_DATE}
+         AND     ${END_CHANGE_DATE}
+         AND   HNDG.ANN_NO LIKE  '%'|| $S{ann_no} ||'%'
+         AND   HNDG.ANN_ITEM  LIKE  '%'|| $S{ann_item} ||'%'
+         ) A
+         ORDER BY A.BID_OPEN_DATE_VALUE DESC
+         ]]>
+	</method>
+	
+	<method name="et_setBDQT">
+		<![CDATA[  
+				UPDATE ICOYBDQT_ICT
+				   SET                             
+				       STATUS               = 'R' 
+				     , CONFIRM_FLAG         = ${CONFIRM_FLAG} 
+				     , CONFIRM_USER_ID      = ${ID}
+	                 , CONFIRM_DATE         = TO_CHAR(SYSDATE,'YYYYMMDD')
+	                 , CONFIRM_TIME         = TO_CHAR(SYSDATE,'HH24MISS')
+	                 , NFIT_RSN             = $S{NFIT_RSN}	                
+				 WHERE HOUSE_CODE           = ${HOUSE_CODE   }  
+				   AND BID_NO               = ${BID_NO       }  
+				   AND BID_COUNT            = ${BID_COUNT    }  
+				   AND VENDOR_CODE          = ${VENDOR_CODE  }                                                		
+		]]>   
+	</method>
+            		
+	<method name="et_insertHNDG">
+	<![CDATA[
+	   insert into ICOYHNDG_ICT 
+		( 
+			HOUSE_CODE            ,    --서비스구분코드
+			BID_NO                ,    --입찰번호(수기번호)
+			BID_COUNT             ,    --입찰차수(무조건 1)
+			VENDOR_CODE           ,    --업체코드  
+		    STATUS                ,    --상태(C생성,R변경,D종료)
+			BIZ_NO                ,    --사업번호
+			HD_GB                 ,    --구분 (B:입찰 , P:수의 , E:종합평가) SCODE.TYPE(M700_ICT)
+			ANN_NO                ,    --공문번호(품의번호)
+			ANN_ITEM              ,    --공문명
+			SETTLE_AMT            ,    --낙찰금액(VAT포함)
+			ADD_USER_ID           ,    --생성자ID
+			ADD_USER_NAME_LOC     ,    --생성자명
+			ADD_DATE              ,    --생성일자
+			ADD_TIME              ,     --생성시간
+			CHANGE_USER_ID        ,    --변경자ID
+			CHANGE_USER_NAME_LOC  ,    --변경자명
+			CHANGE_DATE           ,     --변경일자
+			CHANGE_TIME                 --변경시간
+		) values (
+		    ?           , 
+		    ?           , 
+		    '1'         , 
+		    ?           , 
+		    'C'         ,	 
+			?           ,
+			?           ,
+			?           ,	 
+			?           ,	 
+			?,
+			?,
+			(SELECT USER_NAME_LOC FROM ICOMLUSR_ICT WHERE USER_ID = ?),    	 
+			TO_CHAR(SYSDATE,'YYYYMMDD'),
+			TO_CHAR(SYSDATE,'HH24MISS'), 
+		    ?,
+			(SELECT USER_NAME_LOC FROM ICOMLUSR_ICT WHERE USER_ID = ?),    	 
+		    TO_CHAR(SYSDATE,'YYYYMMDD'),
+			TO_CHAR(SYSDATE,'HH24MISS')           
+		)	 
+	]]>
+    </method>
+    
+    <method name="et_updateHNDG">
+	<![CDATA[
+        update ICOYHNDG_ICT set
+            STATUS           = 'R', 
+            BIZ_NO           = ?,
+        	HD_GB            = ?,
+            ANN_NO           = ?, 
+            ANN_ITEM         = ?,     	
+            VENDOR_CODE      = ?,         	
+            SETTLE_AMT       = ?,
+            CHANGE_USER_ID   = ?,
+            CHANGE_USER_NAME_LOC = (SELECT USER_NAME_LOC FROM ICOMLUSR_ICT WHERE USER_ID = ?),
+            CHANGE_DATE      = TO_CHAR(SYSDATE,'YYYYMMDD'),
+            CHANGE_TIME      = TO_CHAR(SYSDATE,'HH24MMSS')        
+        where HOUSE_CODE = ?
+          and BID_NO = ?
+          and BID_COUNT = '1'                 
+	]]>
+    </method>
+    
+    <method name="et_deleteHNDG">
+	<![CDATA[
+        update ICOYHNDG_ICT set
+        	STATUS           = 'D',          	
+            CHANGE_USER_ID   = ?,
+            CHANGE_USER_NAME_LOC = (SELECT USER_NAME_LOC FROM ICOMLUSR_ICT WHERE USER_ID = ?),
+            CHANGE_DATE      = TO_CHAR(SYSDATE,'YYYYMMDD'),
+            CHANGE_TIME      = TO_CHAR(SYSDATE,'HH24MMSS')        
+        where HOUSE_CODE = ?
+          and BID_NO = ?
+          and BID_COUNT = '1'           
+	]]>
+    </method>
+    
+     <method name="et_attachCnt_HNDG">
+	<![CDATA[
+	      SELECT NVL(SUM(A.CNT),0) CNT	      
+	      FROM (
+				  SELECT GETFILEATTCOUNT(QT.ATTACH_NO) CNT
+				  FROM ICOYBDQT_ICT QT
+				  WHERE QT.STATUS IN ('C' ,'R')
+			<OPT=F,S>	  AND QT.HOUSE_CODE = ?  </OPT>
+			<OPT=F,S>     AND QT.BID_NO = ?      </OPT>
+			      AND QT.BID_COUNT = '1'
+				  UNION ALL
+				  SELECT GETFILEATTCOUNT(CT2.ATTACH_NO) CNT
+				  FROM ICOYBDCT2_ICT CT2
+				  WHERE CT2.STATUS IN ('C' ,'R')
+			<OPT=F,S>	  AND CT2.HOUSE_CODE = ? </OPT>
+			<OPT=F,S>     AND CT2.BID_NO = ?     </OPT>
+			      AND CT2.BID_COUNT = '1'
+				  UNION ALL
+				  SELECT  GETFILEATTCOUNT(PY.ATTACH_NO) CNT
+				  FROM ICOYBDPY_ICT PY
+				  WHERE PY.STATUS IN ('C' ,'R')
+			<OPT=F,S>	  AND PY.HOUSE_CODE = ?  </OPT>
+			<OPT=F,S>	  AND PY.BID_NO = ?      </OPT>
+				  AND PY.BID_COUNT = '1'				   
+			  )A 
+	]]>
+    </method>  
+</service>

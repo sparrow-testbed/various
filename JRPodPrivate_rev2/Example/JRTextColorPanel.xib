@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="17701" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina6_1" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <deployment version="2304" identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="17703"/>
+        <capability name="System colors in document resources" minToolsVersion="11.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view contentMode="scaleToFill" id="iN0-l3-epB" customClass="JRTextColorPanel">
+            <rect key="frame" x="0.0" y="0.0" width="415" height="40"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="mND-dT-go5">
+                    <rect key="frame" x="16" y="-4" width="48" height="48"/>
+                    <state key="normal" image="btn_txt"/>
+                    <state key="highlighted" image="icon_shanchushangyibu"/>
+                    <connections>
+                        <action selector="setTextbagroundColor:" destination="iN0-l3-epB" eventType="touchUpInside" id="aFG-Km-qUS"/>
+                    </connections>
+                </button>
+                <button opaque="NO" tag="991" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="yDj-q0-JDL" userLabel="White Button" customClass="JRColorfullButton">
+                    <rect key="frame" x="112" y="-4" width="47.5" height="48"/>
+                    <userDefinedRuntimeAttributes>
+                        <userDefinedRuntimeAttribute type="number" keyPath="radius">
+                            <real key="value" value="9"/>
+                        </userDefinedRuntimeAttribute>
+                        <userDefinedRuntimeAttribute type="color" keyPath="color">
+                            <color key="value" red="0.94901960784313721" green="0.94901960784313721" blue="0.94901960784313721" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        </userDefinedRuntimeAttribute>
+                    </userDefinedRuntimeAttributes>
+                    <connections>
+                        <action selector="buttonAction:" destination="iN0-l3-epB" eventType="touchUpInside" id="x4w-p8-1Bf"/>
+                    </connections>
+                </button>
+                <button opaque="NO" tag="992" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="NgZ-ao-mKq" userLabel="Black Button" customClass="JRColorfullButton">
+                    <rect key="frame" x="159.5" y="-4" width="48" height="48"/>
+                    <userDefinedRuntimeAttributes>
+                        <userDefinedRuntimeAttribute type="number" keyPath="radius">
+                            <real key="value" value="9"/>
+                        </userDefinedRuntimeAttribute>
+                        <userDefinedRuntimeAttribute type="color" keyPath="color">
+                            <color key="value" red="0.16862745098039217" green="0.16862745098039217" blue="0.16862745098039217" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        </userDefinedRuntimeAttribute>
+                    </userDefinedRuntimeAttributes>
+                    <connections>
+                        <action selector="buttonAction:" destination="iN0-l3-epB" eventType="touchUpInside" id="k3R-Gc-1jL"/>
+                    </connections>
+                </button>
+                <button opaque="NO" tag="993" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="nfB-OU-znV" userLabel="Yellow Button" customClass="JRColorfullButton">
+                    <rect key="frame" x="207.5" y="-4" width="48" height="48"/>
+                    <userDefinedRuntimeAttributes>
+                        <userDefinedRuntimeAttribute type="number" keyPath="radius">
+                            <real key="value" value="9"/>
+                        </userDefinedRuntimeAttribute>
+                        <userDefinedRuntimeAttribute type="color" keyPath="color">
+                            <color key="value" red="0.96470588235294119" green="0.77254901960784317" blue="0.2627450980392157" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        </userDefinedRuntimeAttribute>
+                    </userDefinedRuntimeAttributes>
+                    <connections>
+                        <action selector="buttonAction:" destination="iN0-l3-epB" eventType="touchUpInside" id="tmU-Md-2KW"/>
+                    </connections>
+                </button>
+                <button opaque="NO" tag="994" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="mYV-h8-dqP" userLabel="Green Button" customClass="JRColorfullButton">
+                    <rect key="frame" x="255.5" y="-4" width="48" height="48"/>
+                    <userDefinedRuntimeAttributes>
+                        <userDefinedRuntimeAttribute type="number" keyPath="radius">
+                            <real key="value" value="9"/>
+                        </userDefinedRuntimeAttribute>
+                        <userDefinedRuntimeAttribute type="color" keyPath="color">
+                            <color key="value" red="0.3411764705882353" green="0.74509803921568629" blue="0.41568627450980389" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        </userDefinedRuntimeAttribute>
+                    </userDefinedRuntimeAttributes>
+                    <connections>
+                        <action selector="buttonAction:" destination="iN0-l3-epB" eventType="touchUpInside" id="GOq-ZT-cqz"/>
+                    </connections>
+                </button>
+                <button opaque="NO" tag="995" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="eYA-Iu-lIa" userLabel="Blue Button" customClass="JRColorfullButton">
+                    <rect key="frame" x="303.5" y="-4" width="47.5" height="48"/>
+                    <userDefinedRuntimeAttributes>
+                        <userDefinedRuntimeAttribute type="number" keyPath="radius">
+                            <real key="value" value="9"/>
+                        </userDefinedRuntimeAttribute>
+                        <userDefinedRuntimeAttribute type="color" keyPath="color">
+                            <color key="value" red="0.30980392156862746" green="0.6705882352941176" blue="0.97254901960784312" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        </userDefinedRuntimeAttribute>
+                    </userDefinedRuntimeAttributes>
+                    <connections>
+                        <action selector="buttonAction:" destination="iN0-l3-epB" eventType="touchUpInside" id="SWZ-BV-Oi2"/>
+                    </connections>
+                </button>
+                <button opaque="NO" tag="996" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Egd-MX-byC" userLabel="Purple Button" customClass="JRColorfullButton">
+                    <rect key="frame" x="351" y="-4" width="48" height="48"/>
+                    <constraints>
+                        <constraint firstAttribute="width" secondItem="Egd-MX-byC" secondAttribute="height" multiplier="1:1" id="QnZ-9H-vpU"/>
+                    </constraints>
+                    <userDefinedRuntimeAttributes>
+                        <userDefinedRuntimeAttribute type="number" keyPath="radius">
+                            <real key="value" value="9"/>
+                        </userDefinedRuntimeAttribute>
+                        <userDefinedRuntimeAttribute type="color" keyPath="color">
+                            <color key="value" red="0.39215686274509803" green="0.40392156862745099" blue="0.90980392156862744" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        </userDefinedRuntimeAttribute>
+                    </userDefinedRuntimeAttributes>
+                    <connections>
+                        <action selector="buttonAction:" destination="iN0-l3-epB" eventType="touchUpInside" id="bVZ-sP-i4Q"/>
+                    </connections>
+                </button>
+                <button opaque="NO" tag="990" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Stu-oJ-qbJ" customClass="JRColorfullButton">
+                    <rect key="frame" x="64" y="-4" width="48" height="48"/>
+                    <userDefinedRuntimeAttributes>
+                        <userDefinedRuntimeAttribute type="color" keyPath="color">
+                            <color key="value" red="1" green="0.050980392156862744" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
+                        </userDefinedRuntimeAttribute>
+                        <userDefinedRuntimeAttribute type="number" keyPath="radius">
+                            <real key="value" value="9"/>
+                        </userDefinedRuntimeAttribute>
+                    </userDefinedRuntimeAttributes>
+                    <connections>
+                        <action selector="buttonAction:" destination="iN0-l3-epB" eventType="touchUpInside" id="wAp-CY-0iL"/>
+                    </connections>
+                </button>
+            </subviews>
+            <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+            <constraints>
+                <constraint firstItem="NgZ-ao-mKq" firstAttribute="centerY" secondItem="yDj-q0-JDL" secondAttribute="centerY" id="0f9-fw-WLb"/>
+                <constraint firstItem="mYV-h8-dqP" firstAttribute="leading" secondItem="nfB-OU-znV" secondAttribute="trailing" id="0s8-wb-hI7"/>
+                <constraint firstItem="yDj-q0-JDL" firstAttribute="baseline" secondItem="mYV-h8-dqP" secondAttribute="baseline" id="1bM-iq-I2X"/>
+                <constraint firstItem="Stu-oJ-qbJ" firstAttribute="height" secondItem="mND-dT-go5" secondAttribute="height" id="3Z8-NR-QVQ"/>
+                <constraint firstItem="Egd-MX-byC" firstAttribute="baseline" secondItem="Stu-oJ-qbJ" secondAttribute="baseline" id="4Jb-Lk-GfI"/>
+                <constraint firstAttribute="trailing" secondItem="Egd-MX-byC" secondAttribute="trailing" constant="16" id="5Cg-3p-VQc"/>
+                <constraint firstItem="NgZ-ao-mKq" firstAttribute="baseline" secondItem="Egd-MX-byC" secondAttribute="baseline" id="5m5-Vo-3O6"/>
+                <constraint firstItem="mYV-h8-dqP" firstAttribute="centerY" secondItem="nfB-OU-znV" secondAttribute="centerY" id="7DF-2I-oAh"/>
+                <constraint firstItem="yDj-q0-JDL" firstAttribute="leading" secondItem="Stu-oJ-qbJ" secondAttribute="trailing" id="7th-S6-O6u"/>
+                <constraint firstItem="mYV-h8-dqP" firstAttribute="width" secondItem="nfB-OU-znV" secondAttribute="width" id="9Db-9r-yB5"/>
+                <constraint firstItem="eYA-Iu-lIa" firstAttribute="baseline" secondItem="NgZ-ao-mKq" secondAttribute="baseline" id="BdT-hG-QtQ"/>
+                <constraint firstItem="nfB-OU-znV" firstAttribute="firstBaseline" secondItem="mYV-h8-dqP" secondAttribute="firstBaseline" id="Cne-fd-gjE"/>
+                <constraint firstItem="Egd-MX-byC" firstAttribute="centerY" secondItem="eYA-Iu-lIa" secondAttribute="centerY" id="E2H-cD-tH0"/>
+                <constraint firstItem="Stu-oJ-qbJ" firstAttribute="centerY" secondItem="mND-dT-go5" secondAttribute="centerY" id="HMZ-nv-Iuv"/>
+                <constraint firstItem="nfB-OU-znV" firstAttribute="centerY" secondItem="NgZ-ao-mKq" secondAttribute="centerY" id="J0u-K2-RWm"/>
+                <constraint firstItem="mND-dT-go5" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" constant="16" id="JOm-x5-5or"/>
+                <constraint firstItem="mYV-h8-dqP" firstAttribute="firstBaseline" secondItem="yDj-q0-JDL" secondAttribute="firstBaseline" id="L0t-w4-2T3"/>
+                <constraint firstItem="eYA-Iu-lIa" firstAttribute="height" secondItem="mYV-h8-dqP" secondAttribute="height" id="L15-Ik-X05"/>
+                <constraint firstItem="mYV-h8-dqP" firstAttribute="height" secondItem="nfB-OU-znV" secondAttribute="height" id="Nkx-YM-eYO"/>
+                <constraint firstItem="yDj-q0-JDL" firstAttribute="centerY" secondItem="Stu-oJ-qbJ" secondAttribute="centerY" id="RVh-yd-Stt"/>
+                <constraint firstItem="NgZ-ao-mKq" firstAttribute="width" secondItem="yDj-q0-JDL" secondAttribute="width" id="S73-pK-u5D"/>
+                <constraint firstItem="NgZ-ao-mKq" firstAttribute="leading" secondItem="yDj-q0-JDL" secondAttribute="trailing" id="Tlm-kc-enb"/>
+                <constraint firstItem="nfB-OU-znV" firstAttribute="leading" secondItem="NgZ-ao-mKq" secondAttribute="trailing" id="XOO-4a-wd6"/>
+                <constraint firstItem="eYA-Iu-lIa" firstAttribute="leading" secondItem="mYV-h8-dqP" secondAttribute="trailing" id="YJh-vc-4af"/>
+                <constraint firstItem="Stu-oJ-qbJ" firstAttribute="leading" secondItem="mND-dT-go5" secondAttribute="trailing" id="dO7-EV-ggv"/>
+                <constraint firstItem="nfB-OU-znV" firstAttribute="width" secondItem="NgZ-ao-mKq" secondAttribute="width" id="dc6-0A-Oov"/>
+                <constraint firstItem="Stu-oJ-qbJ" firstAttribute="firstBaseline" secondItem="eYA-Iu-lIa" secondAttribute="firstBaseline" id="dkQ-HG-tLV"/>
+                <constraint firstItem="NgZ-ao-mKq" firstAttribute="height" secondItem="yDj-q0-JDL" secondAttribute="height" id="eG1-oN-UTS"/>
+                <constraint firstItem="Egd-MX-byC" firstAttribute="width" secondItem="eYA-Iu-lIa" secondAttribute="width" id="eXg-R2-qr2"/>
+                <constraint firstItem="yDj-q0-JDL" firstAttribute="firstBaseline" secondItem="nfB-OU-znV" secondAttribute="firstBaseline" id="fUP-NQ-EoT"/>
+                <constraint firstItem="Egd-MX-byC" firstAttribute="leading" secondItem="eYA-Iu-lIa" secondAttribute="trailing" id="gB5-RA-wHu"/>
+                <constraint firstItem="yDj-q0-JDL" firstAttribute="width" secondItem="Stu-oJ-qbJ" secondAttribute="width" id="gaK-T3-zOR"/>
+                <constraint firstItem="Egd-MX-byC" firstAttribute="height" secondItem="eYA-Iu-lIa" secondAttribute="height" id="hPM-Qa-QDt"/>
+                <constraint firstItem="nfB-OU-znV" firstAttribute="baseline" secondItem="mYV-h8-dqP" secondAttribute="baseline" id="hV8-JZ-QNe"/>
+                <constraint firstItem="nfB-OU-znV" firstAttribute="height" secondItem="NgZ-ao-mKq" secondAttribute="height" id="i3j-LJ-nto"/>
+                <constraint firstItem="NgZ-ao-mKq" firstAttribute="baseline" secondItem="Stu-oJ-qbJ" secondAttribute="baseline" id="iQ9-2j-K0n"/>
+                <constraint firstItem="mND-dT-go5" firstAttribute="centerY" secondItem="iN0-l3-epB" secondAttribute="centerY" id="itz-QX-hkK"/>
+                <constraint firstItem="eYA-Iu-lIa" firstAttribute="baseline" secondItem="Egd-MX-byC" secondAttribute="baseline" id="jK6-0U-PcX"/>
+                <constraint firstItem="yDj-q0-JDL" firstAttribute="height" secondItem="Stu-oJ-qbJ" secondAttribute="height" id="jrw-Wj-7eb"/>
+                <constraint firstItem="eYA-Iu-lIa" firstAttribute="width" secondItem="mYV-h8-dqP" secondAttribute="width" id="mYM-4x-8UV"/>
+                <constraint firstItem="Egd-MX-byC" firstAttribute="firstBaseline" secondItem="eYA-Iu-lIa" secondAttribute="firstBaseline" id="nW3-AF-6d0"/>
+                <constraint firstItem="eYA-Iu-lIa" firstAttribute="baseline" secondItem="Stu-oJ-qbJ" secondAttribute="baseline" id="pcV-qi-27O"/>
+                <constraint firstItem="nfB-OU-znV" firstAttribute="baseline" secondItem="yDj-q0-JDL" secondAttribute="baseline" id="qTu-4d-6Nj"/>
+                <constraint firstItem="NgZ-ao-mKq" firstAttribute="firstBaseline" secondItem="Egd-MX-byC" secondAttribute="firstBaseline" id="u35-78-boO"/>
+                <constraint firstItem="eYA-Iu-lIa" firstAttribute="centerY" secondItem="mYV-h8-dqP" secondAttribute="centerY" id="uyP-J8-M6n"/>
+                <constraint firstItem="Stu-oJ-qbJ" firstAttribute="width" secondItem="mND-dT-go5" secondAttribute="width" id="y4S-GL-hVI"/>
+                <constraint firstItem="eYA-Iu-lIa" firstAttribute="firstBaseline" secondItem="NgZ-ao-mKq" secondAttribute="firstBaseline" id="yWJ-jz-84p"/>
+                <constraint firstItem="Stu-oJ-qbJ" firstAttribute="firstBaseline" secondItem="Egd-MX-byC" secondAttribute="firstBaseline" id="yyA-5Y-I7f"/>
+                <constraint firstItem="NgZ-ao-mKq" firstAttribute="firstBaseline" secondItem="Stu-oJ-qbJ" secondAttribute="firstBaseline" id="z8h-tr-dqz"/>
+            </constraints>
+            <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
+            <connections>
+                <outlet property="blackButton" destination="NgZ-ao-mKq" id="DnM-Ui-rHk"/>
+                <outlet property="blueButton" destination="eYA-Iu-lIa" id="3D1-Rc-npS"/>
+                <outlet property="greenButton" destination="mYV-h8-dqP" id="VaX-o2-J7T"/>
+                <outlet property="purpleButton" destination="Egd-MX-byC" id="I1M-oc-gxK"/>
+                <outlet property="redButton" destination="Stu-oJ-qbJ" id="Al4-Ke-XFJ"/>
+                <outlet property="textChangeBagGroundButton" destination="mND-dT-go5" id="vAy-TO-XEn"/>
+                <outlet property="whiteButton" destination="yDj-q0-JDL" id="J7n-fL-v1O"/>
+                <outlet property="yellowButton" destination="nfB-OU-znV" id="iF9-aC-J5Q"/>
+                <outletCollection property="colorButtons" destination="Stu-oJ-qbJ" id="nGL-nL-Tgf"/>
+                <outletCollection property="colorButtons" destination="yDj-q0-JDL" id="9lh-S4-aCl"/>
+                <outletCollection property="colorButtons" destination="NgZ-ao-mKq" id="PIU-GU-eJl"/>
+                <outletCollection property="colorButtons" destination="nfB-OU-znV" id="F25-Xf-FCw"/>
+                <outletCollection property="colorButtons" destination="mYV-h8-dqP" id="Bcn-jA-a87"/>
+                <outletCollection property="colorButtons" destination="eYA-Iu-lIa" id="WRD-rX-U1k"/>
+                <outletCollection property="colorButtons" destination="Egd-MX-byC" id="o79-nb-d5p"/>
+            </connections>
+            <point key="canvasLocation" x="-386.23188405797106" y="-183.48214285714286"/>
+        </view>
+    </objects>
+    <designables>
+        <designable name="Egd-MX-byC">
+            <size key="intrinsicContentSize" width="30" height="30"/>
+        </designable>
+        <designable name="NgZ-ao-mKq">
+            <size key="intrinsicContentSize" width="30" height="30"/>
+        </designable>
+        <designable name="Stu-oJ-qbJ">
+            <size key="intrinsicContentSize" width="30" height="34"/>
+        </designable>
+        <designable name="eYA-Iu-lIa">
+            <size key="intrinsicContentSize" width="30" height="30"/>
+        </designable>
+        <designable name="mYV-h8-dqP">
+            <size key="intrinsicContentSize" width="30" height="30"/>
+        </designable>
+        <designable name="nfB-OU-znV">
+            <size key="intrinsicContentSize" width="30" height="30"/>
+        </designable>
+        <designable name="yDj-q0-JDL">
+            <size key="intrinsicContentSize" width="30" height="30"/>
+        </designable>
+    </designables>
+    <resources>
+        <image name="btn_txt" width="22" height="22"/>
+        <image name="icon_shanchushangyibu" width="22" height="22"/>
+        <systemColor name="systemBackgroundColor">
+            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </systemColor>
+    </resources>
+</document>

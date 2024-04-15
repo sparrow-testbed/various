@@ -1,0 +1,264 @@
+2023-01-12 08:56:15
+Full thread dump OpenJDK 64-Bit Server VM (25.212-b04 mixed mode):
+
+"scala-execution-context-global-31" #31 daemon prio=5 os_prio=0 tid=0x000000003f99e000 nid=0x1ccb0 waiting on condition [0x000000004f67f000]
+   java.lang.Thread.State: WAITING (parking)
+	at sun.misc.Unsafe.park(Native Method)
+	- parking to wait for  <0x0000000548387f68> (a java.util.concurrent.ForkJoinPool)
+	at java.util.concurrent.ForkJoinPool.awaitWork(ForkJoinPool.java:1824)
+	at java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:1693)
+	at java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:157)
+
+"scala-execution-context-global-30" #30 daemon prio=5 os_prio=0 tid=0x000000002e350800 nid=0xbc764 waiting on condition [0x000000004870f000]
+   java.lang.Thread.State: WAITING (parking)
+	at sun.misc.Unsafe.park(Native Method)
+	- parking to wait for  <0x0000000548387f68> (a java.util.concurrent.ForkJoinPool)
+	at java.util.concurrent.ForkJoinPool.awaitWork(ForkJoinPool.java:1824)
+	at java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:1693)
+	at java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:157)
+
+"scala-execution-context-global-29" #29 daemon prio=5 os_prio=0 tid=0x000000002e34b000 nid=0x17654 waiting on condition [0x00000000475cf000]
+   java.lang.Thread.State: WAITING (parking)
+	at sun.misc.Unsafe.park(Native Method)
+	- parking to wait for  <0x0000000548387f68> (a java.util.concurrent.ForkJoinPool)
+	at java.util.concurrent.ForkJoinPool.awaitWork(ForkJoinPool.java:1824)
+	at java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:1693)
+	at java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:157)
+
+"scala-execution-context-global-28" #28 daemon prio=5 os_prio=0 tid=0x000000003e6f7000 nid=0xf4e20 waiting on condition [0x00000000453cf000]
+   java.lang.Thread.State: TIMED_WAITING (parking)
+	at sun.misc.Unsafe.park(Native Method)
+	- parking to wait for  <0x0000000548387f68> (a java.util.concurrent.ForkJoinPool)
+	at java.util.concurrent.ForkJoinPool.awaitWork(ForkJoinPool.java:1824)
+	at java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:1693)
+	at java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:157)
+
+"scala-execution-context-global-27" #27 daemon prio=5 os_prio=0 tid=0x000000003ecc2800 nid=0x9378c waiting on condition [0x000000003dfdf000]
+   java.lang.Thread.State: TIMED_WAITING (parking)
+	at sun.misc.Unsafe.park(Native Method)
+	- parking to wait for  <0x0000000548387f68> (a java.util.concurrent.ForkJoinPool)
+	at java.util.concurrent.ForkJoinPool.awaitWork(ForkJoinPool.java:1824)
+	at java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:1693)
+	at java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:157)
+
+"monitoring-system-akka.actor.default-dispatcher-3" #24 prio=5 os_prio=0 tid=0x0000000038dfa800 nid=0x1c620 waiting on condition [0x000000003cdde000]
+   java.lang.Thread.State: WAITING (parking)
+	at sun.misc.Unsafe.park(Native Method)
+	- parking to wait for  <0x000000054001bef8> (a akka.dispatch.ForkJoinExecutorConfigurator$AkkaForkJoinPool)
+	at akka.dispatch.forkjoin.ForkJoinPool.scan(ForkJoinPool.java:2075)
+	at akka.dispatch.forkjoin.ForkJoinPool.runWorker(ForkJoinPool.java:1979)
+	at akka.dispatch.forkjoin.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:107)
+
+"monitoring-system-scheduler-1" #22 prio=5 os_prio=0 tid=0x0000000038ba6800 nid=0x58c0 waiting on condition [0x000000003abdf000]
+   java.lang.Thread.State: TIMED_WAITING (sleeping)
+	at java.lang.Thread.sleep(Native Method)
+	at akka.actor.LightArrayRevolverScheduler.waitNanos(LightArrayRevolverScheduler.scala:87)
+	at akka.actor.LightArrayRevolverScheduler$$anon$3.nextTick(LightArrayRevolverScheduler.scala:271)
+	at akka.actor.LightArrayRevolverScheduler$$anon$3.run(LightArrayRevolverScheduler.scala:241)
+	at java.lang.Thread.run(Thread.java:748)
+
+"Service Thread" #21 daemon prio=9 os_prio=0 tid=0x000000002e384800 nid=0x295a0 runnable [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"C1 CompilerThread14" #20 daemon prio=9 os_prio=2 tid=0x000000002e34c800 nid=0x7a02c waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"C1 CompilerThread13" #19 daemon prio=9 os_prio=2 tid=0x000000002e34f000 nid=0x7d340 waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"C1 CompilerThread12" #18 daemon prio=9 os_prio=2 tid=0x000000002e351800 nid=0x525f8 waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"C1 CompilerThread11" #17 daemon prio=9 os_prio=2 tid=0x000000002e34c000 nid=0xb4ff8 waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"C1 CompilerThread10" #16 daemon prio=9 os_prio=2 tid=0x000000002e339000 nid=0x967b8 waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"C2 CompilerThread9" #15 daemon prio=9 os_prio=2 tid=0x000000002e328800 nid=0xe3ee0 waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"C2 CompilerThread8" #14 daemon prio=9 os_prio=2 tid=0x000000002e322000 nid=0xaba18 waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"C2 CompilerThread7" #13 daemon prio=9 os_prio=2 tid=0x000000002e2f7000 nid=0x1007a0 waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"C2 CompilerThread6" #12 daemon prio=9 os_prio=2 tid=0x000000002e2ee800 nid=0x5b50c waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"C2 CompilerThread5" #11 daemon prio=9 os_prio=2 tid=0x000000002e2b5800 nid=0x15d28 waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"C2 CompilerThread4" #10 daemon prio=9 os_prio=2 tid=0x000000002bccd000 nid=0x2c34c waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"C2 CompilerThread3" #9 daemon prio=9 os_prio=2 tid=0x000000002bcca000 nid=0xe8ee0 waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"C2 CompilerThread2" #8 daemon prio=9 os_prio=2 tid=0x000000002e2a7800 nid=0xcb21c waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"C2 CompilerThread1" #7 daemon prio=9 os_prio=2 tid=0x000000002e2a6800 nid=0xc7d4 waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"C2 CompilerThread0" #6 daemon prio=9 os_prio=2 tid=0x000000002e2a4000 nid=0xb2fcc waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"Attach Listener" #5 daemon prio=5 os_prio=2 tid=0x000000002e24c800 nid=0x16b6c waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"Signal Dispatcher" #4 daemon prio=9 os_prio=2 tid=0x000000002e236800 nid=0xee72c runnable [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"Finalizer" #3 daemon prio=8 os_prio=1 tid=0x000000002bcb8000 nid=0x3260c in Object.wait() [0x0000000032eae000]
+   java.lang.Thread.State: WAITING (on object monitor)
+	at java.lang.Object.wait(Native Method)
+	at java.lang.ref.ReferenceQueue.remove(ReferenceQueue.java:144)
+	- locked <0x0000000540017e58> (a java.lang.ref.ReferenceQueue$Lock)
+	at java.lang.ref.ReferenceQueue.remove(ReferenceQueue.java:165)
+	at java.lang.ref.Finalizer$FinalizerThread.run(Finalizer.java:216)
+
+"Reference Handler" #2 daemon prio=10 os_prio=2 tid=0x000000002e227800 nid=0x5f8c8 in Object.wait() [0x0000000031eaf000]
+   java.lang.Thread.State: WAITING (on object monitor)
+	at java.lang.Object.wait(Native Method)
+	at java.lang.Object.wait(Object.java:502)
+	at java.lang.ref.Reference.tryHandlePending(Reference.java:191)
+	- locked <0x000000054001bd40> (a java.lang.ref.Reference$Lock)
+	at java.lang.ref.Reference$ReferenceHandler.run(Reference.java:153)
+
+"main" #1 prio=5 os_prio=0 tid=0x00000000030d3800 nid=0xf3a44 runnable [0x00000000030ce000]
+   java.lang.Thread.State: RUNNABLE
+	at scala.runtime.Statics.anyHash(Statics.java:122)
+	at scala.util.hashing.MurmurHash3.productHash(MurmurHash3.scala:68)
+	at scala.util.hashing.MurmurHash3$.productHash(MurmurHash3.scala:215)
+	at scala.runtime.ScalaRunTime$._hashCode(ScalaRunTime.scala:149)
+	at com.fasoo.javafinch.analyzer.absdom.ALoc.hashCode(AbstractDomain.scala:1608)
+	at scala.runtime.Statics.anyHash(Statics.java:122)
+	at scala.collection.immutable.HashMap.elemHashCode(HashMap.scala:87)
+	at scala.collection.immutable.HashMap.computeHash(HashMap.scala:96)
+	at scala.collection.immutable.HashMap.get(HashMap.scala:56)
+	at com.fasoo.javafinch.analyzer.Summary$.$anonfun$mergeTaintInfo$4(Summary.scala:301)
+	at com.fasoo.javafinch.analyzer.Summary$$$Lambda$6625/1397767882.apply(Unknown Source)
+	at scala.collection.TraversableOnce.$anonfun$foldLeft$1(TraversableOnce.scala:162)
+	at scala.collection.TraversableOnce.$anonfun$foldLeft$1$adapted(TraversableOnce.scala:162)
+	at scala.collection.TraversableOnce$$Lambda$51/1295226194.apply(Unknown Source)
+	at scala.collection.immutable.HashMap$HashMap1.foreach(HashMap.scala:234)
+	at scala.collection.immutable.HashMap$HashTrieMap.foreach(HashMap.scala:468)
+	at scala.collection.immutable.HashMap$HashTrieMap.foreach(HashMap.scala:468)
+	at scala.collection.TraversableOnce.foldLeft(TraversableOnce.scala:162)
+	at scala.collection.TraversableOnce.foldLeft$(TraversableOnce.scala:160)
+	at scala.collection.AbstractTraversable.foldLeft(Traversable.scala:108)
+	at com.fasoo.javafinch.analyzer.Summary$.mergeTaintInfo(Summary.scala:298)
+	at com.fasoo.javafinch.analyzer.Summary$.$anonfun$join$1(Summary.scala:274)
+	at com.fasoo.javafinch.analyzer.Summary$$$Lambda$6623/425864266.apply(Unknown Source)
+	at scala.collection.TraversableOnce.$anonfun$foldLeft$1(TraversableOnce.scala:162)
+	at scala.collection.TraversableOnce.$anonfun$foldLeft$1$adapted(TraversableOnce.scala:162)
+	at scala.collection.TraversableOnce$$Lambda$51/1295226194.apply(Unknown Source)
+	at scala.collection.immutable.RedBlackTree$._foreachKey(RedBlackTree.scala:111)
+	at scala.collection.immutable.RedBlackTree$._foreachKey(RedBlackTree.scala:110)
+	at scala.collection.immutable.RedBlackTree$._foreachKey(RedBlackTree.scala:110)
+	at scala.collection.immutable.RedBlackTree$._foreachKey(RedBlackTree.scala:110)
+	at scala.collection.immutable.RedBlackTree$._foreachKey(RedBlackTree.scala:110)
+	at scala.collection.immutable.RedBlackTree$.foreachKey(RedBlackTree.scala:107)
+	at scala.collection.immutable.TreeSet.foreach(TreeSet.scala:170)
+	at scala.collection.TraversableOnce.foldLeft(TraversableOnce.scala:162)
+	at scala.collection.TraversableOnce.foldLeft$(TraversableOnce.scala:160)
+	at scala.collection.immutable.TreeSet.foldLeft(TreeSet.scala:53)
+	at com.fasoo.javafinch.analyzer.Summary$.join(Summary.scala:274)
+	at com.fasoo.javafinch.analyzer.Summary$.join(Summary.scala:267)
+	at com.fasoo.javafinch.analyzer.path.CachedTraceExecutioner.run(CachedTraceExecutioner.scala:63)
+	at com.fasoo.javafinch.analyzer.path.CachedTraceExecutioner.run$(CachedTraceExecutioner.scala:19)
+	at com.fasoo.javafinch.analyzer.Analyze$$anon$2.run(Analyze.scala:224)
+	at com.fasoo.javafinch.analyzer.Analyze$.$anonfun$analyzeMethodOld$2(Analyze.scala:239)
+	at com.fasoo.javafinch.analyzer.Analyze$$$Lambda$1464/1412747662.apply(Unknown Source)
+	at com.fasoo.javafinch.core.Logger.withIncreasedDepth(Util.scala:110)
+	at com.fasoo.javafinch.analyzer.Analyze$.analyzeMethodOld(Analyze.scala:239)
+	at com.fasoo.javafinch.analyzer.Analyze$.$anonfun$analyzeMethod$2(Analyze.scala:204)
+	at com.fasoo.javafinch.analyzer.Analyze$.$anonfun$analyzeMethod$2$adapted(Analyze.scala:204)
+	at com.fasoo.javafinch.analyzer.Analyze$$$Lambda$1459/1585402651.apply(Unknown Source)
+	at com.fasoo.javafinch.analyzer.Analyze$.$anonfun$analyzeGlobal$15(Analyze.scala:377)
+	at com.fasoo.javafinch.analyzer.Analyze$$$Lambda$1457/310309731.apply(Unknown Source)
+	at scala.util.control.Exception$Catch.apply(Exception.scala:228)
+	at com.fasoo.javafinch.core.Util$.jfSafetyNet(Util.scala:247)
+	at com.fasoo.javafinch.analyzer.Analyze$.result$lzycompute$1(Analyze.scala:377)
+	- locked <0x00000007bee081d8> (a scala.runtime.LazyRef)
+	at com.fasoo.javafinch.analyzer.Analyze$.result$1(Analyze.scala:366)
+	at com.fasoo.javafinch.analyzer.Analyze$.$anonfun$analyzeGlobal$8(Analyze.scala:441)
+	at com.fasoo.javafinch.analyzer.Analyze$$$Lambda$1449/1655061466.apply(Unknown Source)
+	at com.fasoo.javafinch.core.Logger.withIncreasedDepth(Util.scala:110)
+	at com.fasoo.javafinch.analyzer.Analyze$.$anonfun$analyzeGlobal$7(Analyze.scala:364)
+	at com.fasoo.javafinch.analyzer.Analyze$$$Lambda$1448/1203956993.apply(Unknown Source)
+	at scala.collection.LinearSeqOptimized.foldLeft(LinearSeqOptimized.scala:126)
+	at scala.collection.LinearSeqOptimized.foldLeft$(LinearSeqOptimized.scala:122)
+	at scala.collection.immutable.List.foldLeft(List.scala:89)
+	at com.fasoo.javafinch.analyzer.Analyze$.analyzeGlobal(Analyze.scala:353)
+	at com.fasoo.javafinch.core.AnalyzeAllTask.run(AnalyzeAllTask.scala:103)
+	at com.fasoo.javafinch.core.task.Task.run_(Task.scala:26)
+	at com.fasoo.javafinch.core.task.Task.run_$(Task.scala:22)
+	at com.fasoo.javafinch.core.AnalyzeAllTask.run_(AnalyzeAllTask.scala:49)
+	at com.fasoo.javafinch.core.task.TaskManager.$anonfun$start$3(TaskManager.scala:24)
+	at com.fasoo.javafinch.core.task.TaskManager$$Lambda$760/1574029810.apply$mcV$sp(Unknown Source)
+	at scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.java:23)
+	at com.fasoo.javafinch.core.Util$._time(Util.scala:144)
+	at com.fasoo.javafinch.core.Util$.recordTime(Util.scala:153)
+	at com.fasoo.javafinch.core.task.TaskManager.$anonfun$start$2(TaskManager.scala:24)
+	at com.fasoo.javafinch.core.task.TaskManager$$Lambda$759/170052458.apply$mcV$sp(Unknown Source)
+	at scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.java:23)
+	at com.fasoo.javafinch.core.Logger.withIncreasedDepth(Util.scala:110)
+	at com.fasoo.javafinch.core.task.TaskManager.start(TaskManager.scala:24)
+	at com.fasoo.javafinch.core.SemanticEngine$.main(SemanticEngine.scala:85)
+	at com.fasoo.javafinch.core.SemanticEngine.main(SemanticEngine.scala)
+
+"VM Thread" os_prio=2 tid=0x000000002bcb5000 nid=0x822a4 runnable 
+
+"ParGC Thread#0" os_prio=0 tid=0x00000000030e9800 nid=0x9980 runnable 
+
+"ParGC Thread#1" os_prio=0 tid=0x00000000030eb000 nid=0x30e60 runnable 
+
+"ParGC Thread#2" os_prio=0 tid=0x00000000030ec800 nid=0x81a98 runnable 
+
+"ParGC Thread#3" os_prio=0 tid=0x00000000030ee800 nid=0xfc380 runnable 
+
+"ParGC Thread#4" os_prio=0 tid=0x00000000030f0800 nid=0x1636c runnable 
+
+"ParGC Thread#5" os_prio=0 tid=0x00000000030f2000 nid=0x18ec4 runnable 
+
+"ParGC Thread#6" os_prio=0 tid=0x00000000030f6000 nid=0x2501c runnable 
+
+"ParGC Thread#7" os_prio=0 tid=0x00000000030f7000 nid=0xf8d8c runnable 
+
+"ParGC Thread#8" os_prio=0 tid=0x00000000030f8800 nid=0x40530 runnable 
+
+"ParGC Thread#9" os_prio=0 tid=0x00000000030f9800 nid=0xebedc runnable 
+
+"ParGC Thread#10" os_prio=0 tid=0x00000000030fa800 nid=0x60554 runnable 
+
+"ParGC Thread#11" os_prio=0 tid=0x00000000030fe000 nid=0x143c8 runnable 
+
+"ParGC Thread#12" os_prio=0 tid=0x00000000030ff000 nid=0x69604 runnable 
+
+"ParGC Thread#13" os_prio=0 tid=0x0000000003100800 nid=0x91104 runnable 
+
+"ParGC Thread#14" os_prio=0 tid=0x0000000003101800 nid=0xb6cec runnable 
+
+"ParGC Thread#15" os_prio=0 tid=0x0000000003102800 nid=0x1fe4c runnable 
+
+"ParGC Thread#16" os_prio=0 tid=0x0000000003108800 nid=0xca2c4 runnable 
+
+"ParGC Thread#17" os_prio=0 tid=0x0000000003114800 nid=0xd4998 runnable 
+
+"ParGC Thread#18" os_prio=0 tid=0x0000000003112000 nid=0x2e488 runnable 
+
+"ParGC Thread#19" os_prio=0 tid=0x000000000310d800 nid=0x6e798 runnable 
+
+"ParGC Thread#20" os_prio=0 tid=0x0000000003113800 nid=0x54b8 runnable 
+
+"ParGC Thread#21" os_prio=0 tid=0x0000000003114000 nid=0x2f620 runnable 
+
+"ParGC Thread#22" os_prio=0 tid=0x0000000003110800 nid=0x68444 runnable 
+
+"VM Periodic Task Thread" os_prio=2 tid=0x000000002e387000 nid=0xabea8 waiting on condition 
+
+JNI global references: 8479
+

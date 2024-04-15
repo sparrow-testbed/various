@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<service>
+	<method name="sgCheckItem">
+		<![CDATA[
+				select count(*) as cnt from icomsgmp 					
+				where house_code = ${session.HOUSE_CODE} and use_flag = 'Y'	
+				and class_code IN (${item_code})  						 
+		]]>
+	</method>
+	<method name="setSgUpdate">
+		<![CDATA[
+				update icomsgmp set	                      					
+				change_date = TO_CHAR(SYSDATE,'YYYYMMDD'), 			
+				use_flag = 'N' 												
+				where house_code = ${session.HOUSE_CODE} 
+				and class_code in (${item_code})					 
+		]]>
+	</method>
+ 	<method name="setSgInsert">
+		<![CDATA[
+				insert into icomsgmp ( 			
+				house_code, 					
+				sg_pty_refitem, 				
+				sg_refitem,    					
+				class_code,  					
+				add_date,				
+				change_date,				
+				use_flag)						
+				select  						
+				${session.HOUSE_CODE},				
+				NVL(max(sg_PTY_REFITEM),0) + 1, 		
+				${sg_refitem},			
+				${item_code},								
+				TO_CHAR(SYSDATE,'YYYYMMDD'),	
+				TO_CHAR(SYSDATE,'YYYYMMDD'), 
+				'Y' from icomsgmp							
+		]]>
+	</method>
+</service>

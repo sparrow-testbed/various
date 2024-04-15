@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+<service> 
+    <method name="getOpinion">
+	<![CDATA[
+		 SELECT SIGN_PATH_SEQ
+		 	, GETUSERNAME(HOUSE_CODE, SIGN_USER_ID, 'LOC') AS SIGN_USER_NAME
+		 	, SIGN_REMARK
+		 	, GETICOMCODE1(HOUSE_CODE, 'M119',PROCEEDING_FLAG) AS PROCEEDING_FLAG_TEXT
+		 	, GETICOMCODE1(HOUSE_CODE, 'M109', APP_STATUS) AS APP_STATUS_TEXT
+		 FROM ICOMSCTP
+		 WHERE
+		 	HOUSE_CODE   = ${session.HOUSE_CODE}
+		 	AND  COMPANY_CODE = ${company_code}
+		 	AND  DOC_TYPE       = ${doc_type}
+		 	AND  DOC_NO         = ${doc_no}
+		 	AND  DOC_SEQ        = ${doc_seq}
+		 ORDER BY  TO_NUMBER(SIGN_PATH_SEQ)
+	]]>
+	</method>
+		
+</service>

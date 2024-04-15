@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu id="0">
+		<item text="동등 노드 추가" id="AddEquiv"/>
+		<item text="하위 노드 추가" id="AddBelow"/>
+		<item text="편집"  id="Edit"/>
+		<item text="삭제" id="Delete"/>
+</menu>

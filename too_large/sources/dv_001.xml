@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+<service>
+	  <method name ="getStateList">
+    <![CDATA[
+		SELECT
+	          PH.PO_NO
+	         ,PH.SUBJECT
+	         ,PH.CUR
+	         ,SUM(PT.ITEM_AMT) AS ITEM_AMT_SUM
+	         ,PH.SIGN_DATE
+	         ,PH.CHANGE_DATE
+	         ,GETUSERNAME(PH.HOUSE_CODE, PH.CHANGE_USER_ID, 'LOC') AS CHANGE_USER_NAME_LOC
+	         ,GETUSERNAMELOC(PH.HOUSE_CODE, PH.ADD_USER_ID) AS ADD_USER_NAME_LOC
+	         ,(CASE
+	                WHEN PH.STATUS = 'C'
+	                THEN '신규'
+	                ELSE '변경'
+	           END) AS STATUS_TXT
+		     ,(CASE 
+		            WHEN PH.CONFIRM_CERTV = 'Y' 
+		            THEN '확인' 
+		            WHEN PH.CONFIRM_CERTV = 'N' 
+		            THEN '반송' 
+		            ELSE '미확인' 
+		       END) AS CONFIRM_STATUS
+	         ,(CASE
+	                WHEN NVL(LTRIM(RTRIM(PH.CONFIRM_DATE||PH.CONFIRM_TIME)), 'X')= 'X'
+	                THEN ''
+	                ELSE TO_CHAR(TO_DATE(PH.CONFIRM_DATE || PH.CONFIRM_TIME, 'YYYYMMDDHH24MISS'), 'YYYY/MM/DD HH24:MI:SS')
+	           END) AS CONFIRM_DATE_TIME
+	        	 ,LTRIM(RTRIM(PH.CONFIRM_DATE)) AS CONFIRM_DATE
+				 ,PH.PO_CREATE_DATE
+          		 ,GETICOMCODE1(PH.HOUSE_CODE,'M010',PH.PAY_TERMS) AS PAY_TERMS
+          		 ,GETCTRLCODENAME(PH.HOUSE_CODE,PH.COMPANY_CODE,'P',PH.CTRL_CODE) AS CTRL_NAME
+          		 ,GETUSERNAME(PH.HOUSE_CODE, PH.PURCHASER_ID, 'LOC') AS PURCHASER_NAME
+          		 ,GETUSERNAME(PH.HOUSE_CODE, PH.TAKE_USER_NAME, 'LOC') AS TAKE_USER_NAME
+            ,( SELECT IRS_NO 
+            FROM ICOMVNGL 
+            WHERE VENDOR_CODE =  PH.VENDOR_CODE 
+            AND HOUSE_CODE = ${session.HOUSE_CODE}) IRS_NO
+            ,EC.CONT_SEQ
+            ,EC.CONT_COUNT
+            ,PH.REJECT_REMARK
+     FROM  ICOYPOHD PH,
+     	   ICOYPODT PT, 
+     	   ICOYECCT EC
+	 		 WHERE PH.HOUSE_CODE        = ${session.HOUSE_CODE} 
+	   		 AND PH.VENDOR_CODE        	= ${session.COMPANY_CODE} 
+	 		 AND PH.SIGN_DATE 			BETWEEN ${po_from_date}
+	 		 AND $S{po_to_date} 	
+	 		 AND PH.PO_NO              	LIKE '%' || $S{po_no} || '%' 	
+			 AND PH.CTRL_CODE          	= $S{CTRL_CODE}
+	]]>
+
+	<if test="${confirm_status}" operator="eq" value="N">
+		AND PH.CONFIRM_CERTV IS NULL
+		--AND LTRIM(RTRIM(PH.CONFIRM_DATE)) IS NULL)
+	</if>
+	
+	<if test="${confirm_status}" operator="eq" value="Y">
+		AND PH.CONFIRM_CERTV = 'Y'
+		--AND LTRIM(RTRIM(PH.CONFIRM_DATE)) IS NOT NULL
+	</if>
+
+	<if test="${confirm_status}" operator="eq" value="R">
+		AND PH.CONFIRM_CERTV = 'N'
+		--AND LTRIM(RTRIM(PH.CONFIRM_DATE)) IS NOT NULL
+	</if>
+
+	<![CDATA[
+     	AND PH.STATUS  	= $S{STATUS}
+	    AND PH.SUBJECT 	LIKE '%' || $S{subject} || '%' 
+	    AND PH.STATUS 			IN ('C', 'R')
+	    AND PT.STATUS 			IN ('C', 'R')
+	    AND PH.SIGN_STATUS      = 'E'
+		AND PH.PO_NO 			= PT.PO_NO
+		AND PH.SHIPPER_TYPE 	= 'D'
+		AND PH.HOUSE_CODE 		= PT.HOUSE_CODE
+        AND PH.HOUSE_CODE 	= EC.HOUSE_CODE(+) 
+        AND PH.PO_NO 			= EC.BID_NO(+) 
+		GROUP BY PH.CUR,
+				 PH.PO_NO,
+				 PH.SUBJECT,
+				 PH.SIGN_DATE,
+				 PH.CHANGE_DATE,
+				 PH.CHANGE_USER_ID,
+				 PH.ADD_USER_ID,
+				 PH.STATUS,
+				 PH.CONFIRM_CERTV,
+				 PH.CONFIRM_DATE,
+				 PH.CONFIRM_TIME,
+				 PH.HOUSE_CODE,
+				 PH.PO_CREATE_DATE,
+				 PH.PAY_TERMS,
+				 PH.CTRL_CODE,
+				 PH.PURCHASER_ID,
+				 PH.COMPANY_CODE,
+				 PH.TAKE_USER_NAME,
+				 PH.VENDOR_CODE, 
+		         EC.CONT_SEQ, 
+		         EC.CONT_COUNT,
+		         PH.REJECT_REMARK
+	  ORDER BY PH.SIGN_DATE DESC, PH.PO_NO DESC
+  	]]>
+	
+
+    </method>
+    
+    
+    
+
+</service>

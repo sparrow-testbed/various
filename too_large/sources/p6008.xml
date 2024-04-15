@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<service>
+	<method name="et_getMainternace">
+	<![CDATA[
+	SELECT DEPT                                   							
+	     , DEPT_NAME_LOC                               						
+	     , DEPT_NAME_ENG                               						
+	     , GETICOMCODE2(HOUSE_CODE,'M062',PR_LOCATION) AS PR_LOCATION_NAME	
+	     , PR_LOCATION
+	     , CASE 
+	     	WHEN MENU_PROFILE_CODE IS NULL OR MENU_PROFILE_CODE = '' THEN '미설정'
+	     	ELSE '설정'
+	       END AS PROFILE_FLAG	
+	     --, MENU_PROFILE_CODE  AS PROFILE_FLAG 
+	     , HIGH_DEPT
+      	 , DEPT_LEVEL
+      	 , GETDEPTNAMELOC(HOUSE_CODE,COMPANY_CODE,HIGH_DEPT) AS HIGH_DEPT_TEXT                        
+	FROM  ICOMOGDP                                 
+	WHERE HOUSE_CODE = ${I_HOUSE_CODE}           
+	AND COMPANY_CODE = ${I_COMPANY_CODE}           
+	AND PR_LOCATION = $S{I_PR_LOCATION}            
+	AND DEPT LIKE '%' || $S{I_DEPT} || '%'    
+	AND ( DEPT_NAME_LOC LIKE '%' || $S{I_DEPT_NAME} || '%'   OR DEPT_NAME_ENG LIKE '%#dept_name#%')   
+	AND STATUS IN ('C','R')
+	ORDER BY DEPT       
+	
+	]]>
+	</method>
+	
+	<method name="Check_Duplicate">
+	<![CDATA[
+	SELECT	STATUS
+	FROM	ICOMOGDP
+	<OPT=F,S> WHERE HOUSE_CODE = ? </OPT>
+	<OPT=F,S> AND COMPANY_CODE = ? </OPT>
+	<OPT=F,S> AND DEPT = ? </OPT>
+	<OPT=F,S> AND PR_LOCATION = ?</OPT>
+	]]>
+	</method>
+	
+	<method name="et_setSave">
+	<![CDATA[
+	INSERT INTO ICOMOGDP		
+	(                        
+			 HOUSE_CODE         
+			,COMPANY_CODE       
+			,DEPT               
+			,DEPT_NAME_LOC      
+			,DEPT_NAME_ENG      
+			,MANAGER_NAME       
+			,MANAGER_POSITION   
+			,PR_LOCATION        
+			,MENU_PROFILE_CODE  
+			,CTRL_DEPT_FLAG     
+			,PHONE_NO           
+			,FAX_NO             
+			,MENU_TYPE   
+			,HIGH_DEPT
+		    ,DEPT_LEVEL          
+			,STATUS             
+			,ADD_DATE           
+			,ADD_TIME           
+			,ADD_USER_ID  
+	)                        
+	VALUES                   
+	(                        
+			 ?                  
+			,?                  
+			,?                  
+			,?                  
+			,?                  
+			,?                  
+			,?                  
+			,?                  
+			,?                  
+			,?                  
+			,?                  
+			,?                  
+			,?                  
+			,?                  
+			,?                  
+			,?                  
+			,?
+			,?
+			,?                  
+	)                        
+	]]>
+	</method>
+	
+	<method name="et_getDis">
+	<![CDATA[
+	SELECT 
+		VM.DEPT_NAME_LOC                           
+	  , VM.DEPT_NAME_ENG                           
+	  , VM.MANAGER_NAME                       
+	  , VM.MANAGER_POSITION                   
+	  , VM.MANAGER_POSITION_NAME              
+	  , VM.PR_LOCATION                        
+	  , VM.PR_LOCATION_NAME                   
+	  , VM.MENU_PROFILE_CODE                  
+	  , VM.MENU_NAME                          
+	  , VM.CTRL_DEPT_FLAG                     
+	  , VM.PHONE_NO                           
+	  , VM.FAX_NO                             
+	  , VM.MENU_TYPE
+	  , OD.HIGH_DEPT
+	  , OD2.DEPT_NAME_LOC AS HIGH_DEPT_TEXT
+	  , OD.DEPT_LEVEL                         
+	 FROM  
+	 	DEPT_GENERAL_VW VM, 
+	 	ICOMOGDP OD,
+	 	ICOMOGDP OD2
+	 WHERE                  
+		 VM.HOUSE_CODE = OD.HOUSE_CODE
+	 	 AND VM.COMPANY_CODE = OD.COMPANY_CODE
+	 	 AND VM.DEPT = OD.DEPT
+	 	 AND OD.HOUSE_CODE = OD2.HOUSE_CODE
+	 	 AND OD.HIGH_DEPT = OD2.DEPT
+		<OPT=F,S> AND VM.HOUSE_CODE = ? </OPT>  
+		<OPT=F,S> AND VM.COMPANY_CODE = ? </OPT>  
+		<OPT=F,S> AND VM.DEPT = ? </OPT>          
+		<OPT=F,S> AND VM.PR_LOCATION = ? </OPT>
+	]]>
+	</method>
+	
+	<method name="et_setChange">
+	<![CDATA[
+	UPDATE ICOMOGDP				
+	SET   DEPT_NAME_LOC  	= ? 
+		   , DEPT_NAME_ENG		= ? 
+		   , MANAGER_NAME		= ? 
+		   , MANAGER_POSITION	= ? 
+		   , PR_LOCATION		= ? 
+		   , MENU_PROFILE_CODE	= ? 
+		   , CTRL_DEPT_FLAG		= ? 
+		   , PHONE_NO			= ? 
+		   , FAX_NO				= ? 
+		   , MENU_TYPE			= ? 
+		   , STATUS				= ? 
+		   , CHANGE_DATE		= ? 
+		   , CHANGE_TIME		= ? 
+		   , CHANGE_USER_ID		= ? 
+		   , HIGH_DEPT			= ?
+		   , DEPT_LEVEL				= ?
+	WHERE HOUSE_CODE			= ? 
+	  AND COMPANY_CODE		= ? 
+	  AND DEPT				= ?  
+	  AND PR_LOCATION		= ?  
+	]]>
+	</method>
+	
+	<method name="et_setDelete">
+	<![CDATA[
+	UPDATE ICOMOGDP SET
+	    STATUS      = ?
+	  , CHANGE_DATE = ?
+	  , CHANGE_TIME = ?
+	  , CHANGE_USER_ID = ?
+	WHERE HOUSE_CODE = ?
+	AND COMPANY_CODE = ?
+	AND DEPT = ?
+	AND PR_LOCATION = ?
+	]]>
+	</method>
+</service>

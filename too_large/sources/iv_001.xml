@@ -1,0 +1,3222 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+<service>
+
+	<!-- 검수요청현황 상세 화면 - 헤더정보(기성정보와 연계없음)  -->
+<method name = "getIvPoHeader">
+<![CDATA[
+	SELECT PH.PO_NO , 
+	       PH.SUBJECT , 
+	       GETICOMCODE1(PH.HOUSE_CODE,'M134','CM') AS DP_TYPE_DESC , 
+	       'CM' AS DP_TYPE , 
+	       TRIM (TO_CHAR 
+	       ( 
+	              (SELECT COUNT(*)+1 
+	                FROM ICOYIVHD 
+	               WHERE INV_NO IN 
+	                     (SELECT INV_NO 
+	                       FROM ICOYIVDT 
+	                      WHERE HOUSE_CODE=PH.HOUSE_CODE 
+	                            AND PO_NO = PH.PO_NO 
+	                            AND STATUS <> 'D' 
+	                     ) 
+	                     AND STATUS <> 'D' 
+	              ), '00000' 
+	          )
+	          ) AS IV_SEQ , 
+	          '' AS DP_PAY_TERMS_TEXT , 
+	          '' AS DP_CODE , 
+	          '' AS DP_TEXT , 
+	          '' AS DP_PERCENT , 
+	          '' AS DP_AMT , 
+	          GETICOMCODE1(PH.HOUSE_CODE,'M010',PH.PAY_TERMS) AS DP_PAY_TERMS_DESC , 
+	          PH.PAY_TERMS DP_PAY_TERMS , 
+	          PH.PO_TTL_AMT , 
+	          GETUSERNAMELOC(PH.HOUSE_CODE, PH.ADD_USER_ID) AS USER_NAME , 
+	          PH.ADD_USER_ID , 
+	          TO_CHAR(SYSDATE, 'YYYYMMDD') AS INV_DATE , 
+	          PH.REMARK , 
+	          PH.PO_CREATE_DATE , 
+	          (SELECT NVL(SUM(IV.INV_AMT), 0) 
+	            FROM ICOYIVDT IV, 
+	                 ICOMMTGL MT 
+	           WHERE IV.HOUSE_CODE = PH.HOUSE_CODE 
+	                 AND IV.PO_NO = PH.PO_NO 
+	                 AND IV.HOUSE_CODE = MT.HOUSE_CODE 
+	                 AND IV.ITEM_NO = MT.ITEM_NO 
+	                 AND 'I' = 
+	                 CASE MT.KTGRM 
+	                     WHEN '02' 
+	                     THEN 'S' 
+	                     ELSE 'I' 
+	                 END 
+	                 AND INV_NO IN 
+	                 (SELECT INV_NO 
+	                   FROM ICOYIVHD IVHD 
+	                  WHERE IVHD.HOUSE_CODE = IV.HOUSE_CODE 
+	                        AND IVHD.INV_NO = IV.INV_NO 
+	                        AND IVHD.SIGN_STATUS = 'E1' 
+	                 ) 
+	          ) AS INV_AMT , 
+	          PH.PR_TYPE , 
+	          PH.CTRL_CODE , 
+	          PH.CONTRACT_NO , 
+	          PH.CONTRACT_FLAG , 
+	          PH.CUR , 
+	          (SELECT MAX(EXCHANGE_RATE) 
+	            FROM ICOYPODT 
+	           WHERE HOUSE_CODE = PH.HOUSE_CODE 
+	                 AND PO_NO = PH.PO_NO 
+	          ) AS EXCHANGE_RATE , 
+	          PH.PO_AMT_KRW , 
+	          ECA.AMT_INSU_NUM , 
+	          ECA.CONT_INSU_NUM , 
+	          ECA.AS_INSU_NUM , 
+	          (SELECT PH.PO_TTL_AMT - SUM(DP_AMT) 
+	            FROM ICOYIVHD 
+	           WHERE INV_NO IN 
+	                 (SELECT INV_NO 
+	                   FROM ICOYIVDT 
+	                  WHERE HOUSE_CODE=PH.HOUSE_CODE 
+	                        AND PO_NO = PH.PO_NO 
+	                 ) 
+	          ) AS PAY_DP_AMT , 
+	          ECA.IS_OFF_LINE , 
+	          ECA.CONT_ATTACH_NO , 
+	          ECA.FIRST_ATTACH_NO , 
+	          ECA.MENGEL_ATTACH_NO , 
+	          ECA.INV_OFF_CONT_FLAG , 
+	          ECA.INV_OFF_FIRST_FLAG , 
+	          ECA.INV_OFF_MENGEL_FLAG , 
+	          PH.VENDOR_CODE , 
+	          VNGL.CASH_GRADE , 
+	          VNGL.CREDIT_RATING
+ 	FROM (SELECT PH.HOUSE_CODE
+			    ,PH.PO_NO
+			    ,PH.SUBJECT
+			    ,PH.PAY_TERMS
+			    ,PH.PO_TTL_AMT
+			    ,SUM(PD.ITEM_AMT) AS ITEM_AMT
+			    ,PH.TAKE_USER_NAME AS ADD_USER_ID
+			    --,PH.ADD_USER_ID
+			    ,PH.REMARK
+			    ,PH.PO_CREATE_DATE
+			    ,PH.PR_TYPE
+			    ,PH.CTRL_CODE
+			    ,PH.CONTRACT_NO
+		     	,PH.CONTRACT_FLAG
+		     	,PH.CUR
+		     	,PH.PO_AMT_KRW
+		     	,PD.EXEC_NO
+		     	,CASE MT.KTGRM WHEN '02' THEN 'S' ELSE 'I' END AS DP_DIV
+		     	,SUM(PD.ITEM_AMT) - (
+		            SELECT NVL(SUM(INV_AMT), 0)
+		            FROM ICOYIVDT IV, ICOMMTGL ML
+		            WHERE PH.HOUSE_CODE = IV.HOUSE_CODE
+		            AND PH.PO_NO        = IV.PO_NO
+		            AND IV.HOUSE_CODE = ML.HOUSE_CODE
+		            AND IV.ITEM_NO = ML.ITEM_NO
+		            AND ${dp_div} = CASE MT.KTGRM WHEN '02' THEN 'S' ELSE 'I' END
+		            AND IV.INV_NO IN (SELECT INV_NO FROM ICOYIVHD WHERE HOUSE_CODE = IV.HOUSE_CODE AND INV_NO = IV.INV_NO AND SIGN_STATUS = 'E1')
+		         ) AS INV_AMT
+		        ,PH.VENDOR_CODE
+		        ,SS.SRC_FILE_NAME
+			FROM ICOYPOHD PH, ICOYPODT PD, ICOMMTGL MT, SFILE SS
+			WHERE PH.HOUSE_CODE = PD.HOUSE_CODE
+			AND PH.PO_NO 		= PD.PO_NO
+			AND MT.HOUSE_CODE 	= PD.HOUSE_CODE
+			AND MT.ITEM_NO 		= PD.ITEM_NO
+			AND PH.CONFIRM_DATE IS NOT NULL
+			AND PH.ATTACH_NO    = SS.DOC_NO(+)
+			AND PH.HOUSE_CODE 	= ${session.HOUSE_CODE}
+			AND PH.PO_NO  		= ${po_no}
+			AND PH.STATUS  	!= 'D'
+		    AND PD.STATUS  	!= 'D'
+		    GROUP BY PH.HOUSE_CODE
+			        ,PH.PO_NO
+			        ,PH.SUBJECT
+			        ,PH.PO_CREATE_DATE
+			        ,PH.PO_TTL_AMT
+			        --,PH.ADD_USER_ID
+			        ,PH.TAKE_USER_NAME
+			        ,PH.CUR
+			        ,PD.EXEC_NO
+			        ,PH.PAY_TERMS
+			        ,PH.REMARK
+			        ,PH.PR_TYPE
+			        ,PH.CTRL_CODE
+			        ,PH.CONTRACT_NO
+			        ,PH.CONTRACT_FLAG
+			        ,PH.PO_AMT_KRW
+			        ,MT.KTGRM
+			        ,PH.VENDOR_CODE
+			        ,SS.SRC_FILE_NAME
+			) PH
+			Left Outer Join ( SELECT  EC.CONT_SEQ
+									,EC.AMT_INSU_NUM
+									,EC.CONT_INSU_NUM
+									,EC.AS_INSU_NUM
+									,EC.IS_OFF_LINE
+		       						,EC.CONT_ATTACH_NO
+		       						,EC.FIRST_ATTACH_NO
+		       						,EC.MENGEL_ATTACH_NO
+		       						,DECODE(EC.INSU_CONTRACT_STATUS, 'O', DECODE(EC.CONT_ATTACH_NO, NULL, 'N', 'Y'), 'N') INV_OFF_CONT_FLAG
+		        					,DECODE(EC.INSU_FIRST_STATUS, 'O', DECODE(EC.CONT_ATTACH_NO, NULL, 'N', 'Y'), 'N') INV_OFF_FIRST_FLAG
+		        					,DECODE(EC.INSU_MENGEL_STATUS, 'O', DECODE(EC.MENGEL_ATTACH_NO, NULL, 'N', 'Y'), 'N') INV_OFF_MENGEL_FLAG
+		        					,EC.BID_NO, EC.HOUSE_CODE
+							 FROM ICOYECCT EC
+		     				WHERE EC.BID_NO = ${po_no}
+		     				  AND EC.HOUSE_CODE = ${session.HOUSE_CODE}
+		       				  AND EC.CONT_COUNT = ( SELECT MAX(CONT_COUNT)
+		             								FROM ICOYECCT
+		                							WHERE HOUSE_CODE = ${session.HOUSE_CODE}
+		                							AND BID_NO = ${po_no})
+		      				) ECA
+		    ON  PH.PO_NO = ECA.BID_NO AND PH.HOUSE_CODE = ECA.HOUSE_CODE
+		   ,ICOMVNGL VNGL
+	WHERE PH.HOUSE_CODE 	= VNGL.HOUSE_CODE
+	AND	  PH.VENDOR_CODE 	= VNGL.VENDOR_CODE
+]]>
+</method>
+	<!-- AND   PH.DP_DIV    		= '${dp_div}' 위에 쿼리에 주석-->
+
+
+<!-- 검수요청현황 상세 화면 - 헤더정보  -->
+<method name = "getIvPoHeader_1">
+<![CDATA[
+	SELECT
+         PH.PO_NO
+        ,PH.SUBJECT
+        ,GETICOMCODE1(CN.HOUSE_CODE,'M134',CN.DP_TYPE) AS DP_TYPE_DESC
+        ,CN.DP_TYPE
+        ,CN.DP_SEQ AS IV_SEQ
+        ,CN.DP_PAY_TERMS_TEXT
+        ,CN.DP_CODE
+        ,GETICOMCODE1(CN.HOUSE_CODE,'M940' ,CN.DP_CODE) AS DP_TEXT
+        ,CN.DP_PERCENT
+        ,CN.DP_AMT
+        ,GETICOMCODE1(PH.HOUSE_CODE,'M010',PH.PAY_TERMS) AS DP_PAY_TERMS_DESC
+        ,PH.PAY_TERMS DP_PAY_TERMS
+        ,PH.PO_TTL_AMT
+        ,GETUSERNAMELOC(PH.HOUSE_CODE, PH.ADD_USER_ID) AS USER_NAME
+        ,PH.ADD_USER_ID
+        ,TO_CHAR(SYSDATE, 'YYYYMMDD') AS INV_DATE
+        ,PH.REMARK
+        ,PH.PO_CREATE_DATE
+        ,(   SELECT NVL(SUM(IV.INV_AMT), 0)
+             FROM ICOYIVDT IV, ICOMMTGL MT
+             WHERE IV.HOUSE_CODE = PH.HOUSE_CODE
+             AND IV.PO_NO = PH.PO_NO
+             AND IV.HOUSE_CODE = MT.HOUSE_CODE
+             AND IV.ITEM_NO = MT.ITEM_NO
+             AND '#dp_div#' = CASE MT.KTGRM WHEN '02' THEN 'S' ELSE 'I' END
+             AND INV_NO IN ( SELECT INV_NO FROM ICOYIVHD IVHD WHERE IVHD.HOUSE_CODE =IV.HOUSE_CODE AND IVHD.INV_NO = IV.INV_NO AND IVHD.SIGN_STATUS = 'E1' )
+         ) INV_AMT
+        ,PH.PR_TYPE
+        ,PH.CTRL_CODE
+        ,PH.CONTRACT_NO
+        ,PH.CONTRACT_FLAG
+        ,PH.CUR
+        ,( SELECT  MAX(EXCHANGE_RATE)
+    	   FROM ICOYPODT
+    	   WHERE HOUSE_CODE = PH.HOUSE_CODE
+      	     AND PO_NO      = PH.PO_NO) AS EXCHANGE_RATE
+        ,PH.PO_AMT_KRW
+        ,ECA.AMT_INSU_NUM
+        ,ECA.CONT_INSU_NUM
+        ,ECA.AS_INSU_NUM
+        ,( SELECT PH.PO_TTL_AMT -SUM(DP_AMT) FROM ICOYIVHD
+            WHERE INV_NO  IN  ( SELECT INV_NO FROM ICOYIVDT
+                                WHERE HOUSE_CODE=PH.HOUSE_CODE
+                                AND PO_NO = PH.PO_NO )
+            ) AS PAY_DP_AMT
+        ,ECA.IS_OFF_LINE
+        ,ECA.CONT_ATTACH_NO
+        ,ECA.FIRST_ATTACH_NO
+        ,ECA.MENGEL_ATTACH_NO
+        ,ECA.INV_OFF_CONT_FLAG
+        ,ECA.INV_OFF_FIRST_FLAG
+        ,ECA.INV_OFF_MENGEL_FLAG
+        ,PH.VENDOR_CODE
+        ,VNGL.CASH_GRADE
+		,VNGL.CREDIT_RATING
+        ,   (  SELECT CASE WHEN COUNT(SIGN_STATUS)+1 = MAX( (SELECT COUNT(*) 
+                                                               FROM ICOYCNDP 
+                                                              WHERE DP_DIV = CN.DP_DIV
+	                                                            AND EXEC_NO = CN.EXEC_NO
+	                                                            AND HOUSE_CODE = '#house_code#'
+	                                                            AND STATUS <> 'D'
+                                                          )
+                                                       )
+                          THEN 'Y' ELSE 'N' END   
+                FROM ICOYIVHD IVHD
+               WHERE INV_NO IN (          
+                                  SELECT INV_NO
+                                    FROM ICOYIVDT
+                                   WHERE HOUSE_CODE = '#house_code#'
+                                     AND PO_NO = '#po_no#'
+                                     AND STATUS <> 'D'
+                               )
+                 AND HOUSE_CODE = '#house_code#'
+                 AND DP_DIV = CN.DP_DIV
+            ) AS LAST_YN,
+	          ( SELECT CASE WHEN COUNT(*) > 0 THEN 'Y' ELSE 'N' END 
+	              FROM ICOYPODT T, ICOMMTGL MT 
+	             WHERE T.HOUSE_CODE = MT.HOUSE_CODE
+	               AND T.ITEM_NO    = MT.ITEM_NO
+	               AND T.HOUSE_CODE = '#house_code#'
+	               AND T.PO_NO = '#po_no#'
+	               AND MT.KTGRM = '02' 
+	           ) AS DEV_FLAG
+ 	FROM ICOYCNDP CN,
+ 	( SELECT PH.HOUSE_CODE
+	    ,PH.PO_NO
+	    ,PH.SUBJECT
+	    ,PH.PAY_TERMS
+	    ,PH.PO_TTL_AMT
+	    ,SUM(PD.ITEM_AMT) ITEM_AMT
+	    ,PH.ADD_USER_ID
+	    ,PH.REMARK
+	    ,PH.PO_CREATE_DATE
+	    ,PH.PR_TYPE
+	    ,PH.CTRL_CODE
+	    ,PH.CONTRACT_NO
+     	,PH.CONTRACT_FLAG
+     	,PH.CUR
+     	,PH.PO_AMT_KRW
+     	,PD.EXEC_NO
+     	, CASE MT.KTGRM WHEN '02' THEN 'S' ELSE 'I' END DP_DIV
+     	,  SUM(PD.ITEM_AMT)  -
+        	(
+            SELECT NVL(SUM(INV_AMT), 0)
+            FROM ICOYIVDT IV, ICOMMTGL ML
+            WHERE PH.HOUSE_CODE  = IV.HOUSE_CODE
+            AND PH.PO_NO        = IV.PO_NO
+            AND IV.HOUSE_CODE = ML.HOUSE_CODE
+            AND IV.ITEM_NO = ML.ITEM_NO
+            AND '#dp_div#' = CASE MT.KTGRM WHEN '02' THEN 'S' ELSE 'I' END
+            AND IV.INV_NO IN (SELECT INV_NO FROM ICOYIVHD WHERE HOUSE_CODE = IV.HOUSE_CODE AND INV_NO = IV.INV_NO AND SIGN_STATUS = 'E1')
+            ) INV_AMT
+         ,PH.VENDOR_CODE
+	FROM ICOYPOHD PH, ICOYPODT PD, ICOMMTGL MT
+	WHERE PH.HOUSE_CODE = PD.HOUSE_CODE
+	AND PH.PO_NO 		= PD.PO_NO
+	AND MT.HOUSE_CODE 	= PD.HOUSE_CODE
+	AND MT.ITEM_NO 		= PD.ITEM_NO
+	AND PH.CONFIRM_DATE IS NOT NULL
+	AND PH.HOUSE_CODE 	= '#house_code#'
+	AND PH.PO_NO  		= '#po_no#'
+	AND PH.STATUS  	!= 'D'
+    AND PD.STATUS  	!= 'D'
+    GROUP BY
+        PH.HOUSE_CODE
+        , PH.PO_NO
+        , PH.SUBJECT
+        , PH.PO_CREATE_DATE
+        , PH.PO_TTL_AMT
+        , PH.ADD_USER_ID
+        , PH.CUR
+        , PD.EXEC_NO
+        ,PH.PAY_TERMS
+        ,PH.REMARK
+        ,PH.PR_TYPE
+        ,PH.CTRL_CODE
+        ,PH.CONTRACT_NO
+        ,PH.CONTRACT_FLAG
+        ,PH.PO_AMT_KRW
+        ,MT.KTGRM
+        ,PH.VENDOR_CODE
+	) PH
+	Left Outer Join ( SELECT  EC.CONT_SEQ
+							,EC.AMT_INSU_NUM
+							,EC.CONT_INSU_NUM
+							,EC.AS_INSU_NUM
+							,EC.IS_OFF_LINE
+       						,EC.CONT_ATTACH_NO
+       						,EC.FIRST_ATTACH_NO
+       						,EC.MENGEL_ATTACH_NO
+       						, DECODE(EC.INSU_CONTRACT_STATUS, 'O', DECODE(EC.CONT_ATTACH_NO, NULL, 'N', 'Y'), 'N') INV_OFF_CONT_FLAG
+        					, DECODE(EC.INSU_FIRST_STATUS, 'O', DECODE(EC.CONT_ATTACH_NO, NULL, 'N', 'Y'), 'N') INV_OFF_FIRST_FLAG
+        					, DECODE(EC.INSU_MENGEL_STATUS, 'O', DECODE(EC.MENGEL_ATTACH_NO, NULL, 'N', 'Y'), 'N') INV_OFF_MENGEL_FLAG
+        					, EC.BID_NO
+					 FROM ICOYECCT EC
+     				WHERE EC.BID_NO = '#po_no#'
+     				  AND EC.HOUSE_CODE = '#house_code#'
+       				  AND EC.CONT_COUNT = ( SELECT MAX(CONT_COUNT)
+             								FROM ICOYECCT
+                							WHERE HOUSE_CODE = '#house_code#' AND BID_NO = '#po_no#'
+                						  )
+      				) ECA
+    ON  PH.PO_NO= ECA.BID_NO
+    ,ICOMVNGL VNGL
+	WHERE PH.HOUSE_CODE = CN.HOUSE_CODE
+	AND   PH.EXEC_NO  = CN.EXEC_NO
+	AND   PH.DP_DIV = CN.DP_DIV
+	AND	  PH.HOUSE_CODE = VNGL.HOUSE_CODE
+	AND	  PH.VENDOR_CODE = VNGL.VENDOR_CODE
+	AND   CN.STATUS   != 'D'
+	AND   PH.DP_DIV    = '#dp_div#'
+	<OPT=S,S>  AND   CN.EXEC_NO		= ?               				                        </OPT>
+	<OPT=S,S>  AND   CN.DP_SEQ		= ?				                                        </OPT>
+]]>
+</method>
+
+<method name = "getIvPoDetail_1">
+	<![CDATA[
+	SELECT PO_NO ,
+	       PO_SEQ ,
+	       ITEM_NO ,
+	       DP_DIV ,
+	       DESCRIPTION_LOC ,
+	       TECHNIQUE_GRADE ,
+	       RD_DATE ,
+	       UNIT_MEASURE ,
+	       ITEM_QTY ,
+	       UNIT_PRICE ,
+	       ITEM_AMT ,
+	       ITEM_AMT_KRW ,
+	       ITEM_QTY-INV_QTY_SUM AS INV_QTY ,
+	       ITEM_AMT-INV_AMT_SUM AS INV_AMT ,
+	       INV_QTY_SUM ,
+	       INV_AMT_SUM ,
+	       GR_QTY ,
+	       GR_AMT ,
+	       INPUT_FROM_DATE ,
+	       INPUT_TO_DATE ,
+	       INV_SEQ ,
+	       PR_USER_ID ,
+	       ADD_USER_ID ,
+	       LAST_FLAG ,
+	       MAKER_CODE ,
+	       MAKER_NAME  
+	  FROM 
+	       (SELECT PD.PO_NO, 
+	              PD.PO_SEQ , 
+	              PD.ITEM_NO , 
+	              (SELECT 
+	                     CASE KTGRM 
+	                         WHEN '02' 
+	                         THEN 'S' 
+	                         ELSE 'I' 
+	                     END 
+	                FROM ICOMMTGL 
+	               WHERE HOUSE_CODE = PD.HOUSE_CODE 
+	                     AND ITEM_NO = PD.ITEM_NO 
+	              ) AS DP_DIV , 
+	              PD.DESCRIPTION_LOC , 
+	              (SELECT GETICOMCODE1(HOUSE_CODE,'M169',TECHNIQUE_GRADE) 
+	                FROM ICOYPRDT 
+	               WHERE HOUSE_CODE = PD.HOUSE_CODE 
+	                     AND PR_NO = PD.PR_NO 
+	                     AND PR_SEQ = PD.PR_SEQ 
+	              ) AS TECHNIQUE_GRADE , 
+	              PD.RD_DATE , 
+	              PD.UNIT_MEASURE , 
+	              PD.ITEM_QTY , 
+	              PD.UNIT_PRICE , 
+	              PD.ITEM_AMT , 
+	              PD.ITEM_AMT_KRW, 
+	              NVL (SUM (VD.INV_QTY), 0) AS INV_QTY , -- 납품요청수량 
+	              NVL (SUM (TRUNC (VD.INV_QTY*VD.UNIT_PRICE)), 0) AS INV_AMT , -- 납품요청금액 
+	              NVL 
+	              ( 
+	                     (SELECT SUM(DECODE (IVDT.GR_DATE,NULL,IVDT.INV_QTY,IVDT.GR_QTY)) 
+	                       FROM ICOYIVHD IVHD, 
+	                            ICOYIVDT IVDT 
+	                      WHERE IVDT.HOUSE_CODE = PD.HOUSE_CODE 
+	                            AND IVDT.PO_NO = PD.PO_NO 
+	                            AND IVDT.PO_SEQ = PD.PO_SEQ 
+	                            AND IVDT.STATUS <> 'D' 
+	                            AND IVHD.HOUSE_CODE = IVDT.HOUSE_CODE 
+	                            AND IVHD.INV_NO = IVDT.INV_NO 
+	                            AND IVHD.STATUS <> 'D' 
+	                     ), 0 
+	                 ) AS INV_QTY_SUM, --누적납품요청수량 
+	                 NVL 
+	                 ( 
+	                        (SELECT SUM(IVDT.INV_AMT) 
+	                          FROM ICOYIVHD IVHD, 
+	                               ICOYIVDT IVDT 
+	                         WHERE IVDT.HOUSE_CODE = PD.HOUSE_CODE 
+	                               AND IVDT.PO_NO = PD.PO_NO 
+	                               AND IVDT.PO_SEQ = PD.PO_SEQ 
+	                               AND IVDT.STATUS <> 'D' 
+	                               AND IVHD.HOUSE_CODE = IVDT.HOUSE_CODE 
+	                               AND IVHD.INV_NO = IVDT.INV_NO 
+	                               AND IVHD.STATUS <> 'D' 
+	                        ), 0 
+	                    ) AS INV_AMT_SUM, --누적납품요청금액 
+	                    --NVL (SUM (VD.GR_QTY), 0) AS GR_QTY , -- 납품완료수량 
+	                    --NVL (SUM (TRUNC (VD.GR_QTY*VD.UNIT_PRICE)), 0) AS GR_AMT , -- 납품완료금액 
+	                     NVL 
+		                ( 
+		                      (SELECT SUM(IVDT.GR_QTY) 
+		                        FROM ICOYIVHD IVHD, 
+		                             ICOYIVDT IVDT 
+		                       WHERE IVDT.HOUSE_CODE = PD.HOUSE_CODE 
+		                             AND IVDT.PO_NO = PD.PO_NO 
+		                             AND IVDT.PO_SEQ = PD.PO_SEQ 
+		                             AND IVDT.STATUS <> 'D' 
+		                             AND IVHD.HOUSE_CODE = IVDT.HOUSE_CODE 
+		                             AND IVHD.INV_NO = IVDT.INV_NO 
+		                             AND IVHD.STATUS <> 'D' 
+		                      ), 0 
+		                  ) AS GR_QTY, --납품완료수량 
+		                 NVL 
+	                    ( 
+	                         (SELECT SUM (TRUNC (IVDT.GR_QTY*IVDT.UNIT_PRICE)) 
+	                           FROM ICOYIVHD IVHD, 
+	                                ICOYIVDT IVDT 
+	                          WHERE IVDT.HOUSE_CODE = PD.HOUSE_CODE 
+	                                AND IVDT.PO_NO = PD.PO_NO 
+	                                AND IVDT.PO_SEQ = PD.PO_SEQ 
+	                                AND IVDT.STATUS <> 'D' 
+	                                AND IVHD.HOUSE_CODE = IVDT.HOUSE_CODE 
+	                                AND IVHD.INV_NO = IVDT.INV_NO 
+	                                AND IVHD.STATUS <> 'D' 
+	                         ), 0 
+	                     ) AS GR_AMT, --납품완료금액 
+	                    '' AS INPUT_FROM_DATE , 
+	                    '' AS INPUT_TO_DATE , 
+	                    '' AS INV_SEQ, --,PD.PR_USER_ID  /*인수자[PM]를 검수자로 설정*/ 
+	                    (SELECT TAKE_USER_NAME 
+	                      FROM ICOYPOHD 
+	                     WHERE HOUSE_CODE = PD.HOUSE_CODE 
+	                           AND PO_NO = PD.PO_NO 
+	                    ) PR_USER_ID , 
+	                    PD.ADD_USER_ID , 
+	                    '' AS LAST_FLAG , 
+	                    PD.MAKER_CODE , 
+	                    PD.MAKER_NAME 
+			     FROM ICOYPODT PD 
+			      LEFT OUTER JOIN ICOYIVDT VD 
+			          ON PD.HOUSE_CODE = VD.HOUSE_CODE 
+			          AND PD.PO_NO = VD.PO_NO 
+			          AND PD.PO_SEQ = VD.PO_SEQ 
+			          AND VD.STATUS != 'D' 
+			          AND EXISTS 
+			          (SELECT SIGN_STATUS 
+			            FROM ICOYIVHD 
+			           WHERE HOUSE_CODE = VD.HOUSE_CODE 
+			                 AND INV_NO = VD.INV_NO 
+			                 AND SIGN_STATUS IN ('E1') 
+			          ) 
+			    WHERE PD.STATUS IN ('C','R') 
+					AND PD.HOUSE_CODE 	= ${session.HOUSE_CODE} 
+					AND PD.PO_NO 	 	= $S{po_no}
+					AND PD.PO_SEQ	 	= $S{po_seq}
+			    GROUP BY PD.ITEM_NO , 
+			          PD.DESCRIPTION_LOC , 
+			          PD.RD_DATE , 
+			          PD.UNIT_MEASURE , 
+			          PD.ITEM_QTY , 
+			          PD.UNIT_PRICE , 
+			          PD.ITEM_AMT , 
+			          PD.PO_SEQ , 
+			          PD.PR_NO , 
+			          PD.PR_SEQ , 
+			          PD.HOUSE_CODE , 
+			          PD.PR_USER_ID , 
+			          PD.ADD_USER_ID , 
+			          PD.HOUSE_CODE , 
+			          PD.PO_NO , 
+			          PD.MAKER_CODE , 
+			          PD.MAKER_NAME , 
+			          PD.ITEM_AMT_KRW
+	             )
+	]]>
+</method>
+
+<method name = "getIvPoDetail_2">
+	<![CDATA[
+	SELECT PD.PO_NO, 
+	       PD.PO_SEQ, 
+	       VD.ITEM_NO , 
+	       (SELECT 
+	              CASE KTGRM 
+	                  WHEN '02' 
+	                  THEN 'S' 
+	                  ELSE 'I' 
+	              END 
+	         FROM ICOMMTGL 
+	        WHERE HOUSE_CODE = PD.HOUSE_CODE 
+	              AND ITEM_NO = PD.ITEM_NO 
+	       ) AS DP_DIV , 
+	       VD.DESCRIPTION_LOC , 
+	       GETTECHNIQUE_GRADE(VD.HOUSE_CODE, VD.PO_NO, VD.PO_SEQ) AS TECHNIQUE_GRADE , 
+	       VD.RD_DATE , 
+	       VD.UNIT_MEASURE , 
+	       NVL (VD.ITEM_QTY, 0) AS ITEM_QTY , 
+	       NVL (VD.UNIT_PRICE, 0) AS UNIT_PRICE , 
+	       NVL (VD.ITEM_AMT, 0) AS ITEM_AMT , 
+	       NVL (PD.ITEM_AMT_KRW, 0) AS ITEM_AMT_KRW, 
+	       NVL (VD.INV_QTY, 0) AS INV_QTY , 
+	       NVL (SUM (TRUNC (VD.INV_QTY*VD.UNIT_PRICE)), 0) AS INV_AMT , -- 납품요청금액 
+	       NVL 
+	       ( 
+	              (SELECT SUM(DECODE (IVDT.GR_DATE,NULL,IVDT.INV_QTY,IVDT.GR_QTY)) 
+	                FROM ICOYIVHD IVHD, 
+	                     ICOYIVDT IVDT 
+	               WHERE IVDT.HOUSE_CODE = PD.HOUSE_CODE 
+	                     AND IVDT.PO_NO = PD.PO_NO 
+	                     AND IVDT.PO_SEQ = PD.PO_SEQ 
+	                     AND IVDT.STATUS <> 'D' 
+	                     AND IVHD.HOUSE_CODE = IVDT.HOUSE_CODE 
+	                     AND IVHD.INV_NO = IVDT.INV_NO 
+	                     AND IVHD.STATUS <> 'D' 
+	              ), 0 
+	          ) AS INV_QTY_SUM, --누적납품요청수량 
+	          NVL 
+	          ( 
+	                 (SELECT SUM (IVDT.INV_AMT) 
+	                   FROM ICOYIVHD IVHD, 
+	                        ICOYIVDT IVDT 
+	                  WHERE IVDT.HOUSE_CODE = PD.HOUSE_CODE 
+	                        AND IVDT.PO_NO = PD.PO_NO 
+	                        AND IVDT.PO_SEQ = PD.PO_SEQ 
+	                        AND IVDT.STATUS <> 'D' 
+	                        AND IVHD.HOUSE_CODE = IVDT.HOUSE_CODE 
+	                        AND IVHD.INV_NO = IVDT.INV_NO 
+	                        AND IVHD.STATUS <> 'D' 
+	                 ), 0 
+	             ) AS INV_AMT_SUM, --누적납품요청금액 
+	             NVL (GET_GR_QTY_IVDT_SUM (VD.HOUSE_CODE, VD.PO_NO, VD.PO_SEQ), 0) AS GR_QTY , 
+	             NVL (GET_GR_QTY_IVDT_SUM (VD.HOUSE_CODE, VD.PO_NO, VD.PO_SEQ) * VD.UNIT_PRICE, 0) AS GR_AMT , 
+	             VD.INPUT_FROM_DATE , 
+	             VD.INPUT_TO_DATE , 
+	             VD.INV_SEQ , 
+	             VD.MAKER_CODE , 
+	             VD.MAKER_NAME 
+	        FROM ICOYIVDT VD, 
+	             ICOYPODT PD 
+	       WHERE VD.HOUSE_CODE = PD.HOUSE_CODE 
+	             AND VD.PO_NO = PD.PO_NO 
+	             AND VD.PO_SEQ = PD.PO_SEQ 
+	             AND VD.STATUS != 'D' 
+	             AND PD.STATUS IN ('C','R') 
+	    		AND VD.HOUSE_CODE = ${session.HOUSE_CODE}	 
+	    		AND VD.INV_NO = $S{inv_no}		
+	]]>
+</method>
+
+<method name = "bl_getIVHeader_1">
+<![CDATA[
+	SELECT  IV.IV_NO
+		   ,PH.PO_NO
+		   ,PH.SUBJECT
+		   ,GETICOMCODE1(PH.HOUSE_CODE,'M134',IV.DP_TYPE) AS DP_TYPE_DESC
+		   ,IV.DP_TYPE
+		   ,GETICOMCODE1(PH.HOUSE_CODE,'M010',PH.PAY_TERMS) AS DP_PAY_TERMS_DESC
+		   ,PH.PAY_TERMS DP_PAY_TERMS
+		   ,IV.IV_SEQ
+		   ,IV.DP_AMT
+		   ,PH.PO_TTL_AMT
+		   ,GETUSERNAMELOC(PH.HOUSE_CODE, PH.ADD_USER_ID) AS USER_NAME
+		   ,PH.ADD_USER_ID
+		   ,TO_CHAR(SYSDATE, 'YYYYMMDD') AS INV_DATE
+		   ,PH.REMARK
+		   ,IV.DP_PAY_TERMS_TEXT
+		   ,PH.PO_CREATE_DATE
+		   ,IV.DP_TEXT
+		   ,IV.DP_PERCENT
+		   ,GETINVAMT(PH.HOUSE_CODE, PH.PO_NO) AS INV_AMT
+		   ,PH.PR_TYPE
+		   ,PH.CTRL_CODE
+		   ,PH.CONTRACT_NO
+		   ,PH.CONTRACT_FLAG
+		   ,PH.CUR
+		   ,(SELECT  MAX(EXCHANGE_RATE)
+			 FROM ICOYPODT
+			 WHERE HOUSE_CODE = PH.HOUSE_CODE
+			   AND PO_NO      = PH.PO_NO) AS EXCHANGE_RATE
+		   ,PH.PO_AMT_KRW
+		   ,ECA.AMT_INSU_NUM
+		   ,ECA.CONT_INSU_NUM
+		   ,ECA.AS_INSU_NUM
+	FROM ICOYIVDP IV, ICOYPOHD PH left outer join (SELECT   EC.CONT_SEQ
+											,EC.AMT_INSU_NUM
+														,EC.CONT_INSU_NUM
+														,EC.AS_INSU_NUM
+									FROM EC_CONTRACT EC
+									WHERE EC.CONT_SEQ = (SELECT HD.CONTRACT_NO
+														 FROM ICOYPOHD HD
+														 WHERE HD.HOUSE_CODE = '#house_code#'
+														   AND HD.PO_NO      = '#po_no#')
+									  AND EC.INC_CONT_SEQ = (SELECT MAX(INC_CONT_SEQ)
+															 FROM EC_CONTRACT
+						   									 WHERE CONT_SEQ = EC.CONT_SEQ)) ECA
+    on   PH.CONTRACT_NO= ECA.CONT_SEQ
+	WHERE PH.HOUSE_CODE = IV.HOUSE_CODE
+    AND   PH.PO_NO		= IV.PO_NO
+	<OPT=F,S>  AND   PH.HOUSE_CODE = ?                               	                    </OPT>
+	<OPT=S,S>  AND   PH.PO_NO		= ?               				                        </OPT>
+	<OPT=S,S>  AND   IV.IV_NO		= ?				                                        </OPT>
+]]>
+</method>
+
+
+<method name = "bl_getCNIVHeader_2">
+<![CDATA[
+    SELECT  MAX(VD.IV_NO) AS IV_NO
+           ,MAX(VD.PO_NO) AS PO_NO
+           ,VH.SUBJECT
+           ,GETICOMCODE1(VH.HOUSE_CODE,'M134',VH.DP_TYPE) AS DP_TYPE_DESC
+           ,VH.DP_TYPE
+           ,GETICOMCODE1(VH.HOUSE_CODE,'M010',VH.DP_PAY_TERMS) AS DP_PAY_TERMS_DESC
+           ,PH.CUR
+           ,VH.DP_PAY_TERMS
+           ,VH.IV_SEQ
+           ,VH.DP_AMT
+           ,VH.PO_TTL_AMT
+           ,GETUSERNAMELOC(PH.HOUSE_CODE, PH.ADD_USER_ID) AS USER_NAME
+           ,PH.ADD_USER_ID
+           ,VH.INV_DATE
+           ,VH.REMARK
+           ,VH.DP_PAY_TERMS_TEXT
+           ,VH.PO_CREATE_DATE
+           ,VH.DP_TEXT
+           ,VH.DP_PERCENT
+           ,VH.INV_AMT
+           ,PH.PR_TYPE
+           ,PH.CONTRACT_NO
+           ,PH.CONTRACT_FLAG
+    FROM ICOYPOHD PH, ICOYIVHD VH, ICOYIVDT VD
+    WHERE PH.HOUSE_CODE = VD.HOUSE_CODE
+    AND   PH.PO_NO      = VD.PO_NO
+    AND   VH.HOUSE_CODE = VD.HOUSE_CODE
+    AND   VH.INV_NO     = VD.INV_NO
+    <OPT=F,S>  AND   VH.HOUSE_CODE = ?                                                        </OPT>
+    <OPT=S,S>  AND   VH.INV_NO      = ?                                                       </OPT>
+    GROUP BY  VH.SUBJECT
+             ,VH.HOUSE_CODE
+             ,VH.DP_TYPE
+             ,VH.DP_PAY_TERMS
+             ,VH.IV_SEQ
+             ,VH.DP_AMT
+             ,VH.PO_TTL_AMT
+             ,PH.ADD_USER_ID
+             ,VH.INV_DATE
+             ,VH.REMARK
+             ,VH.DP_PAY_TERMS_TEXT
+             ,VH.PO_CREATE_DATE
+             ,VH.DP_TEXT
+             ,VH.DP_PERCENT
+             ,VH.INV_AMT
+             ,PH.PR_TYPE
+             ,PH.HOUSE_CODE
+             ,PH.CONTRACT_NO
+             ,PH.CONTRACT_FLAG
+             ,PH.CUR
+
+]]>
+</method>
+
+<method name = "bl_getIVHeader_2">
+<![CDATA[
+	SELECT  MAX(VD.IV_NO) AS IV_NO
+		   ,MAX(VD.PO_NO) AS PO_NO
+		   ,VH.SUBJECT
+		   ,GETICOMCODE1(VH.HOUSE_CODE,'M134',VH.DP_TYPE) AS DP_TYPE_DESC
+		   ,VH.DP_TYPE
+		   ,GETICOMCODE1(VH.HOUSE_CODE,'M010',VH.DP_PAY_TERMS) AS DP_PAY_TERMS_DESC
+		   ,VH.DP_PAY_TERMS
+		   ,VH.IV_SEQ
+		   ,VH.DP_AMT
+		   ,VH.PO_TTL_AMT
+		   ,GETUSERNAMELOC(PH.HOUSE_CODE, PH.ADD_USER_ID) AS USER_NAME
+		   ,PH.ADD_USER_ID
+		   ,VH.INV_DATE
+		   ,VH.REMARK
+		   ,VH.DP_PAY_TERMS_TEXT
+		   ,VH.PO_CREATE_DATE
+		   ,VH.DP_TEXT
+		   ,VH.DP_PERCENT
+		   ,VH.INV_AMT
+		   ,PH.PR_TYPE
+		   ,PH.CONTRACT_NO
+		   ,PH.CONTRACT_FLAG
+	FROM ICOYPOHD PH, ICOYIVHD VH, ICOYIVDT VD
+	WHERE PH.HOUSE_CODE = VD.HOUSE_CODE
+	AND   PH.PO_NO		= VD.PO_NO
+	AND   VH.HOUSE_CODE = VD.HOUSE_CODE
+	AND   VH.INV_NO		= VD.INV_NO
+	<OPT=F,S>  AND   VH.HOUSE_CODE = ?	                                                      </OPT>
+	<OPT=S,S>  AND   VH.INV_NO		= ?  	                                                  </OPT>
+	GROUP BY  VH.SUBJECT
+		   	 ,VH.HOUSE_CODE
+		   	 ,VH.DP_TYPE
+		   	 ,VH.DP_PAY_TERMS
+		   	 ,VH.IV_SEQ
+		   	 ,VH.DP_AMT
+		   	 ,VH.PO_TTL_AMT
+		   	 ,PH.ADD_USER_ID
+		   	 ,VH.INV_DATE
+		   	 ,VH.REMARK
+		   	 ,VH.DP_PAY_TERMS_TEXT
+		   	 ,VH.PO_CREATE_DATE
+		   	 ,VH.DP_TEXT
+		   	 ,VH.DP_PERCENT
+		   	 ,VH.INV_AMT
+		   	 ,PH.PR_TYPE
+		   	 ,PH.HOUSE_CODE
+		   	 ,PH.CONTRACT_NO
+		   	 ,PH.CONTRACT_FLAG
+]]>
+</method>
+
+<method name = "in_setIvhd">
+<![CDATA[
+
+	INSERT INTO ICOYIVHD(
+					 HOUSE_CODE
+					,INV_NO
+					,SUBJECT
+					,STATUS
+					,ADD_DATE
+					,ADD_TIME
+					,ADD_USER_ID
+					,ADD_USER_DEPT
+					,CHANGE_DATE
+					,CHANGE_TIME
+					,CHANGE_USER_ID
+					,CHANGE_USER_DEPT
+					,VENDOR_CODE
+					,DP_TYPE
+					,DP_AMT
+					,DP_PAY_TERMS
+					,DP_PAY_TERMS_TEXT
+					,PO_TTL_AMT
+					,PO_CREATE_DATE
+					,INV_AMT
+					,INV_PERSON_ID
+					,INV_DATE
+					,REMARK
+					,SIGN_STATUS
+					,SIGN_REMARK
+					,PURCHASE_ID
+					,IV_SEQ
+					,DP_PERCENT
+					,DP_TEXT
+					,ATTACH_NO
+					,CTRL_CODE
+					,COMPANY_CODE
+					,DP_DIV
+					,EVAL_FROM_DATE
+					,EVAL_TO_DATE
+			)VALUES( ${session.HOUSE_CODE}
+					,${inv_no}
+					,${SUBJECT}
+					,'C'
+					,${current.DATE}
+					,${current.TIME}
+					,${session.ID}
+					,${session.DEPARTMENT}
+					,''
+					,''
+					,''
+					,''
+					,${session.COMPANY_CODE}
+					,${dp_type}
+					,${DP_AMT}
+					,${DP_PAY_TERMS}
+					,${DP_PAY_TERMS_TEXT}
+					,${PO_TTL_AMT}
+					,${PO_CREATE_DATE}
+					,'0'
+					,${INV_USER_ID}
+					,${INV_DATE}
+					,${REMARK}
+					,'P'
+					,''
+					,${ADD_USER_ID}
+					,${IV_SEQ}
+					,${DP_PERCENT}
+					,${DP_TEXT}
+					,${ATTACH_NO}
+					,${CTRL_CODE}
+					,${COMPANY_CODE}
+					,${dp_type}
+					,${start_change_date}
+					,${end_change_date})
+]]>
+</method>
+<!-- 위에 쿼리 밑에 두개'' 들어갈컬럼 -->
+<!-- !!EVAL_FROM_DATE -->
+<!-- !!EVAL_TO_DATE -->
+
+<method name = "in_setIvdt">
+<![CDATA[
+	INSERT INTO ICOYIVDT(
+					 HOUSE_CODE
+					,INV_NO
+					,INV_SEQ
+					,IV_NO
+					,PO_NO
+					,PO_SEQ
+					,STATUS
+					,ADD_DATE
+					,ADD_TIME
+					,ADD_USER_ID
+					,ADD_USER_DEPT
+					,CHANGE_DATE
+					,CHANGE_TIME
+					,CHANGE_USER_ID
+					,CHANGE_USER_DEPT
+					,ITEM_NO
+					,UNIT_MEASURE
+					,ITEM_QTY
+					,UNIT_PRICE
+					,ITEM_AMT
+					,RD_DATE
+					,GR_QTY
+					,INV_QTY
+					,DESCRIPTION_LOC
+					,INPUT_FROM_DATE
+					,INPUT_TO_DATE
+					,MAKER_CODE
+					,MAKER_NAME
+					,INV_AMT
+					,REQ_INV_AMT
+			)VALUES(
+					 ${session.HOUSE_CODE}
+					,${INV_NO}
+					,${INV_SEQ}
+					,${IV_NO}
+					,${PO_NO}
+					,${PO_SEQ}
+					,'C'
+					,${current.DATE}
+					,${current.TIME}
+					,${ADD_USER_ID}
+					,${ADD_USER_DEPT}
+					,''
+					,''
+					,''
+					,''
+					,${ITEM_NO}
+					,${UNIT_MEASURE}
+					,${ITEM_QTY}
+					,${UNIT_PRICE}
+					,${ITEM_AMT}
+					,${RD_DATE}
+					,${GR_QTY}
+					,${INV_QTY}
+					,${DESCRIPTION_LOC}
+					,${INPUT_FROM_DATE}
+					,${INPUT_TO_DATE}
+					,${MAKER_CODE}
+					,${MAKER_NAME}
+					,${INV_AMT}
+					,'')
+]]>
+</method>
+<method name ="in_setCndp">
+<![CDATA[
+    INSERT INTO ICOYCNDP
+    (
+    	HOUSE_CODE                      ,EXEC_NO
+    	,DP_SEQ,
+    	DP_DIV                          ,STATUS                         ,ADD_DATE,
+    	ADD_TIME                        ,ADD_USER_ID                    ,ADD_USER_DEPT,
+    	CHANGE_DATE                     ,CHANGE_TIME                    ,CHANGE_USER_ID,
+    	CHANGE_USER_DEPT                ,DP_TYPE
+    	,DP_PERCENT,
+    	DP_AMT                          ,DP_PAY_TERMS_TEXT              ,DP_PAY_TERMS,
+    	FIRST_DEPOSIT                   ,FIRST_PERCENT                  ,CONTRACT_DEPOSIT,
+    	CONTRACT_PERCENT                ,MENGEL_DEPOSIT                 ,MENGEL_PERCENT ,
+    	DP_CODE
+    )
+    SELECT
+     	HOUSE_CODE                     ,EXEC_NO
+     	,LPAD((SELECT MAX(DP_SEQ)+1 FROM ICOYCNDP WHERE HOUSE_CODE=${session.HOUSE_CODE}
+     	 AND EXEC_NO = ${EXEC_NO}
+     	 AND DP_DIV = ${STATUS}), 5, '0') AS DP_SEQ
+    	,DP_DIV                         ,${strCnStatus}                             ,TO_CHAR(SYSDATE, 'YYYYMMDD')
+    	,TO_CHAR(SYSDATE,'HH24MISS')    ,ADD_USER_ID                    ,ADD_USER_DEPT
+    	,TO_CHAR(SYSDATE, 'YYYYMMDD')   ,TO_CHAR(SYSDATE,'HH24MISS')    ,CHANGE_USER_ID
+    	,CHANGE_USER_DEPT               ,DP_TYPE
+    	, (
+    		SELECT  ROUND(100- (SUM(IV.INV_AMT)/SUM(PD.ITEM_AMT) * 100), 2)
+        	FROM (
+ 					SELECT IV.HOUSE_CODE, PO_SEQ, PO_NO, SUM(IV.INV_AMT ) INV_AMT
+					FROM ICOYIVDT IV, ICOMMTGL MT
+					WHERE IV.HOUSE_CODE = ${session.HOUSE_CODE}
+					AND IV.PO_NO = ${po_no}
+					ANd IV.STATUS != 'D'
+					AND IV.ITEM_NO = MT.ITEM_NO
+					AND IV.HOUSE_CODE = MT.HOUSE_CODE
+					AND ${STATUS} = CASE MT.KTGRM WHEN '02' THEN 'S' ELSE 'I' END
+					AND INV_NO IN ( SELECT INV_NO FROM ICOYIVHD IVHD WHERE IVHD.HOUSE_CODE =IV.HOUSE_CODE AND IVHD.INV_NO = IV.INV_NO /* AND IVHD.SIGN_STATUS != 'R' */ )
+					GROUP BY IV.HOUSE_CODE, PO_SEQ, PO_NO
+				) IV, ICOYPODT PD
+			WHERE
+			IV.HOUSE_CODE = PD.HOUSE_CODE
+			AND IV.PO_NO = PD.PO_NO
+			AND IV.PO_SEQ = PD.PO_SEQ
+          ) /*DP_PERCENT*/
+    	, (
+    		SELECT  SUM(PD.ITEM_AMT) - SUM(IV.INV_AMT)
+        	FROM (
+ 					SELECT IV.HOUSE_CODE, PO_SEQ, PO_NO, SUM(IV.INV_AMT ) INV_AMT
+					FROM ICOYIVDT IV, ICOMMTGL MT
+					WHERE IV.HOUSE_CODE = ${session.HOUSE_CODE}
+					AND IV.PO_NO = ${po_no}
+					ANd IV.STATUS != 'D'
+					AND IV.ITEM_NO = MT.ITEM_NO
+					AND IV.HOUSE_CODE = MT.HOUSE_CODE
+					AND ${STATUS} = CASE MT.KTGRM WHEN '02' THEN 'S' ELSE 'I' END
+					AND INV_NO IN ( SELECT INV_NO FROM ICOYIVHD IVHD WHERE IVHD.HOUSE_CODE =IV.HOUSE_CODE AND IVHD.INV_NO = IV.INV_NO /* AND IVHD.SIGN_STATUS != 'R' */ )
+					GROUP BY IV.HOUSE_CODE, PO_SEQ, PO_NO
+				) IV, ICOYPODT PD
+			WHERE
+			IV.HOUSE_CODE = PD.HOUSE_CODE
+			AND IV.PO_NO = PD.PO_NO
+			AND IV.PO_SEQ = PD.PO_SEQ
+    	  )
+    	,DP_PAY_TERMS_TEXT              ,DP_PAY_TERMS
+    	,FIRST_DEPOSIT                  ,FIRST_PERCENT                  ,CONTRACT_DEPOSIT
+    	,CONTRACT_PERCENT               ,MENGEL_DEPOSIT                 ,MENGEL_PERCENT
+    	,${strDpCode}  /*DP_CODE*/
+    FROM ICOYCNDP CNDP
+    WHERE HOUSE_CODE = ${session.HOUSE_CODE}
+    AND EXEC_NO = ${EXEC_NO}
+    AND DP_SEQ = ${DP_SEQ}
+    AND DP_DIV = ${STATUS}
+]]>
+</method>
+	
+	<method name="bl_getIvdpList">
+	<![CDATA[
+		SELECT 	HD.PO_NO
+				,HD.PO_CREATE_DATE
+				,HD.VENDOR_CODE
+				,HD.SUBJECT
+				,HD.CTRL_CODE
+				,GETCOMPANYNAMELOC(HD.HOUSE_CODE, HD.VENDOR_CODE, 'S') AS VENDOR_NAME
+				,ROUND(ROUND(HD.PO_TTL_AMT,1),0) AS PO_TTL_AMT
+				,GETICOMCODE1(HD.HOUSE_CODE,'M134',HD.PAY_TERMS) AS PAY_TERMS
+				,GETUSERNAMELOC(HD.HOUSE_CODE, HD.ADD_USER_ID) AS USER_NAME
+				,MAX((CASE  GETIVREGFLAG(HD.HOUSE_CODE,HD.PO_NO, HD.PO_TTL_AMT)
+					WHEN 'N'
+					THEN '미등록'
+					ELSE '등록'
+					END)) AS DP_FLAG
+				,MAX(IVDP.IV_SEQ) AS IV_SEQ
+				,getCompleteIVSEQ(HD.HOUSE_CODE, HD.PO_NO) AS COMPLETE_IV_SEQ
+				,getPayAMT(HD.HOUSE_CODE, HD.PO_NO) AS PAY_AMT
+				,ROUND(ROUND(HD.PO_AMT_KRW - getPayAMT(HD.HOUSE_CODE, HD.PO_NO),1),0)  AS DP_AMT
+				,(SELECT CASE WHEN COUNT(*) > 0 THEN 'Y' ELSE 'N' END FROM ICOYIVDT
+				WHERE HOUSE_CODE = HD.HOUSE_CODE AND PO_NO = HD.PO_NO AND GR_CANCEL_NO IS NULL ) INV_REG_FLAG
+				,HD.CUR
+				,HD.PO_AMT_KRW
+				,(SELECT MAX(EXCHANGE_RATE)
+				  FROM ICOYPODT
+				  WHERE HOUSE_CODE = HD.HOUSE_CODE
+				    AND PO_NO      = HD.PO_NO) AS EXCHANGE_RATE
+		FROM ICOYPOHD HD left outer join ICOYIVDP IVDP
+		  on HD.HOUSE_CODE = IVDP.HOUSE_CODE
+		AND   HD.PO_NO = IVDP.PO_NO
+		AND   IVDP.STATUS != 'D'
+		where   HD.SHIPPER_TYPE = 'D'
+		AND   HD.STATUS 	!= 'D'
+		<OPT=F,S>  AND   HD.HOUSE_CODE     		= ?                                                   </OPT>
+		<OPT=S,S>  AND   HD.PO_CREATE_DATE BETWEEN ? </OPT>
+		<OPT=S,S>AND ?                                </OPT>
+		<OPT=S,S>  AND   HD.PO_NO 				= ?                                                       </OPT>
+		<OPT=S,S>  AND   getDeptCodeByID(HD.HOUSE_CODE,HD.COMPANY_CODE,HD.ADD_USER_ID) = ?            	  </OPT>
+		<OPT=S,S>  AND   GETIVREGFLAG(HD.HOUSE_CODE,HD.PO_NO, HD.PO_TTL_AMT) = ?										  </OPT>
+	    AND   HD.CTRL_CODE IN ('#ctrl_code#')
+		Group BY HD.PO_NO
+				,HD.PO_CREATE_DATE
+				,HD.VENDOR_CODE
+				,HD.HOUSE_CODE
+				,HD.VENDOR_CODE
+				,HD.PO_TTL_AMT
+				,HD.PAY_TERMS
+				,HD.ADD_USER_ID
+				,HD.SUBJECT
+				,HD.CTRL_CODE
+				,HD.CUR
+				,HD.PO_AMT_KRW
+		ORDER BY 1 DESC
+	]]>
+	</method>
+
+	<method name="bl_getSmartBillEmail">
+	<![CDATA[
+		SELECT 	VNGL.SMARTBILL_EMAIL
+		FROM ICOMVNGL VNGL
+		WHERE 1= 1
+		<OPT=F,S> AND VNGL.HOUSE_CODE = ?  </OPT>
+		<OPT=S,S> AND VNGL.VENDOR_CODE = ?  </OPT>
+	]]>
+	</method>
+	
+	<method name="bl_getCndpList">
+	<![CDATA[
+		SELECT
+		A.*,IVDP.DP_PLAN_DATE
+		, CASE NVL(IVDP.PO_NO,'') WHEN '' THEN A.DP_AMT_A ELSE IVDP.DP_AMT END DP_AMT
+		, CASE NVL(IVDP.PO_NO,'') WHEN '' THEN '미등록' ELSE '등록' END STATUS
+		, IVDP.IV_NO
+		FROM  (SELECT  DP.DP_SEQ
+		,GETICOMCODE1(DP.HOUSE_CODE,'M352',DP.DP_PAY_TERMS) AS PAY_TERMS
+		,DP.DP_PAY_TERMS AS PAY_TERMS_CODE
+		,DP.DP_PAY_TERMS_TEXT
+		,DP.DP_PERCENT
+		,DP.DP_AMT DP_AMT_A
+		,DP.DP_TYPE
+		,DP.FIRST_DEPOSIT
+		,DP.FIRST_PERCENT
+		,DP.CONTRACT_DEPOSIT
+		,DP.CONTRACT_PERCENT
+		,DP.MENGEL_DEPOSIT
+		,DP.MENGEL_PERCENT
+		,PD.PO_NO
+		,DP.EXEC_NO
+		FROM
+		ICOYPODT PD   , ICOYCNDP DP
+		WHERE DP.HOUSE_CODE = PD.HOUSE_CODE
+		AND   DP.EXEC_NO        = PD.EXEC_NO
+		<OPT=F,S>  AND   PD.HOUSE_CODE     	= ?                                            </OPT>
+		<OPT=S,S>  AND   PD.PO_NO 				= ?                                            </OPT>
+		GROUP BY DP.DP_SEQ
+		,DP.HOUSE_CODE
+		,DP.DP_PAY_TERMS
+		,DP.DP_PAY_TERMS_TEXT
+		,DP.DP_PERCENT
+		,DP.DP_AMT
+		,DP.DP_TYPE
+		,DP.FIRST_DEPOSIT
+		,DP.FIRST_PERCENT
+		,DP.CONTRACT_DEPOSIT
+		,DP.CONTRACT_PERCENT
+		,DP.MENGEL_DEPOSIT
+		,DP.MENGEL_PERCENT
+		,PD.PO_NO
+		,DP.EXEC_NO
+		) A  LEFT OUTER JOIN  ICOYIVDP  IVDP
+		ON    A.PO_NO = IVDP.PO_NO
+		AND   A.DP_SEQ = IVDP.IV_SEQ
+	]]>
+	</method>
+
+	<method name="bl_getPayTerms">
+			SELECT CODE, TEXT2
+			FROM ICOMCODE
+			WHERE HOUSE_CODE =  '100'
+			AND TYPE =  'M352'
+			AND USE_FLAG = 'Y'
+			AND STATUS IN ('C','R')
+			ORDER BY SORT_SEQ, TEXT2, CODE
+	</method>
+
+	<method name="in_setIvdp">
+		INSERT INTO ICOYIVDP(
+				 HOUSE_CODE
+				,IV_NO
+				,IV_SEQ
+				,PO_NO
+				,STATUS
+				,ADD_DATE
+				,ADD_TIME
+				,ADD_USER_ID
+				,ADD_USER_DEPT
+				,CHANGE_DATE
+				,CHANGE_TIME
+				,CHANGE_USER_ID
+				,CHANGE_USER_DEPT
+				,DP_TYPE
+				,DP_TEXT
+				,DP_PERCENT
+				,DP_AMT
+				,DP_PLAN_DATE
+				,DP_PAY_TERMS
+				,DP_PAY_TERMS_TEXT
+				,DP_FLAG
+				,FIRST_DEPOSIT
+				,FIRST_PERCENT
+				,CONTRACT_DEPOSIT
+				,CONTRACT_PERCENT
+				,MENGEL_DEPOSIT
+				,MENGEL_PERCENT
+		)VALUES(
+				 ?
+				,?
+				,?
+				,?
+				,'C'
+				,?
+				,?
+				,?
+				,?
+				,''
+				,''
+				,''
+				,''
+				,?
+				,?
+				,?
+				,?
+				,?
+				,?
+				,?
+				,'N'
+				,?
+				,?
+				,?
+				,?
+				,?
+				,?)
+	</method>
+
+	<method name="setPersonId_1">
+		update icoypodt set pr_user_id = '#person_id#'
+		where house_code = '#house_code#'
+		and po_no = '#doc_no#'
+	</method>
+
+	<method name="setPersonId_2">
+		update icoyivhd set inv_person_id = '#person_id#'
+		where house_code = '#house_code#'
+		and inv_no = '#doc_no#'
+	</method>
+
+	<method name="bl_getIvdpDesc">
+	<![CDATA[
+		SELECT IV_NO
+			,IV_SEQ
+			,DP_TEXT
+			,DP_PAY_TERMS AS DP_PAY_TERMS_CODE
+			,GETICOMCODE1(HOUSE_CODE,'M010',DP_PAY_TERMS) AS DP_PAY_TERMS
+			,DP_PAY_TERMS_TEXT
+			,DP_PERCENT
+			,DP_AMT
+			,DP_PLAN_DATE
+			,DP_TYPE
+			,DP_FLAG
+			,FIRST_DEPOSIT
+			,FIRST_PERCENT
+			,CONTRACT_DEPOSIT
+			,CONTRACT_PERCENT
+			,MENGEL_DEPOSIT
+			,MENGEL_PERCENT
+		FROM ICOYIVDP
+		<OPT=F,S>	WHERE HOUSE_CODE = ?        	</OPT>
+		<OPT=S,S>	AND   PO_NO 	 = ?			</OPT>
+	]]>
+	</method>
+
+	<method name="in_delIvdp">
+		UPDATE ICOYIVDP	SET
+			 CHANGE_DATE 		= TO_CHAR(SYSDATE, 'YYYYMMDD')
+			,CHANGE_TIME 		= TO_CHAR(SYSDATE, 'HH24MISS')
+			,CHANGE_USER_ID 	= '#user_id#'
+			,CHANGE_USER_DEPT 	= '#dept#'
+			,STATUS 		    = 'D'
+		WHERE HOUSE_CODE = '#house_code#'
+		AND   PO_NO		 = '#po_no#'
+	</method>
+
+	<method name="bl_getDoIvdpList">
+	<![CDATA[
+		SELECT 	PH.PO_NO
+				, PH.SUBJECT
+				, PH.VENDOR_CODE
+				, GETVENDORNAME(PH.HOUSE_CODE, PH.VENDOR_CODE) AS VENDOR_NAME
+				, PH.PO_CREATE_DATE
+				, PH.PO_TTL_AMT
+				, IV.IV_NO
+				, IV.DP_TEXT
+				, GETICOMCODE1(IV.HOUSE_CODE,'M010' ,IV.DP_PAY_TERMS) AS DP_PAY_TERMS
+				, IV.IV_SEQ
+				, IV.DP_PERCENT
+				, IV.DP_AMT
+				, IV.DP_PLAN_DATE
+				, IV.DP_DATE
+				, (CASE
+						WHEN IV.DP_FLAG = 'Y'
+						THEN '지급'
+						ELSE '미지급'
+				  END) AS PAY_FLAG
+				,CUR
+				,(SELECT MAX(EXCHANGE_RATE)
+				  FROM ICOYPODT
+				  WHERE HOUSE_CODE = PH.HOUSE_CODE
+				    AND PO_NO      = PH.PO_NO) AS EXCHANGE_RATE
+		FROM ICOYPOHD PH, ICOYIVDP IV
+		WHERE PH.HOUSE_CODE = IV.HOUSE_CODE
+		AND   PH.PO_NO 		= IV.PO_NO
+		AND   PH.STATUS 	!= 'D'
+		AND   IV.STATUS 	!= 'D'
+		<OPT=F,S>	AND   PH.HOUSE_CODE = ?               				                           		  </OPT>
+		<OPT=S,S>  AND   IV.DP_PLAN_DATE BETWEEN ? </OPT><OPT=S,S>AND ?                                  </OPT>
+		<OPT=S,S>  AND   PH.PO_NO 				= ?                                                       </OPT>
+		<OPT=S,S>  AND   IV.IV_NO 				= ?                                                       </OPT>
+		<OPT=S,S>  AND   IV.DP_FLAG 			= ?                                                       </OPT>
+		<OPT=S,S>  AND   PH.VENDOR_CODE		= ?                                                       </OPT>
+		<OPT=S,S>  AND   getDeptCodeByID(PH.HOUSE_CODE,PH.COMPANY_CODE,PH.ADD_USER_ID) = ?            	  </OPT>
+	    AND   PH.CTRL_CODE IN ('#ctrl_code#')
+		ORDER BY 1 DESC
+	]]>
+	</method>
+
+	<method name="bl_getIvdpDesc_ivno">
+	<![CDATA[
+		SELECT IV_SEQ
+				,DP_TEXT
+				,DP_PAY_TERMS AS DP_PAY_TERMS_CODE
+				,GETICOMCODE1(HOUSE_CODE,'M010',DP_PAY_TERMS) AS DP_PAY_TERMS
+				,DP_PAY_TERMS_TEXT
+				,DP_PERCENT
+				,DP_AMT
+				,DP_PLAN_DATE
+				,DP_TYPE
+		FROM ICOYIVDP
+		<OPT=F,S>	WHERE HOUSE_CODE = ?        	</OPT>
+		<OPT=S,S>	AND   IV_NO 	 = ?			</OPT>
+		<OPT=S,S>	AND   IV_SEQ 	 = ?			</OPT>
+	]]>
+	</method>
+
+	<method name="getInvoiceList">
+	<![CDATA[
+		SELECT   MAX(VD.PO_NO) AS PO_NO
+				,HD.SUBJECT    AS PO_SUBJECT
+				,CONVERT_DATE(VH.PO_CREATE_DATE) AS PO_CREATE_DATE
+				,VH.VENDOR_CODE
+				,GETVENDORNAME(VH.HOUSE_CODE, VH.VENDOR_CODE) AS VENDOR_NAME
+				,VH.PO_TTL_AMT
+				,GETUSERNAMELOC(VH.HOUSE_CODE,VH.INV_PERSON_ID) AS INV_PERSON_NAME
+				,VH.INV_PERSON_ID
+				,GETUSERNAMELOC(VH.HOUSE_CODE,VH.PURCHASE_ID) AS ADD_USER_NAME
+				,VH.PURCHASE_ID AS ADD_USER_ID
+				, '' AS IV_NO
+				,VH.DP_TEXT
+				,GETICOMCODE1(VH.HOUSE_CODE,'M010',VH.DP_PAY_TERMS) AS DP_PAY_TERMS
+				,VH.IV_SEQ
+				,VH.DP_PERCENT
+				,VH.DP_AMT
+				,CONVERT_DATE(VH.INV_DATE) AS INV_DATE
+				,CONVERT_DATE(VH.CONFIRM_DATE1) AS CONFIRM_DATE
+				,GETICOMCODE1(VH.HOUSE_CODE,'M994',VH.SIGN_STATUS) AS SIGN_STATUS_DESC
+				,VH.SIGN_STATUS
+				,VH.SIGN_REMARK
+				, '' AS DP_FLAG
+				,VH.INV_NO
+				,VH.SUBJECT  AS INV_SUBJECT
+				,HD.ORDER_NO
+				,VH.ATTACH_NO
+				, CASE WHEN VH.ATTACH_NO IS NULL THEN 0 ELSE 1 END  AS ATTACH_POP
+				,SUM (VD.INV_QTY) AS INV_QTY
+				, 'Y' AS DEL_FLAG
+				,VH.PAY_NO, vd.gr_date
+				,VH.IV_NO H_IV_NO
+				,VH.IV_CANCEL_NO
+				,VH.IV_CLEAR_NO
+        		, ''  AS GUBUN
+		        ,MAX(VD.GR_NO) GR_NO
+		      	,GETICOMCODE1(VH.HOUSE_CODE,'P013',NVL(VH.APP_STATUS,'T')) APP_STATUS_NAME
+		      	,NVL(VH.APP_STATUS,'T') APP_STATUS
+		      	,CASE WHEN NVL(VH.APP_STATUS,' ') = ' ' THEN '미결재'
+		         ELSE GETICOMCODE1(VH.HOUSE_CODE,'M100', VH.APP_STATUS) END AS APP_STATUS_TXT
+		      	,'' AS PIS_STATUS
+				,VH.EVAL_FLAG
+        		,DECODE(VH.EVAL_FLAG, null, '', 'N', '평가제외', 'T', '평가대기중', 'P', '평가진행중', 'C', '평가완료') AS EVAL_FLAG_DESC
+        		,VH.EVAL_REFITEM
+        		,(SELECT CONVERT_DATE(FROM_DATE) || ' ~ ' || CONVERT_DATE(TO_DATE) FROM ICOMVEVH WHERE HOUSE_CODE = VH.HOUSE_CODE AND EVAL_REFITEM = VH.EVAL_REFITEM) AS EVAL_DATE
+        		--,MAX(VD.INV_SEQ) AS INV_SEQ
+        		--,MAX(CNDT.PR_NO) AS PR_NO 
+        		--,MAX(CNDT.PR_SEQ) AS PR_SEQ
+		FROM ICOYIVHD VH, ICOYIVDT VD, ICOYPOHD HD, ICOMMTGL MTGl, ICOYCNDT CNDT
+		]]>
+		<if test="${bid_type_c}" operator="eq" value="D">
+		<![CDATA[
+			  , ICOYBDHD BDHD
+		]]>
+		</if>
+		<if test="${bid_type_c}" operator="eq" value="C">
+		<![CDATA[
+			  , ICOYBDHD BDHD
+		]]>
+		</if>
+		<if test="${bid_type_c}" operator="eq" value="PC">
+		<![CDATA[
+			  , ICOYRQHD RQHD		  
+		]]>
+		</if>			
+		<![CDATA[
+	   WHERE VH.HOUSE_CODE 	  = VD.HOUSE_CODE
+		 AND VH.INV_NO		  = VD.INV_NO
+		 AND VD.HOUSE_CODE	  = HD.HOUSE_CODE
+	 	 AND VD.PO_NO		  = HD.PO_NO
+		 --AND VD.PO_SEQ	  = DT.PO_SEQ
+		 AND VD.HOUSE_CODE 	  = MTGl.HOUSE_CODE
+		 AND VD.ITEM_NO 	  = MTGl.ITEM_NO
+		 AND VH.STATUS		 != 'D'
+		 AND VD.STATUS		 != 'D'
+		 AND HD.STATUS		 != 'D'
+		 AND VH.HOUSE_CODE 	  = ${session.HOUSE_CODE}
+		 AND VH.PURCHASE_ID	  = $S{}                                                      
+		 AND VH.SIGN_STATUS   = $S{sign_status}                                                          
+		 AND VH.VENDOR_CODE   = $S{vendor_code}                                                          
+		 AND VH.INV_PERSON_ID = $S{inv_person_id}                                                          
+		 AND VD.PO_NO			LIKE '%' || $S{po_no} || '%'                                         
+		 AND VH.INV_DATE 		BETWEEN $S{inv_from_date}
+		 AND $S{inv_to_date}
+		 AND HD.ORDER_NO	  = $S{order_no}
+		 AND VD.HOUSE_CODE    = CNDT.HOUSE_CODE (+)
+	     AND VD.PO_NO         = CNDT.PO_NO      (+)
+		 AND VD.PO_SEQ        = CNDT.PO_SEQ     (+)		 
+		]]>
+		<if test="${bid_type_c}" operator="eq" value="D">
+		<![CDATA[
+			 AND CNDT.HOUSE_CODE  = BDHD.HOUSE_CODE (+)
+			 AND CNDT.RFQ_NO	  = BDHD.BID_NO     (+)
+			 AND CNDT.RFQ_COUNT	  = BDHD.BID_COUNT  (+)
+			 AND CNDT.STATUS (+) != 'D' 
+			 AND BDHD.STATUS (+) != 'D'
+			 AND BDHD.BID_TYPE	  = 'D'
+		]]>
+		</if>
+		<if test="${bid_type_c}" operator="eq" value="C">
+		<![CDATA[
+			 AND CNDT.HOUSE_CODE  = BDHD.HOUSE_CODE (+)
+			 AND CNDT.RFQ_NO	  = BDHD.BID_NO     (+)
+			 AND CNDT.RFQ_COUNT	  = BDHD.BID_COUNT  (+)
+			 AND CNDT.STATUS (+) != 'D' 
+			 AND BDHD.STATUS (+) != 'D'
+			 AND BDHD.BID_TYPE	  = 'C'
+		]]>
+		</if>
+		<if test="${bid_type_c}" operator="eq" value="PC">
+		<![CDATA[
+			 AND CNDT.HOUSE_CODE  = RQHD.HOUSE_CODE (+)
+			 AND CNDT.RFQ_NO	  = RQHD.RFQ_NO     (+)
+			 AND CNDT.RFQ_COUNT	  = RQHD.RFQ_COUNT  (+)
+			 AND CNDT.STATUS (+) != 'D' 
+			 AND RQHD.STATUS (+) != 'D'
+			 AND RQHD.RFQ_TYPE	  IN ('PC','MA')  
+		]]>
+		</if>
+		<if test="${po_type}" operator="eq" value="Y">
+		<![CDATA[
+			 AND CNDT.RFQ_NO	  IS NULL			  
+		]]>
+		</if>
+		<if test="${po_type}" operator="eq" value="N">
+		<![CDATA[
+			 AND CNDT.RFQ_NO	  IS NOT NULL			  
+		]]>
+		</if>
+		
+		
+		<if test="${mode}" operator="eq" value="inv_person">
+		<![CDATA[
+			  AND   getDeptCodeByID(VH.HOUSE_CODE,VH.COMPANY_CODE,VH.INV_PERSON_ID)	= $S{demand_dept}		  
+		]]>
+		</if>
+		<if test="${mode}" operator="ne" value="inv_person">
+		<![CDATA[
+			  AND   getDeptCodeByID(VH.HOUSE_CODE,VH.COMPANY_CODE,VH.PURCHASE_ID)	= $S{demand_dept}		
+		]]>
+		</if>
+		<if test="${pay_create_flag}" operator="eq" value="Y">
+			AND   VH.PAY_NO			IS NOT NULL
+		</if>
+		<if test="${pay_create_flag}" operator="eq" value="N">
+			AND   VH.PAY_NO			IS NULL
+		</if>
+		<if test="${app_status}" operator="ne" value="">
+			AND   NVL(VH.SIGN_STATUS, 'T') = '#app_status#'
+		</if>
+		GROUP BY VH.SIGN_STATUS
+			,VH.INV_NO
+			,VH.PO_CREATE_DATE
+			,VH.VENDOR_CODE
+			,VH.HOUSE_CODE
+			,VH.PO_TTL_AMT
+			,VH.INV_PERSON_ID
+			,VH.ADD_USER_ID
+			,VH.DP_TEXT
+			,VH.DP_PAY_TERMS
+			,VH.IV_SEQ
+			,VH.DP_PERCENT
+			,VH.DP_AMT
+			,VH.INV_DATE
+			,VH.SIGN_REMARK
+			,VH.SUBJECT
+			,VH.PURCHASE_ID
+			,VH.COMPANY_CODE
+			,VH.CTRL_CODE
+			,HD.SUBJECT
+			,HD.ORDER_NO
+			,VH.ATTACH_NO
+			,VH.PAY_NO, vd.gr_date
+			,VH.IV_NO
+			,VH.IV_CANCEL_NO
+			,VH.IV_CLEAR_NO
+			,VH.APP_STATUS
+			,VH.CONFIRM_DATE1
+			,VH.EVAL_FLAG
+        	,VH.EVAL_REFITEM
+        	--,CNDT.PR_NO
+	 	ORDER BY VH.SIGN_STATUS DESC, VH.INV_NO DESC
+	</method>
+<!-- 	,GETICOMBACO2(VH.HOUSE_CODE, VH.COMPANY_CODE, 'P', VH.CTRL_CODE) AS ADD_USER_NAME -->
+<!--  /*,GETICOMCODE1({session.HOUSE_CODE}, 'M042' , MAX(MTGL.MATERIAL_CLASS1) ) MATERIAL_CLASS1_TEXT*/ -->
+	
+	
+	<method name = "getInvoiceTargetList">
+	<![CDATA[
+			SELECT PO_NO
+				, SUBJECT
+				, PO_CREATE_DATE
+				, PO_TTL_AMT
+				, GETUSERNAMELOC(HOUSE_CODE, ADD_USER_ID) AS USER_NAME
+				, ADD_USER_ID
+				, CUR
+				, ( SELECT MAX(EXCHANGE_RATE)
+					FROM ICOYPODT
+					WHERE HOUSE_CODE = HOUSE_CODE
+					AND PO_NO = PO_NO ) AS EXCHANGE_RATE
+				--, getInvSignStatus(HOUSE_CODE, INV_NO) AS SIGN_STATUS_DESC
+				,GETICOMCODE1(HOUSE_CODE,'M994',SIGN_STATUS) AS SIGN_STATUS_DESC
+				, SIGN_STATUS
+				, SIGN_REMARK
+				, INV_NO
+				, EXEC_NO
+				, DP_TYPE
+				, GETICOMCODE1(HOUSE_CODE,'M010' ,DP_PAY_TERMS) AS DP_PAY_TERMS
+				, DP_SEQ
+				, DP_PERCENT
+				--, DECODE(INV_AMT, 0, DP_AMT, INV_AMT) DP_AMT
+				, DP_AMT
+				, DP_PLAN_DATE
+				, INV_DATE
+				, CONFIRM_DATE1
+				, DP_DIV
+				, DECODE(DP_DIV, 'I', '물품', 'S', '용역', DP_DIV) AS DP_DIV_NAME
+				, DP_CODE
+				, GETICOMCODE1(HOUSE_CODE,'M940' ,DP_CODE) AS DP_TEXT
+				, CASE WHEN END_DATE IS NOT NULL THEN GETICOMCODE2(HOUSE_CODE,'M645', 'YY')
+				           ELSE GETICOMCODE2(HOUSE_CODE,'M645', NVL(COMPLETE_MARK, 'N'))
+				  END AS COMPLETE_MARK_TXT
+				,CASE WHEN END_DATE IS NOT NULL THEN 'YY' ELSE COMPLETE_MARK END COMPLETE_MARK
+				,REPLACE(REPLACE( END_REMARK,CHR(13),' '),CHR(10),'') AS END_REMARK
+                ,NVL (  (SELECT 
+                				--SUM (TRUNC (IVDT.GR_QTY * IVDT.UNIT_PRICE)) 
+                				DECODE(sum(IVDT.INV_QTY-IVDT.GR_QTY), 0, sum(IVDT.INV_AMT),  SUM (TRUNC (IVDT.GR_QTY * IVDT.UNIT_PRICE)))
+                            FROM ICOYIVHD IVHD, 
+                                 ICOYIVDT IVDT 
+                           WHERE IVDT.HOUSE_CODE = TOT.HOUSE_CODE 
+                                 AND IVDT.PO_NO = TOT.PO_NO 
+                                 AND IVDT.STATUS <> 'D' 
+                                 AND IVHD.HOUSE_CODE = IVDT.HOUSE_CODE 
+                                 AND IVHD.INV_NO = IVDT.INV_NO 
+                                 AND IVHD.INV_NO = TOT.INV_NO
+                                 AND IVHD.STATUS <> 'D'), 0) AS TOT_INV_AMT, -- 검수완료금액 
+                NVL (  (SELECT SUM (TRUNC (DECODE (IVDT.GR_DATE, NULL, '0', (IVDT.INV_QTY-IVDT.GR_QTY))*IVDT.UNIT_PRICE))
+                            FROM ICOYIVHD IVHD, 
+                                 ICOYIVDT IVDT 
+                           WHERE IVDT.HOUSE_CODE = TOT.HOUSE_CODE 
+                                 AND IVDT.PO_NO = TOT.PO_NO 
+                                 AND IVDT.STATUS <> 'D' 
+                                 AND IVHD.HOUSE_CODE = IVDT.HOUSE_CODE 
+                                 AND IVHD.INV_NO = IVDT.INV_NO 
+                                 AND IVHD.STATUS <> 'D'
+                                 AND IVHD.INV_NO = TOT.INV_NO
+                       ), 0) AS REJECT_AMT -- 검수반려금액 
+			FROM
+			(
+				SELECT  HOUSE_CODE
+					, PO_NO
+					, SUBJECT
+					, PO_CREATE_DATE
+					, PO_TTL_AMT
+					, ADD_USER_ID
+					, CUR
+					, EXEC_NO
+					, DP_TYPE
+					, DP_PAY_TERMS
+					, DP_SEQ
+					, DECODE(DP_AMT,0,DECODEAMT(ITEM_AMT *(DP_PERCENT/100)),DP_AMT) DP_AMT
+					, DECODE (TRUNC (INV_AMT/ITEM_AMT*100), 0, DP_PERCENT, TRUNC(INV_AMT/ITEM_AMT*100)) DP_PERCENT
+					--, DECODE(ROUND(INV_AMT/ITEM_AMT*100, 2), 0, DP_PERCENT, ROUND(INV_AMT/ITEM_AMT*100, 2)) DP_PERCENT
+					, INV_AMT
+					, DP_PLAN_DATE
+					, DP_DIV
+					, DP_CODE
+					, INV_DATE
+					, CONFIRM_DATE1
+					, INV_NO
+					, SIGN_STATUS
+					, SIGN_REMARK
+					, COMPLETE_MARK
+					, END_DATE
+					, END_REMARK
+					, PRE_TYPE
+				FROM
+				(
+					SELECT
+						  B.HOUSE_CODE
+						, B.PO_NO
+						, B.EXEC_NO
+						, B.DP_DIV
+						, B.DP_SEQ
+						, B.PO_TTL_AMT
+						, B.DP_AMT
+						, B.ITEM_AMT
+						--, DECODE(A.DP_AMT, NULL, B.DP_AMT, A.DP_AMT) INV_AMT
+						, DECODE(A.INV_AMT, NULL, B.DP_AMT, A.INV_AMT) INV_AMT
+						, DECODE(A.DP_PERCENT, NULL,  B.DP_PERCENT, A.DP_PERCENT) DP_PERCENT
+						, B.SUBJECT, B.PO_CREATE_DATE
+						, B.ADD_USER_ID, B.CUR
+						, B.DP_TYPE
+						, B.DP_PAY_TERMS
+						, B.DP_PLAN_DATE
+						, B.DP_CODE
+						, A.INV_DATE
+						, A.CONFIRM_DATE1
+						, A.INV_NO
+						, A.SIGN_STATUS
+						, A.SIGN_REMARK
+						, B.COMPLETE_MARK
+						, B.END_DATE
+						, B.END_REMARK
+						, '' AS PRE_TYPE
+					FROM
+					(
+						SELECT PH.HOUSE_CODE
+							, PH.PO_NO, IVH.IV_SEQ AS DP_SEQ
+							, CASE MT.KTGRM WHEN '02' THEN 'S' ELSE 'I' END DP_DIV
+							, PD.EXEC_NO, IVH.DP_PERCENT
+							, SUM(IVH.DP_AMT) DP_AMT
+							, SUM(IV.INV_AMT) INV_AMT
+							, IVH.INV_DATE
+							, IVH.CONFIRM_DATE1
+							, IVH.INV_NO
+							, IVH.SIGN_STATUS
+							, IVH.SIGN_REMARK
+						FROM ICOYPOHD PH, ICOYPODT PD, ICOMMTGL MT, ICOYIVDT IV, ICOYIVHD IVH
+						WHERE PH.HOUSE_CODE = PD.HOUSE_CODE
+						AND PH.PO_NO        = PD.PO_NO
+						AND MT.HOUSE_CODE 	= IV.HOUSE_CODE
+						AND MT.ITEM_NO    	= IV.ITEM_NO
+						AND PD.HOUSE_CODE 	= IV.HOUSE_CODE
+						AND PD.PO_NO       	= IV.PO_NO
+						AND PD.PO_SEQ       = IV.PO_SEQ
+						--AND PD.ITEM_NO 		= IV.ITEM_NO
+						AND IVH.HOUSE_CODE 	= IV.HOUSE_CODE
+						AND IVH.INV_NO 		= IV.INV_NO
+		 				AND PH.HOUSE_CODE  	= ${session.HOUSE_CODE}										
+		 				AND PH.VENDOR_CODE 	= ${vendor_code}										
+						AND PH.CONFIRM_DATE IS NOT NULL
+						AND PH.CONFIRM_CERTV = 'Y' -- 접수완료(Y), 접수반려(N)
+						AND PH.STATUS   != 'D'
+					--	AND PH.COMPLETE_MARK = 'N'
+					--	AND PD.STATUS   != 'D'
+						AND IV.STATUS   != 'D'
+						AND IVH.STATUS  != 'D'
+						GROUP BY PH.HOUSE_CODE
+							, PH.PO_NO, IVH.IV_SEQ
+							, CASE MT.KTGRM WHEN '02' THEN 'S' ELSE 'I' END
+							, PD.EXEC_NO, IVH.DP_PERCENT
+							, IVH.INV_DATE
+							, IVH.CONFIRM_DATE1
+							, IVH.INV_NO
+							, IVH.SIGN_STATUS
+							, IVH.SIGN_REMARK
+					) A
+					,
+					(
+						SELECT  PH.HOUSE_CODE
+							, PH.PO_NO
+							, CN.DP_AMT
+							, CN.DP_PERCENT
+							, CN.DP_SEQ
+							, CASE MT.KTGRM WHEN '02' THEN 'S' ELSE 'I' END DP_DIV
+							, PH.SUBJECT, PH.PO_CREATE_DATE, PH.PO_TTL_AMT
+							, SUM(PD.ITEM_AMT) AS ITEM_AMT
+							, PH.PURCHASER_ID AS ADD_USER_ID
+							, PH.CUR
+							, PD.EXEC_NO
+							, CN.DP_TYPE
+							, CN.DP_PAY_TERMS
+							, CN.DP_PLAN_DATE
+							, CN.DP_CODE
+							, PH.COMPLETE_MARK
+							, PH.END_DATE
+							, PH.END_REMARK
+						FROM ICOYCNDP CN, ICOYPOHD PH, ICOYPODT PD,ICOMMTGL MT,
+							(
+							 	SELECT DISTINCT IV.HOUSE_CODE, IV.PO_NO, IV.PO_SEQ
+            					FROM ICOYIVDT IV, ICOYIVHD IVH
+            					WHERE IV.HOUSE_CODE = IVH.HOUSE_CODE
+            					AND IV.INV_NO = IVH.INV_NO
+							) IV
+						WHERE PH.HOUSE_CODE = PD.HOUSE_CODE
+						AND PH.PO_NO       	= PD.PO_NO
+						AND PD.EXEC_NO    	= CN.EXEC_NO
+						AND PD.HOUSE_CODE 	= CN.HOUSE_CODE
+						--AND CN.DP_DIV = (CASE MT.KTGRM WHEN '02' THEN 'S' ELSE 'I' END)
+						AND MT.HOUSE_CODE 	= PD.HOUSE_CODE
+						AND MT.ITEM_NO    	= PD.ITEM_NO
+						AND IV.HOUSE_CODE = PD.HOUSE_CODE
+      					AND IV.PO_NO = PD.PO_NO
+      					AND IV.PO_SEQ = PD.PO_SEQ
+				 		AND PH.HOUSE_CODE 	= ${session.HOUSE_CODE}										
+				 		AND PH.VENDOR_CODE       = ${vendor_code}								
+						AND PH.CONFIRM_DATE IS NOT NULL
+						AND PH.CONFIRM_CERTV = 'Y' -- 접수완료(Y), 접수반려(N)
+						AND PH.STATUS  	!= 'D'
+     				--	AND PH.COMPLETE_MARK = 'N'
+					--	AND PD.STATUS   != 'D'
+						AND CN.STATUS 	!= 'D'
+						GROUP BY PH.HOUSE_CODE, PH.PO_NO
+						, PH.SUBJECT, PH.PO_CREATE_DATE, PH.PO_TTL_AMT, PH.PURCHASER_ID, PH.CUR
+						, PD.EXEC_NO, CN.DP_SEQ, CN.DP_AMT, CN.DP_PERCENT
+						, CASE MT.KTGRM WHEN '02' THEN 'S' ELSE 'I' END
+						, CN.DP_TYPE
+						, CN.DP_PAY_TERMS
+						, CN.DP_PLAN_DATE
+						, CN.DP_CODE
+						, PH.COMPLETE_MARK
+						, PH.END_DATE
+						, PH.END_REMARK
+				) B
+				WHERE B.HOUSE_CODE  = A.HOUSE_CODE(+)
+				AND B.PO_NO = A.PO_NO(+)
+				AND B.DP_SEQ = A.DP_SEQ(+)
+				AND B.DP_DIV = A.DP_DIV(+)
+				AND B.EXEC_NO = A.EXEC_NO(+)
+				--AND ( (NVL(B.COMPLETE_MARK, 'N') = 'N') or (B.COMPLETE_MARK = 'Y' AND (A.SIGN_STATUS = 'E1' or A.SIGN_STATUS = 'RE')  ) )
+				UNION
+				SELECT  PH.HOUSE_CODE
+					, PH.PO_NO
+					, PD.EXEC_NO
+					, CASE MT.KTGRM WHEN '02' THEN 'S' ELSE 'I' END DP_DIV
+					, CN.DP_SEQ
+					, PH.PO_TTL_AMT
+					, CN.DP_AMT
+					, SUM(PD.ITEM_AMT) AS ITEM_AMT
+					, 0 AS INV_AMT
+					, CN.DP_PERCENT
+					, PH.SUBJECT
+					, PH.PO_CREATE_DATE
+					, PH.PURCHASER_ID AS ADD_USER_ID
+					, PH.CUR
+					, CN.DP_TYPE
+					, CN.DP_PAY_TERMS
+					, CN.DP_PLAN_DATE
+					, CN.DP_CODE
+					, '' INV_DATE
+					, '' CONFIRM_DATE1
+					, '' INV_NO
+					, '' SIGN_STATUS
+					, '' SIGN_REMARK
+					, PH.COMPLETE_MARK
+					, PH.END_DATE
+					, PH.END_REMARK
+					, PRDT.PRE_TYPE
+				FROM ICOYCNDP CN, ICOYPOHD PH, ICOYPODT PD,ICOMMTGL MT, ICOYPRDT PRDT
+				WHERE PH.HOUSE_CODE = PD.HOUSE_CODE
+				AND PH.PO_NO       	= PD.PO_NO
+				AND PD.EXEC_NO  	= CN.EXEC_NO
+				AND PD.HOUSE_CODE 	= CN.HOUSE_CODE
+				AND MT.HOUSE_CODE 	= PD.HOUSE_CODE
+				AND MT.ITEM_NO    	= PD.ITEM_NO
+				AND PD.HOUSE_CODE   = PRDT.HOUSE_CODE
+				AND PD.PR_NO        = PRDT.PR_NO
+				AND PD.PR_SEQ       = PRDT.PR_SEQ
+				AND PH.COMPLETE_MARK = 'N'
+				AND ( PRE_TYPE <> 1 OR PRE_TYPE IS NULL )
+
+			 	AND PH.HOUSE_CODE 	= ${session.HOUSE_CODE}										
+			 	AND PH.PO_CREATE_DATE BETWEEN $S{po_from_date}  AND $S{po_to_date}      
+			 	AND PH.VENDOR_CODE  = ${vendor_code}										
+
+				AND PH.CONFIRM_DATE IS NOT NULL
+				AND PH.CONFIRM_CERTV = 'Y' -- 접수완료(Y), 접수반려(N)
+				AND PH.STATUS  	!= 'D'
+				AND PD.STATUS   != 'D'
+				AND CN.STATUS IN ('C', 'R')
+				--AND CN.DP_DIV = (CASE MT.KTGRM WHEN '02' THEN 'S' ELSE 'I' END)
+				AND NOT EXISTS (SELECT PO_NO FROM ICOYIVDT WHERE HOUSE_CODE = PD.HOUSE_CODE AND PO_NO = PD.PO_NO AND PO_SEQ = PD.PO_SEQ)
+				GROUP BY PH.HOUSE_CODE, PH.PO_NO
+				, PH.SUBJECT, PH.PO_CREATE_DATE, PH.PO_TTL_AMT, PH.PURCHASER_ID, PH.CUR
+				, PD.EXEC_NO, CN.DP_SEQ, CN.DP_AMT, CN.DP_PERCENT
+				, CASE MT.KTGRM WHEN '02' THEN 'S' ELSE 'I' END
+				, CN.DP_TYPE
+				, CN.DP_PAY_TERMS
+				, CN.DP_PLAN_DATE
+				, CN.DP_CODE
+				, CN.DP_SEQ
+				, PH.COMPLETE_MARK
+				, PH.END_DATE
+				, PH.END_REMARK
+				, PRDT.PRE_TYPE
+			)
+		) TOT
+		WHERE 1 = 1
+          AND PO_CREATE_DATE BETWEEN $S{po_from_date}
+          AND $S{po_to_date}      		
+		  AND   ADD_USER_ID						= $S{ctrl_person_id}                		
+		  AND   SUBJECT LIKE '%' || $S{subject} || '%'                              	
+		  AND CASE WHEN END_DATE IS NOT NULL THEN 'YY' ELSE COMPLETE_MARK END =   $S{sign_status}     					
+		ORDER BY PO_NO DESC, DP_DIV, DP_SEQ
+	]]>
+<!-- 		  AND   getInvSupplySignCode(SIGN_STATUS)	= $S{sign_status}  -->
+</method>
+
+<method name = "getInvoiceTargetList2">
+	<![CDATA[
+		SELECT DISTINCT PO_NO , 
+		       SUBJECT , 
+		       PO_CREATE_DATE , 
+		       CTRL_NAME AS USER_NAME , 
+		       ADD_USER_ID , 
+		       CUR , 
+		      (SELECT MAX(EXCHANGE_RATE) FROM ICOYPODT 
+		        WHERE HOUSE_CODE = HOUSE_CODE AND PO_NO = PO_NO) AS EXCHANGE_RATE , 
+		       SIGN_STATUS , 
+		       --getInvSignStatus(HOUSE_CODE, INV_NO) AS SIGN_STATUS_DESC , 
+		       GETICOMCODE1(HOUSE_CODE,'M994',SIGN_STATUS) AS SIGN_STATUS_DESC,
+		       SIGN_REMARK , 
+		       INV_NO , 
+		       EXEC_NO , 
+		       DP_TYPE , 
+		       GETICOMCODE1(HOUSE_CODE, 'M010', DP_PAY_TERMS) AS DP_PAY_TERMS , 
+		       DP_SEQ , 
+		       DP_PERCENT , 
+		       PO_TTL_AMT , 
+		       NVL (  (SELECT SUM (TRUNC (IVDT.INV_QTY * IVDT.UNIT_PRICE)) 
+		                FROM ICOYIVHD IVHD, 
+		                     ICOYIVDT IVDT 
+		               WHERE IVDT.HOUSE_CODE = A.HOUSE_CODE 
+		                     AND IVDT.PO_NO = A.PO_NO 
+		                     AND IVDT.STATUS <> 'D' 
+		                     AND IVHD.HOUSE_CODE = IVDT.HOUSE_CODE 
+		                     AND IVHD.INV_NO = IVDT.INV_NO 
+		                     AND IVHD.STATUS <> 'D'), 0) AS DP_AMT , -- 검수요청금액
+		       NVL (  (SELECT SUM (TRUNC (IVDT.GR_QTY * IVDT.UNIT_PRICE)) 
+		                   FROM ICOYIVHD IVHD, 
+		                        ICOYIVDT IVDT 
+		                  WHERE IVDT.HOUSE_CODE = A.HOUSE_CODE 
+		                        AND IVDT.PO_NO = A.PO_NO 
+		                        AND IVDT.STATUS <> 'D' 
+		                        AND IVHD.HOUSE_CODE = IVDT.HOUSE_CODE 
+		                        AND IVHD.INV_NO = IVDT.INV_NO 
+		                        AND IVHD.STATUS <> 'D'), 0) AS TOT_INV_AMT, -- 검수완료금액 
+		       NVL (  (SELECT SUM (TRUNC (DECODE (IVDT.GR_DATE, NULL, '0', (IVDT.INV_QTY-IVDT.GR_QTY))*IVDT.UNIT_PRICE))
+		                   FROM ICOYIVHD IVHD, 
+		                        ICOYIVDT IVDT 
+		                  WHERE IVDT.HOUSE_CODE = A.HOUSE_CODE 
+		                        AND IVDT.PO_NO = A.PO_NO 
+		                        AND IVDT.STATUS <> 'D' 
+		                        AND IVHD.HOUSE_CODE = IVDT.HOUSE_CODE 
+		                        AND IVHD.INV_NO = IVDT.INV_NO 
+		                        AND IVHD.STATUS <> 'D' 
+		              ), 0) AS REJECT_AMT, -- 검수반려금액 
+		       '' AS DP_PLAN_DATE , 
+		       INV_DATE , 
+		       CONFIRM_DATE1 , 
+		       DP_DIV , 
+		       DECODE(DP_DIV, 'I', '물품', 'S', '용역', DP_DIV) AS DP_DIV_NAME , 
+		       '' AS DP_CODE , 
+		       '' AS DP_TEXT , 
+		       CASE 
+		           WHEN END_DATE IS NOT NULL 
+		           THEN GETICOMCODE2(HOUSE_CODE,'M645', 'YY') 
+		           ELSE GETICOMCODE2(HOUSE_CODE,'M645', NVL(COMPLETE_MARK, 'N')) 
+		       END AS COMPLETE_MARK_TXT , 
+		       CASE 
+		           WHEN END_DATE IS NOT NULL 
+		           THEN 'YY' 
+		           ELSE COMPLETE_MARK 
+		       END COMPLETE_MARK , 
+		       REPLACE(REPLACE( END_REMARK,CHR(13),' '),CHR(10),'') AS END_REMARK 
+		  FROM 
+		       (SELECT PH.HOUSE_CODE , 
+		              PH.PO_NO, 
+		              '' AS INV_NO , 
+		              '' AS DP_SEQ , 
+		              CASE MT.KTGRM 
+		                  WHEN '02' 
+		                  THEN 'S' 
+		                  ELSE 'I' 
+		              END DP_DIV , 
+		              PD.EXEC_NO, 
+		              PH.SUBJECT , -- 발주명 
+		              PH.PO_CREATE_DATE , -- 발주일자 
+		              PH.COMPLETE_MARK , -- 발주완료여부 
+		              PH.END_DATE , -- 발주중도종결일자 
+		              PH.END_REMARK, -- 발주중도종결사유 
+		              PH.CUR, 
+		              PH.PO_TTL_AMT , -- 발주금액 
+		              SUM (PD.ITEM_AMT) AS ITEM_AMT , -- 품목발주금액 
+		              '' AS DP_PERCENT , -- 검수요청율 
+		              SUM (IV.INV_AMT) AS DP_AMT , -- 검수금액 
+		              SUM (IV.INV_AMT) AS INV_AMT , -- 검수금액 
+		              '' AS INV_DATE , -- 검수요청일자 
+		              '' AS CONFIRM_DATE1 , -- 검수일자 
+		              '' AS SIGN_STATUS , -- 결재상태 
+		              '' AS SIGN_REMARK , -- 결재내용 
+		              '' AS ADD_USER_ID , 
+		              '' AS DP_TYPE , 
+		              '' AS DP_PAY_TERMS ,
+		              GETICOMBACO2(PH.HOUSE_CODE, PH.COMPANY_CODE, 'P', PH.CTRL_CODE) AS CTRL_NAME
+		         FROM ICOYPOHD PH, 
+		              ICOYPODT PD, 
+		              ICOMMTGL MT, 
+		              ICOYIVDT IV, 
+		              ICOYIVHD IVH 
+		        WHERE PH.HOUSE_CODE = PD.HOUSE_CODE 
+		              AND PH.PO_NO = PD.PO_NO 
+		              AND MT.HOUSE_CODE = PD.HOUSE_CODE 
+		              AND MT.ITEM_NO = PD.ITEM_NO 
+		              AND PD.HOUSE_CODE = IV.HOUSE_CODE(+) 
+		              AND PD.PO_NO = IV.PO_NO(+) 
+		              AND PD.PO_SEQ = IV.PO_SEQ(+) 
+		              AND IV.STATUS(+) != 'D' 
+		              AND IVH.HOUSE_CODE(+) = IV.HOUSE_CODE 
+		              AND IVH.INV_NO(+) = IV.INV_NO 
+		              AND IVH.STATUS(+) != 'D' 
+					  AND PH.HOUSE_CODE 	= ${session.HOUSE_CODE}									
+			   		  AND PH.PO_CREATE_DATE BETWEEN $S{po_from_date}
+			   		  AND $S{po_to_date}  
+					  AND PH.VENDOR_CODE  = ${vendor_code}									
+		              AND PH.CONFIRM_DATE IS NOT NULL 
+		              AND PH.CONFIRM_CERTV = 'Y' -- 접수완료(Y), 접수반려(N) 
+		              AND PH.STATUS != 'D' -- AND PH.COMPLETE_MARK = 'N' 
+		              AND PD.STATUS != 'D' 
+		        GROUP BY PH.HOUSE_CODE , 
+		              PH.PO_NO, 
+		              IVH.IV_SEQ ,
+					  MT.KTGRM , 
+		              PD.EXEC_NO, 
+		              PH.PO_TTL_AMT , 
+		              PH.PO_TTL_AMT, 
+		              PH.PO_CREATE_DATE, 
+		              PH.SUBJECT , 
+		              PH.COMPLETE_MARK , 
+		              PH.END_DATE , 
+		              PH.END_REMARK , 
+		              PH.CUR ,
+		              PH.COMPANY_CODE ,
+        		      PH.CTRL_CODE ,
+		              IVH.DP_PERCENT , 
+		              IVH.INV_DATE , 
+		              IVH.CONFIRM_DATE1 , 
+		              IVH.INV_NO , 
+		              IVH.SIGN_STATUS , 
+		              IVH.SIGN_REMARK , 
+		              IVH.ADD_USER_ID, 
+		              IVH.DP_TYPE , 
+		              IVH.DP_PAY_TERMS
+		       ) A
+		 WHERE 1=1 
+			AND   A.ADD_USER_ID						= $S{ctrl_person_id} 	
+			AND   A.SUBJECT LIKE '%' || $S{subject} || '%'         		
+			AND   getInvSupplySignCode(A.SIGN_STATUS)	= $S{sign_status} 	
+		ORDER BY A.PO_NO DESC,
+			   A.INV_NO DESC, 
+		       A.DP_DIV, 
+		       A.DP_SEQ 
+	]]>
+</method>
+
+	<method name="bl_getInvCompList">
+	<![CDATA[
+		SELECT   MAX(VD.PO_NO) AS PO_NO
+				,HD.SUBJECT    AS PO_SUBJECT
+				,VH.PO_CREATE_DATE
+				,VH.VENDOR_CODE
+				,GETVENDORNAME(VH.HOUSE_CODE, VH.VENDOR_CODE) AS VENDOR_NAME
+				,HD.PO_TTL_AMT
+				,MAX (
+				  (SELECT NVL (SUM (ITEM_QTY),0) FROM ICOYPODT
+				  	WHERE HOUSE_CODE = HD.HOUSE_CODE
+				  	AND PO_NO = HD.PO_NO
+				  	AND STATUS <> 'D')
+				 ) AS PO_TTL_QTY
+				,GETUSERNAMELOC(VH.HOUSE_CODE,VH.INV_PERSON_ID) AS INV_PERSON_NAME
+				,VH.INV_PERSON_ID
+				--,GETUSERNAMELOC(VH.HOUSE_CODE,VH.PURCHASE_ID) AS ADD_USER_NAME
+				,GETICOMBACO2(VH.HOUSE_CODE, VH.COMPANY_CODE, 'P', VH.CTRL_CODE) AS ADD_USER_NAME
+				,VH.PURCHASE_ID AS ADD_USER_ID
+				, '' AS IV_NO
+				,VH.DP_TEXT
+				,GETICOMCODE1(VH.HOUSE_CODE,'M010',VH.DP_PAY_TERMS) AS DP_PAY_TERMS
+				,VH.IV_SEQ
+				,VH.DP_PERCENT
+				,VH.INV_AMT AS DP_AMT
+				,VH.INV_DATE
+				,VH.CONFIRM_DATE1 AS CONFIRM_DATE
+				,GETICOMCODE1(VH.HOUSE_CODE,'M994',VH.SIGN_STATUS) AS SIGN_STATUS_DESC
+				,VH.SIGN_STATUS
+				,VH.SIGN_REMARK
+				, '' AS DP_FLAG
+				,VH.INV_NO
+				,VH.SUBJECT  AS INV_SUBJECT
+				,HD.ORDER_NO
+				,VH.ATTACH_NO
+				, CASE WHEN VH.ATTACH_NO IS NULL THEN 0 ELSE 1 END  AS ATTACH_POP
+				,SUM (VD.INV_QTY) AS INV_QTY
+				,SUM (VD.GR_QTY) AS GR_QTY
+				,NVL (DECODE (VH.SIGN_STATUS,'E1',SUM (VD.INV_QTY)-SUM (VD.GR_QTY)),0) AS REJECT_QTY
+				, 'Y' AS DEL_FLAG
+				,VH.PAY_NO, vd.gr_date
+				,VH.IV_NO H_IV_NO
+				,VH.IV_CANCEL_NO
+				,VH.IV_CLEAR_NO
+        		, ''  AS GUBUN
+		        --,GETICOMCODE1('#house_code#', 'M042' , MAX(MTGL.MATERIAL_CLASS1) ) MATERIAL_CLASS1_TEXT
+		        ,MAX(VD.GR_NO) GR_NO
+		      	,GETICOMCODE1(VH.HOUSE_CODE,'P013',NVL(VH.APP_STATUS,'T')) APP_STATUS_NAME
+		      	,NVL(VH.APP_STATUS,'T') APP_STATUS
+		      	,CASE WHEN NVL(VH.APP_STATUS,' ') = ' ' THEN '미결재'
+		         ELSE GETICOMCODE1(VH.HOUSE_CODE,'M100', VH.APP_STATUS) END AS APP_STATUS_TXT
+		      	,'' AS PIS_STATUS
+				,VH.EVAL_FLAG
+        		,DECODE(VH.EVAL_FLAG, null, '', 'N', '평가제외', 'T', '평가대기중', 'P', '평가진행중', 'C', '평가완료') AS EVAL_FLAG_DESC
+        		,VH.EVAL_REFITEM
+        		,(SELECT FROM_DATE || ' ~ ' || TO_DATE FROM ICOMVEVH WHERE HOUSE_CODE = VH.HOUSE_CODE AND EVAL_REFITEM = VH.EVAL_REFITEM) AS EVAL_DATE
+		FROM ICOYIVHD VH, ICOYIVDT VD, ICOYPOHD HD, ICOMMTGL MTGl
+		WHERE VH.HOUSE_CODE 	= VD.HOUSE_CODE
+		AND   VH.INV_NO			= VD.INV_NO
+		AND   VD.HOUSE_CODE		= HD.HOUSE_CODE
+		AND   VD.PO_NO			= HD.PO_NO
+		AND   VD.HOUSE_CODE 	= MTGl.HOUSE_CODE
+		AND   VD.ITEM_NO 		= MTGl.ITEM_NO
+		AND   VH.STATUS			!= 'D'
+		AND   VD.STATUS			!= 'D'
+		AND   HD.STATUS			!= 'D'
+		<OPT=F,S> AND   VH.HOUSE_CODE 		= ? 			                                              </OPT>
+		<OPT=S,S> AND   VH.PURCHASE_ID 		= ?                                                           </OPT>
+		<OPT=S,S> AND   VH.SIGN_STATUS  	= ?                                                           </OPT>
+		<OPT=S,S> AND   VH.VENDOR_CODE  	= ?                                                           </OPT>
+		<OPT=S,S> AND   VH.INV_PERSON_ID	= ?                                                           </OPT>
+		<OPT=S,S> AND   VD.PO_NO			LIKE '%' || ? || '%'                                          </OPT>
+		<OPT=S,S> AND   VH.PO_CREATE_DATE 	BETWEEN ? </OPT><OPT=S,S>AND ?                                </OPT>
+		<OPT=S,S> AND   VH.INV_DATE 		BETWEEN ? </OPT><OPT=S,S>AND ?								  </OPT>
+		<OPT=S,S> AND   HD.ORDER_NO			= ?															  </OPT>
+		]]>
+		<if test="${mode}" operator="eq" value="inv_person">
+		<![CDATA[
+			<OPT=S,S>  AND   getDeptCodeByID(VH.HOUSE_CODE,VH.COMPANY_CODE,VH.INV_PERSON_ID)	= ?		  </OPT>
+		]]>
+		</if>
+		<if test="${mode}" operator="ne" value="inv_person">
+		<![CDATA[
+			<OPT=S,S>  AND   getDeptCodeByID(VH.HOUSE_CODE,VH.COMPANY_CODE,VH.PURCHASE_ID)	= ?			  </OPT>
+		]]>
+		</if>
+		<if test="${pay_create_flag}" operator="eq" value="Y">
+			AND   VH.PAY_NO			IS NOT NULL
+		</if>
+		<if test="${pay_create_flag}" operator="eq" value="N">
+			AND   VH.PAY_NO			IS NULL
+		</if>
+		<if test="${app_status}" operator="ne" value="">
+			AND   NVL(VH.SIGN_STATUS, 'T') = '#app_status#'
+		</if>
+		GROUP BY VH.SIGN_STATUS
+			,VH.INV_NO
+			,VH.PO_CREATE_DATE
+			,VH.VENDOR_CODE
+			,VH.HOUSE_CODE
+			,HD.PO_TTL_AMT
+			,VH.INV_PERSON_ID
+			,VH.ADD_USER_ID
+			,VH.DP_TEXT
+			,VH.DP_PAY_TERMS
+			,VH.IV_SEQ
+			,VH.DP_PERCENT
+			,VH.INV_AMT
+			,VH.INV_DATE
+			,VH.SIGN_REMARK
+			,VH.SUBJECT
+			,VH.PURCHASE_ID
+			,VH.COMPANY_CODE
+			,VH.CTRL_CODE
+			,HD.SUBJECT
+			,HD.ORDER_NO
+			,VH.ATTACH_NO
+			,VH.PAY_NO, vd.gr_date
+			,VH.IV_NO
+			,VH.IV_CANCEL_NO
+			,VH.IV_CLEAR_NO
+			,VH.APP_STATUS
+			,VH.CONFIRM_DATE1
+			,VH.EVAL_FLAG
+        	,VH.EVAL_REFITEM
+	 	ORDER BY MAX(VD.PO_NO) DESC, VH.SIGN_STATUS DESC, VH.INV_NO DESC
+	 	--ORDER BY VH.SIGN_STATUS DESC, VH.INV_NO DESC
+	</method>
+
+	<method name="getIvHeader">
+	<![CDATA[
+		    SELECT
+	           vd.po_no AS po_no11,
+	           (SELECT  subject FROM icoypohd WHERE HOUSE_CODE = VH.HOUSE_CODE AND po_no = pd.po_no AND ROWNUM = '1') AS po_name12,
+	           prhd.wbs || ' / ' || prhd.wbs_name AS project_name21,
+	           vd.iv_no  AS iv_no31,
+	           vd.inv_no AS inv_no32,
+		       TO_NUMBER(VH.IV_SEQ) || '차' || ' (' || '검수자 : ' || getusernameloc (vh.house_code, vh.inv_person_id) || ')'  AS inv_seq41,
+	           SUBSTR (vh.inv_date, 1, 4)  || '/' || SUBSTR (vh.inv_date, 5, 2)  || '/' || SUBSTR (vh.inv_date, 7, 2)  AS app_status42,
+	           SUBSTR (vh.confirm_date1, 1, 4)  || '/' || SUBSTR (vh.confirm_date1, 5, 2)  || '/' || SUBSTR (vh.confirm_date1, 7, 2)  AS confirm_date1,
+	           TO_CHAR(round(vh.po_ttl_amt, 0), 'FM999,999,999,999,999,999') AS po_ttl_amt51,
+	           TO_CHAR(NVL(( SELECT vh.po_ttl_amt - SUM(B.INV_AMT)
+					 FROM ICOYIVDT B
+					 WHERE B.HOUSE_CODE = VD.HOUSE_CODE
+					 AND B.PO_NO = VD.PO_NO
+					 AND B.STATUS <> 'D'
+					 AND B.INV_NO IN ( SELECT INV_NO FROM ICOYIVHD WHERE HOUSE_CODE = B.HOUSE_CODE  AND INV_NO = B.INV_NO AND SIGN_STATUS != 'R' )
+					 GROUP BY B.HOUSE_CODE, B.PO_NO
+					), 0), 'FM999,999,999,999,999,999')    as inv_amt52,
+			   TO_CHAR(DP_AMT, 'FM999,999,999,999,999,999') as dp_amt,
+	           getvendorname (vh.house_code, vh.vendor_code) AS vendor_name61,
+	           (SELECT   vendor_cp_name || ' (' || vendor_mobile_no || ' )'
+	              FROM icoypohd
+	             WHERE HOUSE_CODE = VH.HOUSE_CODE AND po_no = pd.po_no) AS vendor_cp_name62,
+	           (SELECT  '선급금보증 ' || ROUND(first_percent, 0) || '%, 계약이행보증 ' || ROUND(contract_percent, 0) || '%, 하자이행보증 ' || ROUND(mengel_percent, 0) || '%'
+	              FROM icoycndp
+	             WHERE HOUSE_CODE = VH.HOUSE_CODE AND exec_no = pd.exec_no AND ROWNUM = 1) AS bb71,
+	           vh.attach_no AS attach_no81,
+	           '검수일 : ' || SUBSTR (vh.inv_date, 1, 4)  || '/' || SUBSTR (vh.inv_date, 5, 2)  || '/' || SUBSTR (vh.inv_date, 7, 2) AS inv_date98,
+	           '검수자 : ' || getusernameloc (vh.house_code, vh.inv_person_id) AS inv_person_name99,
+	           vh.sign_status
+	           ,   (  SELECT CASE WHEN COUNT(SIGN_STATUS) = MAX( (SELECT COUNT(*) 
+	           														FROM ICOYCNDP 
+	           													   WHERE DP_DIV = ( SELECT DP_DIV 
+																                      FROM ICOYIVHD 
+																                     WHERE HOUSE_CODE = ${session.HOUSE_CODE}
+																                       AND INV_NO     = ${inv_no}
+                                                                                   )
+                                                                     AND EXEC_NO = PD.EXEC_NO
+                                                                     AND HOUSE_CODE = ${session.HOUSE_CODE}
+                                                                     AND STATUS <> 'D'
+                                                                  )
+                                                               )
+                                   AND SUM(CASE WHEN SIGN_STATUS ='P' THEN 1 ELSE 0 END) = 1
+                                  THEN 'Y' ELSE 'N' END   
+                        FROM ICOYIVHD IVHD
+                       WHERE INV_NO IN (          
+                                          SELECT INV_NO
+                                            FROM ICOYIVDT
+                                           WHERE HOUSE_CODE = ${session.HOUSE_CODE}
+                                             AND PO_NO = (SELECT MAX(PO_NO)
+                                                            FROM ICOYIVDT 
+                                                           WHERE HOUSE_CODE = ${session.HOUSE_CODE}
+                                                             AND INV_NO     = ${inv_no}
+                                                             AND STATUS <> 'D')
+                                             AND STATUS <> 'D'
+                                       )
+                    ) AS LAST_YN
+               , PD.EXEC_NO
+			   , ( SELECT DP_DIV 
+                     FROM ICOYIVHD 
+                    WHERE HOUSE_CODE = ${session.HOUSE_CODE}
+                      AND INV_NO     = ${inv_no}
+                 ) AS DP_DIV
+               , ss.src_file_name
+               , vh.attach_no_1 --검수자 첨부파일
+               , (
+                  SELECT
+                   SRC_FILE_NAME
+                  FROM SFILE
+                  WHERE 1 = 1
+                  AND DOC_NO = VH.ATTACH_NO_1
+                  AND ROWNUM = 1
+                 ) AS SRC_FILE_NAME_1 --검수자 첨부파일명
+                ,GETFILENAMES(vh.attach_no)   AS RPT_GETFILENAMES81
+                ,GETFILENAMES(vh.attach_no_1) AS RPT_GETFILENAMES1                
+	      FROM icoyivhd vh, icoyivdt vd, icoypodt pd, icoyprhd prhd, sfile ss
+	     WHERE vh.house_code = vd.house_code
+			AND   VH.HOUSE_CODE	= ${session.HOUSE_CODE}		                                             	  
+			AND   VH.INV_NO		= $S{inv_no}		                                             	  
+	       AND vh.inv_no = vd.inv_no
+	       AND vd.po_no = pd.po_no
+	       AND pd.house_code = prhd.house_code(+)
+	       and vh.attach_no = ss.doc_no(+)
+	       and pd.pr_no = prhd.pr_no(+)
+	       and vh.status <> 'D'
+	       AND ROWNUM = 1
+	]]>
+	</method>
+<!-- 		       (SELECT SUM (TRUNC (DECODE (GR_DATE,NULL,INV_QTY,GR_QTY)*UNIT_PRICE)) -->
+<!-- 		        FROM ICOYIVDT  -->
+<!-- 		        WHERE HOUSE_CODE = VH.HOUSE_CODE  -->
+<!-- 		              AND INV_NO = VH.INV_NO  -->
+<!-- 		       ) AS TOTAL_AMT , -->
+	<method name="getIvDetailTop">
+	<![CDATA[
+		SELECT
+			VD.INV_SEQ,    VD.ITEM_NO,  VD.DESCRIPTION_LOC, VD.UNIT_MEASURE,       VD.ITEM_QTY,
+			VD.UNIT_PRICE, VD.ITEM_AMT, GL.MATERIAL_CLASS2, GL.MATERIAL_CTRL_TYPE,
+			row_number() over( ORDER BY VD.INV_SEQ ASC  ) AS SEQ , 
+		    NVL(VD.INV_QTY, '0')                          AS INV_QTY,
+			NVL(VD.GR_QTY, '0')                           AS GR_QTY,
+			--NVL(VD.INV_QTY, '0')                           AS GR_QTY,
+			NVL(VD.GR_QTY, '0') * VD.UNIT_PRICE           AS EXPECT_AMT,
+			--NVL(VD.INV_QTY, '0') * VD.UNIT_PRICE           AS EXPECT_AMT,
+			NVL(VD.REQ_INV_AMT, '0')                      AS LAST_EXPECT_AMT, 
+			(
+				SELECT
+					DP_AMT
+				FROM
+					ICOYIVHD 
+				WHERE
+					HOUSE_CODE = VH.HOUSE_CODE 
+				AND
+					INV_NO = VH.INV_NO 
+			) AS TOTAL_AMT,
+			(
+				SELECT
+					SUM(GR_QTY)
+				FROM
+					ICOYIVDT 
+				WHERE
+					HOUSE_CODE = VH.HOUSE_CODE 
+				AND
+					INV_NO = VH.INV_NO 
+			) AS TOTAL_QTY ,
+			'' AS PIS_STATUS,
+			(
+				SELECT
+					COUNT(1)
+				FROM
+					ICOYIVSE
+				WHERE
+					HOUSE_CODE = VD.HOUSE_CODE
+				AND
+					IV_NO      = VD.INV_NO
+				AND
+					IV_SEQ     = VD.INV_SEQ
+			) AS SE_COUNT,
+           (SELECT CASE WHEN PRDT.DEMAND_DEPT IS NULL THEN '신청부서없음' 
+                                                      ELSE OGDP.DEPT_NAME_LOC||'('||OGDP.DEPT||')' END AS BR_NAME
+              FROM ICOYPODT PODT, ICOYPRDT PRDT, ICOMOGDP OGDP
+             WHERE PODT.HOUSE_CODE  = VD.HOUSE_CODE
+               AND PODT.PO_NO       = VD.PO_NO
+               AND PODT.PO_SEQ      = VD.PO_SEQ
+               AND PODT.HOUSE_CODE  = PRDT.HOUSE_CODE
+               AND PODT.PR_NO       = PRDT.PR_NO
+               AND PODT.PR_SEQ      = PRDT.PR_SEQ
+               AND PRDT.HOUSE_CODE  = OGDP.HOUSE_CODE
+               AND PRDT.DEMAND_DEPT = OGDP.DEPT
+               AND ROWNUM = 1) AS BR_NAME
+		FROM
+			ICOYIVDT VD
+		INNER JOIN ICOYIVHD VH ON VD.HOUSE_CODE = VH.HOUSE_CODE AND VD.INV_NO  = VH.INV_NO
+		INNER JOIN ICOMMTGL GL ON VD.HOUSE_CODE = GL.HOUSE_CODE AND VD.ITEM_NO = GL.ITEM_NO
+		WHERE
+			VD.HOUSE_CODE = ${session.HOUSE_CODE}
+		AND
+			VD.INV_NO     = ${inv_no}
+		AND
+			VD.STATUS     != 'D' 
+		AND
+			VH.STATUS     <> 'D'
+		ORDER BY
+			VD.INV_SEQ ASC
+	]]>
+	</method>
+
+	<method name="getIvDetailBottom">
+	<![CDATA[
+	   SELECT row_number() over(order by IVHD.CONFIRM_DATE1 desc) as seq ,
+	   	      convert_date(IVHD.CONFIRM_DATE1) as DATE1,	  -- 검수일자
+	   	      /* TO_CHAR(ROUND(sum(NVL((CASE WHEN IVHD.SIGN_STATUS = 'E1' THEN IVDT.GR_QTY
+	                             ELSE IVDT.INV_QTY END) * IVDT.UNIT_PRICE,0)),5), 'FM999999999999999.00000') AS AMT,
+	           */
+	          /*DECODEAMT(ROUND(sum(NVL((CASE WHEN IVHD.SIGN_STATUS = 'E1' THEN IVDT.GR_QTY
+	                             ELSE IVDT.INV_QTY END) * IVDT.UNIT_PRICE,0)), 5)) AS AMT,*/
+	         SUM(IVDT.INV_AMT) AS AMT,
+             IVHD.INV_DATE AS flag,
+	   	      '' AS date2
+	   	  FROM ICOYIVDT IVDT, ICOYIVHD IVHD
+	   	 WHERE IVDT.HOUSE_CODE = IVHD.HOUSE_CODE
+		   AND IVDT.HOUSE_CODE = ${session.HOUSE_CODE}	 
+		   and IVDT.inv_no     <> $S{inv_no}	 
+		   AND IVDT.PO_NO = (select po_no from icoyivdt where HOUSE_CODE = IVHD.HOUSE_CODE AND inv_no = $S{inv_no} AND ROWNUM = 1)
+	          AND IVDT.STATUS <> 'D'
+	   	   AND IVDT.INV_NO = IVHD.INV_NO
+	          AND IVHD.STATUS <> 'D'
+	   	   AND IVHD.SIGN_STATUS IN ('E1','RE')
+	   	 GROUP BY IVHD.HOUSE_CODE, IVHD.CONFIRM_DATE1, IVHD.PAY_NO, IVHD.inv_no,IVDT.PO_NO,IVHD.INV_DATE
+	]]>
+	</method>
+
+	<method name="bl_getItemList">
+	<![CDATA[
+		SELECT  VD.ITEM_NO
+			   ,VD.DESCRIPTION_LOC
+			   ,VD.SPECIFICATION
+			   ,VD.MAKER_NAME
+			   ,VD.MAKER_CODE
+			   ,VD.RD_DATE
+			   ,GETTECHNIQUE_GRADE(VD.HOUSE_CODE, VD.PO_NO, VD.PO_SEQ) AS TECHNIQUE_GRADE
+			   ,VD.UNIT_MEASURE
+			   ,VD.ITEM_QTY
+			   ,VD.UNIT_PRICE
+			   ,VD.ITEM_AMT
+			   ,VD.INV_SEQ
+          	   ,GET_GR_QTY_IVDT_SUM (VD.HOUSE_CODE, VD.PO_NO, VD.PO_SEQ) AS GR_QTY
+          	   ,VD.INV_QTY
+          	   ,TO_CHAR(ROUND(INV_QTY*UNIT_PRICE,5), 'FM999999999999999.00000') AS INV_AMT
+          	   ,TO_CHAR(ROUND(GET_GR_QTY_IVDT_SUM (VD.HOUSE_CODE, VD.PO_NO, VD.PO_SEQ)*UNIT_PRICE,5), 'FM999999999999999.00000')
+          	   ,VD.INPUT_FROM_DATE
+          	   ,VD.INPUT_TO_DATE
+			   ,(SELECT PR_TYPE
+			     FROM ICOYPRHD
+			     WHERE HOUSE_CODE = VD.HOUSE_CODE
+			       AND PR_NO	  = (SELECT PD.PR_NO
+			       				  	 FROM ICOYPODT PD
+			       				  	 WHERE PD.HOUSE_CODE = VD.HOUSE_CODE
+			       				  	   AND PD.PO_NO	  = VD.PO_NO
+			       				  	   AND PD.PO_SEQ     = VD.PO_SEQ)) AS PR_TYPE
+		FROM ICOYIVDT VD
+		<OPT=F,S>	WHERE VD.HOUSE_CODE = ? 				              		  					  </OPT>
+		<OPT=S,S>	AND   VD.INV_NO 	= ?     					      		  					  </OPT>
+			AND   VD.STATUS 	!= 'D'
+			AND   VD.gr_cancel_no is null
+	]]>
+	</method>
+
+	<method name="in_setApproval_ICOYIVDT">
+		<![CDATA[
+		UPDATE ICOYIVDT 
+		       SET CHANGE_DATE = TO_CHAR(SYSDATE, 'YYYYMMDD') , 
+		       CHANGE_TIME = TO_CHAR(SYSDATE, 'HH24MISS') , 
+		       CHANGE_USER_ID = ? , 
+		       STATUS = 'R', 
+		       GR_QTY = ? , 
+		       INV_QTY = ? , 
+		       INV_AMT = ? ,
+		       GR_DATE = TO_CHAR(SYSDATE, 'YYYYMMDD')
+		 WHERE HOUSE_CODE = ? 
+		       AND INV_NO = ? 
+		       AND INV_SEQ = ? 
+		       AND STATUS != 'D'  
+		]]>
+	</method>
+
+	<method name="in_setApproval_ICOYIVHD">
+		<![CDATA[
+		UPDATE ICOYIVHD 
+		       SET CHANGE_DATE = TO_CHAR(SYSDATE, 'YYYYMMDD') , 
+		       CHANGE_TIME = TO_CHAR(SYSDATE, 'HH24MISS') , 
+		       CHANGE_USER_ID = ? , 
+		       STATUS = 'R', 
+		       INV_AMT = ? , 
+		       INV_PERSON_ID = ? , 
+		       INV_DATE = TO_CHAR(SYSDATE, 'YYYYMMDD') , 
+		       CONFIRM_DATE1 = ? , 
+		       SIGN_STATUS = ? , 
+		       SIGN_REMARK = ? , 
+		       EVAL_REFITEM = ? 
+		 WHERE HOUSE_CODE = ? 
+		       AND INV_NO = ? 
+		       AND STATUS != 'D'  
+		]]>
+	</method>
+
+	<method name="in_setApproval_ICOYPODT">
+		<![CDATA[
+		UPDATE ICOYPODT 
+		       SET CHANGE_DATE = TO_CHAR(SYSDATE, 'YYYYMMDD') , 
+		       CHANGE_TIME = TO_CHAR(SYSDATE, 'HH24MISS') , 
+		       CHANGE_USER_ID = ? , 
+		       STATUS = 'R', 
+		       GR_QTY = GET_GR_QTY_IVDT_SUM (HOUSE_CODE, PO_NO, PO_SEQ), 
+		       INV_QTY = GET_INV_QTY_IVDT_SUM (HOUSE_CODE, PO_NO, PO_SEQ) 
+		 WHERE HOUSE_CODE = ? 
+		       AND (PO_NO, PO_SEQ) IN (SELECT PO_NO, PO_SEQ FROM ICOYIVDT 
+								        WHERE HOUSE_CODE = ? 
+								              AND INV_NO = ? 
+								              AND INV_SEQ = ?) 
+		       AND STATUS != 'D'  
+		]]>
+	</method>
+
+	<method name="in_setApproval_ICOYPODT_COMP">
+		<![CDATA[
+		UPDATE ICOYPODT 
+		       SET CHANGE_DATE = TO_CHAR(SYSDATE, 'YYYYMMDD') , 
+		       CHANGE_TIME = TO_CHAR(SYSDATE, 'HH24MISS') , 
+		       CHANGE_USER_ID = ? , 
+		       STATUS = 'R', 
+		       COMPLETE_MARK = CASE 
+						           WHEN NVL(GR_QTY, 0) = NVL (ITEM_QTY, 0) 
+						           THEN 'Y' 
+						           ELSE 'N' 
+						       END 
+		 WHERE HOUSE_CODE = ? 
+		       AND (PO_NO, PO_SEQ) IN (SELECT PO_NO, PO_SEQ FROM ICOYIVDT 
+								        WHERE HOUSE_CODE = ? 
+								              AND INV_NO = ? 
+								              AND INV_SEQ = ?) 
+		       AND STATUS != 'D'  
+		]]>
+	</method>
+	
+	<method name="in_setApproval_ICOYPOHD">
+		<![CDATA[
+		UPDATE ICOYPOHD 
+		       SET CHANGE_DATE = TO_CHAR(SYSDATE, 'YYYYMMDD') , 
+		       CHANGE_TIME = TO_CHAR(SYSDATE, 'HH24MISS') , 
+		       CHANGE_USER_ID = ? , 
+		       STATUS = 'R'
+<OPT=F,S> WHERE HOUSE_CODE 	= ?		</OPT> 
+<OPT=S,S>   AND PO_NO 		= ? 	</OPT>
+		    AND STATUS 		!= 'D'  
+		]]>
+	</method>
+	
+	<!-- 검수취소 -->
+	<!-- 1.검수수량(ICOYIVDT) 변경. -->
+	<method name="ex_cancelInv_ICOYIVDT">
+		<![CDATA[
+	   UPDATE ICOYIVDT
+	      SET GR_QTY  = '0'
+	        , INV_AMT = REQ_INV_AMT
+	        , GR_DATE = ''
+	    WHERE HOUSE_CODE = '#house_code#'
+	      AND INV_NO     = '#inv_no#'
+	      AND STATUS    <> 'D'
+		]]>
+	</method>
+	
+	<!-- 2.검수상태수정 (ICOYIVHD) -->
+	<method name="ex_cancelInv_ICOYIVHD">
+		<![CDATA[
+	   UPDATE ICOYIVHD
+	      SET INV_AMT     = '0'
+	        , SIGN_STATUS = 'P'
+	        , SIGN_REMARK = ''
+	    WHERE HOUSE_CODE = '#house_code#'
+	      AND INV_NO     = '#inv_no#'
+		]]>
+	</method>
+	
+	<!-- 3. 발주수량수정(ICOYPODT) -->
+	<method name="ex_cancelInv_ICOYPODT1">
+		<![CDATA[
+	  UPDATE ICOYPODT 
+	         SET CHANGE_DATE = TO_CHAR(SYSDATE, 'YYYYMMDD') , 
+	         CHANGE_TIME = TO_CHAR(SYSDATE, 'HH24MISS') , 
+	         CHANGE_USER_ID = 'CLOUD_ADMIN' , 
+	         STATUS = 'R', 
+	         GR_QTY = GET_GR_QTY_IVDT_SUM (HOUSE_CODE, PO_NO, PO_SEQ), 
+	         INV_QTY = GET_INV_QTY_IVDT_SUM (HOUSE_CODE, PO_NO, PO_SEQ) 
+	   WHERE HOUSE_CODE = '#house_code#' 
+	         AND (PO_NO, PO_SEQ) IN (SELECT PO_NO, PO_SEQ FROM ICOYIVDT 
+	                WHERE HOUSE_CODE = '#house_code#' 
+	                      AND INV_NO = '#inv_no#' 
+	                      ) 
+	         AND STATUS != 'D'
+		]]>
+	</method>
+	
+	<!-- 4. 발주 완료 처리 수정(ICOYPODT) -->
+	<method name="ex_cancelInv_ICOYPODT2">
+		<![CDATA[
+	  UPDATE ICOYPODT 
+	         SET CHANGE_DATE = TO_CHAR(SYSDATE, 'YYYYMMDD') , 
+	         CHANGE_TIME = TO_CHAR(SYSDATE, 'HH24MISS') , 
+	         CHANGE_USER_ID = 'CLOUD_ADMIN' , 
+	         STATUS = 'R', 
+	         COMPLETE_MARK = CASE 
+	                 WHEN NVL(GR_QTY, 0) = NVL (ITEM_QTY, 0) 
+	                 THEN 'Y' 
+	                 ELSE 'N' 
+	             END 
+	   WHERE HOUSE_CODE = '#house_code#' 
+	         AND (PO_NO, PO_SEQ) IN (SELECT PO_NO, PO_SEQ FROM ICOYIVDT 
+	                WHERE HOUSE_CODE = '#house_code#' 
+	                      AND INV_NO = '#inv_no#'
+	                      )  
+	         AND STATUS != 'D'  
+		]]>
+	</method>
+	
+	<!-- 5. 발주 완료 처리 수정(ICOYPOHD) -->
+	<method name="ex_cancelInv_ICOYPOHD">
+		<![CDATA[
+	  UPDATE ICOYPOHD POHD
+	         SET POHD.CHANGE_DATE = TO_CHAR(SYSDATE, 'YYYYMMDD') , 
+	         POHD.CHANGE_TIME = TO_CHAR(SYSDATE, 'HH24MISS') , 
+	         POHD.CHANGE_USER_ID = 'CLOUD_ADMIN' , 
+	         POHD.STATUS = 'R' , 
+	         POHD.COMPLETE_MARK = CASE 
+	                WHEN 
+	                    (SELECT COUNT(PODT.PO_NO) 
+	                      FROM ICOYPODT PODT 
+	                     WHERE PODT.HOUSE_CODE = POHD.HOUSE_CODE 
+	                           AND PODT.PO_NO = POHD.PO_NO 
+	                           AND PODT.STATUS IN ('C','R') 
+	                           AND PODT.COMPLETE_MARK = 'N' 
+	                    ) = 0 
+	                THEN 'Y' 
+	                ELSE 'N' 
+	            END 
+	   WHERE POHD.HOUSE_CODE = '#house_code#' 
+	         AND POHD.PO_NO = (SELECT MAX(PO_NO) FROM ICOYIVDT 
+	            WHERE HOUSE_CODE = '#house_code#' 
+	           AND INV_NO = '#inv_no#' 
+	           ) 
+	         AND POHD.STATUS != 'D'
+		]]>
+	</method>
+
+	<method name="in_setApproval_ICOYPOHD_COMP">
+		<![CDATA[
+		UPDATE ICOYPOHD POHD
+		       SET POHD.CHANGE_DATE = TO_CHAR(SYSDATE, 'YYYYMMDD') , 
+		       POHD.CHANGE_TIME = TO_CHAR(SYSDATE, 'HH24MISS') , 
+		       POHD.CHANGE_USER_ID = '#user_id#' , 
+		       POHD.STATUS = 'R' , 
+		       POHD.COMPLETE_MARK = CASE 
+								        WHEN 
+								            (SELECT COUNT(PODT.PO_NO) 
+								              FROM ICOYPODT PODT 
+							    	         WHERE PODT.HOUSE_CODE = POHD.HOUSE_CODE 
+							        	           AND PODT.PO_NO = POHD.PO_NO 
+							            	       AND PODT.STATUS IN ('C','R') 
+								                   AND PODT.COMPLETE_MARK = 'N' 
+								            ) = 0 
+								        THEN 'Y' 
+								        ELSE 'N' 
+								    END 
+		 WHERE POHD.HOUSE_CODE = '#house_code#' 
+		       AND POHD.PO_NO = (SELECT MAX(PO_NO) FROM ICOYIVDT 
+							     WHERE HOUSE_CODE = '#house_code#' 
+								   AND INV_NO = '#inv_no#' 
+						    	) 
+		       AND POHD.STATUS != 'D'  
+		]]>
+	</method>
+	
+	<!-- 
+		6. 검수요청 마지막 차수 검수 완료 후 잔여 검수량을 잔금으로 생성 시킨다.(ICOYCNDP)
+		   (남은 검수요청 수량이 있을 경구 대금지급 정보를 생성한다.)
+	 -->
+	<method name="in_setApproval_ICOYCNDP_COMP">
+		<![CDATA[
+        INSERT INTO ICOYCNDP(
+                  HOUSE_CODE,         EXEC_NO,         DP_DIV,         DP_SEQ,          STATUS,            ADD_DATE,
+                  ADD_TIME,         ADD_USER_ID,     ADD_USER_DEPT,    CHANGE_DATE,      CHANGE_TIME,        CHANGE_USER_ID,
+                  CHANGE_USER_DEPT, DP_TYPE,         DP_PERCENT,     DP_AMT,          DP_PLAN_DATE,     DP_PAY_TERMS,
+                  DP_PAY_TERMS_TEXT,FIRST_DEPOSIT,  FIRST_PERCENT,  CONTRACT_DEPOSIT,CONTRACT_PERCENT, MENGEL_DEPOSIT,
+                  MENGEL_PERCENT,     DP_CODE
+        )
+        SELECT HOUSE_CODE
+             , EXEC_NO
+             , DP_DIV
+             , LPAD(TO_NUMBER(DP_SEQ)+1, 5, '0') AS DP_SEQ
+             , 'T'
+             , TO_CHAR(SYSDATE, 'YYYYMMDD')
+             , TO_CHAR(SYSDATE, 'HH24miss') 
+             , '#user_id#'
+             , ADD_USER_DEPT
+             , ''
+             , ''
+             , ''
+             , ''
+             , DP_TYPE
+             , TRUNC((IVAMT.ITEM_AMT - IVAMT.INV_AMT) / IVAMT.ITEM_AMT * 100, 2) AS DP_PERCENT
+             , IVAMT.ITEM_AMT - IVAMT.INV_AMT AS DP_AMT
+             , DP_PLAN_DATE
+             , DP_PAY_TERMS
+             , DP_PAY_TERMS_TEXT
+             , FIRST_DEPOSIT
+             , FIRST_PERCENT
+             , CONTRACT_DEPOSIT
+             , CONTRACT_PERCENT
+             , MENGEL_DEPOSIT
+             , MENGEL_PERCENT
+             , '3'  -- 잔금으로 고정 처리
+          FROM ICOYCNDP DP, ( SELECT MAX((SELECT SUM(ITEM_AMT) FROM ICOYPODT WHERE HOUSE_CODE = IVDT.HOUSE_CODE AND PO_NO = IVDT.PO_NO)) AS ITEM_AMT, SUM(INV_AMT) AS INV_AMT
+                                FROM ICOYIVDT IVDT
+                               WHERE HOUSE_CODE = '#house_code#'
+                                 AND PO_NO = (SELECT MAX(PO_NO) FROM ICOYIVDT WHERE HOUSE_CODE = '#house_code#' AND INV_NO = '#inv_no#')
+                                 AND STATUS <> 'D'
+                            ) IVAMT
+           WHERE HOUSE_CODE = '#house_code#'
+             AND EXEC_NO    = '#exec_no#'
+             AND STATUS <> 'D'
+             AND DP_DIV = '#dp_div#'
+             AND DP_SEQ  = ( SELECT MAX(DP_SEQ) 
+                                FROM ICOYCNDP 
+                               WHERE HOUSE_CODE = '#house_code#'
+                                 AND EXEC_NO    =  '#exec_no#'
+                                 AND STATUS <> 'D'
+                                 AND DP_DIV = '#dp_div#'
+                            )
+             AND 'Y' = (
+                          SELECT CASE WHEN S_CNT =  EXEC_CNT AND P_CNT = 0 AND INV_AMT < PO_AMT THEN 'Y'
+                                      ELSE 'N' END AS ADD_YN
+                            FROM (
+			                          SELECT COUNT(SIGN_STATUS) AS S_CNT
+			                               , SUM(CASE WHEN SIGN_STATUS ='P' THEN 1 ELSE 0 END) AS P_CNT
+			                               , MAX( (SELECT COUNT(*) FROM ICOYCNDP WHERE HOUSE_CODE = '#house_code#' 
+			                               										   AND STATUS <> 'D' 
+			                               										   AND DP_DIV = '#dp_div#'
+			                               										   AND EXEC_NO = '#exec_no#')) AS EXEC_CNT
+			                               , '#exec_no#' AS EXEC_NO
+			                               , MAX(HOUSE_CODE) AS HOUSE_CODE
+			                               , MAX(( SELECT SUM(ITEM_AMT) FROM ICOYPODT WHERE HOUSE_CODE = '#house_code#' AND PO_NO =(SELECT MAX(PO_NO) FROM ICOYIVDT WHERE HOUSE_CODE = '#house_code#' AND INV_NO = '#inv_no#') AND STATUS <> 'D')) AS PO_AMT
+			                               , MAX(( SELECT SUM(INV_AMT) FROM ICOYIVDT WHERE HOUSE_CODE = '#house_code#' AND PO_NO =(SELECT MAX(PO_NO) FROM ICOYIVDT WHERE HOUSE_CODE = '#house_code#' AND INV_NO = '#inv_no#') AND STATUS <> 'D')) AS INV_AMT
+			                            FROM ICOYIVHD IVHD
+			                           WHERE INV_NO IN (          
+			                                                SELECT INV_NO
+			                                                  FROM ICOYIVDT
+			                                                 WHERE HOUSE_CODE = '#house_code#'
+			                                                   AND PO_NO = (SELECT MAX(PO_NO) FROM ICOYIVDT WHERE HOUSE_CODE = '#house_code#' AND INV_NO = '#inv_no#')
+			                                                   AND STATUS <> 'D'
+			                                           )
+                                 ) A
+                       ) 
+		]]>
+	</method>
+
+	<method name="in_setApproval_1">
+	<![CDATA[
+		select count(*) CNT
+		  from icoyivdt
+		 where status = 'C'
+		<OPT=F,S>	and house_code = ?		</OPT>
+		<OPT=S,S>	and inv_no = ?		</OPT>
+	]]>
+	</method>
+
+	<method name="in_setApproval_2">
+		UPDATE ICOYIVDT
+		SET	CHANGE_DATE			= TO_CHAR(SYSDATE, 'YYYYMMDD')
+			,CHANGE_TIME        = TO_CHAR(SYSDATE, 'HH24MISS')
+			,CHANGE_USER_ID     = '#user_id#'
+			,CHANGE_USER_DEPT   = '#dept#'
+			,STATUS  			= 'R'
+		WHERE HOUSE_CODE 		= '#house_code#'
+		AND   INV_NO	 		= '#inv_no#'
+		AND   STATUS	 		!= 'D'
+	</method>
+
+	<method name="in_setApproval_3">
+			UPDATE ICOYIVHD
+			SET	CHANGE_DATE			= TO_CHAR(SYSDATE, 'YYYYMMDD')
+				,CHANGE_TIME        = TO_CHAR(SYSDATE, 'HH24MISS')
+				,CHANGE_USER_ID     = ?
+				,CHANGE_USER_DEPT   = ?
+				,SIGN_STATUS        = ?
+				,SIGN_REMARK        = ?
+				,CONFIRM_DATE1  	= TO_CHAR(SYSDATE, 'YYYYMMDD')
+			WHERE HOUSE_CODE 		= ?
+			AND   INV_NO	 		= ?
+	</method>
+
+	<method name="in_setApproval_4">
+			UPDATE ICOYIVHD
+			SET	CHANGE_DATE			= TO_CHAR(SYSDATE, 'YYYYMMDD')
+				,CHANGE_TIME        = TO_CHAR(SYSDATE, 'HH24MISS')
+				,CHANGE_USER_ID     = ?
+				,CHANGE_USER_DEPT   = ?
+				,SIGN_STATUS        = ?
+				,SIGN_REMARK        = ?
+				,CONFIRM_DATE2  	= TO_CHAR(SYSDATE, 'YYYYMMDD')
+			WHERE HOUSE_CODE 		= ?
+			AND   INV_NO	 		= ?
+	</method>
+
+	<method name="in_setApproval_5">
+			UPDATE ICOYIVHD
+			SET	CHANGE_DATE			= TO_CHAR(SYSDATE, 'YYYYMMDD')
+				,CHANGE_TIME        = TO_CHAR(SYSDATE, 'HH24MISS')
+				,CHANGE_USER_ID     = ?
+				,CHANGE_USER_DEPT   = ?
+				,SIGN_STATUS        = ?
+				,SIGN_REMARK        = ?
+				,STATUS  			= 'R'
+			WHERE HOUSE_CODE 		= ?
+			AND   INV_NO	 		= ?
+	</method>
+	
+	<method name="in_setApproval2_1">
+		UPDATE ICOYIVHD
+		SET	CHANGE_DATE			= TO_CHAR(SYSDATE, 'YYYYMMDD')
+			,CHANGE_TIME        = TO_CHAR(SYSDATE, 'HH24MISS')
+			,CHANGE_USER_ID     = '#user_id#'
+			,CHANGE_USER_DEPT   = '#dept#'
+			,SIGN_STATUS		= 'R'
+			,SIGN_REMARK        = '#sign_remark#'
+		WHERE HOUSE_CODE 		= '#house_code#'
+		AND   INV_NO	 		= '#inv_no#'
+	</method>
+	
+	<method name="in_setApproval2_2">
+		UPDATE ICOYPOHD
+		SET	CHANGE_DATE			= TO_CHAR(SYSDATE, 'YYYYMMDD')
+			,CHANGE_TIME        = TO_CHAR(SYSDATE, 'HH24MISS')
+			,CHANGE_USER_ID     = '#user_id#'
+			,COMPLETE_MARK		= ''
+		WHERE HOUSE_CODE 		= '#house_code#'
+		AND   PO_NO		 		in (SELECT DISTINCT PO_NO FROM ICOYIVDT
+			WHERE HOUSE_CODE = '#house_code#'
+			AND INV_NO = '#inv_no#')
+	</method>
+
+	<method name="in_setInvQty_1">
+		UPDATE ICOYIVDT
+		SET	CHANGE_DATE			= TO_CHAR(SYSDATE, 'YYYYMMDD')
+			,CHANGE_TIME        = TO_CHAR(SYSDATE, 'HH24MISS')
+			,CHANGE_USER_ID     = ?
+			,CHANGE_USER_DEPT   = ?
+			,GR_DATE            = ?
+			,GR_QTY        		= INV_QTY
+		WHERE HOUSE_CODE = ?
+		AND   INV_NO	 = ?
+	</method>
+
+	<method name="in_setInvQty_2">
+		UPDATE ICOYIVHD
+		SET	CHANGE_DATE			= TO_CHAR(SYSDATE, 'YYYYMMDD')
+			,CHANGE_TIME        = TO_CHAR(SYSDATE, 'HH24MISS')
+			,CHANGE_USER_ID     = ?
+			,CHANGE_USER_DEPT   = ?
+			,CONFIRM_DATE2      = ?
+			,INV_AMT			 = DP_AMT
+		WHERE HOUSE_CODE   = ?
+		AND   INV_NO	 	= ?
+	</method>
+
+	<method name="in_setInvQty_3">
+		UPDATE ICOYPODT
+		SET	CHANGE_DATE			= TO_CHAR(SYSDATE, 'YYYYMMDD')
+			,CHANGE_TIME        = TO_CHAR(SYSDATE, 'HH24MISS')
+			,CHANGE_USER_ID     = '#user_id#'
+			,GR_QTY        		= GET_GR_QTY_IVDT_SUM (HOUSE_CODE,PO_NO,PO_SEQ)
+		WHERE HOUSE_CODE = '#house_code#'
+		AND   PO_NO	 	 = (SELECT MAX(PO_NO)
+							FROM ICOYIVDT
+							WHERE HOUSE_CODE = '#house_code#'
+							  AND INV_NO     = '#inv_no#')
+	</method>
+	
+	<method name="in_setInvQty2_1">
+		UPDATE ICOYPODT
+		SET	CHANGE_DATE			= TO_CHAR(SYSDATE, 'YYYYMMDD')
+			,CHANGE_TIME        = TO_CHAR(SYSDATE, 'HH24MISS')
+			,CHANGE_USER_ID     = '#user_id#'
+			,GR_QTY        		= GET_GR_QTY_IVDT_SUM (HOUSE_CODE,PO_NO,PO_SEQ)
+		WHERE HOUSE_CODE = '#house_code#'
+		AND   PO_NO	 	 = (SELECT MAX(PO_NO) FROM ICOYIVDT
+							WHERE HOUSE_CODE = '#house_code#'
+							  AND INV_NO     = '#inv_no#')
+	</method>
+
+	<method name="in_setInvQty_4">
+		UPDATE ICOYPODT
+		SET	CHANGE_DATE			= TO_CHAR(SYSDATE, 'YYYYMMDD')
+			,CHANGE_TIME        = TO_CHAR(SYSDATE, 'HH24MISS')
+			,CHANGE_USER_ID     = '#user_id#'
+			,COMPLETE_MARK      = CASE WHEN NVL(GR_QTY, 0) = ITEM_QTY THEN 'Y' ELSE 'N' END
+		WHERE HOUSE_CODE = '#house_code#'
+		AND   PO_NO	 	 = (SELECT MAX(PO_NO)
+							FROM ICOYIVDT
+							WHERE HOUSE_CODE = '#house_code#'
+							  AND INV_NO     = '#inv_no#')
+	</method>
+
+	<method name="in_setInvQty_5">
+    UPDATE ICOYPOHD POHD
+    SET  POHD.CHANGE_DATE      = TO_CHAR(SYSDATE, 'YYYYMMDD')
+      ,POHD.CHANGE_TIME        = TO_CHAR(SYSDATE, 'HH24MISS')
+      ,POHD.CHANGE_USER_ID     = '#user_id#'
+      ,POHD.COMPLETE_MARK      = CASE WHEN (SELECT COUNT(PODT.PO_NO)
+                                              FROM ICOYPODT PODT
+                                             WHERE PODT.HOUSE_CODE = POHD.HOUSE_CODE
+                                               AND PODT.PO_NO = POHD.PO_NO
+                                               AND PODT.STATUS IN ('C','R')
+                                               AND PODT.COMPLETE_MARK = 'N') = 0
+                                            THEN 'Y' ELSE 'N' END
+		WHERE POHD.HOUSE_CODE = '#house_code#'
+		AND   POHD.PO_NO	 = (SELECT MAX(PO_NO)
+							FROM ICOYIVDT
+							WHERE HOUSE_CODE = '#house_code#'
+							  AND INV_NO     = '#inv_no#')
+	</method>
+
+	<method name="et_charge_transfer_doc">
+		UPDATE ICOYIVHD
+		SET  INV_PERSON_ID = ?
+		WHERE HOUSE_CODE = ?
+		AND INV_NO   = ?
+	</method>
+	
+	<method name="et_charge_transfer_eval">
+   UPDATE ICOMVEVL
+      SET EVAL_VALUER_ID = '#Transfer_person_id#'
+    WHERE EVAL_ITEM_REFITEM IN  ( SELECT EVAL_ITEM_REFITEM
+                                    FROM ICOMVEVH VH, ICOMVEVD VD
+                                   WHERE VH.HOUSE_CODE = VD.HOUSE_CODE
+                                     AND VH.EVAL_REFITEM = VD.EVAL_REFITEM
+                                     AND VH.EVAL_REFITEM = ( SELECT EVAL_REFITEM FROM ICOYIVHD WHERE HOUSE_CODE = '#house_code#' AND INV_NO = '#inv_no#' )
+                                )
+	</method>
+
+	<method name="bl_getInvHeader">
+	<![CDATA[
+			SELECT
+				    VD.IV_NO
+				   ,VD.PO_NO
+				   ,VH.SUBJECT
+				   ,GETICOMCODE1(VH.HOUSE_CODE,'M134',VH.DP_TYPE) AS DP_TYPE_DESC
+				   ,VH.DP_TYPE
+				   ,GETICOMCODE1(VH.HOUSE_CODE,'M010',VH.DP_PAY_TERMS) AS DP_PAY_TERMS_DESC
+				   ,VH.DP_PAY_TERMS
+				   ,VH.IV_SEQ
+				   ,VH.DP_AMT
+				   ,VH.PO_TTL_AMT
+				   ,GETUSERNAMELOC(VH.HOUSE_CODE, VH.PURCHASE_ID) AS USER_NAME
+				   ,VH.INV_PERSON_ID
+				   ,VH.INV_DATE
+				   ,VH.REMARK
+				   ,VH.DP_PAY_TERMS_TEXT
+				   ,VH.PO_CREATE_DATE
+				   ,VH.DP_TEXT
+				   ,VH.DP_PERCENT
+				   ,VH.ATTACH_NO
+				   ,(case vh.attach_no when '' then 0 else 1 end) as attach_count
+				   ,GETINVAMT(VD.HOUSE_CODE, VD.PO_NO) AS INV_AMT
+				   ,(SELECT PR_TYPE
+					 FROM ICOYPOHD
+					 WHERE HOUSE_CODE 	= VD.HOUSE_CODE
+					   AND PO_NO		= VD.PO_NO
+					   AND PO_SEQ	 	= VD.PO_SEQ) AS PR_TYPE
+			FROM ICOYIVHD VH, ICOYIVDT VD
+			WHERE VH.HOUSE_CODE = VD.HOUSE_CODE
+			<OPT=F,S>	AND   VH.HOUSE_CODE	= ?			                                             	  </OPT>
+			<OPT=S,S>	AND   VH.INV_NO		= ?			                                             	  </OPT>
+			AND   VH.INV_NO     = VD.INV_NO
+			AND   ROWNUM = 1
+	]]>
+	</method>
+
+	<method name="in_setGRCancel_1">
+				SELECT
+				       COUNT(*) CNT
+				  FROM ICOYIVDT
+				  WHERE GR_CANCEL_NO IS NOT NULL
+				  AND INV_NO      = '#inv_no#'
+	</method>
+
+	<method name="in_setGRCancel_2">
+				SELECT
+				       COUNT(*) CNT
+				  FROM ICOYIVDT
+				  WHERE INV_NO      = '#inv_no#'
+	</method>
+
+	<method name="svc_setSmartBillEmail">
+	<![CDATA[
+				UPDATE ICOMVNGL
+					SET SMARTBILL_EMAIL = ?
+				WHERE HOUSE_CODE = ?
+				  AND VENDOR_CODE = ?
+	]]>
+	</method>
+
+
+	<method name="in_setGRCancel_3">
+	<![CDATA[
+						UPDATE ICOYIVHD
+						SET	CHANGE_DATE			= TO_CHAR(SYSDATE, 'YYYYMMDD')
+							,CHANGE_TIME        = TO_CHAR(SYSDATE, 'HH24MISS')
+							,CHANGE_USER_ID     = '#user_id#'
+							,CHANGE_USER_DEPT   = '#dept#'
+							,SIGN_STATUS        = 'D'
+							,SIGN_REMARK        = ''
+							,STATUS  			= 'D'
+						WHERE HOUSE_CODE 		= '#house_code#'
+						AND   INV_NO	 		= ?
+	]]>
+	</method>
+
+	<method name="bl_getInvAppDis">
+	<![CDATA[
+		SELECT
+		            MAX(VH.SUBJECT) SUBJECT
+		            ,MAX(GETVENDORNAME(VH.HOUSE_CODE, VH.VENDOR_CODE))  VENDOR_NAME
+		            ,MAX(VD.DESCRIPTION_LOC) DESCRIPTION_LOC
+		           	,ROUND
+				 	(
+		            	(
+		            	SELECT
+		            		SUM(case mwskz when 'V2' then  0
+		            			when 'V3' then 0
+		            			when 'Z0' then 0
+		            			else FLOOR(vd.GR_QTY * vd.UNIT_PRICE * 0.1)
+		            			end)
+		            	from icoypodt podt, icoyivdt vd
+		            	where podt.house_code     = vd.house_code
+		            	  AND podt.po_no     = vd.po_no
+		            	  AND  podt.po_SEQ     = vd.po_SEQ
+		            	  and vd.house_code  = VH.house_code
+		            	  and vd.inv_no       = VH.inv_no
+		            	) , 0
+		            ) TAX_AMT
+		            , SUM(ROUND(FLOOR(VD.GR_QTY * VD.UNIT_PRICE), 0))  ITEM_AMT
+		            , (
+		            	SELECT
+		                	MAX(case mwskz when 'V2' then  ' '
+		                			when 'V3' then ' '
+		                			when 'Z0' then ''
+		                			else 'VAT'
+				                end)
+		                from icoypodt podt, icoyivdt vd
+		                where podt.house_code     = vd.house_code
+		                AND podt.po_no     = vd.po_no
+		                AND  podt.po_SEQ     = vd.po_SEQ
+		                and vd.house_code  = VH.house_code
+		                and vd.inv_no       = VH.inv_no      ) VAT
+					,floor(
+				            ROUND(
+				                    (
+				                    SELECT
+						                SUM(case mwskz when 'V2' then  FLOOR(vd.GR_QTY * vd.UNIT_PRICE)
+						                    when 'V3' then FLOOR(vd.GR_QTY * vd.UNIT_PRICE)
+						                    when 'Z0' then FLOOR(vd.GR_QTY * vd.UNIT_PRICE)
+						                    else FLOOR(vd.GR_QTY * vd.UNIT_PRICE * 1.1)
+				    		                end
+				                            )
+						            from icoypodt podt, icoyivdt vd
+						            where podt.house_code     = vd.house_code
+						            AND podt.po_no     = vd.po_no
+						            AND  podt.po_SEQ     = vd.po_SEQ
+						            and vd.house_code  = VH.house_code
+						            and vd.inv_no       = VH.inv_no
+				                    )
+				                  ,0
+				                ) / 10
+				          ) * 10 as TAX_TOTAL
+				FROM ICOYIVHD VH, ICOYIVDT VD
+				WHERE VH.HOUSE_CODE = VD.HOUSE_CODE
+		<OPT=F,S>	AND   VH.HOUSE_CODE	= ?			                                             	  </OPT>
+		<OPT=S,S>	AND   VH.INV_NO		= ?			                                             	  </OPT>
+				AND   VH.INV_NO     = VD.INV_NO
+				GROUP BY VH.HOUSE_CODE, VH.INV_NO
+	]]>
+	</method>
+
+	<method name="in_setPISGR">
+	<![CDATA[
+	    INSERT INTO TB_SCM_GR
+        (
+            GR_NO
+            ,GR_SEQ
+            ,GR_DATE
+            ,PO_NO
+            ,PO_SEQ
+            ,PJT_CODE
+            ,CONTRACT_DIV
+            ,DELY_TO_ADDRESS
+            ,WARRANTY
+            ,ITEM_NO
+            ,DISCRIPTION_LOC
+            ,MAKER_CODE
+            ,MAKER_NAME
+            ,SPECIFICATION
+            ,VENDOR_CODE
+            ,VENDOR_NAME
+            ,ITEM_QTY
+            ,UNIT_MEASURE
+            ,UNIT_PRICE
+            ,ITEM_AMT
+            ,REMARK
+            ,REG_ID
+            ,REG_DTTM
+            ,UPD_ID
+            ,UPD_DTTM
+            ,GR_KEY
+            ,ORDER_NO
+    		,ORDER_SEQ
+    		,ORDER_COUNT
+        )
+        SELECT IVDT.INV_NO
+            ,IVDT.INV_SEQ
+            ,IVHD.CONFIRM_DATE1
+            ,IVDT.PO_NO
+            ,IVDT.PO_SEQ
+            ,PODT.WBS_NO
+            ,PRDT.CONTRACT_DIV
+            ,PODT.DELY_TO_ADDRESS
+            ,PODT.WARRANTY
+            ,IVDT.ITEM_NO
+            ,IVDT.DESCRIPTION_LOC
+            ,IVDT.MAKER_CODE
+            ,IVDT.MAKER_NAME
+            ,IVDT.SPECIFICATION
+            ,IVHD.VENDOR_CODE
+            ,(SELECT VENDOR_NAME_LOC FROM ICOMVNGL WHERE HOUSE_CODE = IVHD.HOUSE_CODE AND VENDOR_CODE = IVHD.VENDOR_CODE) AS VENDOR_NAME_LOC
+            ,IVDT.GR_QTY		-- 입고수량
+            ,IVDT.UNIT_MEASURE
+            ,IVDT.UNIT_PRICE
+            ,(IVDT.GR_QTY*IVDT.UNIT_PRICE) INV_ANT -- 입고금액
+            ,''  --REMARK
+            ,IVDT.ADD_USER_ID
+            ,IVDT.ADD_DATE || IVDT.ADD_TIME AS REG_DTTM
+            ,IVDT.CHANGE_USER_ID
+            ,IVDT.CHANGE_DATE || IVDT.CHANGE_TIME AS UPD_DTTM
+            ,IVDT.INV_NO || IVDT.INV_SEQ
+            , PODT.ORDER_NO
+            , PODT.ORDER_SEQ
+            , PODT.ORDER_COUNT
+        FROM ICOYIVDT IVDT, ICOYIVHD IVHD, ICOYPODT PODT, ICOYPRDT PRDT
+        WHERE IVHD.HOUSE_CODE = '#house_code#'
+        AND IVHD.INV_NO = '#inv_no#'
+        AND IVDT.HOUSE_CODE = IVHD.HOUSE_CODE
+        AND IVHD.INV_NO = IVDT.INV_NO
+        AND IVDT.HOUSE_CODE = PODT.HOUSE_CODE
+        AND IVDT.PO_NO = PODT.PO_NO
+        AND IVDT.PO_SEQ = PODT.PO_SEQ
+        AND PODT.HOUSE_CODE = PRDT.HOUSE_CODE
+        AND PODT.PR_NO = PRDT.PR_NO
+        AND PODT.PR_SEQ = PRDT.PR_SEQ
+        AND IVDT.STATUS <> 'D'
+	]]>
+	</method>
+
+	<method name="del_setEvalData_1">
+	<![CDATA[
+		UPDATE ICOMVEVL
+		SET STATUS = '#eval_status#'
+		WHERE HOUSE_CODE = '#house_code#'
+		AND EVAL_ITEM_REFITEM IN ( SELECT EVAL_ITEM_REFITEM FROM ICOMVEVD WHERE HOUSE_CODE = '#house_code#' AND EVAL_REFITEM = #eval_refitem#)
+
+	]]>
+	</method>
+
+	<method name="del_setEvalData_2">
+	<![CDATA[
+		UPDATE ICOMVEVD
+		SET STATUS = '#eval_status#'
+		WHERE HOUSE_CODE = '#house_code#' AND EVAL_REFITEM = #eval_refitem#
+	]]>
+	</method>
+
+	<method name="del_setEvalData_3">
+	<![CDATA[
+		UPDATE ICOMVEVH
+		SET STATUS = '#eval_status#'
+		WHERE HOUSE_CODE = '#house_code#' AND EVAL_REFITEM = #eval_refitem#
+	]]>
+	</method>
+
+	<method name="getERPINVList">
+		    SELECT IVHD.CONFIRM_DATE1 AS RD_DATE
+		         ,(SELECT IRS_NO
+				      FROM ICOMVNGL
+				      WHERE HOUSE_CODE = IVHD.HOUSE_CODE
+				        AND VENDOR_CODE = IVHD.VENDOR_CODE
+				        AND ROWNUM = 1
+				   ) AS VENDOR_CODE 		    
+		         , IVDT.PO_NO
+		         , IVDT.PO_SEQ
+		         , IVDT.INV_NO
+		         , IVDT.INV_SEQ
+		         , PJTH.ERP_ID
+		         , IVDT.ITEM_NO
+		         , IVDT.GR_QTY AS INV_QTY
+		         , IVDT.UNIT_PRICE
+		         , DECODE(VNGL.TAX_DIV,'1','1','0') AS TAX_DIV
+		         , DECODE(VNGL.TAX_DIV,'1','10','0') AS VAT
+		         , GETUSERNAMELOC(PODT.HOUSE_CODE,PODT.ADD_USER_ID) AS USER_NAME_LOC
+		         , DECODE(MTGL.KTGRM,'01',
+    		         DECODE(SUBSTR(PJTH.PJT_CODE,0, 2),'SI'
+    		                       ,'상품(' || SUBSTR(SUBSTR(PJTH.PJT_CODE,0, 9),0, 5) ||')'
+    		                       ,SUBSTR(PJTH.PJT_CODE,0, 9)
+    		                )
+    		        , SUBSTR(PJTH.PJT_CODE,0, 9)
+    		   ) AS ASSETSEQ
+		      FROM ICOYIVHD IVHD, ICOYIVDT IVDT,
+		           ICOYPODT PODT, ICOYPRDT PRDT, 
+		           ICOYPRHD PRHD, ICOYPJTH PJTH, 
+		           ICOMVNGL VNGL, ICOMMTGL MTGL 
+		     WHERE IVHD.HOUSE_CODE = IVDT.HOUSE_CODE
+		       AND IVHD.INV_NO     = IVDT.INV_NO
+		       AND IVDT.HOUSE_CODE = PODT.HOUSE_CODE
+		       AND IVDT.PO_NO = PODT.PO_NO
+		       AND IVDT.PO_SEQ = PODT.PO_SEQ
+		       AND PODT.HOUSE_CODE = PRDT.HOUSE_CODE
+		       AND PODT.PR_NO = PRDT.PR_NO
+		       AND PODT.PR_SEQ = PRDT.PR_SEQ
+		       AND PRDT.HOUSE_CODE = PRHD.HOUSE_CODE
+		       AND PRDT.PR_NO = PRHD.PR_NO
+		       AND PRHD.HOUSE_CODE = PJTH.HOUSE_CODE (+)
+		       AND PRHD.WBS = PJTH.PJT_SEQ (+)
+		       AND PODT.HOUSE_CODE = VNGL.HOUSE_CODE
+		       AND PODT.VENDOR_CODE = VNGL.VENDOR_CODE
+		       AND PODT.HOUSE_CODE = MTGL.HOUSE_CODE
+		       AND PODT.ITEM_NO = MTGL.ITEM_NO
+		       AND IVHD.HOUSE_CODE = '#house_code#'
+		       AND IVHD.INV_NO = '#inv_no#'
+		     ORDER BY IVHD.ADD_DATE DESC		
+
+	</method>
+	
+	<method name="getIvItemInfo">
+		SELECT 	ITEM_QTY
+		,		ITEM_LETTER
+		,		ITEM_START_NUMBER
+		FROM 	ICOYIVSE
+		WHERE 	IV_NO = ${iv_no}
+		AND 	IV_SEQ = ${iv_seq}
+		AND 	ITEM_NO = ${item_no}
+	</method>
+	
+	<method name="deleteIVSE">
+		DELETE
+		FROM 	ICOYIVSE
+		WHERE 	IV_NO = ${inv_no}
+		AND 	IV_SEQ = ${inv_seq}
+		AND 	ITEM_NO = ${item_no}
+	</method>
+	
+	<method name="insertIVSE">
+		INSERT INTO ICOYIVSE(
+			HOUSE_CODE
+		,	IV_NO
+		,	IV_SEQ
+		,	IV_SE_SEQ
+		,	ITEM_NO
+		,	ITEM_QTY
+		,	ITEM_LETTER
+		,	ITEM_START_NUMBER
+		,	ADD_DATE
+		,	ADD_TIME
+		,	ADD_USER_ID	
+		)VALUES(
+			${HOUSE_CODE}
+		,	${IV_NO}
+		,	${IV_SEQ}
+		,	(SELECT NVL(MAX(TO_NUMBER(IV_SE_SEQ)), 0) + 1 FROM ICOYIVSE)
+		,	${ITEM_NO}
+		,	${ITEM_QTY}
+		,	${ITEM_LETTER}
+		,	${ITEM_START_NUMBER}
+		,	TO_CHAR(SYSDATE,'YYYYMMDD')
+		,	TO_CHAR(SYSDATE,'HH24MISS')
+		,	${ADD_USER_ID}	
+		)
+	</method>
+	
+	<method name="updateIVDT">
+		UPDATE ICOYIVDT SET
+		GR_QTY = ${item_qty}
+		WHERE 	HOUSE_CODE = ${house_code}
+		AND 	INV_NO = ${inv_no}
+		AND 	INV_SEQ = ${inv_seq}
+		AND 	ITEM_NO = ${item_no}
+	</method>
+	
+	<method name="et_setDeleteInvHD">
+		UPDATE ICOYIVHD
+		SET CHANGE_DATE	   = TO_CHAR(SYSDATE,'YYYYMMDD')
+		   ,CHANGE_TIME    = TO_CHAR(SYSDATE,'HH24MISS')
+		   ,CHANGE_USER_ID = '#user_id#'
+		   ,STATUS 		   = '#status#'
+		   ,SIGN_STATUS	   = ''
+		WHERE HOUSE_CODE   = '#house_code#'
+		  AND INV_NO	   = '#inv_no#'
+	</method>	
+	
+	<method name="et_setDeleteInvDT">
+		UPDATE ICOYIVDT
+		SET CHANGE_DATE	   = TO_CHAR(SYSDATE,'YYYYMMDD')
+		   ,CHANGE_TIME    = TO_CHAR(SYSDATE,'HH24MISS')
+		   ,CHANGE_USER_ID = '#user_id#'
+		   ,STATUS 		   = '#status#'
+		WHERE HOUSE_CODE   = '#house_code#'
+		  AND INV_NO	   = '#inv_no#'	
+	</method>
+	
+			
+	<method name="et_setDeleteVEV_1">
+		UPDATE ICOMVEVH
+		SET CHANGE_DATE	   = TO_CHAR(SYSDATE,'YYYYMMDD')
+		   ,STATUS 		   = '#status#'
+		WHERE HOUSE_CODE   = '#house_code#' 
+		  AND DOC_NO 	   = '#inv_no#' 
+		  AND EVAL_REFITEM = ( SELECT EVAL_REFITEM 
+		                       FROM ICOYIVHD
+		                       WHERE HOUSE_CODE = '#house_code#'
+		                         AND INV_NO = '#inv_no#' )		
+	
+	</method>
+
+	<method name="et_setDeleteVEV_2">
+		UPDATE ICOMVEVD
+		SET STATUS 		   = '#status#'
+		WHERE EVAL_REFITEM = (SELECT EVAL_REFITEM 
+                      		  FROM ICOYIVHD
+                      		  WHERE HOUSE_CODE = '#house_code#'
+                        	    AND INV_NO = '#inv_no#' )   
+	</method>
+	
+	<method name="et_setDeleteVEV_3">
+		UPDATE ICOMVEVL
+		SET STATUS 		   		= '#status#'
+		WHERE EVAL_ITEM_REFITEM = (SELECT EVAL_ITEM_REFITEM 
+                           		   FROM ICOMVEVD
+                           		   WHERE EVAL_REFITEM = (SELECT EVAL_REFITEM 
+                                                 		 FROM ICOYIVHD
+                                                 		 WHERE HOUSE_CODE = '#house_code#'
+                                                   		   AND INV_NO = '#inv_no#' ))		
+	</method>
+	
+	<method name="et_getInvAddUserList">
+	SELECT *
+	  FROM (	
+		    SELECT  A.ADD_USER_ID AS USER_ID
+					-- ,'검수담당자 : ' || GETUSERNAMELOC(HOUSE_CODE, ADD_USER_ID) AS USER_NAME
+			      -- ,GETDEPTNAMELOC(HOUSE_CODE, 'WOORI', GETUSERINFO('000', ADD_USER_ID, 'DEPT'))||' : '|| GETUSERNAMELOC(HOUSE_CODE, ADD_USER_ID) AS USER_NAME  
+			         ,(SELECT DEPT_NAME_LOC FROM ICOMOGDP WHERE DEPT = A.DEMAND_DEPT)||' : '|| GETUSERNAMELOC(A.HOUSE_CODE, A.ADD_USER_ID) AS USER_NAME
+			         ,3 AS ODR           
+			    FROM  ICOYPRDT A 
+			   WHERE  A.PR_NO IN ( SELECT  PR_NO FROM  ICOYPODT  WHERE  PO_NO = '#po_no#' )     
+			UNION
+			SELECT  A.PURCHASER_ID AS USER_ID
+			         ,(SELECT DEPT_NAME_LOC FROM ICOMOGDP WHERE DEPT IN (SELECT DEPT FROM ICOMLUSR WHERE USER_ID = A.PURCHASER_ID) )||' : '|| A.PURCHASER_NAME AS USER_NAME
+			         ,2 AS ODR                      
+			    FROM  ICOYPOHD A
+			   WHERE  A.PO_NO = '#po_no#'
+			UNION	
+			SELECT  A.TAKE_USER_NAME AS USER_ID
+					 ,(SELECT DEPT_NAME_LOC FROM ICOMOGDP WHERE DEPT IN (SELECT DEPT FROM ICOMLUSR WHERE USER_ID = A.TAKE_USER_NAME) )||' : '|| GETUSERNAMELOC(A.HOUSE_CODE, A.TAKE_USER_NAME) AS USER_NAME
+					 ,1 AS ODR           
+			FROM  ICOYPOHD A
+			WHERE  A.PO_NO = '#po_no#'	     
+	 ) 
+	 ORDER BY ODR           
+	</method>
+	
+	<method name="et_chkInvUserId">
+	<![CDATA[
+		SELECT 	   
+		       NVL(SUM(DECODE(B.C_DEPT,B.R_DEPT,0,1)),-1) CNT 
+		FROM
+		(
+			SELECT A.ADD_USER_ID
+			       ,(SELECT DEPT FROM ICOMLUSR WHERE USER_ID = A.ADD_USER_ID) C_DEPT
+			       ,DEMAND_DEPT R_DEPT     
+			FROM ICOYPRDT A 
+			WHERE (A.PR_NO,A.PR_SEQ) IN (SELECT PR_NO,PR_SEQ 
+			                               FROM ICOYPODT 
+			                              WHERE PO_NO = ${PO_NO})
+		) B 
+		WHERE B.ADD_USER_ID = ${INV_USER_ID}
+		AND B.C_DEPT <> ${DEFAULT_GAM_JUMCD}  -- TOBE 2017-07-01 ASIS AND B.C_DEPT <> '20644'
+	]]>
+	</method>
+</service>

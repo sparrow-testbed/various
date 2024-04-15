@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<service>
+	<method name="getEvaDetailList">
+	<![CDATA[
+		SELECT B.SG_NAME
+			, A.FROM_DATE
+			, A.TO_DATE
+			, C.TEMPLATE_NAME
+			, A.E_TEMPLATE_REFITEM  
+			, A.FROM_DATE as EVAL_from_date
+			, A.TO_DATE as EVAL_to_date
+	  	FROM ICOMVEVH A,
+		(
+			SELECT DISTINCT SG_NAME, A.EVAL_REFITEM, A.HOUSE_CODE
+		  	FROM ICOMVEVH A, ICOMVEVD B, SSGGL C
+		 	WHERE A.EVAL_REFITEM = B.EVAL_REFITEM  
+		 	  AND B.SG_REFITEM = C.SG_REFITEM
+		 	  AND A.HOUSE_CODE = B.HOUSE_CODE
+			  AND A.HOUSE_CODE = C.HOUSE_CODE
+		) B, ICOMVETH C
+	 	WHERE A.E_TEMPLATE_REFITEM = C.E_TEMPLATE_REFITEM 
+	      AND A.EVAL_REFITEM = ${eval_refitem} 
+	      AND A.EVAL_REFITEM = B.EVAL_REFITEM
+	      AND A.HOUSE_CODE = ${session.HOUSE_CODE}
+	      AND A.HOUSE_CODE = C.HOUSE_CODE
+		  AND A.HOUSE_CODE = B.HOUSE_CODE
+		  
+	]]>
+	</method>
+	
+	<method name="getEvaList">
+	<![CDATA[
+	SELECT  A.VENDOR_CODE AS VENDOR_CODE,
+			GETVENDORNAME(${session.HOUSE_CODE}, A.VENDOR_CODE) AS NAME_LOC,
+			getsgname(A.SG_REFITEM) AS SG_NAME,
+			(SELECT COUNT(*) FROM ICOMVEVL WHERE EVAL_ITEM_REFITEM = A.EVAL_ITEM_REFITEM) AS CNT,
+			(SELECT CASE AUTO_FLAG WHEN 'N' THEN 'Y' ELSE 'N' END FROM ICOMVEVH 
+			 WHERE EVAL_REFITEM = ${eval_refitem}
+			   AND HOUSE_CODE = ${session.HOUSE_CODE}) AS QTY_YN,
+			A.SG_REFITEM AS SG_REFITEM,
+			A.EVAL_ITEM_REFITEM AS EVAL_ITEM_REFITEM
+		FROM 	ICOMVEVD A
+		WHERE A.HOUSE_CODE = ${session.HOUSE_CODE}
+		  AND A.EVAL_REFITEM = ${eval_refitem} 
+	]]>
+	</method>
+	
+	<method name="et_getEvabdupd2">
+	<![CDATA[
+	SELECT A.DEPT AS DEPT,
+			GETDEPTNAMELOC('#house_code#', '#company_code#', A.DEPT) AS DEPT_NAME,
+			GETUSERINFO('#house_code#', A.EVAL_VALUER_ID, 'NAME') AS USER_NAME,
+			A.EVAL_VALUER_ID AS EVAL_VALUER_ID
+		FROM 	ICOMVEVL A
+		WHERE A.HOUSE_CODE = '#house_code#'	
+		  AND A.EVAL_ITEM_REFITEM= '#eval_item_refitem#'
+
+	]]>
+	</method>	
+</service>

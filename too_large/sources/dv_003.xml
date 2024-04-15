@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+<service>
+	<method name="sel_getPoCreateInfo_2">
+		<![CDATA[
+SELECT GETICOMCODE1(CNHD.HOUSE_CODE,'M009',CNHD.DELY_TERMS) AS DELY_TERMS,
+       CNHD.DELAY_REMARK,
+       CNHD.WARRANTY_MONTH,
+       MAX(CNDP.FIRST_PERCENT) AS FIRST_PERCENT,     /*선급금보증*/
+       MAX(CNDP.CONTRACT_PERCENT) AS CONTRACT_PERCENT, /*계약이행보증*/
+       MAX(CNDP.MENGEL_PERCENT) AS MENGEL_PERCENT /*하자이행보증*/
+  FROM ICOYCNHD CNHD, ICOYCNDP CNDP
+ WHERE CNHD.HOUSE_CODE = CNDP.HOUSE_CODE
+   AND CNHD.EXEC_NO = CNDP.EXEC_NO
+   AND CNHD.HOUSE_CODE = ${session.HOUSE_CODE}
+   AND CNHD.EXEC_NO = (SELECT EXEC_NO
+   								  FROM ICOYPODT
+   								 WHERE HOUSE_CODE = ${session.HOUSE_CODE}
+   								   AND PO_NO = $S{po_no}
+   								   AND STATUS IN ('C','R')
+   								   AND ROWNUM = 1)
+   
+  GROUP BY CNHD.HOUSE_CODE, CNHD.DELY_TERMS, CNHD.DELAY_REMARK, CNHD.WARRANTY_MONTH
+		]]>
+	</method>
+	
+	
+	<method name="getPoDetailHeader">
+		<![CDATA[
+	SELECT   PH.PO_NO												    			
+  	    	,PH.VENDOR_CODE                                         				
+  	    	, GETCOMPANYNAMELOC(PH.HOUSE_CODE, PH.VENDOR_CODE, 'S')  AS VENDOR_NAME	
+  	    	, GETUSERNAMELOC(PH.HOUSE_CODE, PH.ADD_USER_ID)  AS USER_NAME			
+  	    	,PH.SUBJECT                                             				
+  	    	,PH.CTRL_CODE															
+  	    	,PH.PAY_TERMS															
+  	    	,GETICOMCODE1(PH.HOUSE_CODE,'M010',PH.PAY_TERMS) AS PAY_TERMS_DESC	
+  	    	,PH.DELY_TERMS															
+  	    	,GETICOMCODE1(PH.HOUSE_CODE,'M009',DECODE (LENGTH (PH.DELY_TERMS), 1, '0'||PH.DELY_TERMS, PH.DELY_TERMS)) AS DELY_TERMS_DESC	
+  	    	,PH.PR_TYPE																
+  	    	,GETICOMCODE2(PH.HOUSE_CODE,'M138',PH.PR_TYPE) AS PR_TYPE_DESC			
+  	    	,PH.ORDER_NO                                          					
+  	    	,PH.ORDER_NAME                                         					
+  	    	,PH.CUR                                                 				
+  	    	,PH.PO_TTL_AMT
+  	    	,PH.TAKE_USER_NAME AS TAKE_USER_ID				                               				
+			,GetUserNameLoc(PH.HOUSE_CODE, PH.TAKE_USER_NAME) AS TAKE_USER_NAME
+  	    	--, DECODE(PRHD.PROJECT_PM, NULL, DECODE(PRHD.SALES_USER_ID, NULL, PRHD.ADD_USER_ID, PRHD.SALES_USER_ID), PRHD.PROJECT_PM) AS TAKE_USER_ID
+  	    	--,GetUserNameLoc(PH.HOUSE_CODE, DECODE(PRHD.PROJECT_PM, NULL, DECODE(PRHD.SALES_USER_ID, NULL, PRHD.ADD_USER_ID, PRHD.SALES_USER_ID), PRHD.PROJECT_PM)) AS TAKE_USER_NAME
+  	    	,CNDT.CTR_DATE                                          				
+  	    	,PH.TAKE_TEL                                          					
+  	    	,PH.REMARK                                              				
+  	    	,PD.EXEC_NO                                             				
+  	    	,CNDT.CTR_NO                                                  	      	
+  	    	,PRHD.CUST_CODE
+			,PRHD.CUST_NAME
+  	    	,PH.PO_CREATE_DATE                                             	      	
+  	    	,PH.VENDOR_CP_NAME	                                           	      	 
+  	    	,PH.VENDOR_MOBILE_NO                                           	      	 
+  	    	,PH.CONTRACT_FROM_DATE	                                           	     
+  	    	,PH.CONTRACT_TO_DATE                                           	      	 
+			, case PH.CONTRACT_FLAG when 'Y' then PH.CONTRACT_NO else '' end AS CONTRACT_NO			
+  	    	,PH.SIGN_PERSON_ID	                                           	      	
+  	    	,PH.SIGN_DATE	                                           	      		 
+  	    	,PH.ADD_USER_ID	                                           	      		 
+  	    	,PH.ADD_DATE	                                           	      		 
+  	    	,PH.ADD_TIME	                                           	      		 
+  	    	,PH.PO_TYPE	                                           	      			 
+  	    	,PH.PO_TTL_AMT PO_AMT_KRW                                         	      			 
+  	    	,PD.EXCHANGE_RATE                                         	      		 
+  	    	--,GETICOMCODE1(PH.HOUSE_CODE,'M383',PH.BSART) AS BSART_DESC			
+			,NVL(( SELECT  																											
+					MAX(INV_PERSON_ID)                                                           
+					FROM ICOYIVHD IVHD, ICOYIVDT IVDT                                       
+					WHERE                                                                   
+					IVDT.HOUSE_CODE = PD.HOUSE_CODE                                         
+					AND IVDT.PO_NO = PD.PO_NO                                               
+					AND IVDT.PO_SEQ = PD.PO_SEQ                                             
+					AND IVHD.INV_NO = IVDT.INV_NO                                           
+			),PD.PR_USER_ID) INV_PERSON_ID                                          
+			,GETUSERNAMELOC(PH.HOUSE_CODE, NVL(( SELECT                      
+													CASE MAX(INV_PERSON_ID) WHEN NULL THEN PD.PR_USER_ID ELSE MAX(INV_PERSON_ID) END  
+												 FROM ICOYIVHD IVHD, ICOYIVDT IVDT                                       
+												 WHERE                                                                   
+												 IVDT.HOUSE_CODE = PD.HOUSE_CODE                                         
+													AND IVDT.PO_NO = PD.PO_NO                                               
+													AND IVDT.PO_SEQ = PD.PO_SEQ                                             
+													AND IVHD.INV_NO = IVDT.INV_NO                                           
+							),PD.PR_USER_ID)) INV_PERSON_NAME                                       
+		    ,PD.PO_NO  AS DOC_NO
+			,PH.ATTACH_NO
+			,PH.VENDOR_EMAIL
+			,PH.SIGN_STATUS AS ORIGINAL_SIGN_STATUS
+			,ECCT.CONT_SEQ
+			,ECCT.CONT_COUNT
+			,ECCT.FORM_SEQ
+			,SS.SRC_FILE_NAME	
+	    FROM ICOYPODT PD, ICOYPOHD PH, ICOYPRHD PRHD, ICOYCNDT CNDT, ICOYECCT ECCT, SFILE SS                	
+						WHERE PD.HOUSE_CODE   = ${session.HOUSE_CODE}
+						AND   PD.PO_NO        = $S{po_no}
+				  		AND   PD.STATUS       IN ('C', 'R')                                           	
+				  		AND   PH.HOUSE_CODE   = PD.HOUSE_CODE
+				  		AND   PH.PO_NO        = PD.PO_NO
+				  		AND   PD.HOUSE_CODE	  = PRHD.HOUSE_CODE(+)
+				  		AND   PD.PR_NO		  = PRHD.PR_NO(+)
+				  		AND   PD.HOUSE_CODE	  = CNDT.HOUSE_CODE(+)
+				  		AND   PD.EXEC_NO	  = CNDT.EXEC_NO(+)
+				  		AND   PD.EXEC_SEQ     = CNDT.EXEC_SEQ(+)
+				  		AND	  PH.ATTACH_NO	  = SS.DOC_NO(+)
+				  		AND   PH.STATUS       IN ('C', 'R')
+				  		AND   PH.PO_NO        = ECCT.PO_NO(+)
+				  		AND   PH.HOUSE_CODE   = ECCT.HOUSE_CODE(+)
+						ORDER BY 1 DESC
+		]]>
+	</method>
+	
+	
+	<method name="getPoCreateInfo">
+		<![CDATA[
+     			SELECT ROWNUM AS SEQ
+     				,DT.ITEM_NO                              										 
+    				,DT.DESCRIPTION_LOC                 	 										 
+     				,DT.RD_DATE                              										 
+     				,DT.UNIT_MEASURE                         										 
+     				,DT.ITEM_QTY                             										 
+     				,DT.UNIT_PRICE                           										 
+     				,DT.ITEM_AMT                             										 
+     				,PD.UNIT_PRICE AS PR_UNIT_PRICE          										 
+     				,DT.PR_AMT                               										 
+     				,DT.PR_AMT - DT.ITEM_AMT AS DOWN_AMT     										 
+     				,DT.PR_NO                                										 
+     				,DT.CUST_CODE
+     				,(SELECT CUST_NAME FROM ICOYPRHD WHERE HOUSE_CODE = DT.HOUSE_CODE AND PR_NO = DT.PR_NO)  AS CUST_NAME
+     				,HD.CUR                                  										 
+     				,DT.EXCHANGE_RATE                        										 
+     				,DT.ITEM_AMT AS EXEC_AMT_KRW             										 
+     				,DT.ITEM_AMT_KRW 				          										 
+     				,DT.DELY_TO_LOCATION                     										 
+     				,DT.DELY_TO_ADDRESS						 										 
+     				, GETICOMCODE1(DT.HOUSE_CODE,'M187',DT.DELY_TO_LOCATION) AS DELY_TO_LOCATION_DESC 
+     				,DT.QTA_NO                               										 
+     				,DT.QTA_SEQ                              										 
+     				,DT.PR_SEQ                               										 
+     				,DT.EXEC_NO                              										 
+     				,DT.EXEC_SEQ                             										 
+     				,DT.CUSTOMER_PRICE                       										 
+     				,DT.DISCOUNT                             										 
+    				, GETICOMCODE1(PD.HOUSE_CODE,'M169',PD.TECHNIQUE_GRADE) AS TECHNIQUE_GRADE	 	       
+    				,PD.INPUT_FROM_DATE						 										 	    
+    				,PD.INPUT_TO_DATE						 										 	
+    				,DT.PR_USER_ID																	 
+					,DT.PR_DEPT																		 
+					,DT.MAKER_CODE		 															 
+					,DT.MAKER_NAME		 															 
+	  				,DT.SPECIFICATION 																  	 
+	  				,DT.PO_NO 																		  	 
+	  				,DT.PO_SEQ		 																  
+	  				,HD.CTRL_CODE		 															 
+					,DT.ORDER_NO																	
+					,DT.ORDER_SEQ	
+					,DT.ORDER_COUNT																
+					,DT.WBS_NO																		
+					,DT.WBS_SUB_NO																	
+					,DT.WBS_TXT	
+					,DT.WBS_NAME																	
+					--,DT.KNTTP																		
+					--,DT.INVEST_NO																		
+					--,DT.INVEST_SUB_NO																
+					,DT.WARRANTY																
+     		FROM ICOYPOHD HD, ICOYPODT DT, ICOYPRDT PD       										 
+     		WHERE DT.HOUSE_CODE = HD.HOUSE_CODE
+     		AND   DT.PO_NO		= HD.PO_NO
+     		AND   DT.HOUSE_CODE = PD.HOUSE_CODE(+)
+     		AND   DT.PR_NO		= PD.PR_NO(+)
+    		AND   DT.PR_SEQ		= PD.PR_SEQ(+)
+     		AND   DT.HOUSE_CODE   = '000'                 										 
+     		AND   DT.PO_NO        = ${po_no}                 										 
+     		AND   DT.STATUS     IN ('C', 'R')       -- (발주상세조회 D 건도 조회)       										 
+     		AND   HD.STATUS     IN ('C', 'R')              										 
+     		ORDER BY DT.PO_SEQ, DT.PR_SEQ                               										 
+		]]>
+	</method>
+	
+	
+	<method name = "setPoConfirm">
+	<![CDATA[
+		UPDATE ICOYPOHD
+	      	   SET  CONFIRM_DATE      = ${current.DATE}
+	      	       ,CONFIRM_TIME      = ${current.TIME}
+	      	       ,CONFIRM_USER_ID   = ${session.ID}
+	      	       ,CONFIRM_CERTV     = ${CONFIRM_SIGN}
+	      	   WHERE HOUSE_CODE       = ${session.HOUSE_CODE}
+	      	     AND PO_NO            = ${po_no}
+	]]>
+	</method>
+	
+	<method name = "setPoConfirm_detail">
+	<![CDATA[
+		UPDATE ICOYPODT
+	      	   SET  VENDOR_RD_DATE      = REPLACE(${VENDOR_RD_DATE}, '/', '')
+	      	   WHERE HOUSE_CODE       = ${session.HOUSE_CODE}
+	      	     AND PO_NO            = ${po_no}
+	      	     AND PO_SEQ            = ${PO_SEQ}
+	]]>
+	</method>
+	
+	<method name = "setPoReject">
+	<![CDATA[
+		UPDATE ICOYPOHD
+	      	   SET  CONFIRM_DATE      = ${current.DATE}
+	      	       ,CONFIRM_TIME      = ${current.TIME}
+	      	       ,CONFIRM_USER_ID   = ${session.ID}
+	      	       ,CONFIRM_CERTV     = ${CONFIRM_SIGN}
+	      	       ,REJECT_REMARK	  = ${REJECT_RSN}
+	      	   WHERE HOUSE_CODE       = ${session.HOUSE_CODE}
+	      	     AND PO_NO            = ${po_no}
+	]]>
+	</method>
+	
+
+</service>

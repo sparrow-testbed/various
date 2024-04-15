@@ -1,0 +1,276 @@
+<OBJECT ID="XecureWeb" CLASSID="CLSID:7E9FDB80-5316-11D4-B02C-00C04F0CD404">
+<COMMENT>
+        <EMBED type='application/x-SoftForum-XecSSL40' hidden=true name='XecureWeb'>
+        <NOEMBED>
+</COMMENT>
+           No XecureWeb 4.0 PlugIn
+        </NOEMBED>
+        </EMBED>
+</OBJECT> 
+
+<form name='xecure'><input type=hidden name='p'></form> 
+<!-- XecureSubmit(this) 로 보내는 submit 할때 사용 -->
+<script language='javascript' src='/XecureObject/xecureweb.js'></script>
+
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ks_c_5601-1987">
+</head>
+<body>
+
+<br>
+
+1. XecureLink 를 이용하지 않은 클라이언트 Request<br><br>
+
+<pre>
+&lt;a href="/XecureDemo/jsp/enc_server_res_xw_tld.jsp?abc=def&amp;pop=hi" >&lt;/a>
+</pre>
+<a href="/XecureDemo/jsp/enc_server_res_xw_tld.jsp?abc=def&pop=hi" >전송
+</a><br><br>
+
+2. XecureLink 를 이용한 클라이언트 절대 경로 ( http:// 포함 ) Request <br><br>
+
+<pre>
+&lt;a href="http://&lt;hostname>/XecureDemo/jsp/enc_server_res_xw_tld.jsp?abc=def&amp;pop=hi" onClick="return XecureLink(this);">&lt;/a>
+</pre>
+<script language=javascript>
+document.writeln ("<a href='http://"+window.location.host+"/XecureDemo/jsp/enc_server_res_xw_tld.jsp?abc=def&pop=hi' onClick='return XecureLink(this);'>전송</a><br><br>");
+</script>
+
+3. XecureLink 를 이용한 클라이언트 절대 경로 Request <br><br>
+
+<pre>
+&lt;a href="/XecureDemo/jsp/enc_server_res_xw_tld.jsp?abc=def&amp;pop=hi" onClick="return XecureLink(this);">&lt;/a>
+</pre>
+<a href="/XecureDemo/jsp/enc_server_res_xw_tld.jsp?abc=def&pop=hi" onClick="return XecureLink(this);">전송
+</a><br><br>
+
+4. XecureLink 를 이용한 클라이언트 상대 경로 Request<br><br>
+
+<pre>
+&lt;a href="enc_server_res_xw_tld.jsp?abc=def&amp;pop=hi" onClick="return XecureLink(this);">&lt;/a>
+</pre>
+<a href="enc_server_res_xw_tld.jsp?abc=def&pop=hi" onClick="return XecureLink(this);">전송
+</a><br><br>
+
+5. XecureLink 를 이용한 클라이언트 상대 경로 Request<br><br>
+
+<pre>
+&lt;a href="./enc_server_res_xw_tld.jsp?abc=def&amp;pop=hi" onClick="return XecureLink(this);">&lt;/a>
+</pre>
+<a href="./enc_server_res_xw_tld.jsp?abc=def&pop=hi" onClick="return XecureLink(this);">전송
+</a><br><br>
+
+6. XecureSubmit 을 이용하지 않은 클라이언트 FORM Request<br><br>
+
+<pre>
+&lt;form action="/XecureDemo/jsp/enc_server_res_xw_tld.jsp?abc=def&amp;pop=hi"
+method="post" >
+<br>&lt;input type=text name="text_field1" >&lt;br>
+<br>&lt;input type=text name="text_field2">&lt;br>
+<br>&lt;input type=submit value="전송">
+<br>&lt;/form>
+</pre>
+
+<form action="/XecureDemo/jsp/enc_server_res_xw_tld.jsp?abc=def&pop=hi" method="post" >
+<input type=text name="text_field1" ><br>
+<input type=text name="text_field2"><br>
+<input type=submit value="전송">
+</form>
+<br>
+
+7. XecureSubmit 을 이용한 클라이언트 절대 경로 ( http:// 포함 ) FORM Request ( POST )<br><br>
+
+<pre>
+&lt;form action="http://&lt;hostname>/XecureDemo/jsp/enc_server_res_xw_tld.jsp?abc=def&amp;pop=hi"
+method="post" onSubmit="return XecureSubmit(this);">
+<br>&lt;input type=text name="text_field1" >&lt;br>
+<br>&lt;input type=text name="text_field2">&lt;br>
+<br>&lt;input type=submit value="전송">
+<br>&lt;/form>
+</pre>
+
+<script language=javascript>
+document.writeln("<form action='http://" + window.location.host + "/XecureDemo/jsp/enc_server_res_xw_tld.jsp?abc=def&pop=hi' method='post' onSubmit='return XecureSubmit(this);'>");
+document.writeln("<input type=text name='text_field1' ><br>");
+document.writeln("<input type=text name='text_field2'><br>");
+document.writeln("<input type=submit value='전송'>");
+document.writeln("</form>");
+document.writeln("<br>");
+</script>
+
+8. XecureSubmit 을 이용한 클라이언트 절대 경로 FORM Request ( POST ) <br><br>
+
+<pre>
+&lt;form action="/XecureDemo/jsp/enc_server_res_xw_tld.jsp?abc=def&pop=hi"
+method="post" onSubmit='return XecureSubmit(this);' >
+<br>&lt;input type=text name="text_field1" >&lt;br>
+<br>&lt;input type=text name="text_field2">&lt;br>
+<br>&lt;input type=submit value="전송">
+<br>&lt;/form>
+</pre>
+
+<form action="/XecureDemo/jsp/enc_server_res_xw_tld.jsp?abc=def&pop=hi" method="post" onSubmit='return XecureSubmit(this);' >
+<input type=text name="text_field1" ><br>
+<input type=text name="text_field2"><br>
+<input type=submit value="전송">
+</form>
+<br>
+
+9. XecureSubmit 을 이용한 클라이언트 상대 경로 FORM Request ( POST ) <br><br>
+
+<pre>
+&lt;form action="enc_server_res_xw_tld.jsp?abc=def&amp;pop=hi"
+method="post" onSubmit='return XecureSubmit(this);' >
+<br>&lt;input type=text name="text_field1" >&lt;br>
+<br>&lt;input type=text name="text_field2">&lt;br>
+<br>&lt;input type=submit value="전송">
+<br>&lt;/form>
+</pre>
+
+<form action="enc_server_res_xw_tld.jsp?abc=def&pop=hi" method="post" onSubmit='return XecureSubmit(this);' >
+<input type=text name="text_field1" ><br>
+<input type=text name="text_field2"><br>
+<input type=submit value="전송">
+</form>
+<br>
+
+10. XecureSubmit 을 이용한 클라이언트 상대 경로 FORM Request ( POST ) <br><br>
+
+<pre>
+&lt;form action="./enc_server_res_xw_tld.jsp?abc=def&amp;pop=hi"
+method="post" onSubmit='return XecureSubmit(this);' >
+<br>&lt;input type=text name="text_field1" >&lt;br>
+<br>&lt;input type=text name="text_field2">&lt;br>
+<br>&lt;input type=submit value="전송">
+<br>&lt;/form>
+</pre>
+
+<form action="./enc_server_res_xw_tld.jsp?abc=def&pop=hi" method="post" onSubmit='return XecureSubmit(this);' >
+<input type=text name="text_field1" ><br>
+<input type=text name="text_field2"><br>
+<input type=submit value="전송">
+</form>
+<br>
+
+11. XecureSubmit 을 이용한 클라이언트 FORM Request ( GET )<br><br>
+
+<pre>
+&lt;form action="/XecureDemo/jsp/enc_server_res_xw_tld.jsp?abc=def&amp;pop=hi"
+method="GET" onSubmit="return XecureSubmit(this);">
+<br>&lt;input type=text name="text_field1" >&lt;br>
+<br>&lt;input type=text name="text_field2">&lt;br>
+<br>&lt;input type=submit value="전송">
+<br>&lt;/form>
+</pre>
+
+<form action="/XecureDemo/jsp/enc_server_res_xw_tld.jsp?abc=def&pop=hi" method="GET" onSubmit="return XecureSubmit(this);">
+<input type=text name="text_field1" ><br>
+<input type=text name="text_field2"><br>
+<input type=submit value="전송">
+</form>
+<br>
+
+12. XecureNavigate 를 이용한 클라이언트 절대 경로 Request 암호<br><br>
+
+<pre>
+&lt;script language=javascript>
+<br>function navigate(url, target)
+<br>{
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; url += "?abc=def&amp;amp;pop=hi";
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; XecureNavigate( url, target);
+<br>}
+<br>&lt;/script>
+<br>&lt;a href="javascript:navigate('http://&lt;hostname>/XecureDemo/jsp/enc_server_res_xw.jsp','_self');">전송&lt;/a>
+</pre>
+
+<script language=javascript>
+function navigate(url, target)
+{
+	url += "?abc=def&pop=hi";
+	XecureNavigate( url, target );
+}
+</script>
+<a href="javascript:navigate('http://' + window.location.host + '/XecureDemo/jsp/enc_server_res_xw.jsp','_self');">전송</a>
+<br>
+<br>
+
+13. XecureNavigate 를 이용한 클라이언트 절대 경로 Request 암호<br><br>
+
+<pre>
+&lt;script language=javascript>
+<br>function navigate(url, target)
+<br>{
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; url += "?abc=def&amp;amp;pop=hi";
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; XecureNavigate( url, target);
+<br>}
+<br>&lt;/script>
+<br>&lt;a href="javascript:navigate('/XecureDemo/jsp/enc_server_res_xw.jsp','_self');">전송&lt;/a>
+</pre>
+
+<script language=javascript>
+function navigate(url, target)
+{
+	url += "?abc=def&pop=hi";
+	XecureNavigate( url, target );
+}
+</script>
+<a href="javascript:navigate('/XecureDemo/jsp/enc_server_res_xw_tld.jsp','_self');">전송</a>
+<br>
+<br>
+
+14. XecureNavigate 를 이용한 클라이언트 상대 경로 Request 암호<br><br>
+
+<pre>
+&lt;script language=javascript>
+<br>function navigate(url, target)
+<br>{
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; url += "?abc=def&amp;amp;pop=hi";
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; XecureNavigate( url, target);
+<br>}
+<br>&lt;/script>
+<br>&lt;a href="javascript:navigate('enc_server_res_xw_tld.jsp','_self');">전송&lt;/a>
+</pre>
+
+<script language=javascript>
+function navigate(url, target)
+{
+	url += "?abc=def&pop=hi";
+	XecureNavigate( url, target );
+}
+</script>
+<a href="javascript:navigate('enc_server_res_xw.jsp_tld','_self');">전송</a>
+<br>
+<br>
+
+15. XecureNavigate_NoEnc 를 이용한 클라이언트 Request <br><br>
+
+XecureNavigate_NoEnc 함수를 호출하면 Request URL 의 QueryString 부분은 암호화 되지 않는다.
+<br>
+
+<pre>
+&lt;script language=javascript>
+<br>function navigate_noenc(url, target)
+<br>{
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; url += "?abc=def&amp;amp;pop=hi";
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; XecureNavigate_NoEnc( url, target);
+<br>}
+<br>&lt;/script>
+<br>&lt;a href="javascript:navigate_noenc('/XecureDemo/jsp/enc_server_res_xw_tld.jsp','_self');">전송&lt;/a>
+</pre>
+
+<script language=javascript>
+function navigate_noenc(url, target)
+{
+	url += "?abc=def&pop=hi";
+	XecureNavigate_NoEnc( url, target );
+}
+</script>
+<a href="javascript:navigate_noenc('/XecureDemo/jsp/enc_server_res_xw_tld.jsp','_self');">전송</a>
+
+<br><br>
+<br><br>
+<br><a href='index.html'>시작</a>
+</center>
+</body>
+

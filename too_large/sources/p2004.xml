@@ -1,0 +1,689 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<service>
+
+	<method name="et_getInfoList">
+	<![CDATA[
+		SELECT INFO.VENDOR_CODE AS VENDOR_CODE, 
+		       GETVENDORNAME(INFO.HOUSE_CODE, INFO.VENDOR_CODE) AS VENDOR_NAME, 
+		       GETICOMCODE2(INFO.HOUSE_CODE, 'M039', INFO.PURCHASE_LOCATION) AS PURCHASE_LOCATION_NAME, 
+		       INFO.ITEM_NO AS ITEM_NO, 
+		       GETITEMDESC(INFO.HOUSE_CODE, INFO.ITEM_NO) AS DESCRIPTION_LOC, 
+		       GETITEMSPEC(INFO.HOUSE_CODE, INFO.ITEM_NO) AS SPECIFICATION, 
+		       INFO.VALID_FROM_DATE, 
+		       INFO.VALID_TO_DATE, 
+		       INFO.UNIT_PRICE AS UNIT_PRICE, 
+		       INFO.CUR AS CUR, 
+		       (SELECT QUOTA_PERCENT 
+		         FROM ICOYINDR INDR 
+		        WHERE INFO.HOUSE_CODE = INDR.HOUSE_CODE 
+		              AND INFO.COMPANY_CODE = INDR.COMPANY_CODE 
+		              AND INFO.PURCHASE_LOCATION = INDR.PURCHASE_LOCATION 
+		              AND INFO.ITEM_NO = INDR.ITEM_NO 
+		              AND INFO.VENDOR_CODE = INDR.VENDOR_CODE 
+		       ) AS QUOTA_PERCENT, 
+		       (SELECT CTRL_NAME_LOC 
+		         FROM ICOMBACO 
+		        WHERE HOUSE_CODE = INFO.HOUSE_CODE 
+		              AND CTRL_CODE = INFO.CTRL_CODE 
+		       ) AS CTRL_NAME, 
+		       NVL(INFO.AUTO_PO_FLAG, 'N') AS AUTO_PO_FLAG, 
+		       INFO.ADD_DATE AS ADD_DATE, 
+		       INFO.EXEC_NO AS EXEC_NO, 
+		       NVL(INFO.PRICE_TYPE,'N') AS PRICE_TYPE, 
+		       GETICOMCODE2(INFO.HOUSE_CODE, 'M025', INFO.SHIPPER_TYPE) AS SHIPPER_TYPE, 
+		       GETICOMCODE2(INFO.HOUSE_CODE, 'M009', INFO.DELY_TERMS) AS DELY_TERMS, 
+		       GETICOMCODE2(INFO.HOUSE_CODE, 'M010', INFO.PAY_TERMS) AS PAY_TERMS, 
+		       (SELECT CUM_PO_QTY 
+		         FROM ICOYINDR INDR 
+		        WHERE INFO.HOUSE_CODE = INDR.HOUSE_CODE 
+		              AND INFO.COMPANY_CODE = INDR.COMPANY_CODE 
+		              AND INFO.PURCHASE_LOCATION = INDR.PURCHASE_LOCATION 
+		              AND INFO.ITEM_NO = INDR.ITEM_NO 
+		              AND INFO.VENDOR_CODE = INDR.VENDOR_CODE 
+		       ) AS CUM_PO_QTY, 
+		       INFO.BASIC_UNIT AS BASIC_UNIT, 
+		       INFO.CTRL_CODE AS CTRL_CODE, 
+		       INFO.PURCHASE_LOCATION AS PURCHASE_LOCATION, 
+		       INFO.COMPANY_CODE AS COMPANY_CODE, 
+		       SCTM.DOC_TYPE AS DOC_TYPE, 
+		       SCTM.DOC_SEQ AS DOC_SEQ 
+		  FROM ICOYINFO INFO 
+		   LEFT OUTER JOIN ICOMSCTM SCTM 
+		       ON INFO.HOUSE_CODE = SCTM.HOUSE_CODE 
+		       AND INFO.COMPANY_CODE = SCTM.COMPANY_CODE 
+		       AND INFO.EXEC_NO = SCTM.DOC_NO 
+		       AND 
+		       ( 
+		           SCTM.DOC_TYPE = 'BS' 
+		           OR SCTM.DOC_TYPE = 'EX' 
+		       ) 
+		 WHERE INFO.STATUS <> 'D' 
+	<OPT=F,S> AND INFO.HOUSE_CODE      = ?            							</OPT>            
+	<OPT=S,S> AND INFO.ITEM_NO         LIKE ?||'%'    							</OPT>            
+	<OPT=S,S> AND INFO.VENDOR_CODE     = ?            							</OPT>            
+	<OPT=S,S> AND GETITEMDESC(INFO.HOUSE_CODE, INFO.ITEM_NO)   LIKE '%'||?||'%' </OPT>            
+	<OPT=S,S> AND (INFO.valid_from_date BETWEEN  ?     							</OPT>            
+	<OPT=S,S> AND ?      														</OPT>
+	<OPT=S,S> OR  INFO.valid_to_date BETWEEN  ?      							</OPT>            
+	<OPT=S,S> AND ?)      														</OPT>            
+	ORDER BY INFO.ITEM_NO DESC                                                                           
+	]]>
+	</method>
+
+	<method name="et_getInfoList2">
+	<![CDATA[
+	SELECT  INFO.VENDOR_CODE                                          AS VENDOR_CODE,
+	        GETVENDORNAME(INFO.HOUSE_CODE, INFO.VENDOR_CODE)      AS VENDOR_NAME,
+	        GETICOMCODE2(INFO.HOUSE_CODE, 'M039', INFO.PURCHASE_LOCATION) AS PURCHASE_LOCATION_NAME,
+	        INFO.ITEM_NO                                              AS ITEM_NO,
+	        GETITEMDESC(INFO.HOUSE_CODE, INFO.ITEM_NO)            AS DESCRIPTION_LOC,
+	        INFO.MDLMDLNM                                         AS MDLMDLNM,
+	        GETITEMSPEC(INFO.HOUSE_CODE, INFO.ITEM_NO)            AS SPECIFICATION,
+	        CONVERT_DATE(INFO.VALID_FROM_DATE) AS VALID_FROM_DATE,
+	        CONVERT_DATE(INFO.VALID_TO_DATE) AS VALID_TO_DATE,
+	        INFO.UNIT_PRICE                                           AS UNIT_PRICE,
+	        INFO.CUR                                                  AS CUR,
+	       (SELECT QUOTA_PERCENT FROM ICOYINDR INDR
+	        WHERE    INFO.HOUSE_CODE        = INDR.HOUSE_CODE
+	          AND    INFO.COMPANY_CODE      = INDR.COMPANY_CODE
+	          AND    INFO.PURCHASE_LOCATION = INDR.PURCHASE_LOCATION
+	          AND    INFO.ITEM_NO           = INDR.ITEM_NO
+	          AND    INFO.VENDOR_CODE       = INDR.VENDOR_CODE)       AS QUOTA_PERCENT,
+	       (SELECT CTRL_NAME_LOC FROM ICOMBACO
+	         WHERE HOUSE_CODE = INFO.HOUSE_CODE
+	           AND CTRL_CODE = INFO.CTRL_CODE)                        AS CTRL_NAME,
+	        NVL(INFO.AUTO_PO_FLAG, 'N')                               AS AUTO_PO_FLAG,
+	        CONVERT_DATE(INFO.ADD_DATE)                                             AS ADD_DATE,
+	        INFO.EXEC_NO                                              AS EXEC_NO,
+	        NVL(INFO.PRICE_TYPE,'N') AS PRICE_TYPE,
+	        GETICOMCODE2(INFO.HOUSE_CODE, 'M025', INFO.SHIPPER_TYPE)  AS SHIPPER_TYPE,
+	        GETICOMCODE2(INFO.HOUSE_CODE, 'M009', INFO.DELY_TERMS)    AS DELY_TERMS,
+	        GETICOMCODE2(INFO.HOUSE_CODE, 'M010', INFO.PAY_TERMS)     AS PAY_TERMS,
+	       (SELECT CUM_PO_QTY FROM ICOYINDR INDR
+	        WHERE    INFO.HOUSE_CODE        = INDR.HOUSE_CODE
+	          AND    INFO.COMPANY_CODE      = INDR.COMPANY_CODE
+	          AND    INFO.PURCHASE_LOCATION = INDR.PURCHASE_LOCATION
+	          AND    INFO.ITEM_NO           = INDR.ITEM_NO
+	          AND    INFO.VENDOR_CODE       = INDR.VENDOR_CODE)       AS CUM_PO_QTY,
+	        INFO.BASIC_UNIT                                           AS BASIC_UNIT,
+	        INFO.CTRL_CODE                                            AS CTRL_CODE,
+	        INFO.PURCHASE_LOCATION                                    AS PURCHASE_LOCATION,
+	        INFO.COMPANY_CODE                                         AS COMPANY_CODE,
+	        SCTM.DOC_TYPE                                             AS DOC_TYPE,
+	        SCTM.DOC_SEQ                                              AS DOC_SEQ,
+	        --INFO.CONT_SEQ,
+	        INFO.PRE_UNIT_PRICE,
+	        INFO.REMARK,
+	        DECODE(CONVERT_DATE(INFO.CHANGE_DATE) , '//', ' ', CONVERT_DATE(INFO.CHANGE_DATE)) AS CHANGE_DATE
+	        --INFO.PLANT_CODE,
+	        --getplantname(INFO.HOUSE_CODE, INFO.COMPANY_CODE, INFO.PLANT_CODE, '') AS PLANT_CODE_NAME
+	  FROM  ICOYINFO INFO, ICOMSCTM SCTM, ICOMMTGL MTGL
+	 WHERE  INFO.HOUSE_CODE   	= SCTM.HOUSE_CODE(+)
+	   AND  INFO.COMPANY_CODE 	= SCTM.COMPANY_CODE(+)
+	   AND  INFO.EXEC_NO      	= SCTM.DOC_NO(+)
+	   AND  INFO.HOUSE_CODE    = MTGL.HOUSE_CODE
+       AND  INFO.ITEM_NO       = MTGL.ITEM_NO
+	   AND  INFO.COMPANY_CODE = ${session.COMPANY_CODE}
+	 /* AND  SCTM.DOC_TYPE IN ('BS','EX')*/
+	   AND    INFO.HOUSE_CODE      	= ${session.HOUSE_CODE}
+	   AND    INFO.ITEM_NO         	LIKE $S{item_no}||'%'
+	   AND    INFO.VENDOR_CODE     	= $S{vendor_code}            
+	   AND    UPPER(GETVENDORNAME(INFO.HOUSE_CODE, INFO.VENDOR_CODE)) LIKE '%'||UPPER($S{vendor_name})||'%' 
+	   AND    UPPER(GETITEMDESC(INFO.HOUSE_CODE, INFO.ITEM_NO)) LIKE '%'||UPPER($S{item_name})||'%' 
+	   AND    INFO.ADD_DATE BETWEEN  $S{po_from_date}      									
+	   AND     $S{po_to_date}
+	   AND    INFO.CONT_SEQ     = $S{cont_seq}
+	   AND    INFO.VALID_FROM_DATE <= $S{info_stand_date}
+	   AND    INFO.VALID_TO_DATE >= $S{info_stand_date}
+	   AND  INFO.STATUS            <> 'D'
+	   AND  MTGL.MATERIAL_TYPE = $S{material_type}
+	   AND  MTGL.MATERIAL_CTRL_TYPE = $S{material_ctrl_type}
+	   AND  MTGL.MATERIAL_CLASS1 = $S{material_class1}
+	   AND  MTGL.MATERIAL_CLASS2 = $S{material_class2}
+	]]>
+	</method>
+	
+	<method name="et_setUpdateInfo">
+	<![CDATA[
+		UPDATE ICOYINFO SET 
+		                    MDLMDLNM = $S{MDLMDLNM},
+							UNIT_PRICE = $S{UNIT_PRICE},
+							VALID_TO_DATE = $S{VALID_TO_DATE},
+							REMARK = $S{REMARK},
+							PRE_UNIT_PRICE = (SELECT UNIT_PRICE
+												FROM ICOYINFO
+											   WHERE HOUSE_CODE   = ${session.HOUSE_CODE}
+											     AND COMPANY_CODE = ${session.COMPANY_CODE}
+											     AND VENDOR_CODE  = $S{VENDOR_CODE}
+											     AND ITEM_NO      = $S{ITEM_NO} 
+												 ),
+							CHANGE_DATE = TO_CHAR(SYSDATE, 'YYYYMMDD'),
+							CHANGE_TIME = TO_CHAR(SYSDATE, 'HH24MISS'),
+							CHANGE_USER_ID = $S{USER_ID},
+							STATUS = 'C'
+		WHERE HOUSE_CODE   = ${session.HOUSE_CODE}  
+		  AND COMPANY_CODE = ${session.COMPANY_CODE}
+		  AND VENDOR_CODE  = $S{VENDOR_CODE}        
+		  AND ITEM_NO      = $S{ITEM_NO}            
+	]]>
+	</method>
+	
+	<method name="et_setDeleteInfo_bak20220121">
+	<![CDATA[
+		UPDATE ICOYINFO SET STATUS = 'D',
+							CHANGE_DATE = TO_CHAR(SYSDATE, 'YYYYMMDD'),
+							CHANGE_TIME = TO_CHAR(SYSDATE, 'HH24MISS'),
+							CHANGE_USER_ID = $S{USER_ID}
+		WHERE HOUSE_CODE   = ${session.HOUSE_CODE}        
+		  AND COMPANY_CODE = ${session.COMPANY_CODE}      
+		  AND VENDOR_CODE  = $S{VENDOR_CODE}              
+		  AND ITEM_NO      = $S{ITEM_NO}                  
+	]]>
+	</method>
+
+	<method name="et_setDeleteInfo">
+	<![CDATA[
+		DELETE FROM ICOYINFO 
+		WHERE HOUSE_CODE   = ${session.HOUSE_CODE}        
+		  AND COMPANY_CODE = ${session.COMPANY_CODE}      
+		  AND VENDOR_CODE  = $S{VENDOR_CODE}              
+		  AND ITEM_NO      = $S{ITEM_NO}                  
+	]]>
+	</method>
+
+
+	<method name="et_getIcoyinfo">
+		<![CDATA[
+	   SELECT HOUSE_CODE
+	        , COMPANY_CODE
+	        , PURCHASE_LOCATION
+	        , ITEM_NO
+	        , VENDOR_CODE
+	        --, PLANT_CODE
+	        , VALID_FROM_DATE AS INFO_FROM_DATE
+	        , VALID_TO_DATE AS INFO_TO_DATE
+	        , CASE WHEN TO_DATE('#VALID_FROM_DATE#') <= TO_DATE(VALID_FROM_DATE)
+		         THEN 'Y' ELSE 'N' END AS DEL_FLAG
+		    --, SEQ
+	    FROM ICOYINFO
+	    WHERE HOUSE_CODE = '#HOUSE_CODE#'
+	      AND COMPANY_CODE = '#COMPANY_CODE#'
+	      AND NVL(PURCHASE_LOCATION,'01') = '01'
+	      AND ITEM_NO = '#ITEM_NO#'
+	      --AND PLANT_CODE = '#PLANT_CODE#'
+	      AND VENDOR_CODE = '#VENDOR_CODE#'
+	      AND STATUS != 'D'
+	      AND ((VALID_FROM_DATE <= TO_CHAR(SYSDATE, 'YYYYMMDD') AND VALID_TO_DATE >= TO_CHAR(SYSDATE, 'YYYYMMDD')) OR VALID_FROM_DATE >= TO_CHAR(SYSDATE, 'YYYYMMDD'))       
+		]]>
+	</method>
+
+	<method name="et_delInfo">
+		<![CDATA[
+	DELETE ICOYINFO
+	 WHERE HOUSE_CODE = '#HOUSE_CODE#'
+	   AND COMPANY_CODE = '#COMPANY_CODE#'
+	   AND PURCHASE_LOCATION = '#PURCHASE_LOCATION#'
+	   AND ITEM_NO = '#ITEM_NO#'
+	   AND VENDOR_CODE = '#VENDOR_CODE#'
+	   --AND PLANT_CODE = '#PLANT_CODE#'
+	   --AND SEQ = '#SEQ#'
+		]]>
+	</method>
+	
+	
+	<method name="et_preInfoUpdate">
+		<![CDATA[
+	UPDATE ICOYINFO
+	   SET VALID_TO_DATE = TO_CHAR(TO_DATE('#VALID_FROM_DATE#') - 1, 'YYYYMMDD')
+	 WHERE HOUSE_CODE = '#HOUSE_CODE#'
+	   AND COMPANY_CODE = '#COMPANY_CODE#'
+	   AND PURCHASE_LOCATION = '#PURCHASE_LOCATION#'
+	   AND ITEM_NO = '#ITEM_NO#'
+	   AND VENDOR_CODE = '#VENDOR_CODE#'
+	   --AND PLANT_CODE = '#PLANT_CODE#'
+	   --AND SEQ = '#SEQ#'
+		]]>
+	</method>
+	
+	<method name="et_setInsertInfo_1">
+		<![CDATA[
+
+		 INSERT INTO ICOYINFO(
+								 HOUSE_CODE
+								,COMPANY_CODE
+								,PURCHASE_LOCATION
+								,ITEM_NO
+								,VENDOR_CODE
+								,STATUS
+								,ADD_DATE
+								,ADD_TIME
+								,ADD_USER_ID
+								,CHANGE_DATE
+								,CHANGE_TIME
+								,CHANGE_USER_ID
+								,SHIPPER_TYPE
+								,VENDOR_ITEM_NO
+								,MAKER_CODE
+								,MAKER_NAME
+								,BASIC_UNIT
+								,DELIVERY_LT
+								,VALID_FROM_DATE
+								,VALID_TO_DATE
+								,DELY_TERMS
+								,DELY_TEXT
+								,PAY_TERMS
+								,PAY_TEXT
+								,PRICE_TYPE
+								,EXEC_NO
+								,EXEC_QTY
+								,EXEC_SEQ
+								,TTL_CHARGE
+								,NET_AMT
+								,EXEC_TTL_AMT
+								,PURCHASE_HOLD_FLAG
+								,CHARGE_FLAG
+								,GR_BASE_FLAG
+								,UNIT_PRICE
+								,CUR
+								,MOLDING_CHARGE
+								,AUTO_PO_FLAG
+								,PURCHASE_LEVEL
+								,PURCHASE_UNIT
+								,PURCHASE_CONV_RATE
+								,PURCHASE_CONV_QTY
+								,FOB_CHARGE
+								,TRANS_CHARGE
+								,MOLDING_QTY
+								,CTRL_CODE
+								,APP_TAX_CODE
+								,ARRIVAL_PORT
+								,ARRIVAL_PORT_NAME
+								,DEPART_PORT
+								,DEPART_PORT_NAME
+								,TOD_1
+								,TOD_2
+								,TOD_3
+								,SHIPPING_METHOD
+								,NOTIFY
+								,TARIFF_TAX_RATE
+								,YEAR_QTY
+								,CUSTOMER_PRICE
+								,DISCOUNT
+								,MAGIN_RATE
+								,PREV_UNIT_PRICE
+								,YEAR_TTL_REQ_QTY
+								,MIN_ORDER_QTY
+								,PROCESS_TYPE
+								,LIST_PRICE
+								,ACCOUNT_TYPE
+								/*,PLANT_CODE
+								,CONT_SEQ
+								,SEQ*/
+							)VALUES(
+								'#HOUSE_CODE#'
+								,'#COMPANY_CODE#'
+								,'01'
+								,'#ITEM_NO#' --ITEM_NO
+								,'#VENDOR_CODE#' --VENDOR_CODE
+								,'C'
+								,TO_CHAR(SYSDATE,'YYYYMMDD')
+								,TO_CHAR(SYSDATE, 'HH24MISS')
+								,'#USER_ID#' --ADD_USER_ID
+								,TO_CHAR(SYSDATE,'YYYYMMDD')
+								,TO_CHAR(SYSDATE, 'HH24MISS')
+								,'#USER_ID#' --CHANGE_USER_ID
+								,'D'
+								,'' --VENDOR_ITEM_NO
+								,'' --MAKER_CODE
+								,'' --MAKER_NAME
+								,'#BASIC_UNIT#' --BASIC_UNIT
+								,'' --DELIVERY_LT
+								,'#VALID_FROM_DATE#' --VALID_FROM_DATE
+								,'#VALID_TO_DATE#' --VALID_TO_DATE
+								,'' --DELY_TERMS
+								,'' --DELY_TEXT
+								,'' --PAY_TERMS
+								,'' --PAY_TEXT
+								,'' --PRICE_TYPE
+								,'0' --EXEC_NO
+								,'' --EXEC_QTY
+								,'' --EXEC_SEQ
+								,'' --TTL_CHARGE
+								,'' --NET_AMT
+								,'' --EXEC_TTL_AMT
+								,'' --PURCHASE_HOLD_FLAG
+								,'' --CHARGE_FLAG
+								,'' --GR_BASE_FLAG
+								,'#UNIT_PRICE#' --UNIT_PRICE
+								,'KRW' --CUR
+								,'' --MOLDING_CHARGE
+								,'' --AUTO_PO_FLAG
+								,'' --PURCHASE_LEVEL
+								,'' --PURCHASE_UNIT
+								,'' --PURCHASE_CONV_RATE
+								,'' --PURCHASE_CONV_QTY
+								,'' --FOB_CHARGE
+								,'' --TRANS_CHARGE
+								,'' --MOLDING_QTY
+								,'' --CTRL_CODE
+								,'' --APP_TAX_CODE
+								,'' --ARRIVAL_PORT
+								,'' --ARRIVAL_PORT_NAME
+								,'' --DEPART_PORT
+								,'' --DEPART_PORT_NAME
+								,'' --TOD_1
+								,'' --TOD_2
+								,'' --TOD_3
+								,'' --SHIPPING_METHOD
+								,'' --NOTIFY
+								,'' --TARIFF_TAX_RATE
+								,'' --YEAR_QTY
+								,'' --CUSTOMER_PRICE
+								,'' --DISCOUNT
+								,'' --MAGIN_RATE
+								,'' --PREV_UNIT_PRICE
+								,'' --YEAR_TTL_REQ_QTY
+								,'' --MIN_ORDER_QTY
+								,'' --PROCESS_TYPE
+								,'' --LIST_PRICE
+								,'' --ACCOUNT_TYPE
+								--,'#PLANT_CODE#' --PLANT_CODE
+								--,'#CONT_SEQ#' --CONT_SEQ
+								--,NVL((SELECT MAX(SEQ)
+		                        --        FROM ICOYINFO
+		                        --       WHERE HOUSE_CODE = '#HOUSE_CODE#'
+		                        --         AND COMPANY_CODE = '#COMPANY_CODE#'
+		                        --         AND PURCHASE_LOCATION = '01'
+		                        --         AND ITEM_NO = '#ITEM_NO#'
+		                        --         AND VENDOR_CODE = '#VENDOR_CODE#'
+		                        --         AND PLANT_CODE = '#PLANT_CODE#'), 0) + 1
+							)
+
+		
+		]]>
+	</method>
+	
+	<method name="et_setInsertInfo">
+	<![CDATA[
+		INSERT INTO ICOYINFO
+		(
+ 			HOUSE_CODE
+		,	COMPANY_CODE
+		,	PURCHASE_LOCATION
+		,   ITEM_NO
+		,   VENDOR_CODE
+		,   STATUS
+		,   ADD_DATE
+		,   ADD_TIME
+		,   ADD_USER_ID
+		,   CHANGE_DATE
+		,   CHANGE_TIME
+		,   CHANGE_USER_ID
+		,   SHIPPER_TYPE
+		,   VENDOR_ITEM_NO
+		,   MAKER_CODE
+		,   MAKER_NAME
+		,   BASIC_UNIT
+		,   DELIVERY_LT
+		,   VALID_FROM_DATE
+		,   VALID_TO_DATE
+		,   DELY_TERMS
+		,   DELY_TEXT
+		,   PAY_TERMS
+		,   PAY_TEXT
+		,   PRICE_TYPE
+		,   EXEC_NO
+		,   EXEC_QTY
+		,   EXEC_SEQ
+		,   TTL_CHARGE
+		,   NET_AMT
+		,   EXEC_TTL_AMT
+		,   PURCHASE_HOLD_FLAG
+		,   CHARGE_FLAG
+		,   GR_BASE_FLAG
+		,   UNIT_PRICE
+		,   CUR
+		,   MOLDING_CHARGE
+		,   AUTO_PO_FLAG
+		,   PURCHASE_LEVEL
+		,   PURCHASE_UNIT
+		,   PURCHASE_CONV_RATE
+		,   PURCHASE_CONV_QTY
+		,   FOB_CHARGE
+		,   TRANS_CHARGE
+		,   MOLDING_QTY
+		,   CTRL_CODE
+		,   APP_TAX_CODE
+		,   ARRIVAL_PORT
+		,   ARRIVAL_PORT_NAME
+		,   DEPART_PORT
+		,   DEPART_PORT_NAME
+		,   TOD_1
+		,   TOD_2
+		,   TOD_3
+		,   SHIPPING_METHOD
+		,   NOTIFY
+		,   TARIFF_TAX_RATE
+		,   YEAR_QTY
+		,   CUSTOMER_PRICE
+		,   DISCOUNT
+		,   MAGIN_RATE
+		,   PREV_UNIT_PRICE
+		,   YEAR_TTL_REQ_QTY
+		,   MIN_ORDER_QTY
+		,   PROCESS_TYPE
+		,   LIST_PRICE
+		,   ACCOUNT_TYPE
+		,   MDLMDLNM
+		)VALUES(
+			${session.HOUSE_CODE}
+		,	'WOORI'
+		,   '01'
+		,   ${item_no} --ITEM_NO
+		,   ${vendor_code} --VENDOR_CODE
+		,   'C'
+		,   TO_CHAR(SYSDATE,'YYYYMMDD')
+		,   TO_CHAR(SYSDATE, 'HH24MISS')
+		,   ${session.ID} --ADD_USER_ID
+		,   TO_CHAR(SYSDATE,'YYYYMMDD')
+		,   TO_CHAR(SYSDATE, 'HH24MISS')
+		,   ${session.ID} --CHANGE_USER_ID
+		,   'D'
+		,   '' --VENDOR_ITEM_NO
+		,   '' --MAKER_CODE
+		,   '' --MAKER_NAME
+		,   ${basicUnit} --BASIC_UNIT
+		,   '' --DELIVERY_LT
+		,   ${cont_from_date} --VALID_FROM_DATE
+		,   ${cont_to_date} --VALID_TO_DATE
+		,   '' --DELY_TERMS
+		,   '' --DELY_TEXT
+		,   '' --PAY_TERMS
+		,   '' --PAY_TEXT
+		,   '' --PRICE_TYPE
+		,   '0' --EXEC_NO
+		,   '' --EXEC_QTY
+		,   '' --EXEC_SEQ
+		,   '' --TTL_CHARGE
+		,   '' --NET_AMT
+		,   '' --EXEC_TTL_AMT
+		,   '' --PURCHASE_HOLD_FLAG
+		,   '' --CHARGE_FLAG
+		,   '' --GR_BASE_FLAG
+		,   ${cont_price} --UNIT_PRICE
+		,   'KRW' --CUR
+		,   '' --MOLDING_CHARGE
+		,   '' --AUTO_PO_FLAG
+		,   '' --PURCHASE_LEVEL
+		,   '' --PURCHASE_UNIT
+		,   '' --PURCHASE_CONV_RATE
+		,   '' --PURCHASE_CONV_QTY
+		,   '' --FOB_CHARGE
+		,   '' --TRANS_CHARGE
+		,   '' --MOLDING_QTY
+		,   '' --CTRL_CODE
+		,   '' --APP_TAX_CODE
+		,   '' --ARRIVAL_PORT
+		,   '' --ARRIVAL_PORT_NAME
+		,   '' --DEPART_PORT
+		,   '' --DEPART_PORT_NAME
+		,   '' --TOD_1
+		,   '' --TOD_2
+		,   '' --TOD_3
+		,   '' --SHIPPING_METHOD
+		,   '' --NOTIFY
+		,   '' --TARIFF_TAX_RATE
+		,   '' --YEAR_QTY
+		,   '' --CUSTOMER_PRICE
+		,   '' --DISCOUNT
+		,   '' --MAGIN_RATE
+		,   '' --PREV_UNIT_PRICE
+		,   '' --YEAR_TTL_REQ_QTY
+		,   '' --MIN_ORDER_QTY
+		,   '' --PROCESS_TYPE
+		,   '' --LIST_PRICE
+		,   '' --ACCOUNT_TYPE
+		,   ${mdlmdlnm} --VENDOR_CODE
+		)
+	]]>
+	</method>
+	
+	<method name="et_getPlantList">
+	<![CDATA[
+		SELECT PLANT_CODE 
+		  FROM ICOMOGPL 
+		 WHERE HOUSE_CODE = '#HOUSE_CODE#' 
+		   AND COMPANY_CODE = '#COMPANY_CODE#'
+		   --AND PLANT_CODE = '#PLANT_CODE#'
+		   AND INDUSTRY_TYPE = 'A' 
+		   AND STATUS != 'D' 
+		 ORDER BY PLANT_CODE
+	]]>
+	</method>
+
+
+	<method name="et_getItemList">
+	<![CDATA[
+		SELECT ITEM_NO
+		  FROM ICOMMTGL 
+		 WHERE HOUSE_CODE = '#HOUSE_CODE#'
+		   AND ITEM_NO = '#ITEM_NO#'
+		   AND STATUS != 'D'
+	]]>
+	</method>
+	
+	<method name="getInfoData">
+		SELECT 	COUNT(1) AS CNT
+		FROM	ICOYINFO
+		WHERE 	HOUSE_CODE = ${session.HOUSE_CODE}
+		AND 	ITEM_NO = ${item_no}
+		AND 	VENDOR_CODE = ${vendor_code} 
+	</method>
+	
+	
+	<method name="setExcelSaveInfo2ItemMgt">
+		<![CDATA[
+		INSERT INTO epsuser.TEMP_INFO_XSL (
+			 TRANSACTION_ID
+			,ITEM_NO
+			,VENDOR_CODE
+			,BASIC_UNIT
+			,VALID_FROM_DATE
+			,VALID_TO_DATE
+			,UNIT_PRICE		 
+		) VALUES (
+			 ${TRANSACTION_ID}
+			,${ITEM_NO}
+			,${VENDOR_CODE}
+			,${BASIC_UNIT}
+			,${VALID_FROM_DATE}
+			,${VALID_TO_DATE}
+			,${UNIT_PRICE}		 
+		)
+		]]>
+	</method>
+	
+	<method name="et_getInfo2ItemMgt">
+		<![CDATA[
+		SELECT TRANSACTION_ID
+		      ,ITEM_NO
+		      ,VENDOR_CODE
+		      ,BASIC_UNIT
+		      ,VALID_FROM_DATE
+		      ,VALID_TO_DATE
+		      ,UNIT_PRICE 
+		      ,CASE WHEN ((SELECT COUNT(ITEM_NO) 
+				          FROM ICOYINFO 
+				         WHERE HOUSE_CODE = ${HOUSE_CODE} 
+				           AND COMPANY_CODE = ${COMPANY_CODE} 
+				           AND PURCHASE_LOCATION = ${PURCHASE_LOCATION} 
+				           AND ITEM_NO = T.ITEM_NO 
+				           AND VENDOR_CODE = T.VENDOR_CODE)> 0) THEN '기등록' 
+				    ELSE ' ' END REMARK
+		FROM epsuser.TEMP_INFO_XSL T
+		WHERE TRANSACTION_ID = ${transaction_id}
+		]]>
+	</method>
+	
+	<method name="doCheckInfo">
+		<![CDATA[
+		SELECT
+		COUNT(*) AS CNT
+		FROM ICOYINFO
+		WHERE 1 = 1
+		AND HOUSE_CODE = ${HOUSE_CODE}
+		AND COMPANY_CODE = ${COMPANY_CODE}
+		AND PURCHASE_LOCATION = ${PURCHASE_LOCATION}
+		AND ITEM_NO = ${ITEM_NO}
+		AND VENDOR_CODE = ${VENDOR_CODE}
+		]]>
+	</method>
+	
+	<method name="doInfo2ItemMgtInsert">
+		<![CDATA[
+		INSERT INTO ICOYINFO (
+			 HOUSE_CODE
+			,COMPANY_CODE
+			,PURCHASE_LOCATION
+			,ITEM_NO
+			,VENDOR_CODE
+			,BASIC_UNIT
+			,VALID_FROM_DATE
+			,VALID_TO_DATE
+			,UNIT_PRICE		 
+			,STATUS
+			,ADD_DATE
+			,ADD_TIME
+			,ADD_USER_ID
+			,SHIPPER_TYPE
+			,EXEC_NO
+			,CUR
+		) VALUES (
+			 ${HOUSE_CODE}
+			,${COMPANY_CODE}
+			,${PURCHASE_LOCATION}
+			,${ITEM_NO}
+			,${VENDOR_CODE}
+			,${BASIC_UNIT}
+			,${VALID_FROM_DATE}
+			,${VALID_TO_DATE}
+			,${UNIT_PRICE}
+			,'C' --STATUS
+			,${ADD_DATE}
+			,${ADD_TIME}
+			,${ADD_USER_ID}
+			,'D' --SHIPPER_TYPE
+			,'0' --EXEC_NO
+			,'KRW' --CUR		 
+		)
+		]]>
+	</method>
+	
+	<method name="doDeleteInfo2ItemMgt">
+		<![CDATA[
+		DELETE from epsuser.TEMP_INFO_XSL 
+		WHERE TRANSACTION_ID = ${transaction_id}
+		]]>
+	</method>
+       			
+</service>

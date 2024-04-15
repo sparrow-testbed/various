@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<service>
+	<method name="et_addSignRequest_1">
+		 SELECT COUNT(*)          					
+		 FROM ICOMSCTM         					
+		 WHERE HOUSE_CODE 	= ${session.HOUSE_CODE}   	
+		 	AND COMPANY_CODE= ${session.COMPANY_CODE}
+			AND DOC_TYPE  	= ${doc_type}        	
+		 	AND DOC_NO 		= ${doc_no}             	
+		 	AND DOC_SEQ 	= ${doc_seq}	
+--		 	AND APP_STATUS IN ('R','D') 	
+	</method>
+	
+	<method name="et_addSignRequest_2">
+		DELETE FROM ICOMSCTM     				
+		WHERE HOUSE_CODE 	= ${session.HOUSE_CODE}   	       
+			AND COMPANY_CODE= ${session.COMPANY_CODE}          
+			AND DOC_TYPE 	= ${doc_type}        	           
+			AND DOC_NO 		= ${doc_no}             	       
+			AND DOC_SEQ 	= ${doc_seq}	                   
+	</method>
+	
+	<method name="et_addSignRequest_3">
+		DELETE FROM ICOMSCTP 						
+		WHERE HOUSE_CODE 	= ${session.HOUSE_CODE}   	       
+			AND COMPANY_CODE= ${session.COMPANY_CODE}          
+			AND DOC_TYPE 	= ${doc_type}        	           
+			AND DOC_NO 		= ${doc_no}             	       
+			AND DOC_SEQ 	= ${doc_seq}	                   		
+	</method>
+	
+	<method name="et_addSignRequest_4">
+		INSERT INTO ICOMSCTM (   					
+			HOUSE_CODE,     								
+			COMPANY_CODE,    							
+			DOC_TYPE,     								
+			DOC_NO,    									
+			DOC_SEQ,     								
+			ADD_USER_ID,    								
+			SHIPPER_TYPE,  								
+			CTRL_PERSON_ID,  							
+			ITEM_COUNT,  								
+			CUR,  										
+			TTL_AMT,  									
+			CONV_TTL_AMT, 								
+			ACCOUNT_CODE, 								
+			ADD_DATE,  									
+			ADD_TIME,  									
+			APP_STATUS,  								
+			APP_STAGE,  									
+			NEXT_SIGN_USER_ID, 							
+			AUTO_MANUAL_FLAG,   							
+			STRATEGY_TYPE,  								
+			ARGENT_FLAG,  								
+			SIGN_REMARK,  								
+			STATUS, 										 
+			ATTACH_NO
+		) VALUES (
+			${session.HOUSE_CODE},   					 
+			${session.COMPANY_CODE},   						 
+			$S{doc_type},        	    						 
+			$S{doc_no},             							 
+			$S{doc_seq},	            						 
+			$S{req_user_id}, 							 
+			$S{shipper_type}, 							 
+			$S{ctrl_code},  							 
+			$S{item_count},  							
+			$S{cur},  									 
+			$S{amt},  									  
+			$S{amt_ex},  								  
+			$S{acc_code},								 
+			$S{req_date},  							 
+			$S{req_time},   							 
+			$S{sign_status},  							 
+			'0',  										 
+			$S{app_person}, 							 
+			$S{auto_flag}, 							 
+			$S{strategy},  							 
+			$S{urgent},  								 
+			$S{remark},	 
+			'C',  										
+			$S{attach_no}
+		)
+	</method>
+	
+	<method name="et_addSignRequest_5">
+		INSERT INTO ICOMSCTP ( 	
+			HOUSE_CODE,  			
+			COMPANY_CODE,  			
+			DOC_TYPE,  				
+			DOC_NO,  				
+			DOC_SEQ, 				
+			SIGN_PATH_SEQ, 			
+			SIGN_USER_ID,  			
+			SIGN_POSITION,  			
+			SIGN_M_POSITION,  		
+			PROCEEDING_FLAG,  		
+			SIGN_CHECK 				
+		) VALUES ( 				
+			${session.HOUSE_CODE},   		
+			${session.COMPANY_CODE},   		
+			$S{doc_type},        	    	
+			$S{doc_no},             		
+			$S{doc_seq},	            	
+			$S{sign_path_seq},      					
+			$S{sign_user_id},    					
+			$S{sign_position},    					
+			$S{sign_m_position},   					
+			$S{proceeding_flag},    					
+			$S{sign_check}    					
+		)    						
+	</method>
+	
+	<method name="et_addSignRequest_6">
+		<![CDATA[
+		SELECT   MIN(SIGN_PATH_SEQ) - TO_NUMBER('#current_sign_path_seq#') AS GAP
+   		FROM     ICOMSCTP
+   		WHERE    HOUSE_CODE      = ${session.HOUSE_CODE}   	
+     	  AND    COMPANY_CODE    = ${session.COMPANY_CODE}   
+     	  AND    DOC_TYPE        = $S{doc_type}        	   
+     	  AND    DOC_NO          = $S{doc_no}             	
+     	  AND    DOC_SEQ         = $S{doc_seq}	           
+     	  AND    SIGN_PATH_SEQ > '#current_sign_path_seq#'
+     	  AND 	PROCEEDING_FLAG = 'P'	
+     	  ]]>						
+	</method>
+	
+	<method name="et_addSignRequest_7_1">
+		<![CDATA[
+		UPDATE ICOMSCTP 
+					SET SIGN_CHECK = 'Y'
+		WHERE    HOUSE_CODE      = ${session.HOUSE_CODE}   	   
+     	  AND    COMPANY_CODE    = ${session.COMPANY_CODE}     
+     	  AND    DOC_TYPE        = $S{doc_type}        	       
+     	  AND    DOC_NO          = $S{doc_no}             	   
+     	  AND    DOC_SEQ         = $S{doc_seq}	               
+     	  AND    SIGN_PATH_SEQ > '#current_sign_path_seq#'  
+     	  ]]>
+	</method>
+	
+	<method name="et_addSignRequest_7_2">
+		<![CDATA[
+		UPDATE ICOMSCTP 
+					SET SIGN_CHECK = 'Y'
+		WHERE    HOUSE_CODE      = ${session.HOUSE_CODE}   	     
+     	  AND    COMPANY_CODE    = ${session.COMPANY_CODE}       
+     	  AND    DOC_TYPE        = ${doc_type}        	         
+     	  AND    DOC_NO          = ${doc_no}             	     
+     	  AND    DOC_SEQ         = ${doc_seq}	                 
+     	  AND    TO_NUMBER(SIGN_PATH_SEQ) > TO_NUMBER('#current_sign_path_seq#')  
+     	  AND	 TO_NUMBER(SIGN_PATH_SEQ) < TO_NUMBER('#next_sign_path_seq_p#')   
+     	  ]]>
+	</method>
+	
+	<method name="setPydtmApvNoUpdate">
+		UPDATE SPY2GL
+		SET   
+--            STATUS_CD       = '20' 
+		       PYDTM_APV_NO  = ${PYDTM_APV_NO}
+--		     , APP_STATUS_CD = 'M'
+		     , USER_TRM_NO = $S{user_trm_no}
+		WHERE  PAY_ACT_NO = ${pay_act_no}
+	</method>
+	
+		<method name="bl_getSpy2List">
+		SELECT 	
+			   SPGL.HOUSE_CODE,	SPGL.PAY_ACT_NO,	SPGL.VENDOR_CODE, SPGL.STD_DATE, SPGL.DEPOSITOR_NAME
+			 , SPGL.BANK_CODE		, SPGL.BANK_ACCT, SPGL.SUPPLY_AMT, SPGL.TAX_AMT, SPGL.TOT_AMT
+             , SPGL.BMSBMSYY, SPGL.BUGUMCD, SPGL.ACT_DATE, SPGL.EXPENSECD, SPGL.SEMOKCD
+             , SPGL.SAUPCD			, SPGL.DOC_TYPE		, SPGL.PAY_TYPE		, TO_MULTI_BYTE(SPGL.PAY_REASON) AS PAY_REASON, SPGL.TAX_NO		
+             , SPGL.NTS_APP_NO   , SPGL.ACC_TAX_DATE , SPGL.ACC_TAX_SEQ  , SPGL.APP_STATUS_CD	, SPGL.ADD_DATE
+             , SPGL.ADD_TIME, SPGL.ADD_USER_ID, SPGL.SEBUCD, SPGL.ZIPHANGCD, SPGL.PYDTM_APV_NO, SPGL.SLIP_NO
+             , SPGL.USER_TRM_NO , SPGL.ISU_DT, VNGL.VENDOR_NAME_LOC AS VENDOR_NAME, VNGL.IRS_NO, SPGL.EXECUTE_NO
+		FROM   SPY2GL SPGL,	ICOMVNGL VNGL
+		WHERE  SPGL.PAY_ACT_NO = ${pay_act_no}
+		  AND  SPGL.VENDOR_CODE = VNGL.VENDOR_CODE 
+	</method>
+
+</service>

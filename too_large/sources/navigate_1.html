@@ -1,0 +1,34 @@
+<html>
+<head>
+<title>XecureHttpJspPage 클래스 암호 데모</title>
+<meta http-equiv="Content-Type" content="text/html; charset=euc-kr"><style type="text/css">
+<!--
+.font1 { font-size: 9pt;color:#666666;}
+td {  font-size: 9pt;color:#333333}
+A:link    {font-size:9pt;color:#010824;text-decoration:none; }
+A:active  {font-size:9pt;color:#010824;text-decoration:none; }
+A:visited {font-size:9pt;color:#010824;text-decoration:none; }
+A:hover   {font-size:9pt;color:#0066cc;text-decoration:none; }
+-->
+</style>
+</head><body bgcolor="#FFFFFF" text="#000000" leftmargin="0" topmargin="0" marginwidth="0" marginheight="0">
+
+<form name='xecure'><input type=hidden name='p'></form>
+<script language='javascript' src='/XecureObject/xecureweb.js'></script>
+<script language='javascript'>
+PrintObjectTag();
+</script>
+<script language=javascript>
+function navigate(url, target)
+{
+	//url += "?utpark=def&pop=hi";
+	//url += "?fromWhere=<=fromWhere>"
+	url += "?"
+	XecureNavigate( url, target );
+}
+</script>
+
+<a href="javascript:navigate('http://' + window.location.host + '/XecureDemo/jsp/enc_server_response.jsp','_self');">전송</a>
+
+</body>
+</html>

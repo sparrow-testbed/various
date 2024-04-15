@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<service>
+	<method name="getCsBdPnDescList">
+		<![CDATA[
+		   SELECT
+		   		 A.ANN_NO
+		   		,A.ANN_ITEM
+		   		,A.CONT_TYPE1_TEXT
+		   		,A.BID_OPEN_DATE
+		   		,A.BID_END_DATE
+		   		,A.BID_NO                                                            
+		        ,A.BID_COUNT                                                         
+		        ,A.VOTE_COUNT
+		        ,A.STATUS
+		        ,A.VENDOR_CODE
+		        ,A.VENDOR_NAME_LOC
+		        ,A.ANN_VERSION
+		        ,A.BID_TYPE
+		        ,A.VENDOR_COUNT
+		        ,A.PN_C_PRICE
+		        ,A.PN_H_PRICE
+		        ,A.PN_L_PRICE
+		        ,A.BID_AMT_ENC
+		        ,A.BID_YN
+		        
+		        ,CASE WHEN A.BID_YN = 'O' AND A.PN_H_PRICE IS NULL THEN 'O'         
+		              WHEN A.BID_YN = 'O' AND A.BID_AMT_ENC <= A.PN_H_PRICE AND A.BID_AMT_ENC >= A.PN_L_PRICE THEN 'O'                       
+				 ELSE 'X'
+				 END AS NML_BID_YN
+				 
+				,CASE WHEN A.BID_YN = 'X' THEN '<font color="red">미투찰</font>'       
+				      WHEN A.BID_YN = 'O' AND A.PN_H_PRICE IS NULL THEN ''         
+		              WHEN A.BID_YN = 'O' AND A.BID_AMT_ENC > A.PN_H_PRICE THEN '<font color="red">평균입찰가15%상한 초과</font>'  
+		              WHEN A.BID_YN = 'O' AND A.BID_AMT_ENC < A.PN_L_PRICE THEN '<font color="red">평균입찰가15%하한 미만</font>'		                             
+				 ELSE ''
+				 END AS NML_BID_MSRN_RSN		        		       
+		   FROM		  		   
+		   ( 
+		           SELECT                                                                        
+		                 decode(substr(HD.ANN_NO,1,2),'BD',HD.BID_NO,HD.ANN_NO) AS ANN_NO                                     
+		                 ,HD.ANN_ITEM             
+		                 
+		                 ,GETICOMCODE2(HD.HOUSE_CODE, 'M974', HD.CONT_TYPE1 )
+		        		 ||' / '||GETICOMCODE2(HD.HOUSE_CODE, 'M973', HD.CONT_TYPE2 )
+		        		 ||' / '||GETICOMCODE2(HD.HOUSE_CODE, 'M930', HD.PROM_CRIT ) AS CONT_TYPE1_TEXT                                    
+		                 
+		                 ,TO_CHAR(TO_DATE(PG.OPEN_DATE||PG.OPEN_TIME, 'YYYYMMDDHH24MISS'),'YYYY/MM/DD HH24:MI') AS BID_OPEN_DATE
+		                 
+		                 ,TO_CHAR(TO_DATE(PG.BID_END_DATE||PG.BID_END_TIME, 'YYYYMMDDHH24MISS'),'YYYY/MM/DD HH24:MI') AS BID_END_DATE 
+		                                          
+		                ,HD.BID_NO                                                            
+		                ,HD.BID_COUNT                                                         
+		                ,PG.VOTE_COUNT                                                        
+		                ,HD.BID_STATUS AS STATUS                                             
+		                 
+		                ,AP.VENDOR_CODE
+		                ,GETVENDORNAME(AP.HOUSE_CODE, AP.VENDOR_CODE) AS VENDOR_NAME_LOC
+		                                                                 
+		                ,CASE WHEN HD.ANN_VERSION IS NULL THEN (SELECT CODE FROM SCODE WHERE TYPE = 'VR001')
+		                 ELSE HD.ANN_VERSION
+		                 END AS ANN_VERSION
+		               	,HD.BID_TYPE 
+		            	,(SELECT COUNT(VENDOR_CODE) 
+		                    FROM ICOYBDVO                                     
+		                   WHERE HOUSE_CODE = PG.HOUSE_CODE                                    
+		                     AND BID_NO     = PG.BID_NO                                        
+		                     AND BID_COUNT  = PG.BID_COUNT                                     
+		                     AND VOTE_COUNT = 1                                    
+		                     AND BID_CANCEL = 'N') AS VENDOR_COUNT  	
+		                ,PN.PN_C_PRICE
+		                ,PN.PN_H_PRICE
+		                ,PN.PN_L_PRICE
+		                
+		                ,(SELECT BID_AMT_ENC 
+		                    FROM ICOYBDVO                                     
+		                   WHERE HOUSE_CODE = PG.HOUSE_CODE                                    
+		                     AND BID_NO     = PG.BID_NO                                        
+		                     AND BID_COUNT  = PG.BID_COUNT                                     
+		                     AND VOTE_COUNT = 1                                    
+		                     AND BID_CANCEL = 'N'
+		                     AND VENDOR_CODE = ${vendor_code}) BID_AMT_ENC
+		                                          
+		                ,CASE WHEN  (SELECT COUNT(VENDOR_CODE) 
+					                      FROM ICOYBDVO                                     
+					                     WHERE HOUSE_CODE = PG.HOUSE_CODE                                    
+					                       AND BID_NO     = PG.BID_NO                                        
+					                       AND BID_COUNT  = PG.BID_COUNT                                     
+					                       AND VOTE_COUNT = 1                                    
+					                       AND BID_CANCEL = 'N'
+					                       AND VENDOR_CODE = ${vendor_code})  > 0 THEN 'O'                       
+				     	 ELSE 'X'
+				 		 END AS BID_YN				 		 		  
+		         FROM  ICOYBDHD HD, ICOYBDPG PG, ICOYBDAP AP, ICOYBDPN PN
+		         WHERE HD.HOUSE_CODE  = PG.HOUSE_CODE                                          
+		         AND   HD.HOUSE_CODE  = ${HOUSE_CODE}                                   
+		         AND   HD.BID_NO      = PG.BID_NO                                              
+		         AND   HD.BID_COUNT   = PG.BID_COUNT
+		         AND   HD.HOUSE_CODE  = AP.HOUSE_CODE
+				 AND   HD.BID_NO      = AP.BID_NO                                              
+				 AND   HD.BID_COUNT   = AP.BID_COUNT		 	
+				 AND   HD.HOUSE_CODE  = PN.HOUSE_CODE(+)
+		         AND   HD.BID_NO      = PN.BID_NO(+)
+		         AND   HD.BID_COUNT   = PN.BID_COUNT(+)
+		         AND   HD.BID_STATUS  IN ('SB', 'NB')                                     
+		         AND   HD.SIGN_STATUS  IN ('C')                                                
+		         AND   HD.STATUS IN ('C' ,'R')                                                 
+		         AND   PG.STATUS IN ('C' ,'R')
+		         AND   AP.STATUS IN ('C' ,'R') 
+		         AND   HD.BID_TYPE = 'C'
+				 AND   HD.CONT_TYPE1 = 'NC'
+				 AND   HD.PROM_CRIT = 'B'
+				 AND   AP.VENDOR_CODE = ${vendor_code}                               
+				 AND   PG.OPEN_DATE BETWEEN ${OPEN_DATE_START} 
+				 AND   ${OPEN_DATE_END}
+		 )A
+		 ORDER BY A.BID_OPEN_DATE DESC, A.BID_END_DATE DESC                                                                                                                             
+		 ]]>
+	</method>                                
+</service>
+

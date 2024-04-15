@@ -1,0 +1,156 @@
+2023-01-11 15:48:21
+Full thread dump OpenJDK 64-Bit Server VM (25.212-b04 mixed mode):
+
+"Service Thread" #21 daemon prio=9 os_prio=0 tid=0x000000002e768800 nid=0x4a8c runnable [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"C1 CompilerThread14" #20 daemon prio=9 os_prio=2 tid=0x000000002e74e800 nid=0x47548 waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"C1 CompilerThread13" #19 daemon prio=9 os_prio=2 tid=0x000000002e74c000 nid=0xbc798 waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"C1 CompilerThread12" #18 daemon prio=9 os_prio=2 tid=0x000000002e728000 nid=0xb38e0 waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"C1 CompilerThread11" #17 daemon prio=9 os_prio=2 tid=0x000000002e717800 nid=0x91dcc waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"C1 CompilerThread10" #16 daemon prio=9 os_prio=2 tid=0x000000002e714000 nid=0x73e78 waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"C2 CompilerThread9" #15 daemon prio=9 os_prio=2 tid=0x000000002e703800 nid=0xd1e78 waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"C2 CompilerThread8" #14 daemon prio=9 os_prio=2 tid=0x000000002e6e9800 nid=0x51e98 waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"C2 CompilerThread7" #13 daemon prio=9 os_prio=2 tid=0x000000002e6cf000 nid=0x101890 waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"C2 CompilerThread6" #12 daemon prio=9 os_prio=2 tid=0x000000002e696000 nid=0xbfef0 runnable [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"C2 CompilerThread5" #11 daemon prio=9 os_prio=2 tid=0x000000002e68d000 nid=0x5f12c waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"C2 CompilerThread4" #10 daemon prio=9 os_prio=2 tid=0x000000002c0ad800 nid=0x1a3b0 waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"C2 CompilerThread3" #9 daemon prio=9 os_prio=2 tid=0x000000002c0ad000 nid=0x5de5c waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"C2 CompilerThread2" #8 daemon prio=9 os_prio=2 tid=0x000000002c0ac000 nid=0x42d90 waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"C2 CompilerThread1" #7 daemon prio=9 os_prio=2 tid=0x000000002c0ab000 nid=0x10b80 waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"C2 CompilerThread0" #6 daemon prio=9 os_prio=2 tid=0x000000002e682000 nid=0x38ae8 waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"Attach Listener" #5 daemon prio=5 os_prio=2 tid=0x000000002e62a000 nid=0xb845c waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"Signal Dispatcher" #4 daemon prio=9 os_prio=2 tid=0x000000002e680000 nid=0x41198 runnable [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"Finalizer" #3 daemon prio=8 os_prio=1 tid=0x000000002e60d000 nid=0xd7868 in Object.wait() [0x00000000332df000]
+   java.lang.Thread.State: WAITING (on object monitor)
+	at java.lang.Object.wait(Native Method)
+	- waiting on <0x00000006eab08ed0> (a java.lang.ref.ReferenceQueue$Lock)
+	at java.lang.ref.ReferenceQueue.remove(ReferenceQueue.java:144)
+	- locked <0x00000006eab08ed0> (a java.lang.ref.ReferenceQueue$Lock)
+	at java.lang.ref.ReferenceQueue.remove(ReferenceQueue.java:165)
+	at java.lang.ref.Finalizer$FinalizerThread.run(Finalizer.java:216)
+
+"Reference Handler" #2 daemon prio=10 os_prio=2 tid=0x000000002e608000 nid=0xb14f8 in Object.wait() [0x00000000322de000]
+   java.lang.Thread.State: WAITING (on object monitor)
+	at java.lang.Object.wait(Native Method)
+	- waiting on <0x00000006eab06bf8> (a java.lang.ref.Reference$Lock)
+	at java.lang.Object.wait(Object.java:502)
+	at java.lang.ref.Reference.tryHandlePending(Reference.java:191)
+	- locked <0x00000006eab06bf8> (a java.lang.ref.Reference$Lock)
+	at java.lang.ref.Reference$ReferenceHandler.run(Reference.java:153)
+
+"main" #1 prio=5 os_prio=0 tid=0x0000000003583800 nid=0x80544 runnable [0x000000000357c000]
+   java.lang.Thread.State: RUNNABLE
+	at java.io.BufferedInputStream.read(BufferedInputStream.java:264)
+	- locked <0x00000006eac7de80> (a java.io.BufferedInputStream)
+	at java.io.DataInputStream.readInt(DataInputStream.java:390)
+	at java.util.Currency.readIntArray(Currency.java:656)
+	at java.util.Currency.access$000(Currency.java:97)
+	at java.util.Currency$1.run(Currency.java:232)
+	at java.util.Currency$1.run(Currency.java:214)
+	at java.security.AccessController.doPrivileged(Native Method)
+	at java.util.Currency.<clinit>(Currency.java:214)
+	at java.text.DecimalFormatSymbols.initialize(DecimalFormatSymbols.java:638)
+	at java.text.DecimalFormatSymbols.<init>(DecimalFormatSymbols.java:113)
+	at sun.util.locale.provider.DecimalFormatSymbolsProviderImpl.getInstance(DecimalFormatSymbolsProviderImpl.java:85)
+	at java.text.DecimalFormatSymbols.getInstance(DecimalFormatSymbols.java:180)
+	at sun.util.locale.provider.NumberFormatProviderImpl.getInstance(NumberFormatProviderImpl.java:178)
+	at sun.util.locale.provider.NumberFormatProviderImpl.getIntegerInstance(NumberFormatProviderImpl.java:131)
+	at java.text.NumberFormat.getInstance(NumberFormat.java:884)
+	at java.text.NumberFormat.getInstance(NumberFormat.java:861)
+	at java.text.NumberFormat.getIntegerInstance(NumberFormat.java:508)
+	at java.text.SimpleDateFormat.initialize(SimpleDateFormat.java:639)
+	at java.text.SimpleDateFormat.<init>(SimpleDateFormat.java:605)
+	at java.text.SimpleDateFormat.<init>(SimpleDateFormat.java:580)
+	at com.fasoo.sparrow.pmd.logger.PMDLogger.<clinit>(PMDLogger.java:12)
+	at com.fasoo.sparrow.pmd.option.OptionParser.parse(OptionParser.java:71)
+	at com.fasoo.sparrow.pmd.option.OptionParser.<init>(OptionParser.java:26)
+	at com.fasoo.sparrow.pmd.PMDMain.run(PMDMain.java:24)
+	at com.fasoo.sparrow.pmd.PMDMain.main(PMDMain.java:115)
+
+"VM Thread" os_prio=2 tid=0x000000002c094800 nid=0xf098 runnable 
+
+"ParGC Thread#0" os_prio=0 tid=0x0000000003599000 nid=0x47180 runnable 
+
+"ParGC Thread#1" os_prio=0 tid=0x000000000359a800 nid=0x8d148 runnable 
+
+"ParGC Thread#2" os_prio=0 tid=0x000000000359c000 nid=0xac364 runnable 
+
+"ParGC Thread#3" os_prio=0 tid=0x000000000359d800 nid=0xec394 runnable 
+
+"ParGC Thread#4" os_prio=0 tid=0x00000000035a0000 nid=0x53238 runnable 
+
+"ParGC Thread#5" os_prio=0 tid=0x00000000035a1000 nid=0xe35e4 runnable 
+
+"ParGC Thread#6" os_prio=0 tid=0x00000000035a5800 nid=0x5dddc runnable 
+
+"ParGC Thread#7" os_prio=0 tid=0x00000000035a6800 nid=0xad82c runnable 
+
+"ParGC Thread#8" os_prio=0 tid=0x00000000035a7800 nid=0xa1ea4 runnable 
+
+"ParGC Thread#9" os_prio=0 tid=0x00000000035a9000 nid=0x8e508 runnable 
+
+"ParGC Thread#10" os_prio=0 tid=0x00000000035aa000 nid=0x1d3bc runnable 
+
+"ParGC Thread#11" os_prio=0 tid=0x00000000035ad800 nid=0x2b8f4 runnable 
+
+"ParGC Thread#12" os_prio=0 tid=0x00000000035ae800 nid=0x14058 runnable 
+
+"ParGC Thread#13" os_prio=0 tid=0x00000000035af800 nid=0x3d328 runnable 
+
+"ParGC Thread#14" os_prio=0 tid=0x00000000035b1000 nid=0x3ddc8 runnable 
+
+"ParGC Thread#15" os_prio=0 tid=0x00000000035b2000 nid=0xa0154 runnable 
+
+"ParGC Thread#16" os_prio=0 tid=0x00000000035b8000 nid=0x993c4 runnable 
+
+"ParGC Thread#17" os_prio=0 tid=0x00000000035c2000 nid=0x82b40 runnable 
+
+"ParGC Thread#18" os_prio=0 tid=0x00000000035c0800 nid=0x94e28 runnable 
+
+"ParGC Thread#19" os_prio=0 tid=0x00000000035c0000 nid=0xbbb2c runnable 
+
+"ParGC Thread#20" os_prio=0 tid=0x00000000035c1800 nid=0x651ac runnable 
+
+"ParGC Thread#21" os_prio=0 tid=0x00000000035bf800 nid=0x35edc runnable 
+
+"ParGC Thread#22" os_prio=0 tid=0x00000000035c2800 nid=0xe0ea0 runnable 
+
+"VM Periodic Task Thread" os_prio=2 tid=0x000000002e769000 nid=0xa07b8 waiting on condition 
+
+JNI global references: 5
+

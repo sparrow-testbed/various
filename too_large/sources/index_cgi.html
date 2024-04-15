@@ -1,0 +1,59 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ks_c_5601-1987">
+<title>XecureWeb ver 4 Demo</title>
+</head>
+
+<body text="#FFFFFF" bgcolor="#000000" link="#FFFF00" vlink="#66FFFF" alink="#66FFFF">
+<script Language=javascript src='/XecureObject/xecureweb.js'></script>
+
+<Script Language='JavaScript'>
+
+if (navigator.appName == 'Netscape') {
+
+  var XecureMime = navigator.mimeTypes["application/x-SoftForum-XecSSL40"];
+  if (XecureMime) {   // Xecure PlugIn 이 이미 설치되어 있는 경우
+	if ( isNewPlugin(XecureMime.enabledPlugin.description) == false) {
+		if (navigator.userAgent.indexOf("Mozilla/4") == 0)  // Netscape 4.0 up. Using SmartUpdate
+			downloadNow();
+	}
+   }
+   else {     // Xecure PlugIn 이 설치되어 있지 않은 경우
+		if (navigator.userAgent.indexOf("Mozilla/4") == 0)  // Netscape 4.0 up. Using SmartUpdate
+			downloadNow();
+   }
+}
+
+</Script>
+
+<center>
+<img src="./image/xw.jpg"></p>
+
+<h2>환영합니다.</h2> <br><br>
+</center>
+최상의 암호/인증 보안 솔루션 XecureWeb ver4 를 사용해 주셔서 감사합니다.<br> 
+본 데모에 처음 접속하신 경우에는 클라이언트 설치 프로그램이 자동으로 다운로드 되어 PC 에 설치됩니다. 잠시만 기다리십시요.<br>
+PC 에 설치를 하신후 아래의 cgi demo 를 사용하십시요. <br><br>
+자동 다운로드가 실패할 경우, 아래의 클라이언트 설치 프로그램 페이지로 이동하여 설치프로그램을 받은후 직접 설치하시면 됩니다.<br><br>
+
+<OBJECT ID="XecureWeb" CLASSID="CLSID:7E9FDB80-5316-11D4-B02C-00C04F0CD404" 
+	CODEBASE="/XecureObject/xw40_install.cab#Version=4,1,0,0" >
+<COMMENT>
+        <EMBED type='application/x-SoftForum-XecSSL40' hidden=true name='XecureWeb'>
+        <NOEMBED> 
+</COMMENT>
+           No XecureWeb 4.0 PlugIn
+        </NOEMBED>
+        </EMBED>
+</OBJECT>
+<script language='javascript'>
+// PutBannerUrl();
+// PutCACert();
+</script>
+
+<center>
+[<a href="/XecureDoc/client_sw_install.html">클라이언트 설치 프로그램</a>]<br><br>
+[<a href="./cgi/index.html"> CGI demo </a>]
+</center>
+</body>
+</html>

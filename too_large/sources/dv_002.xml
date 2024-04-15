@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+<service>
+	<method name = "getProgressList">
+<![CDATA[
+			SELECT   HD.PO_NO
+					,DT.ITEM_NO
+					,DT.DESCRIPTION_LOC
+					,DT.SPECIFICATION
+					,DT.MAKER_NAME
+					,HD.PO_CREATE_DATE
+					,GETICOMBACO2(HD.HOUSE_CODE, HD.COMPANY_CODE, 'P', HD.CTRL_CODE) AS CTRL_CODE
+					,GETUSERNAME(HD.HOUSE_CODE, HD.PURCHASER_ID,'LOC') AS PURCHASER_NAME
+					,DT.RD_DATE
+					,CD.CTR_NO
+					,HD.CUR
+					,DT.UNIT_PRICE
+					,DT.UNIT_MEASURE
+					,HD.SUBJECT
+					,DT.ITEM_QTY
+					,DT.ITEM_AMT
+					,NVL ((SELECT SUM(GR_QTY) FROM ICOYIVDT
+					  WHERE HOUSE_CODE 	= DT.HOUSE_CODE
+					    AND PO_NO	   	= DT.PO_NO
+					    AND PO_SEQ	   	= DT.PO_SEQ
+					    AND STATUS 		<> 'D'), 0) AS GR_QTY
+					,getIvSeq(DT.HOUSE_CODE, DT.PO_NO, DT.PO_SEQ) AS IV_SEQ
+					,(SELECT MAX(DP_PLAN_DATE) FROM ICOYIVDP VP
+					  WHERE VP.HOUSE_CODE = DT.HOUSE_CODE
+					    AND VP.PO_NO	  = DT.PO_NO
+					    AND VP.IV_SEQ	  = getIvSeq(DT.HOUSE_CODE, DT.PO_NO, DT.PO_SEQ)) AS DP_PLAN_DATE
+					/*,GETICOMCODE1(HD.HOUSE_CODE,'M645',DT.COMPLETE_MARK) AS COMPLETE_GR_MARK*/
+					,CASE WHEN HD.END_DATE IS NOT NULL THEN GETICOMCODE2(HD.HOUSE_CODE,'M645', 'YY')
+				           ELSE GETICOMCODE2(HD.HOUSE_CODE,'M645', NVL(HD.COMPLETE_MARK, 'N'))
+				      END AS COMPLETE_GR_MARK
+					,(SELECT PH.PR_TYPE FROM ICOYPRHD PH
+					  WHERE PH.HOUSE_CODE = DT.HOUSE_CODE
+					    AND PH.PR_NO	  = DT.PR_NO
+					    AND PH.STATUS	 <> 'D') AS PR_TYPE
+			FROM ICOYPOHD HD, ICOYPODT DT, ICOYCNDT CD
+			WHERE HD.HOUSE_CODE 	= DT.HOUSE_CODE
+			  AND HD.PO_NO			= DT.PO_NO
+			  AND DT.HOUSE_CODE 	= CD.HOUSE_CODE(+)
+			  AND DT.EXEC_NO		= CD.EXEC_NO(+)
+			  AND DT.EXEC_SEQ		= CD.EXEC_SEQ(+)
+			  AND HD.SHIPPER_TYPE 	= 'D'
+			  AND HD.STATUS 		<> 'D'
+			  AND DT.STATUS 		<> 'D'
+			  AND HD.SIGN_STATUS 	= 'E'
+			  AND HD.HOUSE_CODE 	= ${session.HOUSE_CODE}		
+			  AND HD.PO_CREATE_DATE BETWEEN $S{from_date}
+			  AND $S{to_date}  						 		  
+              AND HD.PO_NO 			LIKE '%' || $S{po_no} || '%'
+              AND DT.ITEM_NO		= $S{item_no}  
+              AND HD.VENDOR_CODE	= ${session.COMPANY_CODE} 
+              AND HD.ADD_USER_ID	= $S{ADD_USER_ID}
+]]>
+           
+		<if test="${close_status}" operator="eq" value="YY">
+				AND HD.END_DATE IS NOT NULL
+		</if>
+		<if test="${close_status}" operator="eq" value="Y">
+				AND HD.COMPLETE_MARK = '#close_status#'
+		</if>
+		<if test="${close_status}" operator="eq" value="N">
+				AND HD.COMPLETE_MARK = '#close_status#'
+				AND HD.END_DATE IS NULL
+		</if>              
+
+                
+                                 		  
+			ORDER BY HD.SIGN_DATE DESC, HD.PO_NO DESC
+
+</method>
+
+</service>

@@ -1,0 +1,1387 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+	<service>
+		<method name="getWaitList">
+		    <![CDATA[
+		    	SELECT DISTINCT 
+				       CNHD.EXEC_NO  
+				     , CONVERT_DATE(CNHD.CHANGE_DATE) AS CHANGE_DATE   
+				     , CNHD.SUBJECT  
+				     , (SELECT SUM(ITEM_AMT) FROM ICOYCNDT WHERE EXEC_NO = CNHD.EXEC_NO) EXEC_AMT_KRW 
+				     , CNHD.CTRL_CODE CTRL_CODE_NAME  
+				     , VNGL.VENDOR_CODE AS PO_SELLER_CODE  
+				     , VNGL.VENDOR_NAME_LOC AS PO_SELLER_NAME  
+				     , CNDT.RFQ_NO          AS RFQ_NUMBER  
+				     , CNDT.RFQ_COUNT       AS RFQ_COUNT  
+				     , CNHD.EXEC_NO         AS EXEC_NUMBER  
+				     , '0'                  AS EXEC_COUNT  
+				     , ECCT.CONT_NO     	AS CONT_NUMBER  
+				     , ECCT.CONT_GL_SEQ     AS CONT_GL_SEQ  
+				     , '0'                  AS PO_COUNT  
+				     , ''                   AS PURCHASER_NAME 
+				  FROM 
+				       ICOYCNHD CNHD  
+				     , ICOYCNDT CNDT  
+				     , ICOMVNGL VNGL  
+				     , SCPGL ECCT 
+				 WHERE 
+				       1 = 1 
+				       AND CNHD.HOUSE_CODE = $S{house_code} 
+				       AND CNHD.SIGN_STATUS = 'E' 
+				       AND CNHD.STATUS     != 'D' 
+				       AND CNHD.HOUSE_CODE  = CNDT.HOUSE_CODE 
+				       AND CNHD.EXEC_NO     = CNDT.EXEC_NO 
+				       AND CNHD.ADD_USER_ID = $S{ctrl_person_id} 
+				       AND CNDT.CONTRACT_FLAG = 'Y' 
+				       AND CNDT.STATUS       != 'D' 
+				       AND CNDT.EXEC_NO       = ECCT.EXEC_NO(+) 
+				       AND ECCT.CONT_NO IS NULL
+				       AND CNDT.STATUS       != 'D' 
+				       AND CNDT.HOUSE_CODE    = VNGL.HOUSE_CODE 
+				       AND CNDT.VENDOR_CODE   = VNGL.VENDOR_CODE 
+				       AND VNGL.VENDOR_NAME_LOC LIKE '%' || $S{vendor_name_loc} || '%' 
+				UNION ALL
+                SELECT DISTINCT
+				       CNHD.EXEC_NO  
+				     , CONVERT_DATE(CNHD.CHANGE_DATE) AS CHANGE_DATE   
+				     , CNHD.SUBJECT  
+				     , (SELECT SUM(ITEM_AMT) FROM ICOYCNDT WHERE EXEC_NO = CNHD.EXEC_NO) EXEC_AMT_KRW 
+				     , CNHD.CTRL_CODE CTRL_CODE_NAME  
+				     , VNGL.VENDOR_CODE AS PO_SELLER_CODE  
+				     , VNGL.VENDOR_NAME_LOC AS PO_SELLER_NAME  
+				     , CNDT.RFQ_NO          AS RFQ_NUMBER  
+				     , CNDT.RFQ_COUNT       AS RFQ_COUNT  
+				     , CNHD.EXEC_NO         AS EXEC_NUMBER  
+				     , '0'                  AS EXEC_COUNT  
+				     --, ECCT.CONT_NO     	AS CONT_NUMBER  
+				     --, ECCT.CONT_GL_SEQ     AS CONT_GL_SEQ  
+				     , ''     	            AS CONT_NUMBER  
+				     , ''                   AS CONT_GL_SEQ  
+				     , '0'                  AS PO_COUNT  
+				     , ''                   AS PURCHASER_NAME 
+				  FROM 
+				       ICOYCNHD CNHD  
+				     , ICOYCNDT CNDT  
+				     , ICOMVNGL VNGL  
+				     , SCPGL ECCT 
+				     , (
+				     		SELECT EXEC_NO,COUNT(*) CNT
+				     		FROM SCPGL
+				     		GROUP BY EXEC_NO   
+				        ) ECCT1
+				      , (
+				     		SELECT EXEC_NO,COUNT(*) CNT
+				     		FROM SCPGL
+				     		WHERE CT_FLAG = 'CL'
+				     		GROUP BY EXEC_NO   
+				        ) ECCT2				     
+				   /* , (
+				     		SELECT CONT_NO,EXEC_NO,MAX(CONT_GL_SEQ) CONT_GL_SEQ
+				     		FROM SCPGL
+				     		WHERE CT_FLAG = 'CL'
+				     		GROUP BY CONT_NO,EXEC_NO   
+				        ) ECCT3 */				      
+				 WHERE 
+				       1 = 1 
+				       AND CNHD.HOUSE_CODE = $S{house_code} 
+				       AND CNHD.SIGN_STATUS = 'E' 
+				       AND CNHD.STATUS     != 'D' 
+				       AND CNHD.HOUSE_CODE  = CNDT.HOUSE_CODE 
+				       AND CNHD.EXEC_NO     = CNDT.EXEC_NO 
+				       AND CNHD.ADD_USER_ID = $S{ctrl_person_id} 
+				       AND CNDT.CONTRACT_FLAG = 'Y' 
+				       AND CNDT.STATUS       != 'D' 
+				       AND CNDT.EXEC_NO       = ECCT.EXEC_NO
+				       AND ECCT.EXEC_NO       = ECCT1.EXEC_NO
+				       AND ECCT.EXEC_NO       = ECCT2.EXEC_NO
+				    /* AND ECCT.EXEC_NO       = ECCT3.EXEC_NO */
+				       AND ECCT1.CNT          = ECCT2.CNT 
+				    /* AND ECCT3.CONT_GL_SEQ  = ECCT.CONT_GL_SEQ */
+				       AND CNDT.STATUS       != 'D' 
+				       AND CNDT.HOUSE_CODE    = VNGL.HOUSE_CODE 
+				       AND CNDT.VENDOR_CODE   = VNGL.VENDOR_CODE
+				       AND VNGL.VENDOR_NAME_LOC LIKE '%' || $S{vendor_name_loc} || '%'  					    			       
+					ORDER BY 
+					       CNHD.EXEC_NO DESC
+				]]>
+		</method>
+
+		<method name="setCTInsert_getContract_signData">
+		    <![CDATA[
+			    SELECT                
+				      SIGN_HASH       
+				FROM SSIGN WHERE 1=1 
+					AND CONT_NO     = $S{cont_number} 
+					AND CONT_COUNT  = $S{cont_gl_seq} 
+				]]>
+		</method>
+
+
+		<method name="setCTInsert_contract_count">
+		    <![CDATA[
+		    
+		    	SELECT 
+				       COUNT ( * ) CNT 
+				  FROM 
+				       SCTGL 
+				 WHERE 
+				       1 = 1 
+				       AND CONT_NUMBER = $S{cont_number} 
+				       AND CONT_GL_SEQ = $S{cont_gl_seq} 
+				]]>
+		</method>
+
+		<method name="setCTInsert_contract_insert">
+		    <![CDATA[
+		    
+		    	INSERT 
+				  INTO 
+				       SCTGL 
+				       ( 
+				           COMPANY_CODE  
+				         , CONT_NUMBER  
+				         , CONT_GL_SEQ  
+				         , PO_NUMBER  
+				         , PO_COUNT  
+				         , EXEC_NUMBER  
+				         , PROJECT_NAME  
+				         , PROJECT_CODE  
+				         , SUBJECT  
+				         , CONT_TYPE  
+				         , POR_NAME  
+				         , CONT_METHOD  
+				         , CHANGE_METHOD  
+				         , CONT_DATE  
+				         , CONT_ADD_DATE  
+				         , CONT_AMT  
+				         , ADD_DATE  
+				         , ADD_TIME  
+				         , ADD_USER_ID  
+				         , CHANGE_DATE  
+				         , CHANGE_TIME  
+				         , CHANGE_USER_ID  
+				         , DEL_FLAG  
+				         , CONT_FROM  
+				         , CONT_TO  
+				         , SIGN_PERSON_ID  
+				         , SIGN_PERSON_DEP  
+				         , OPER_DEP  
+				         , OPER_CHARGE  
+				         , PROJET_MANAGER  
+				         , CLIENT_NAME  
+				         , EX_WORK  
+				         , SELLER_CODE  
+				         , ADD_TAX_FLAG  
+				         , DELAY_CHARGE  
+				         , BD_NUMBER  
+				         , ST_DATE  
+				         , RD_DATE  
+				         , PAY_TERMS_TEXT  
+				         , PAY_TERMS  
+				         , REMARK  
+				         , FIRST_AMT  
+				         , THIRD_AMT  
+				         , SECOND_AMT_01  
+				         , SECOND_AMT_02  
+				         , SECOND_AMT_03  
+				         , SECOND_AMT_04  
+				         , SECOND_AMT_05  
+				         , FIRST_AMT_RATIO  
+				         , THIRD_AMT_RATIO  
+				         , SECOND_AMT_RATIO_01  
+				         , SECOND_AMT_RATIO_02  
+				         , SECOND_AMT_RATIO_03  
+				         , SECOND_AMT_RATIO_04  
+				         , SECOND_AMT_RATIO_05  
+				         , FIRST_AMT_TIME  
+				         , THIRD_AMT_TIME  
+				         , SECOND_AMT_TIME_01  
+				         , SECOND_AMT_TIME_02  
+				         , SECOND_AMT_TIME_03  
+				         , SECOND_AMT_TIME_04  
+				         , SECOND_AMT_TIME_05  
+				         , FIRST_AMT_DATE  
+				         , THIRD_AMT_DATE  
+				         , SECOND_AMT_DATE_01  
+				         , SECOND_AMT_DATE_02  
+				         , SECOND_AMT_DATE_03  
+				         , SECOND_AMT_DATE_04  
+				         , SECOND_AMT_DATE_05  
+				         , FIRST_AMT_PAY  
+				         , THIRD_AMT_PAY  
+				         , SECOND_AMT_PAY_01  
+				         , SECOND_AMT_PAY_02  
+				         , SECOND_AMT_PAY_03  
+				         , SECOND_AMT_PAY_04  
+				         , SECOND_AMT_PAY_05  
+				         , PRE_INS_AMT  
+				         , PRE_INS_PERCENT  
+				         , PRE_INS_DATE  
+				         , CONT_INS_AMT  
+				         , CONT_INS_PERCENT  
+				         , CONT_INS_FROM  
+				         , CONT_INS_TO  
+				         , FAULT_INS_AMT  
+				         , FAULT_INS_PERCENT  
+				         , FAULT_INS_FROM  
+				         , FAULT_INS_TO  
+				         , ATTACH_NO  
+				         , ATTACH_NO_USER  
+				         , ATTACH_NO1  
+				         , ATTACH_NO1_USER  
+				         , ATTACH_NO2  
+				         , ATTACH_NO2_USER  
+				         , ATTACH_NO3  
+				         , ATTACH_NO3_USER  
+				         , ATTACH_NO4  
+				         , ATTACH_NO4_USER  
+				         , INS_VENDOR_NO  
+				         , CONT_INS_NO  
+				         , ATTACH_CONT_INS_NO  
+				         , FAULT_INS_NO  
+				         , ATTACH_FAULT_INS_NO  
+				         , CONT_INS_FLAG  
+				         , FAULT_INS_FLAG  
+				         , CONT_REJECT_REASON  
+				         , CONT_INS_PATH  
+				         , FAULT_INS_PATH  
+				         , PRE_INS_NO  
+				         , ATTACH_PRE_INS_NO  
+				         , PRE_INS_FLAG  
+				         , PRE_INS_PATH  
+				         , ATTACH_INS_XMLNO  
+				         , ATTACH_FAL_XMLNO  
+				         , ATTACH_PRE_XMLNO  
+				         , DISCARD_DATE  
+				         , DISCARD_REASON  
+				         , CT_FLAG  
+				         , TEXT_NUMBER  
+				         , CTRL_CODE  
+				         , PAY_TERMS_TEXT_1  
+				         , ERP_FLAG  
+				         , RIVISION_REASON_TEXT  
+				         , PLANT_CODE  
+				         , RIVISION_REASON  
+				         , PO_NAME  
+				         , SURETY_FLAG  
+				         , PREINS_SELLER_CHECK  
+				         , CONINS_SELLER_CHECK  
+				         , FLRINS_SELLER_CHECK  
+				         , SEND_DATE  
+				         , SEL_ACCEPT_DATE  
+				         , BUY_ACCEPT_DATE  
+				         , SEL_REG_NO  
+				         , BUYER_COMPANY_IRS_NO  
+				         , BUYER_COMPANY_NAME  
+				         , BUYER_COMPANY_ADDR  
+				         , BUYER_COMPANY_CEO_NAME  
+				         , SELLER_COMPANY_IRS_NO  
+				         , SELLER_COMPANY_NAME  
+				         , SELLER_COMPANY_ADDR  
+				         , SELLER_COMPANY_CEO_NAME  
+				         , CONT_AMT_TEXT  
+				         , CONT_TTL_AMT_TEXT  
+				         , CONT_TTL_AMT  
+				         , CONT_VAT_TEXT  
+				         , CONT_VAT  
+				         , BUYER_COMPANY_ZIP_CODE1  
+				         , BUYER_COMPANY_ZIP_CODE2  
+				         , SELLER_COMPANY_ZIP_CODE1  
+				         , SELLER_COMPANY_ZIP_CODE2  
+				         , BUYER_COMPANY_ADDR2  
+				         , SELLER_COMPANY_ADDR2  
+				         , LOCATION  
+				         , PAY_TERMS_DATE  
+				         , PAY_TERMS_PERCENT  
+				         , PAY_TERMS_SPEC_FLAG  
+				         , PERIOD_CHECK  
+				         , DELAY_PRICE  
+				         , PRE_INS_PERCENT_TEXT  
+				         , DELAY_DATE1  
+				         , DELAY_PRICE1  
+				         , DELAY_REMARK1  
+				         , DELAY_DATE2  
+				         , DELAY_PRICE2  
+				         , DELAY_REMARK2  
+				         , DELAY_REMARK3  
+				         , CONFIRM_METHOD  
+				         , MUTUAL_DISTRICT  
+				         , PRESIDENT  
+				         , PAY_TERMS_SPEC  
+				         , CONTRACT_EFFECT  
+				         , DESCRIPTION1  
+				         , UNIT_MEASURE1  
+				         , ITEM_QTY1  
+				         , UNIT_PRICE1  
+				         , ITEM_AMT1  
+				         , DESCRIPTION2  
+				         , UNIT_MEASURE2  
+				         , ITEM_QTY2  
+				         , UNIT_PRICE2  
+				         , ITEM_AMT2  
+				         , DESCRIPTION3  
+				         , TEAM_VIEW  
+				         , DIFFERENT_TEAM_VIEW  
+				         , APP_TEAM_MANAGER  
+				         , APP_TEAM_MANAGER_TEXT  
+				         , APP_JUDICIAL  
+				         , APP_JUDICIAL_TEXT  
+				         , PERSON_CHARGE_PHONE1  
+				         , PERSON_CHARGE_PHONE2  
+				         , PERSON_CHARGE_PHONE3  
+				         , CONT_CONTENTS  
+				         , MIGRATION_REMARK  
+				       ) 
+				       VALUES 
+				       ( 
+				           ${company_code}  
+				         , ${cont_number}  
+				         , ${cont_gl_seq}  
+				         , ${po_number}  
+				         , ${po_count}  
+				         , ${exec_number}  
+				         , ${pj_name}  
+				         , ${pj_code}  
+				         , ${subject}  
+				         , ${cont_type}  
+				         , ${por_name}  
+				         , ${cont_method}  
+				         , ${change_method}  
+				         , ${cont_date}  
+				         , ${current_date}  
+				         , ${cont_amt}  
+				         , ${current_date}  
+				         , ${current_time}  
+				         , ${session_user_id}  
+				         , ${current_date}  
+				         , ${current_time}  
+				         , ${session_user_id}  
+				         , ${del_flag}  
+				         , ${cont_from}  
+				         , ${cont_to}  
+				         , ${sign_person_id}  
+				         , ${sign_person_dep}  
+				         , ${oper_dep}  
+				         , ${oper_charge}  
+				         , ${projet_manager}  
+				         , ${client_name}  
+				         , ${ex_work}  
+				         , ${seller_code}  
+				         , ${add_tax_flag}  
+				         , ${delay_charge}  
+				         , ${bd_number}  
+				         , ${st_date}  
+				         , ${rd_date}  
+				         , ${pay_terms_text}  
+				         , ${pay_terms}  
+				         , ${remark}  
+				         , ${first_amt}  
+				         , ${third_amt}  
+				         , ${second_amt_01}  
+				         , ${second_amt_02}  
+				         , ${second_amt_03}  
+				         , ${second_amt_04}  
+				         , ${second_amt_05}  
+				         , ${first_amt_ratio}  
+				         , ${third_amt_ratio}  
+				         , ${second_amt_ratio_01}  
+				         , ${second_amt_ratio_02}  
+				         , ${second_amt_ratio_03}  
+				         , ${second_amt_ratio_04}  
+				         , ${second_amt_ratio_05}  
+				         , ${first_amt_time}  
+				         , ${third_amt_time}  
+				         , ${second_amt_time_01}  
+				         , ${second_amt_time_02}  
+				         , ${second_amt_time_03}  
+				         , ${second_amt_time_04}  
+				         , ${second_amt_time_05}  
+				         , ${first_amt_date}  
+				         , ${third_amt_date}  
+				         , ${second_amt_date_01}  
+				         , ${second_amt_date_02}  
+				         , ${second_amt_date_03}  
+				         , ${second_amt_date_04}  
+				         , ${second_amt_date_05}  
+				         , ${first_amt_pay}  
+				         , ${third_amt_pay}  
+				         , ${second_amt_pay_01}  
+				         , ${second_amt_pay_02}  
+				         , ${second_amt_pay_03}  
+				         , ${second_amt_pay_04}  
+				         , ${second_amt_pay_05}  
+				         , ${pre_ins_amt}  
+				         , ${pre_ins_percent}  
+				         , ${pre_ins_date}  
+				         , ${cont_ins_amt}  
+				         , ${cont_ins_percent}  
+				         , ${cont_ins_from}  
+				         , ${cont_ins_to}  
+				         , ${fault_ins_amt}  
+				         , ${fault_ins_percent}  
+				         , ${fault_ins_from}  
+				         , ${fault_ins_to}  
+				         , ${attach_no}  
+				         , ${attach_no_user}  
+				         , ${attach_no1}  
+				         , ${attach_no1_user}  
+				         , ${attach_no2}  
+				         , ${attach_no2_user}  
+				         , ${attach_no3}  
+				         , ${attach_no3_user}  
+				         , ${attach_no4}  
+				         , ${attach_no4_user}  
+				         , ${ins_vendor_no}  
+				         , ${cont_ins_no}  
+				         , ${attach_cont_ins_no}  
+				         , ${fault_ins_no}  
+				         , ${attach_fault_ins_no}  
+				         , ${cont_ins_flag}  
+				         , ${fault_ins_flag}  
+				         , ${cont_reject_reason}  
+				         , ${cont_ins_path}  
+				         , ${fault_ins_path}  
+				         , ${pre_ins_no}  
+				         , ${attach_pre_ins_no}  
+				         , ${pre_ins_flag}  
+				         , ${pre_ins_path}  
+				         , ${attach_ins_xmlno}  
+				         , ${attach_fal_xmlno}  
+				         , ${attach_pre_xmlno}  
+				         , ${discard_date}  
+				         , ${discard_reason}  
+				         , ${ct_flag}  
+				         , ${text_number}  
+				         , ${ctrl_code}  
+				         , ${pay_terms_text_1}  
+				         , ${erp_flag}  
+				         , ${rivision_reason_text}  
+				         , ${plant_code}  
+				         , ${rivision_reason}  
+				         , ${po_name}  
+				         , ${surety_flag}  
+				         , ${preins_seller_check}  
+				         , ${conins_seller_check}  
+				         , ${flrins_seller_check}  
+				         , ${send_date}  
+				         , ${sel_accept_date}  
+				         , ${buy_accept_date}  
+				         , ${sel_reg_no}  
+				         , ${buyer_company_irs_no}  
+				         , ${buyer_company_name}  
+				         , ${buyer_company_addr}  
+				         , ${buyer_company_ceo_name}  
+				         , ${seller_company_irs_no}  
+				         , ${seller_company_name}  
+				         , ${seller_company_addr}  
+				         , ${seller_company_ceo_name}  
+				         , ${cont_amt_text}  
+				         , ${cont_ttl_amt_text}  
+				         , ${cont_ttl_amt}  
+				         , ${cont_vat_text}  
+				         , ${cont_vat}  
+				         , ${buyer_company_zip_code1}  
+				         , ${buyer_company_zip_code2}  
+				         , ${seller_company_zip_code1}  
+				         , ${seller_company_zip_code2}  
+				         , ${buyer_company_addr2}  
+				         , ${seller_company_addr2}  
+				         , ${location}  
+				         , ${pay_terms_date}  
+				         , ${pay_terms_percent}  
+				         , ${pay_terms_spec_flag}  
+				         , ${period_check}  
+				         , ${delay_price}  
+				         , ${pre_ins_percent_text}  
+				         , ${delay_date1}  
+				         , ${delay_price1}  
+				         , ${delay_remark1}  
+				         , ${delay_date2}  
+				         , ${delay_price2}  
+				         , ${delay_remark2}  
+				         , ${delay_remark3}  
+				         , ${confirm_method}  
+				         , ${mutual_district}  
+				         , ${president}  
+				         , ${pay_terms_spec}  
+				         , ${contract_effect}  
+				         , ${description1}  
+				         , ${unit_measure1}  
+				         , ${item_qty1}  
+				         , ${unit_price1}  
+				         , ${item_amt1}  
+				         , ${description2}  
+				         , ${unit_measure2}  
+				         , ${item_qty2}  
+				         , ${unit_price2}  
+				         , ${item_amt2}  
+				         , ${description3}  
+				         , ${team_view}  
+				         , ${different_team_view}  
+				         , ${app_team_manager}  
+				         , ${app_team_manager_text}  
+				         , ${app_judicial}  
+				         , ${app_judicial_text}  
+				         , ${person_charge_phone1}  
+				         , ${person_charge_phone2}  
+				         , ${person_charge_phone3}  
+				         , ${cont_contents}  
+				         , ${migration_remark}  
+				       )  
+				]]>
+		</method>
+		<method name="setCTInsert_contract_update">
+		    <![CDATA[
+		     	UPDATE SCTGL SET                   
+				       PO_NUMBER                =  ${po_number}
+				      ,PO_COUNT                 =  ${po_count}
+				      ,PROJECT_NAME             =  ${pj_name}
+				      ,PROJECT_CODE             =  ${pj_code}
+				      ,SUBJECT                  =  ${subject}
+				      ,CONT_TYPE                =  ${cont_type}
+				      ,POR_NAME                 =  ${por_name}
+				      ,CONT_METHOD              =  ${cont_method}
+				      ,CHANGE_METHOD            =  ${change_method}
+				      ,CONT_DATE                =  ${cont_date}
+				      ,CONT_ADD_DATE            =  ${current_date}
+				      ,CONT_AMT                 =  ${cont_amt}
+				      ,CHANGE_DATE              =  ${current_date}
+				      ,CHANGE_TIME              =  ${current_time}
+				      ,CHANGE_USER_ID           =  ${session_user_id}
+				      ,CONT_FROM                =  ${cont_from}
+				      ,CONT_TO                  =  ${cont_to}
+				      ,SIGN_PERSON_ID           =  ${sign_person_id}
+				      ,SIGN_PERSON_DEP          =  ${sign_person_dep}
+				      ,OPER_DEP                 =  ${oper_dep}
+				      ,OPER_CHARGE              =  ${oper_charge}
+				      ,PROJET_MANAGER           =  ${projet_manager}
+				      ,CLIENT_NAME              =  ${client_name}
+				      ,EX_WORK                  =  ${ex_work}
+				      ,SELLER_CODE              =  ${seller_code}
+				      ,ADD_TAX_FLAG             =  ${add_tax_flag}
+				      ,DELAY_CHARGE             =  ${delay_charge}
+				      ,BD_NUMBER                =  ${bd_number}
+				      ,ST_DATE                  =  ${st_date}
+				      ,RD_DATE                  =  ${rd_date}
+				      ,PAY_TERMS_TEXT           =  ${pay_terms_text}
+				      ,PAY_TERMS                =  ${pay_terms}
+				      ,REMARK                   =  ${remark}
+				      ,FIRST_AMT                =  ${first_amt}
+				      ,THIRD_AMT                =  ${third_amt}
+				      ,SECOND_AMT_01            =  ${second_amt_01}
+				      ,SECOND_AMT_02            =  ${second_amt_02}
+				      ,SECOND_AMT_03            =  ${second_amt_03}
+				      ,SECOND_AMT_04            =  ${second_amt_04}
+				      ,SECOND_AMT_05            =  ${second_amt_05}
+				      ,FIRST_AMT_RATIO          =  ${first_amt_ratio}
+				      ,THIRD_AMT_RATIO          =  ${third_amt_ratio}
+				      ,SECOND_AMT_RATIO_01      =  ${second_amt_ratio_01}
+				      ,SECOND_AMT_RATIO_02      =  ${second_amt_ratio_02}
+				      ,SECOND_AMT_RATIO_03      =  ${second_amt_ratio_03}
+				      ,SECOND_AMT_RATIO_04      =  ${second_amt_ratio_04}
+				      ,SECOND_AMT_RATIO_05      =  ${second_amt_ratio_05}
+				      ,FIRST_AMT_TIME           =  ${first_amt_time}
+				      ,THIRD_AMT_TIME           =  ${third_amt_time}
+				      ,SECOND_AMT_TIME_01       =  ${second_amt_time_01}
+				      ,SECOND_AMT_TIME_02       =  ${second_amt_time_02}
+				      ,SECOND_AMT_TIME_03       =  ${second_amt_time_03}
+				      ,SECOND_AMT_TIME_04       =  ${second_amt_time_04}
+				      ,SECOND_AMT_TIME_05       =  ${second_amt_time_05}
+				      ,FIRST_AMT_DATE           =  ${first_amt_date}
+				      ,THIRD_AMT_DATE           =  ${third_amt_date}
+				      ,SECOND_AMT_DATE_01       =  ${second_amt_date_01}
+				      ,SECOND_AMT_DATE_02       =  ${second_amt_date_02}
+				      ,SECOND_AMT_DATE_03       =  ${second_amt_date_03}
+				      ,SECOND_AMT_DATE_04       =  ${second_amt_date_04}
+				      ,SECOND_AMT_DATE_05       =  ${second_amt_date_05}
+				      ,FIRST_AMT_PAY            =  ${first_amt_pay}
+				      ,THIRD_AMT_PAY            =  ${third_amt_pay}
+				      ,SECOND_AMT_PAY_01        =  ${second_amt_pay_01}
+				      ,SECOND_AMT_PAY_02        =  ${second_amt_pay_02}
+				      ,SECOND_AMT_PAY_03        =  ${second_amt_pay_03}
+				      ,SECOND_AMT_PAY_04        =  ${second_amt_pay_04}
+				      ,SECOND_AMT_PAY_05        =  ${second_amt_pay_05}
+				      ,PRE_INS_AMT              =  ${pre_ins_amt}
+				      ,PRE_INS_PERCENT          =  ${pre_ins_percent}
+				      ,PRE_INS_DATE             =  ${pre_ins_date}
+				      ,CONT_INS_AMT             =  ${cont_ins_amt}
+				      ,CONT_INS_PERCENT         =  ${cont_ins_percent}
+				      ,CONT_INS_FROM            =  ${cont_ins_from}
+				      ,CONT_INS_TO              =  ${cont_ins_to}
+				      ,FAULT_INS_AMT            =  ${fault_ins_amt}
+				      ,FAULT_INS_PERCENT        =  ${fault_ins_percent}
+				      ,FAULT_INS_FROM           =  ${fault_ins_from}
+				      ,FAULT_INS_TO             =  ${fault_ins_to}
+				      ,ATTACH_NO                =  ${attach_no}
+				      ,ATTACH_NO_USER           =  ${attach_no_user}
+				      ,ATTACH_NO1               =  ${attach_no1}
+				      ,ATTACH_NO1_USER          =  ${attach_no1_user}
+				      ,ATTACH_NO2               =  ${attach_no2}
+				      ,ATTACH_NO2_USER          =  ${attach_no2_user}
+				      ,ATTACH_NO3               =  ${attach_no3}
+				      ,ATTACH_NO3_USER          =  ${attach_no3_user}
+				      ,ATTACH_NO4               =  ${attach_no4}
+				      ,ATTACH_NO4_USER          =  ${attach_no4_user}
+				      ,INS_VENDOR_NO            =  ${ins_vendor_no}
+				      ,CONT_INS_NO              =  ${cont_ins_no}
+				      ,ATTACH_CONT_INS_NO       =  ${attach_cont_ins_no}
+				      ,FAULT_INS_NO             =  ${fault_ins_no}
+				      ,ATTACH_FAULT_INS_NO      =  ${attach_fault_ins_no}
+				      ,CONT_INS_FLAG            =  ${cont_ins_flag}
+				      ,FAULT_INS_FLAG           =  ${fault_ins_flag}
+				      ,CONT_REJECT_REASON       =  ${cont_reject_reason}
+				      ,CONT_INS_PATH            =  ${cont_ins_path}
+				      ,FAULT_INS_PATH           =  ${fault_ins_path}
+				      ,PRE_INS_NO               =  ${pre_ins_no}
+				      ,ATTACH_PRE_INS_NO        =  ${attach_pre_ins_no}
+				      ,PRE_INS_FLAG             =  ${pre_ins_flag}
+				      ,PRE_INS_PATH             =  ${pre_ins_path}
+				      ,ATTACH_INS_XMLNO         =  ${attach_ins_xmlno}
+				      ,ATTACH_FAL_XMLNO         =  ${attach_fal_xmlno}
+				      ,ATTACH_PRE_XMLNO         =  ${attach_pre_xmlno}
+				      ,DISCARD_DATE             =  ${discard_date}
+				      ,DISCARD_REASON           =  ${discard_reason}
+				      ,CT_FLAG                  =  ${ct_flag}
+				      ,TEXT_NUMBER              =  ${text_number}
+				      ,CTRL_CODE                =  ${ctrl_code}
+				      ,PAY_TERMS_TEXT_1         =  ${pay_terms_text_1}
+				      ,ERP_FLAG                 =  ${erp_flag}
+				      ,RIVISION_REASON_TEXT     =  ${rivision_reason_text}
+				      ,PLANT_CODE               =  ${plant_code}
+				      ,RIVISION_REASON          =  ${rivision_reason}
+				      ,PO_NAME                  =  ${po_name}
+				      ,SURETY_FLAG              =  ${surety_flag}
+				      ,PREINS_SELLER_CHECK      =  ${preins_seller_check}
+				      ,CONINS_SELLER_CHECK      =  ${conins_seller_check}
+				      ,FLRINS_SELLER_CHECK      =  ${flrins_seller_check}
+				      ,SEND_DATE                =  ${send_date}
+				      ,SEL_ACCEPT_DATE          =  ${sel_accept_date}
+				      ,BUY_ACCEPT_DATE          =  ${buy_accept_date}
+				      ,SEL_REG_NO               =  ${sel_reg_no}
+				      ,BUYER_COMPANY_IRS_NO     =  ${buyer_company_irs_no}
+				      ,BUYER_COMPANY_NAME       =  ${buyer_company_name}
+				      ,BUYER_COMPANY_ADDR       =  ${buyer_company_addr}
+				      ,BUYER_COMPANY_CEO_NAME   =  ${buyer_company_ceo_name}
+				      ,SELLER_COMPANY_IRS_NO    =  ${seller_company_irs_no}
+				      ,SELLER_COMPANY_NAME      =  ${seller_company_name}
+				      ,SELLER_COMPANY_ADDR      =  ${seller_company_addr}
+				      ,SELLER_COMPANY_CEO_NAME  =  ${seller_company_ceo_name}
+				      ,CONT_AMT_TEXT            =  ${cont_amt_text}
+				      ,CONT_TTL_AMT_TEXT        =  ${cont_ttl_amt_text}
+				      ,CONT_TTL_AMT             =  ${cont_ttl_amt}
+				      ,CONT_VAT_TEXT            =  ${cont_vat_text}
+				      ,CONT_VAT                 =  ${cont_vat}
+				      ,BUYER_COMPANY_ZIP_CODE1  =  ${buyer_company_zip_code1}
+				      ,BUYER_COMPANY_ZIP_CODE2  =  ${buyer_company_zip_code2}
+				      ,SELLER_COMPANY_ZIP_CODE1 =  ${seller_company_zip_code1}
+				      ,SELLER_COMPANY_ZIP_CODE2 =  ${seller_company_zip_code2}
+				      ,BUYER_COMPANY_ADDR2      =  ${buyer_company_addr2}
+				      ,SELLER_COMPANY_ADDR2     =  ${seller_company_addr2}
+				      ,LOCATION                 =  ${location}
+				      ,PAY_TERMS_DATE           =  ${pay_terms_date}
+				      ,PAY_TERMS_PERCENT        =  ${pay_terms_percent}
+				      ,PAY_TERMS_SPEC_FLAG      =  ${pay_terms_spec_flag}
+				      ,PERIOD_CHECK             =  ${period_check}
+				      ,DELAY_PRICE              =  ${delay_price}
+				      ,PRE_INS_PERCENT_TEXT     =  ${pre_ins_percent_text}
+				      ,DELAY_DATE1              =  ${delay_date1}
+				      ,DELAY_PRICE1             =  ${delay_price1}
+				      ,DELAY_REMARK1            =  ${delay_remark1}
+				      ,DELAY_DATE2              =  ${delay_date2}
+				      ,DELAY_PRICE2             =  ${delay_price2}
+				      ,DELAY_REMARK2            =  ${delay_remark2}
+				      ,DELAY_REMARK3            =  ${delay_remark3}
+				      ,CONFIRM_METHOD           =  ${confirm_method}
+				      ,MUTUAL_DISTRICT          =  ${mutual_district}
+				      ,PRESIDENT                =  ${president}
+				      ,PAY_TERMS_SPEC           =  ${pay_terms_spec}
+				      ,CONTRACT_EFFECT          =  ${contract_effect}
+				      ,DESCRIPTION1             =  ${description1}
+				      ,UNIT_MEASURE1            =  ${unit_measure1}
+				      ,ITEM_QTY1                =  ${item_qty1}
+				      ,UNIT_PRICE1              =  ${unit_price1}
+				      ,ITEM_AMT1                =  ${item_amt1}
+				      ,DESCRIPTION2             =  ${description2}
+				      ,UNIT_MEASURE2            =  ${unit_measure2}
+				      ,ITEM_QTY2                =  ${item_qty2}
+				      ,UNIT_PRICE2              =  ${unit_price2}
+				      ,ITEM_AMT2                =  ${item_amt2}
+				      ,DESCRIPTION3             =  ${description3}
+				      ,TEAM_VIEW                =  ${team_view}
+				      ,DIFFERENT_TEAM_VIEW      =  ${different_team_view}
+				      ,APP_TEAM_MANAGER         =  ${app_team_manager}
+				      ,APP_TEAM_MANAGER_TEXT    =  ${app_team_manager_text}
+				      ,APP_JUDICIAL             =  ${app_judicial}
+				      ,APP_JUDICIAL_TEXT        =  ${app_judicial_text}
+				      ,PERSON_CHARGE_PHONE1     =  ${person_charge_phone1}
+				      ,PERSON_CHARGE_PHONE2     =  ${person_charge_phone2}
+				      ,PERSON_CHARGE_PHONE3     =  ${person_charge_phone3}
+				      ,CONT_CONTENTS            =  ${cont_contents}
+				      ,MIGRATION_REMARK         =  ${migration_remark}
+				 WHERE 1=1                          
+				    AND COMPANY_CODE =             ${company_code}
+				    AND CONT_NUMBER  =             ${cont_number}
+				    AND CONT_GL_SEQ  =             ${cont_gl_seq}
+				]]>
+		</method>
+		<method name="setCTInsert_contract_signdata_insert">
+		    <![CDATA[
+		    	 INSERT INTO SCTSG (             
+				     COMPANY_TYPE                
+				    ,SIGN_CONTENT                
+				    ,SIGN_DATA                   
+				    ,CONT_NUMBER                 
+				    ,CONT_COUNT                  
+				    ,ADD_DATE                    
+				 ) VALUES (                      
+				     ${sctsg_company_type}                           
+				    ,${sctsg_sign_content}                           
+				    ,${sctsg_sign_data}                           
+				    ,${cont_number}                           
+				    ,${cont_gl_seq}                           
+				    ,TO_CHAR(SYSDATE,'yyyymmdd') 
+				 )                               
+				]]>
+		</method>
+		<method name="setCTInsert_contract_sign_delete">
+		    <![CDATA[
+			    DELETE FROM SSIGN         
+					WHERE CONT_NO        = ${cont_number}   
+					AND   CONT_COUNT     = ${cont_gl_seq}   
+				]]>
+		</method>
+		<method name="setCTInsert_contract_sign_insert">
+		    <![CDATA[
+		    		INSERT INTO SSIGN   (  
+					     CONT_NO           
+					    ,CONT_COUNT        
+					    ,SIGN_HASH         
+					    ,SIGN_VALUE        
+					    ,ADD_USER_ID       
+					    ,ADD_DATE          
+					    ,ADD_TIME          
+					    ,CHANGE_USER_ID    
+					    ,CHANGE_DATE       
+					    ,CHANGE_TIME       
+					    ,DEL_FLAG          
+					    ,SIGN_KEY          
+					) VALUES (             
+					     ${cont_number}               
+					    ,${cont_gl_seq}               
+					    ,${sctsg_sign_data}               
+					    ,${sign_value}               
+					    ,${session_user_id}               
+					    ,${current_date}               
+					    ,${current_time}               
+					    ,${session_user_id}               
+					    ,${current_date}               
+					    ,${current_time}               
+					    ,${cont_gl_seq}               
+					    ,${sign_key}               
+					)                      
+				]]>
+		</method>
+		<method name="setCTInsert_contract_update_seller_sign">
+		    <![CDATA[
+		    	 UPDATE SCTGL SET                         
+				       CHANGE_DATE              = ${current_date}
+				      ,CHANGE_TIME              = ${current_time}
+				      ,CHANGE_USER_ID           = ${session_user_id}
+				      ,CT_FLAG                  = ${ct_flag}  
+				      ,SEL_ACCEPT_DATE          = SYSDATE
+				 WHERE 1=1                                
+				    AND COMPANY_CODE = ${company_code} 
+				    AND CONT_NUMBER  = ${cont_number} 
+				    AND CONT_GL_SEQ  = ${cont_gl_seq}                   
+				]]>
+		</method>
+		<method name="setCTInsert_contract_update_buyer_sign">
+		    <![CDATA[
+		    	 UPDATE SCTGL SET                         
+				       CHANGE_DATE              = ${current_date}
+				      ,CHANGE_TIME              = ${current_time}
+				      ,CHANGE_USER_ID           = ${session_user_id}
+				      ,CT_FLAG                  = ${ct_flag}
+				      ,BUY_ACCEPT_DATE          = SYSDATE
+				 WHERE 1=1                                
+				    AND COMPANY_CODE = ${company_code} 
+				    AND CONT_NUMBER  = ${cont_number} 
+				    AND CONT_GL_SEQ  = ${cont_gl_seq} 
+				]]>
+		</method>
+		<method name="setCTInsert_contract_update_send">
+		    <![CDATA[
+		    	 UPDATE SCTGL SET                         
+				       CHANGE_DATE              = ${current_date}
+				      ,CHANGE_TIME              = ${current_time}
+				      ,CHANGE_USER_ID           = ${session_user_id}
+				      ,CT_FLAG                  = ${ct_flag}
+				      ,SEND_DATE                = SYSDATE
+				 WHERE 1=1                                
+				    AND COMPANY_CODE = ${company_code} 
+				    AND CONT_NUMBER  = ${cont_number} 
+				    AND CONT_GL_SEQ  = ${cont_gl_seq} 
+				]]>
+		</method>
+		<method name="getContractDeaitl_contract_count">
+		    <![CDATA[
+		    	SELECT PO_NUMBER, TO_NUMBER(PO_COUNT) + 1 AS PO_COUNT FROM SCTGL WHERE 1=1 
+		    	AND CONT_NUMBER  = $S{cont_number}
+		    	AND CONT_GL_SEQ  = $S{cont_gl_seq}
+				]]>
+		</method>
+		<method name="getContractDeaitl_contract_getExecNumber">
+		    <![CDATA[
+			     SELECT                      
+				         MAX ( EXEC_NUMBER ) 
+				    FROM                     
+				         SCTGL WHERE 1=1  
+				         AND CONT_NUMBER  = $S{cont_number}    
+				]]>
+		</method>
+		<method name="getContractDeaitl_waitDetail">
+		    <![CDATA[
+		    	  SELECT                                                                                                     
+		              *                                                                                              
+		         FROM                                                                                                
+		              (                                                                                              
+		              SELECT                                                                                         
+		                     DRLN.EXEC_NO AS EXEC_NUMBER                                                             
+		                   , DRLN.EXEC_SEQ                                                                           
+		                   , GETDATEFORMAT ( DRGL.ADD_DATE ) AS PO_CREATE_DATE                                       
+		                   , DRGL.SUBJECT                                                                            
+		                   , GETCTRLCODENAME ( '100' , DRGL.COMPANY_CODE , 'P' , DRGL.CTRL_CODE ) AS CTRL_CODE_NAME  
+		                   , DRLN.VENDOR_CODE                                                     AS SELLER_CODE     
+		                   , DRGL.COMPANY_CODE                                                                       
+		                   , DRLN.RFQ_NO AS RFQ_NUMBER                                                               
+		                   , DRLN.RFQ_COUNT                                                                          
+		                   , DRLN.RD_DATE                                                                            
+		                   , DRGL.EXEC_AMT_KRW AS CONT_AMT                                                           
+		                   , DRGL.PAY_TERMS                                                                          
+		                   , GETCODETEXT1 ( 'M421_1' , DRGL.PAY_TERMS , 'KO' ) AS PAY_TERMS_TEXT                     
+		                   , DRLN.CUR                                                                                
+		                   , CMGL.COMPANY_NAME_LOC AS BUYER_COMPANY_NAME                                             
+		                   , B_ADDR.ADDRESS_LOC    AS BUYER_COMPANY_ADDR1                                            
+		                   , B_ADDR.CEO_NAME_LOC   AS BUYER_COMPANY_CEO_NAME                                         
+		                   , SUGL.VENDOR_NAME_LOC  AS SELLER_COMPANY_NAME                                            
+		                   , S_ADDR.ADDRESS_LOC    AS SELLER_COMPANY_ADDR1                                           
+		                   , S_ADDR.CEO_NAME_LOC   AS SELLER_COMPANY_CEO_NAME                                        
+		                   , '#zero#'                  AS CONT_AMT_TEXT                                                  
+		                   , '#zero#'                  AS CONT_TTL_AMT_TEXT                                              
+		                   , ( DRGL.EXEC_AMT_KRW * 0.1 ) + DRGL.EXEC_AMT_KRW AS CONT_TTL_AMT                         
+		                   , '#zero#'                                            AS CONT_VAT_TEXT                        
+		                   , DRGL.EXEC_AMT_KRW * 0.1                         AS CONT_VAT                             
+		                   , DRLN.UNIT_MEASURE                               AS UNIT_MEASURE1                        
+		                   , SUBSTR ( REPLACE ( B_ADDR.ZIP_CODE , '-' , NULL ) , 1 , 3 ) AS BUYER_COMPANY_ZIP_CODE1  
+		                   , SUBSTR ( REPLACE ( B_ADDR.ZIP_CODE , '-' , NULL ) , 4 , 3 ) AS BUYER_COMPANY_ZIP_CODE2  
+		                   , SUBSTR ( REPLACE ( S_ADDR.ZIP_CODE , '-' , NULL ) , 1 , 3 ) AS SELLER_COMPANY_ZIP_CODE1 
+		                   , SUBSTR ( REPLACE ( S_ADDR.ZIP_CODE , '-' , NULL ) , 4 , 3 ) AS SELLER_COMPANY_ZIP_CODE2 
+		                   , SUBSTR ( REPLACE ( CMGL.IRS_NO , '-' , NULL ) , 1 , 3 ) || '-' ||                       
+		                     SUBSTR ( REPLACE ( CMGL.IRS_NO , '-' , NULL ) , 4 , 2 ) || '-' ||                       
+		                     SUBSTR ( REPLACE ( CMGL.IRS_NO , '-' , NULL ) , 6 , 5 ) AS BUYER_COMPANY_IRS_NO         
+		                   , SUBSTR ( REPLACE ( SUGL.IRS_NO , '-' , NULL ) , 1 , 3 ) || '-' ||                       
+		                     SUBSTR ( REPLACE ( SUGL.IRS_NO , '-' , NULL ) , 4 , 2 ) || '-' ||                       
+		                     SUBSTR ( REPLACE ( SUGL.IRS_NO , '-' , NULL ) , 6 , 5 ) AS SELLER_COMPANY_IRS_NO        
+		                FROM                                                                                         
+		                     ICOYCNHD DRGL                                                                           
+		                 LEFT OUTER JOIN                                                                             
+		                     ICOYCNDT DRLN                                                                           
+		                     ON                                                                                      
+		                     DRGL.EXEC_NO = DRLN.EXEC_NO                                                             
+		                 LEFT JOIN                                                                                   
+		                     ICOMCMGL CMGL                                                                           
+		                     ON                                                                                      
+		                     CMGL.COMPANY_CODE = DRGL.COMPANY_CODE                                                   
+		                 LEFT JOIN                                                                                   
+		                     ICOMADDR B_ADDR                                                                         
+		                     ON                                                                                      
+		                     CMGL.COMPANY_CODE = B_ADDR.CODE_NO                                                      
+		                     AND B_ADDR.CODE_TYPE = '1'                                                              
+		                 LEFT JOIN                                                                                   
+		                     ICOMVNGL SUGL                                                                           
+		                     ON                                                                                      
+		                     SUGL.VENDOR_CODE = DRLN.VENDOR_CODE                                                     
+		                 LEFT JOIN                                                                                   
+		                     ICOMADDR S_ADDR                                                                         
+		                     ON                                                                                      
+		                     SUGL.VENDOR_CODE = S_ADDR.CODE_NO                                                       
+		                     AND S_ADDR.CODE_TYPE = '2'                                                              
+		               WHERE                                                                                         
+		                     1 = 1                                                                                   
+		                     AND DRGL.HOUSE_CODE    = ${session.HOUSE_CODE}  
+							 AND DRGL.COMPANY_CODE  = ${company_code}  
+							 AND DRGL.EXEC_NO       = ${exec_no}
+							 AND DRGL.SIGN_STATUS   = 'E'
+					   ) A            
+					   ORDER BY              
+					         EXEC_NUMBER DESC   
+					       , EXEC_SEQ ASC     
+				]]>
+		</method>
+		<method name="getContractDeaitl">
+		    <![CDATA[
+			      SELECT                                                                                                          
+			             CTGL.COMPANY_CODE                                                                                    
+			            ,CTGL.CONT_NUMBER                                                                                     
+			            ,CTGL.CONT_GL_SEQ                                                                                     
+			            ,CTGL.PO_NUMBER                                                                                       
+			            ,CTGL.PO_COUNT                                                                                        
+			            ,CTGL.PROJECT_NAME AS PJ_NAME                                                                         
+			            ,CTGL.PROJECT_CODE                                                                                    
+			            ,CTGL.SUBJECT                                                                                         
+			            ,CTGL.CONT_TYPE                                                                                       
+			            ,CTGL.POR_NAME                                                                                        
+			            ,CTGL.CONT_METHOD                                                                                     
+			            ,CTGL.CHANGE_METHOD                                                                                   
+			            ,CTGL.CONT_DATE                                                                                       
+			            ,CTGL.CONT_ADD_DATE                                                                                   
+			            ,CTGL.CONT_AMT                                                                                        
+			            ,CTGL.ADD_DATE                                                                                        
+			            ,CTGL.ADD_TIME                                                                                        
+			            ,CTGL.ADD_USER_ID                                                                                     
+			            ,CTGL.CHANGE_DATE                                                                                     
+			            ,CTGL.CHANGE_TIME                                                                                     
+			            ,CTGL.CHANGE_USER_ID                                                                                  
+			            ,CTGL.DEL_FLAG                                                                                        
+			            ,CTGL.CONT_FROM                                                                                       
+			            ,CTGL.CONT_TO                                                                                         
+			            ,CTGL.SIGN_PERSON_ID                                                                                  
+			            ,CTGL.SIGN_PERSON_DEP                                                                                 
+			            ,CTGL.OPER_DEP                                                                                        
+			            ,CTGL.OPER_CHARGE                                                                                     
+			            ,CTGL.PROJET_MANAGER                                                                                  
+			            ,CTGL.CLIENT_NAME                                                                                     
+			            ,CTGL.EX_WORK                                                                                         
+			            ,CTGL.SELLER_CODE                                                                                     
+			            ,CTGL.ADD_TAX_FLAG                                                                                    
+			            ,CTGL.DELAY_CHARGE                                                                                    
+			            ,CTGL.BD_NUMBER                                                                                       
+			            ,CTGL.ST_DATE                                                                                         
+			            ,CTGL.RD_DATE                                                                                         
+			            ,CTGL.PAY_TERMS_TEXT                                                                                  
+			            ,CTGL.PAY_TERMS                                                                                       
+			            ,CTGL.REMARK                                                                                          
+			            ,CTGL.FIRST_AMT                                                                                       
+			            ,CTGL.THIRD_AMT                                                                                       
+			            ,CTGL.SECOND_AMT_01                                                                                   
+			            ,CTGL.SECOND_AMT_02                                                                                   
+			            ,CTGL.SECOND_AMT_03                                                                                   
+			            ,CTGL.SECOND_AMT_04                                                                                   
+			            ,CTGL.SECOND_AMT_05                                                                                   
+			            ,CTGL.FIRST_AMT_RATIO                                                                                 
+			            ,CTGL.THIRD_AMT_RATIO                                                                                 
+			            ,CTGL.SECOND_AMT_RATIO_01                                                                             
+			            ,CTGL.SECOND_AMT_RATIO_02                                                                             
+			            ,CTGL.SECOND_AMT_RATIO_03                                                                             
+			            ,CTGL.SECOND_AMT_RATIO_04                                                                             
+			            ,CTGL.SECOND_AMT_RATIO_05                                                                             
+			            ,CTGL.FIRST_AMT_TIME                                                                                  
+			            ,CTGL.THIRD_AMT_TIME                                                                                  
+			            ,CTGL.SECOND_AMT_TIME_01                                                                              
+			            ,CTGL.SECOND_AMT_TIME_02                                                                              
+			            ,CTGL.SECOND_AMT_TIME_03                                                                              
+			            ,CTGL.SECOND_AMT_TIME_04                                                                              
+			            ,CTGL.SECOND_AMT_TIME_05                                                                              
+			            ,CTGL.FIRST_AMT_DATE                                                                                  
+			            ,CTGL.THIRD_AMT_DATE                                                                                  
+			            ,CTGL.SECOND_AMT_DATE_01                                                                              
+			            ,CTGL.SECOND_AMT_DATE_02                                                                              
+			            ,CTGL.SECOND_AMT_DATE_03                                                                              
+			            ,CTGL.SECOND_AMT_DATE_04                                                                              
+			            ,CTGL.SECOND_AMT_DATE_05                                                                              
+			            ,CTGL.FIRST_AMT_PAY                                                                                   
+			            ,CTGL.THIRD_AMT_PAY                                                                                   
+			            ,CTGL.SECOND_AMT_PAY_01                                                                               
+			            ,CTGL.SECOND_AMT_PAY_02                                                                               
+			            ,CTGL.SECOND_AMT_PAY_03                                                                               
+			            ,CTGL.SECOND_AMT_PAY_04                                                                               
+			            ,CTGL.SECOND_AMT_PAY_05                                                                               
+			            ,CTGL.PRE_INS_AMT                                                                                     
+			            ,CTGL.PRE_INS_PERCENT                                                                                 
+			            ,CTGL.PRE_INS_DATE                                                                                    
+			            ,CTGL.CONT_INS_AMT                                                                                    
+			            ,CTGL.CONT_INS_PERCENT                                                                                
+			            ,CTGL.CONT_INS_FROM                                                                                   
+			            ,CTGL.CONT_INS_TO                                                                                     
+			            ,CTGL.FAULT_INS_AMT                                                                                   
+			            ,CTGL.FAULT_INS_PERCENT                                                                               
+			            ,CTGL.FAULT_INS_FROM                                                                                  
+			            ,CTGL.FAULT_INS_TO                                                                                    
+			            ,CTGL.ATTACH_NO                                                                                       
+			            ,CTGL.ATTACH_NO_USER                                                                                  
+			            ,CTGL.ATTACH_NO1                                                                                      
+			            ,CTGL.ATTACH_NO1_USER                                                                                 
+			            ,CTGL.ATTACH_NO2                                                                                      
+			            ,FILE2.SRC_FILE_NAME AS ATTACH_NAME2                                                                  
+			            ,CTGL.ATTACH_NO2_USER                                                                                 
+			            ,CTGL.ATTACH_NO3                                                                                      
+			            ,FILE3.SRC_FILE_NAME AS ATTACH_NAME3                                                                  
+			            ,CTGL.ATTACH_NO3_USER                                                                                 
+			            ,CTGL.ATTACH_NO4                                                                                      
+			            ,FILE4.SRC_FILE_NAME AS ATTACH_NAME4                                                                  
+			            ,CTGL.ATTACH_NO4_USER                                                                                 
+			            ,CTGL.INS_VENDOR_NO                                                                                   
+			            ,CTGL.CONT_INS_NO                                                                                     
+			            ,CTGL.ATTACH_CONT_INS_NO                                                                              
+			            ,CTGL.FAULT_INS_NO                                                                                    
+			            ,CTGL.ATTACH_FAULT_INS_NO                                                                             
+			            ,CTGL.CONT_INS_FLAG                                                                                   
+			            ,CTGL.FAULT_INS_FLAG                                                                                  
+			            ,CTGL.CONT_REJECT_REASON                                                                              
+			            ,CTGL.CONT_INS_PATH                                                                                   
+			            ,CTGL.FAULT_INS_PATH                                                                                  
+			            ,CTGL.PRE_INS_NO                                                                                      
+			            ,CTGL.ATTACH_PRE_INS_NO                                                                               
+			            ,CTGL.PRE_INS_FLAG                                                                                    
+			            ,CTGL.PRE_INS_PATH                                                                                    
+			            ,CTGL.ATTACH_INS_XMLNO                                                                                
+			            ,CTGL.ATTACH_FAL_XMLNO                                                                                
+			            ,CTGL.ATTACH_PRE_XMLNO                                                                                
+			            ,CTGL.DISCARD_DATE                                                                                    
+			            ,CTGL.DISCARD_REASON                                                                                  
+			            ,CTGL.CT_FLAG                                                                                         
+			            ,CASE WHEN CTGL.CT_FLAG = 'CC' OR CTGL.CT_FLAG = 'CD' THEN '#seller_sign#' END AS BUYER_APP_SUCCESS         
+			            ,CASE WHEN CTGL.CT_FLAG = 'CD'                        THEN '#buyer_sign#' END AS SELLER_APP_SUCCESS       
+			            ,CTGL.TEXT_NUMBER                                                                                     
+			            ,CTGL.CTRL_CODE                                                                                       
+			            ,CTGL.PAY_TERMS_TEXT_1                                                                                
+			            ,CTGL.ERP_FLAG                                                                                        
+			            ,CTGL.RIVISION_REASON_TEXT                                                                            
+			            ,CTGL.PLANT_CODE                                                                                      
+			            ,CTGL.RIVISION_REASON                                                                                 
+			            ,CTGL.PO_NAME                                                                                         
+			            ,CTGL.SURETY_FLAG                                                                                     
+			            ,CTGL.PREINS_SELLER_CHECK                                                                             
+			            ,CTGL.CONINS_SELLER_CHECK                                                                             
+			            ,CTGL.FLRINS_SELLER_CHECK                                                                             
+			            ,CTGL.SEND_DATE                                                                                       
+			            ,CTGL.SEL_ACCEPT_DATE                                                                                 
+			            ,CTGL.BUY_ACCEPT_DATE                                                                                 
+			            ,CTGL.SEL_REG_NO                                                                                      
+			            ,CTGL.BUYER_COMPANY_IRS_NO                                                                            
+			            ,CTGL.BUYER_COMPANY_NAME                                                                              
+			            ,CTGL.BUYER_COMPANY_ADDR        AS BUYER_COMPANY_ADDR1                                                
+			            ,CTGL.BUYER_COMPANY_CEO_NAME                                                                          
+			            ,CTGL.SELLER_COMPANY_IRS_NO                                                                           
+			            ,CTGL.SELLER_COMPANY_NAME                                                                             
+			            ,CTGL.SELLER_COMPANY_ADDR       AS SELLER_COMPANY_ADDR1                                               
+			            ,CTGL.SELLER_COMPANY_CEO_NAME                                                                         
+			            ,CTGL.CONT_AMT_TEXT                                                                                   
+			            ,CTGL.CONT_TTL_AMT_TEXT                                                                               
+			            ,CTGL.CONT_TTL_AMT                                                                                    
+			            ,CTGL.CONT_VAT_TEXT                                                                                   
+			            ,CTGL.CONT_VAT                                                                                        
+			            ,CTGL.BUYER_COMPANY_ZIP_CODE1                                                                         
+			            ,CTGL.BUYER_COMPANY_ZIP_CODE2                                                                         
+			            ,CTGL.SELLER_COMPANY_ZIP_CODE1                                                                        
+			            ,CTGL.SELLER_COMPANY_ZIP_CODE2                                                                        
+			            ,CTGL.BUYER_COMPANY_ADDR2                                                                             
+			            ,CTGL.SELLER_COMPANY_ADDR2                                                                            
+			            ,CTGL.LOCATION                                                                                        
+			            ,CTGL.PAY_TERMS_DATE                                                                                  
+			            ,CTGL.PAY_TERMS_PERCENT                                                                               
+			            ,CASE WHEN CTGL.PAY_TERMS_SPEC_FLAG = LOWER('true') THEN 'checked' ELSE '' END AS PAY_TERMS_SPEC_FLAG 
+			            ,CTGL.PERIOD_CHECK                                                                                    
+			            ,CTGL.DELAY_PRICE                                                                                     
+			            ,CTGL.PRE_INS_PERCENT_TEXT                                                                            
+			            ,CTGL.DELAY_DATE1                                                                                     
+			            ,CTGL.DELAY_PRICE1                                                                                    
+			            ,CTGL.DELAY_REMARK1                                                                                   
+			            ,CTGL.DELAY_DATE2                                                                                     
+			            ,CTGL.DELAY_PRICE2                                                                                    
+			            ,CTGL.DELAY_REMARK2                                                                                   
+			            ,CTGL.DELAY_REMARK3                                                                                   
+			            ,CTGL.CONFIRM_METHOD                                                                                  
+			            ,CTGL.MUTUAL_DISTRICT                                                                                 
+			            ,CTGL.PRESIDENT                                                                                       
+			            ,CTGL.PAY_TERMS_SPEC                                                                                  
+			            ,CTGL.CONTRACT_EFFECT                                                                                 
+			            ,CTGL.DESCRIPTION1                                                                                    
+			            ,CTGL.UNIT_MEASURE1                                                                                   
+			            ,CTGL.ITEM_QTY1                                                                                       
+			            ,CTGL.UNIT_PRICE1                                                                                     
+			            ,CTGL.ITEM_AMT1                                                                                       
+			            ,CTGL.DESCRIPTION2                                                                                    
+			            ,CTGL.UNIT_MEASURE2                                                                                   
+			            ,CTGL.ITEM_QTY2                                                                                       
+			            ,CTGL.UNIT_PRICE2                                                                                     
+			            ,CTGL.ITEM_AMT2                                                                                       
+			            ,CTGL.DESCRIPTION3                                                                                    
+			            ,CASE WHEN CTGL.TEAM_VIEW           = LOWER('true') THEN 'checked' ELSE '' END AS TEAM_VIEW           
+			            ,CASE WHEN CTGL.DIFFERENT_TEAM_VIEW = LOWER('true') THEN 'checked' ELSE '' END AS DIFFERENT_TEAM_VIEW 
+			            ,CASE WHEN CTGL.APP_TEAM_MANAGER    = LOWER('true') THEN 'checked' ELSE '' END AS APP_TEAM_MANAGER    
+			            ,CASE WHEN CTGL.APP_JUDICIAL        = LOWER('true') THEN 'checked' ELSE '' END AS APP_JUDICIAL        
+			            ,CTGL.APP_TEAM_MANAGER_TEXT                                                                           
+			            ,CTGL.APP_JUDICIAL_TEXT                                                                               
+			            ,CTGL.PERSON_CHARGE_PHONE1                                                                            
+			            ,CTGL.PERSON_CHARGE_PHONE2                                                                            
+			            ,CTGL.PERSON_CHARGE_PHONE3                                                                            
+			            ,SUGL.SIGN_VALUE                                                                                      
+			            ,SUGL.SIGN_NAME                                                                                       
+			            ,CTGL.CONT_CONTENTS                                                                                   
+			            ,CTGL.MIGRATION_REMARK                                                                                
+			  FROM SCTGL CTGL                                                                                                 
+			       LEFT OUTER JOIN ICOMATCH FILE2 ON CTGL.ATTACH_NO2  = FILE2.DOC_NO                                          
+			       LEFT OUTER JOIN ICOMATCH FILE3 ON CTGL.ATTACH_NO3  = FILE3.DOC_NO                                          
+			       LEFT OUTER JOIN ICOMATCH FILE4 ON CTGL.ATTACH_NO4  = FILE4.DOC_NO                                          
+			       LEFT OUTER JOIN ICOMVNGL SUGL  ON CTGL.SELLER_CODE = SUGL.VENDOR_CODE                                      
+			       WHERE 1=1
+			       AND CTGL.CONT_NUMBER  = ${cont_number} 
+		 		   AND CTGL.CONT_GL_SEQ  = ${cont_gl_seq}                                                                                      
+				]]>
+		</method>
+		<method name="setContractBond_detailInfo">
+		    <![CDATA[
+		    	      SELECT                                                                                                                                                                
+				          CT.CONT_NUMBER                                                                                                                          AS CONT_NUMBER            
+				        , CT.CONT_GL_SEQ                                                                                                                          AS CONT_GL_SEQ            
+				        , CT.PRE_INS_NO                                                                                                                           AS PRE_INS_NO             
+				        , CT.CONT_INS_NO                                                                                                                          AS CONT_INS_NO            
+				        , CT.FAULT_INS_NO                                                                                                                         AS FAULT_INS_NO           
+				        , CT.SELLER_CODE                                                                                                                          AS SELLER_CODE            
+				        , CT.PRE_INS_PERCENT                                                                                                                      AS PRE_INS_PERCENT        
+				        , CT.FAULT_INS_PERCENT                                                                                                                    AS FAULT_INS_PERCENT      
+				        , CT.CONT_INS_PERCENT                                                                                                                     AS CONT_INS_PERCENT       
+				        , CT.CONT_AMT                                                                                                                             AS CONT_AMT               
+				        , CT.PRE_INS_FLAG                                                                                                                         AS PRE_INS_FLAG           
+				        , CT.CONT_INS_FLAG                                                                                                                        AS CONT_INS_FLAG          
+				        , CT.FAULT_INS_FLAG                                                                                                                       AS FAULT_INS_FLAG         
+				        , TO_DATE(CT.CONT_TO,'YYYYMMDD') - ADD_MONTHS ( TO_DATE(CT.CONT_TO,'YYYYMMDD') , NVL(TO_NUMBER(CT.FAULT_INS_FROM),0))                     AS FAULT_DATE_PERIOD      
+				        , TO_NUMBER ( TO_NUMBER ( CT.CONT_AMT ) * TO_NUMBER ( CT.PRE_INS_PERCENT ) / 100 )                                                        AS PRE_INS_AMT            
+				        , TO_NUMBER ( TO_NUMBER ( CT.CONT_AMT ) * TO_NUMBER ( CT.FAULT_INS_PERCENT ) / 100 )                                                      AS FAULT_INS_AMT          
+				        , TO_NUMBER ( TO_NUMBER ( CT.CONT_AMT ) * TO_NUMBER ( CT.CONT_INS_PERCENT ) / 100 )                                                       AS CONT_INS_AMT           
+				        , CT.CONT_TO                                                                                                                              AS FAULT_INS_FROM         
+				        , TO_CHAR(ADD_MONTHS ( TO_DATE(CT.CONT_TO,'YYYYMMDD') , NVL(TO_NUMBER(CT.FAULT_INS_FROM),0))-1,'YYYYMMDD')                                AS FAULT_INS_TO           
+				        , CT.SUBJECT                                                                                                                              AS SUBJECT                
+				        , CT.CONT_DATE                                                                                                                            AS CONT_DATE              
+				        , CT.CONT_FROM                                                                                                                            AS CONT_FROM              
+				        , CT.CONT_TO                                                                                                                              AS CONT_TO                
+				        , REPLACE ( CT.BUYER_COMPANY_IRS_NO , '-' , NULL )                                                                                        AS BUYER_COMPANY_IRS_NO   
+				        , CT.BUYER_COMPANY_NAME                                                                                                                   AS BUYER_COMPANY_NAME     
+				        , CT.BUYER_COMPANY_ADDR || ' ' ||CT.BUYER_COMPANY_ADDR2                                                                                   AS BUYER_COMPANY_ADDR     
+				        , CT.BUYER_COMPANY_CEO_NAME                                                                                                               AS BUYER_COMPANY_CEO_NAME 
+				        , CT.BUYER_COMPANY_ZIP_CODE1 || CT.BUYER_COMPANY_ZIP_CODE2                                                                                AS BUYER_ZIP_CODE         
+				        , REPLACE ( CT.SELLER_COMPANY_IRS_NO , '-' , NULL )                                                                                       AS SELLER_COMPANY_IRS_NO  
+				        , CT.SELLER_COMPANY_NAME                                                                                                                  AS SELLER_COMPANY_NAME    
+				        , CT.SELLER_COMPANY_ADDR || ' ' || CT.SELLER_COMPANY_ADDR2                                                                                AS SELLER_COMPANY_ADDR    
+				        , CT.SELLER_COMPANY_CEO_NAME                                                                                                              AS SELLER_COMPANY_CEO_NAME
+				        , CT.SELLER_COMPANY_ZIP_CODE1 || CT.SELLER_COMPANY_ZIP_CODE2                                                                              AS SELLER_ZIP_CODE        
+				        , CT.ADD_USER_ID                                                                                                                          AS BUYER_USER_ID          
+				        , MT.USER_NAME_LOC                                                                                                                        AS BUYER_USER_NAME        
+				        , MT.DEPT                                                                                                                                 AS BUYER_DEPT             
+				        , PT.DEPT_NAME_LOC                                                                                                                        AS BUYER_DEPT_NAME        
+				        , DR.EMAIL                                                                                                                                AS BUYER_EMAIL            
+				        , CASE WHEN DR.PHONE_NO1 IS NULL OR DR.PHONE_NO1 = '' OR DR.PHONE_NO1 = ' ' THEN DR.PHONE_NO2 ELSE DR.PHONE_NO1 END                       AS BUYER_PHONE_NO1        
+				        , CASE WHEN DR.PHONE_NO2 IS NULL OR DR.PHONE_NO2 = '' OR DR.PHONE_NO2 = ' ' THEN DR.PHONE_NO1 ELSE DR.PHONE_NO2 END                       AS BUYER_PHONE_NO2        
+				        , CT.SELLER_CODE                                                                                                                          AS SELLER_USER_ID         
+				        , PI.USER_NAME                                                                                                                            AS SELLER_USER_NAME       
+				        , PI.DIVISION                                                                                                                             AS SELLER_DEPT_NAME       
+				        , PI.EMAIL                                                                                                                                AS SELLER_EMAIL           
+				        , PI.PHONE_NO                                                                                                                             AS SELLER_PHONE_NO1       
+				        , PI.MOBILE_NO                                                                                                                            AS SELLER_PHONE_NO2       
+				        , CASE WHEN SUBSTR ( REPLACE ( CT.SELLER_COMPANY_IRS_NO , '-' , NULL ) , 4 , 1 ) = '8' THEN 'O' ELSE 'P' END                              AS SOLE                   
+				        , CASE WHEN SUBSTR ( REPLACE ( CT.SELLER_COMPANY_IRS_NO , '-' , NULL ) , 4 , 1 ) = '8'                                                                              
+				               THEN REPLACE ( CT.SELLER_COMPANY_IRS_NO , '-' , NULL )                                                                                                       
+				               ELSE CT.SEL_REG_NO END                                                                                                             AS SOLE_NUMBER            
+				     FROM SCTGL CT                                                                                                                                                          
+				      LEFT OUTER JOIN ICOMLUSR MT                                                                                                                                           
+				          ON CT.ADD_USER_ID = MT.USER_ID                                                                                                                                    
+				      LEFT OUTER JOIN ICOMOGDP PT                                                                                                                                           
+				          ON MT.DEPT = PT.DEPT                                                                                                                                              
+				      LEFT OUTER JOIN ICOMADDR DR                                                                                                                                           
+				          ON MT.USER_ID = DR.CODE_NO                                                                                                                                        
+				          AND DR.CODE_TYPE = '3'                                                                                                                                            
+				      LEFT OUTER JOIN ICOMVNCP PI                                                                                                                                           
+				          ON PI.COMPANY_CODE = CT.COMPANY_CODE                                                                                                                              
+				          AND PI.VENDOR_CODE = CT.SELLER_CODE                                                                                                                               
+				          AND PI.SEQ = '1'                                                                                                                                                  
+				      WHERE 1 = 1
+				      AND CT.CONT_NUMBER = ${cont_number}
+				      AND CT.CONT_GL_SEQ = ${cont_gl_seq}
+				]]>
+		</method>
+		<method name="setSgix_flag_update">
+		    <![CDATA[
+		    	UPDATE SCTGL SET 
+			]]>
+			<if test="${docTypeCode}" operator="eq" value="CONINF">
+			    <![CDATA[
+				    	 CONT_INS_FLAG    = 'SE'
+						,SEL_REG_NO       = ${resident_no}
+				]]>
+			</if>
+			<if test="${docTypeCode}" operator="eq" value="PREINF">
+			    <![CDATA[
+						 PRE_INS_FLAG     = 'SE'
+						,PRE_INS_DATE     = ${pre_ins_date} 
+						,SEL_REG_NO       = ${resident_no} 
+				]]>
+			</if>
+			<if test="${docTypeCode}" operator="eq" value="FLRINF">
+			    <![CDATA[
+						 FAULT_INS_FLAG   = 'SE'
+						,SEL_REG_NO       = ${resident_no}
+				]]>
+			</if>
+		    <![CDATA[
+				WHERE CONT_NUMBER = ${cont_number}
+				AND   CONT_GL_SEQ = ${cont_gl_seq} 
+			]]>
+		</method>
+		<method name="setSgixSendAfter_flag_update">
+		    <![CDATA[
+		    	UPDATE SCTGL SET 
+			]]>
+			<if test="${docProgress}" operator="eq" value="CONINFNOTAP">
+		    	<![CDATA[
+					  CONT_INS_FLAG       = ${docTypeFlag}
+					 ,CONT_INS_NO         = ''
+					 ,CONT_INS_PATH       = ''
+					 ,ATTACH_CONT_INS_NO  = ''
+					 ,ATTACH_INS_XMLNO    = ''
+					 ,CONINS_SELLER_CHECK = 'X'
+				]]>
+			</if>
+
+			<if test="${docProgress}" operator="eq" value="CONINFAP">
+		    	<![CDATA[
+					  CONT_INS_FLAG       = ${docTypeFlag}
+				]]>
+			</if>
+			<if test="${docProgress}" operator="eq" value="PREINFNOTAP">
+		    	<![CDATA[
+					  PRE_INS_FLAG        = ${docTypeFlag}
+					 ,PRE_INS_NO          = ''
+					 ,PRE_INS_PATH        = ''
+					 ,ATTACH_PRE_INS_NO   = ''
+					 ,ATTACH_PRE_XMLNO    = ''
+					 ,PREINS_SELLER_CHECK = 'X'
+				]]>
+			</if>
+
+			<if test="${docProgress}" operator="eq" value="PREINFAP">
+		    	<![CDATA[
+					  PRE_INS_FLAG        = ${docTypeFlag}
+				]]>
+			</if>
+			<if test="${docProgress}" operator="eq" value="FLRINFNOTAP">
+		    	<![CDATA[
+					  FAULT_INS_FLAG      = ${docTypeFlag}
+					 ,FAULT_INS_NO        = ''
+					 ,FAULT_INS_PATH      = ''
+					 ,ATTACH_FAULT_INS_NO = ''
+					 ,ATTACH_FAL_XMLNO    = ''
+					 ,FLRINS_SELLER_CHECK = 'X'
+				]]>
+			</if>
+
+			<if test="${docProgress}" operator="eq" value="FLRINFAP">
+		    	<![CDATA[
+					  FAULT_INS_FLAG      = ${docTypeFlag}
+				]]>
+			</if>
+		    <![CDATA[
+				WHERE CONT_NUMBER = ${cont_number}
+				AND   CONT_GL_SEQ = ${cont_gl_seq} 
+			]]>
+		</method>
+		<method name="setSgixRecv_file_insert">
+		    <![CDATA[
+		    	INSERT INTO SFILE           
+		         (                  
+		              DOC_NO        
+		             ,DOC_SEQ       
+		             ,ADD_DATE      
+		             ,ADD_TIME      
+		             ,ADD_USER_ID   
+		             ,CHANGE_DATE   
+		             ,CHANGE_TIME   
+		             ,TYPE          
+		             ,DES_FILE_NAME 
+		             ,SRC_FILE_NAME 
+		             ,FILE_SIZE     
+		         ) VALUES (         
+		              ${attach_key}
+		             ,${attach_seq}             
+		             ,${current.date}
+		             ,${current.time}
+		             ,${session.ID}
+		             ,${current.date}
+		             ,${current.time}
+		             ,${type}             
+		             ,${FileName}             
+		             ,${FileName}             
+		             ,${real_size}             
+		         )
+				]]>
+		</method>
+		<method name="setSgixRecv_flag_update">
+		    <![CDATA[
+		    		UPDATE SCTGL SET
+				]]>
+
+			<if test="${docTypeCode}" operator="eq" value="CONGUA">
+			    <![CDATA[
+			    		  CONT_INS_NO         = ${bond_numb_text}
+						, CONT_INS_FLAG       = 'G'
+						, INS_VENDOR_NO       = 'A'
+						, CONT_INS_PATH       = ${bond_path}
+						, ATTACH_CONT_INS_NO  = ${attach_key}
+						, ATTACH_INS_XMLNO    = ${attach_key}
+					]]>
+			</if>
+			<if test="${docTypeCode}" operator="eq" value="FLRGUA">
+			    <![CDATA[
+						  FAULT_INS_NO        = ${bond_numb_text}
+						, FAULT_INS_FLAG      = 'G'
+						, INS_VENDOR_NO       = 'A'
+						, FAULT_INS_PATH      = ${bond_path}
+						, ATTACH_FAULT_INS_NO = ${attach_key}
+						, ATTACH_FAL_XMLNO    = ${attach_key}
+					]]>
+			</if>
+			<if test="${docTypeCode}" operator="eq" value="PREINF">
+			    <![CDATA[
+						  PRE_INS_NO          = ${bond_numb_text}
+						, PRE_INS_FLAG        = 'G'
+						, INS_VENDOR_NO       = 'A'
+						, PRE_INS_PATH        = ${bond_path}
+						, ATTACH_PRE_INS_NO   = ${attach_key}
+						, ATTACH_PRE_XMLNO    = ${attach_key}
+					]]>
+			</if>
+		    <![CDATA[
+					WHERE CONT_NUMBER||CONT_GL_SEQ   = ${cont_numb_text}
+				]]>
+		</method>
+		<method name="isChked">
+			<![CDATA[
+			SELECT DECODE(NVL(CHK_USER_ID,'0'),'0','0','1') AS CHK_FG
+			FROM SCPGL
+			WHERE COMPANY_CODE = ${COMPANY_CODE}		    		
+		    AND CONT_NO = ${CONT_NO}
+		    AND CONT_GL_SEQ = ${CONT_GL_SEQ}
+			]]>	
+		</method>
+		<method name="getChkInfo">
+			<![CDATA[
+			SELECT TO_CHAR(TO_DATE(CHK_DATE,'YYYYMMDD'),'YYYY. MM. DD') AS  CHK_DATE 
+				  ,CHK_TIME
+				  ,CHK_USER_ID
+				  ,GETUSERNAMELOC(${session.HOUSE_CODE}, CHK_USER_ID) AS CHK_USER_NAME
+			FROM SCPGL
+			WHERE COMPANY_CODE = ${COMPANY_CODE}		    		
+		    AND CONT_NO = ${CONT_NO}
+		    AND CONT_GL_SEQ = ${CONT_GL_SEQ}
+		    ]]>	
+		</method>			
+		<method name="getChkFg">
+			<![CDATA[
+			SELECT CHK_FLAG
+			FROM SCCHK
+			WHERE COMPANY_CODE = ${COMPANY_CODE}		    		
+		    AND CONT_NO = ${CONT_NO}
+		    AND CONT_GL_SEQ = ${CONT_GL_SEQ}
+		    ORDER BY CHK_SEQ
+			]]>	
+		</method>		
+	</service>

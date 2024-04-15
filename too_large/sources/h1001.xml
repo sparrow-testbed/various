@@ -1,0 +1,423 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<service>
+	<method name="getSignDate">
+		<![CDATA[
+              	SELECT 
+					MAGL.BRANCHES_CODE
+					, GETDEPTNAMELOC(MAGL.HOUSE_CODE, 'WOORI', MAGL.BRANCHES_CODE) AS BRANCHES_NAME
+					, MAGL.ITEM_NO
+					, (SELECT A.DESCRIPTION_LOC FROM ICOMMTGL A WHERE A.ITEM_NO = MAGL.ITEM_NO) AS ITEM_NAME
+					, MAGL.IO_NUMBER
+					, MAGL.SPECIFICATION
+					, MAGL.SIGNFORM_CODE AS SIGNFORM
+					, MAGL.INSTALL_DATE
+					, MAGL.CONFIRM_DATE_FROM
+					, MAGL.CONFIRM_DATE_TO
+					, MAGL.STICK_LOCATION
+					, MAGL.INSTALL_STORE
+					, (
+				     	SELECT
+				 			GL.VENDOR_NAME_LOC
+				  		FROM ICOMVNGL GL
+				  		RIGHT OUTER JOIN ICOMADDR DR 
+				  			ON DR.HOUSE_CODE = GL.HOUSE_CODE 
+				  			AND DR.CODE_NO = GL.VENDOR_CODE 
+				  		WHERE GL.HOUSE_CODE = '000'
+						AND GL.STATUS IN ('C','R') 
+				  		AND GL.JOB_STATUS = 'E'  
+				  		AND	DR.CODE_TYPE = '2' 
+				 		AND GL.PURCHASE_BLOCK_FLAG != 'Y'
+				 		AND GL.VENDOR_CODE = MAGL.INSTALL_STORE
+				     ) AS INSTALL_STORE_NAME
+					, MAGL.INSTALL_STORE_PHONE
+					, MAGL.ATTACH_NO
+					, MAGL.REMOVE_FLAG
+					, MAGL.REMARK
+				FROM SMAGL MAGL
+				WHERE HOUSE_CODE =  ${house_code}
+				AND KEY_NO =  ${key_no}
+				AND BRANCHES_CODE =  ${branches_code}
+				AND ITEM_NO =  ${item_no}
+				AND IO_NUMBER =  ${io_number}
+		]]>
+	</method>
+	<method name="getCheckDataSign">
+		<![CDATA[
+              	SELECT COUNT(*) AS CNT  
+				FROM SMCGL
+				WHERE HOUSE_CODE =  ${house_code}
+				AND CON_NUMBER	 =  ${con_number}
+		]]>
+	</method>
+	<method name="insertConData">
+		<![CDATA[
+		 INSERT INTO SMCGL  													
+						 (  																		
+						  HOUSE_CODE  															
+						 ,CON_NUMBER     
+						 ,CON_KIND       
+						 ,OWN_KIND       
+						 ,DEPT           
+						 ,CON_NAME       
+						 ,PAY_TERM       
+						 ,CON_DATE       
+						 ,MADE_DATE      
+						 ,PAY_DATE       
+						 ,OWN_NAME1      
+						 ,OWN_NAME2      
+						 ,OWN_NAME3      
+						 ,CON_TYPE1      
+						 ,VENDOR_CODE1   
+						 ,PRE_AMT1       
+						 ,CON_AMT1       
+						 ,CON_TYPE2      
+						 ,VENDOR_CODE2   
+						 ,PRE_AMT2       
+					     ,CON_AMT2       
+					     ,CON_TYPE3      
+					     ,VENDOR_CODE3   
+					     ,PRE_AMT3       
+					     ,CON_AMT3       
+					     ,CON_TYPE4      
+					     ,VENDOR_CODE4   
+					     ,PRE_AMT4       
+					     ,CON_AMT4       
+					     ,CON_TYPE5      
+					     ,VENDOR_CODE5   
+					     ,PRE_AMT5       
+					     ,CON_AMT5       
+					     ,CON_TYPE6      
+					     ,VENDOR_CODE6   
+					     ,PRE_AMT6       
+					     ,CON_AMT6       
+					     ,CON_TYPE7      
+					     ,VENDOR_CODE7   
+					     ,PRE_AMT7       
+					     ,CON_AMT7       
+					     ,CON_TYPE8      
+					     ,ETC_AMT1       
+					     ,ETC_AMT2       
+					     ,ETC_AMT3       
+					     ,ETC_AMT4       
+					     ,TOTAL_AMT      
+					     ,PA_TITLE       
+					     ,PA_NAME        
+					     ,BOSS_TITLE     
+					     ,BOSS_NAME      
+					     ,REMARK         
+					     ,ATTACH_FILE    
+					     ,ADD_DATE 		
+					     ,ADD_TIME 		
+					     ,ADD_USER_ID 		
+					     ,CHANGE_DATE 		
+					     ,CHANGE_TIME 		
+					     ,CHANGE_USER_ID 
+				 ) VALUES (  
+				 		 $S{house_code}												
+						,$S{con_number}    		
+						,$S{con_kind}      					
+						,$S{own_kind}      		
+						,$S{dept}          			
+						,$S{con_name}      						
+						,$S{pay_term}      					
+						,$S{con_date}      					
+						,$S{made_date}     																								
+						,$S{pay_date}      																					
+						,$S{own_name1}     					
+						,$S{own_name2}     
+					    ,$S{own_name3}     
+					    ,$S{con_type1}     
+					    ,$S{vendor_code1}  
+					    ,$S{pre_amt1}      
+					    ,$S{con_amt1}      
+					    ,$S{con_type2}     
+					    ,$S{vendor_code2}  
+					    ,$S{pre_amt2}      
+					    ,$S{con_amt2}      
+					    ,$S{con_type3}     
+					    ,$S{vendor_code3}  
+					    ,$S{pre_amt3}      
+					    ,$S{con_amt3}      
+					    ,$S{con_type4}     
+					    ,$S{vendor_code4}  
+					    ,$S{pre_amt4}      
+					    ,$S{con_amt4}      
+					    ,$S{con_type5}     
+					    ,$S{vendor_code5}  
+					    ,$S{pre_amt5}      
+					    ,$S{con_amt5}      
+					    ,$S{con_type6}     
+					    ,$S{vendor_code6}  
+					    ,$S{pre_amt6}      
+					    ,$S{con_amt6}      
+					    ,$S{con_type7}     
+					    ,$S{vendor_code7}  
+					    ,$S{pre_amt7}      
+					    ,$S{con_amt7}      
+					    ,$S{con_type8}     
+					    ,$S{etc_amt1}      
+					    ,$S{etc_amt2}      
+					    ,$S{etc_amt3}      
+					    ,$S{etc_amt4}      
+					    ,$S{total_amt}     
+					    ,$S{pa_title}      
+					    ,$S{pa_name}       
+					    ,$S{boss_title}    
+					    ,$S{boss_name}     
+					    ,$S{remark}        
+					    ,$S{attach_file}   
+					    ,$S{add_date} 		
+					    ,$S{add_time} 		
+					    ,$S{add_user_id} 	
+					    ,$S{change_date} 	
+					    ,$S{change_time} 	
+					    ,$S{change_user_id}
+					 )   	
+	  
+		]]>
+	</method>
+	
+	
+	<method name="updateConData">
+		<![CDATA[
+           UPDATE SMCGL            			
+           SET     CON_KIND               = ${con_kind}      
+                  ,OWN_KIND               = ${own_kind}      
+                  ,DEPT                   = ${dept}          
+                  ,CON_NAME               = ${con_name}      
+                  ,PAY_TERM               = ${pay_term}      
+                  ,CON_DATE               = ${con_date}      
+                  ,MADE_DATE              = ${made_date}     
+                  ,PAY_DATE               = ${pay_date}      
+                  ,OWN_NAME1              = ${own_name1}     
+                  ,OWN_NAME2              = ${own_name2}     
+                  ,OWN_NAME3              = ${own_name3}     
+                  ,CON_TYPE1              = ${con_type1}     
+                  ,VENDOR_CODE1           = ${vendor_code1}  
+                  ,PRE_AMT1               = ${pre_amt1}      
+                  ,CON_AMT1               = ${con_amt1}      
+                  ,CON_TYPE2              = ${con_type2}     
+                  ,VENDOR_CODE2           = ${vendor_code2}  
+                  ,PRE_AMT2               = ${pre_amt2}      
+                  ,CON_AMT2               = ${con_amt2}      
+                  ,CON_TYPE3              = ${con_type3}     
+                  ,VENDOR_CODE3           = ${vendor_code3}  
+                  ,PRE_AMT3               = ${pre_amt3}      
+                  ,CON_AMT3               = ${con_amt3}      
+                  ,CON_TYPE4              = ${con_type4}     
+                  ,VENDOR_CODE4           = ${vendor_code4}  
+                  ,PRE_AMT4               = ${pre_amt4}      
+                  ,CON_AMT4               = ${con_amt4}      
+                  ,CON_TYPE5              = ${con_type5}     
+                  ,VENDOR_CODE5           = ${vendor_code5}  
+                  ,PRE_AMT5               = ${pre_amt5}      
+                  ,CON_AMT5               = ${con_amt5}      
+                  ,CON_TYPE6              = ${con_type6}     
+                  ,VENDOR_CODE6           = ${vendor_code6}  
+                  ,PRE_AMT6               = ${pre_amt6}      
+                  ,CON_AMT6               = ${con_amt6}      
+                  ,CON_TYPE7              = ${con_type7}     
+                  ,VENDOR_CODE7           = ${vendor_code7}  
+                  ,PRE_AMT7               = ${pre_amt7}      
+                  ,CON_AMT7               = ${con_amt7}      
+                  ,CON_TYPE8              = ${con_type8}     
+                  ,ETC_AMT1               = ${etc_amt1}      
+                  ,ETC_AMT2               = ${etc_amt2}      
+                  ,ETC_AMT3               = ${etc_amt3}      
+                  ,ETC_AMT4               = ${etc_amt4}      
+                  ,TOTAL_AMT              = ${total_amt}     
+                  ,PA_TITLE               = ${pa_title}      
+                  ,PA_NAME                = ${pa_name}       
+                  ,BOSS_TITLE             = ${boss_title}    
+                  ,BOSS_NAME              = ${boss_name}     
+                  ,REMARK                 = ${remark}        
+                  ,ATTACH_FILE            = ${attach_file}   
+                  ,CHANGE_DATE 		      = ${change_date} 		
+                  ,CHANGE_TIME 		      = ${change_time} 		
+                  ,CHANGE_USER_ID         = ${change_user_id}
+           WHERE  HOUSE_CODE = ${session.HOUSE_CODE}  
+             AND  CON_NUMBER = ${con_number}     		
+		]]>
+	</method>
+	
+	<method name="getConData">
+		<![CDATA[
+              	SELECT
+					 MCGL.HOUSE_CODE
+					,MCGL.CON_NUMBER
+					,MCGL.CON_KIND
+					,MCGL.OWN_KIND
+					,MCGL.DEPT
+					,(SELECT DEPT_NAME_LOC FROM ICOMOGDP WHERE STATUS != 'D' AND HOUSE_CODE = '000' AND COMPANY_CODE = 'WOORI' AND DEPT = MCGL.DEPT) AS DEPT_TEXT
+					,MCGL.CON_NAME
+					,MCGL.PAY_TERM
+					,MCGL.CON_DATE
+					,MCGL.MADE_DATE
+					,MCGL.PAY_DATE
+					,MCGL.OWN_NAME1
+					,MCGL.OWN_NAME2
+					,MCGL.OWN_NAME3
+					,MCGL.CON_TYPE1
+					,MCGL.VENDOR_CODE1
+					,(SELECT GL.VENDOR_NAME_LOC FROM ICOMVNGL GL RIGHT OUTER JOIN ICOMADDR DR ON DR.HOUSE_CODE = GL.HOUSE_CODE AND DR.CODE_NO = GL.VENDOR_CODE WHERE GL.HOUSE_CODE = '000' AND GL.STATUS IN ('C','R') AND GL.JOB_STATUS = 'E' AND DR.CODE_TYPE = '2' AND GL.PURCHASE_BLOCK_FLAG != 'Y' AND GL.VENDOR_CODE = MCGL.VENDOR_CODE1) AS VENDOR_CODE1_TEXT   
+					,MCGL.PRE_AMT1
+					,MCGL.CON_AMT1
+					,MCGL.CON_TYPE2
+					,MCGL.VENDOR_CODE2
+					,(SELECT GL.VENDOR_NAME_LOC FROM ICOMVNGL GL RIGHT OUTER JOIN ICOMADDR DR ON DR.HOUSE_CODE = GL.HOUSE_CODE AND DR.CODE_NO = GL.VENDOR_CODE WHERE GL.HOUSE_CODE = '000' AND GL.STATUS IN ('C','R') AND GL.JOB_STATUS = 'E' AND DR.CODE_TYPE = '2' AND GL.PURCHASE_BLOCK_FLAG != 'Y' AND GL.VENDOR_CODE = MCGL.VENDOR_CODE2) AS VENDOR_CODE2_TEXT
+					,MCGL.PRE_AMT2
+					,MCGL.CON_AMT2
+					,MCGL.CON_TYPE3
+					,MCGL.VENDOR_CODE3
+					,(SELECT GL.VENDOR_NAME_LOC FROM ICOMVNGL GL RIGHT OUTER JOIN ICOMADDR DR ON DR.HOUSE_CODE = GL.HOUSE_CODE AND DR.CODE_NO = GL.VENDOR_CODE WHERE GL.HOUSE_CODE = '000' AND GL.STATUS IN ('C','R') AND GL.JOB_STATUS = 'E' AND DR.CODE_TYPE = '2' AND GL.PURCHASE_BLOCK_FLAG != 'Y' AND GL.VENDOR_CODE = MCGL.VENDOR_CODE3) AS VENDOR_CODE3_TEXT
+					,MCGL.PRE_AMT3
+					,MCGL.CON_AMT3
+					,MCGL.CON_TYPE4
+					,MCGL.VENDOR_CODE4
+					,(SELECT GL.VENDOR_NAME_LOC FROM ICOMVNGL GL RIGHT OUTER JOIN ICOMADDR DR ON DR.HOUSE_CODE = GL.HOUSE_CODE AND DR.CODE_NO = GL.VENDOR_CODE WHERE GL.HOUSE_CODE = '000' AND GL.STATUS IN ('C','R') AND GL.JOB_STATUS = 'E' AND DR.CODE_TYPE = '2' AND GL.PURCHASE_BLOCK_FLAG != 'Y' AND GL.VENDOR_CODE = MCGL.VENDOR_CODE4) AS VENDOR_CODE4_TEXT
+					,MCGL.PRE_AMT4
+					,MCGL.CON_AMT4
+					,MCGL.CON_TYPE5
+					,MCGL.VENDOR_CODE5
+					,(SELECT GL.VENDOR_NAME_LOC FROM ICOMVNGL GL RIGHT OUTER JOIN ICOMADDR DR ON DR.HOUSE_CODE = GL.HOUSE_CODE AND DR.CODE_NO = GL.VENDOR_CODE WHERE GL.HOUSE_CODE = '000' AND GL.STATUS IN ('C','R') AND GL.JOB_STATUS = 'E' AND DR.CODE_TYPE = '2' AND GL.PURCHASE_BLOCK_FLAG != 'Y' AND GL.VENDOR_CODE = MCGL.VENDOR_CODE5) AS VENDOR_CODE5_TEXT
+					,MCGL.PRE_AMT5
+					,MCGL.CON_AMT5
+					,MCGL.CON_TYPE6
+					,MCGL.VENDOR_CODE6
+					,(SELECT GL.VENDOR_NAME_LOC FROM ICOMVNGL GL RIGHT OUTER JOIN ICOMADDR DR ON DR.HOUSE_CODE = GL.HOUSE_CODE AND DR.CODE_NO = GL.VENDOR_CODE WHERE GL.HOUSE_CODE = '000' AND GL.STATUS IN ('C','R') AND GL.JOB_STATUS = 'E' AND DR.CODE_TYPE = '2' AND GL.PURCHASE_BLOCK_FLAG != 'Y' AND GL.VENDOR_CODE = MCGL.VENDOR_CODE6) AS VENDOR_CODE6_TEXT
+					,MCGL.PRE_AMT6
+					,MCGL.CON_AMT6
+					,MCGL.CON_TYPE7
+					,MCGL.VENDOR_CODE7
+					,(SELECT GL.VENDOR_NAME_LOC FROM ICOMVNGL GL RIGHT OUTER JOIN ICOMADDR DR ON DR.HOUSE_CODE = GL.HOUSE_CODE AND DR.CODE_NO = GL.VENDOR_CODE WHERE GL.HOUSE_CODE = '000' AND GL.STATUS IN ('C','R') AND GL.JOB_STATUS = 'E' AND DR.CODE_TYPE = '2' AND GL.PURCHASE_BLOCK_FLAG != 'Y' AND GL.VENDOR_CODE = MCGL.VENDOR_CODE7) AS VENDOR_CODE7_TEXT
+					,MCGL.PRE_AMT7
+					,MCGL.CON_AMT7
+					,MCGL.CON_TYPE8
+					,MCGL.ETC_AMT1
+					,MCGL.ETC_AMT2
+					,MCGL.ETC_AMT3
+					,MCGL.ETC_AMT4
+					,MCGL.TOTAL_AMT
+					,MCGL.PA_TITLE
+					,MCGL.PA_NAME
+					,MCGL.BOSS_TITLE
+					,MCGL.BOSS_NAME
+					,MCGL.REMARK
+					,MCGL.ATTACH_FILE
+					,MCGL.ADD_USER_ID
+					,MCGL.ADD_DATE
+					,MCGL.ADD_TIME
+					,MCGL.CHANGE_USER_ID
+					,MCGL.CHANGE_DATE
+					,MCGL.CHANGE_TIME
+					,GETFILEATTCOUNT(MCGL.ATTACH_FILE) AS ATTACH_CNT
+					FROM 
+					SMCGL MCGL
+				    WHERE 1=1
+				    AND MCGL.HOUSE_CODE 	  =  $S{house_code}
+				    AND MCGL.CON_NUMBER 	  =  $S{con_number}
+				   
+		]]>
+	</method>
+	
+	
+	<method name="getConList">
+		<![CDATA[
+              	SELECT
+					 MCGL.HOUSE_CODE
+					,MCGL.CON_NUMBER
+					,MCGL.CON_KIND
+					,GETCODETEXT1('H001', MCGL.CON_KIND, 'KO') AS CON_KIND_TEXT
+					,MCGL.OWN_KIND
+					,(SELECT DEPT_NAME_LOC FROM ICOMOGDP WHERE STATUS != 'D' AND HOUSE_CODE = '000' AND COMPANY_CODE = 'WOORI' AND DEPT = MCGL.DEPT) AS DEPT_TEXT
+					,MCGL.CON_NAME
+					,MCGL.PAY_TERM
+					,MCGL.CON_DATE
+					,MCGL.MADE_DATE
+					,MCGL.PAY_DATE
+					,MCGL.OWN_NAME1
+					,MCGL.OWN_NAME2
+					,MCGL.OWN_NAME3
+					,MCGL.CON_TYPE1
+					,GETCODETEXT1('H002', MCGL.CON_TYPE1, 'KO') AS CON_TYPE1_TEXT
+					,MCGL.VENDOR_CODE1
+					,(SELECT GL.VENDOR_NAME_LOC FROM ICOMVNGL GL RIGHT OUTER JOIN ICOMADDR DR ON DR.HOUSE_CODE = GL.HOUSE_CODE AND DR.CODE_NO = GL.VENDOR_CODE WHERE GL.HOUSE_CODE = '000' AND GL.STATUS IN ('C','R') AND GL.JOB_STATUS = 'E' AND DR.CODE_TYPE = '2' AND GL.PURCHASE_BLOCK_FLAG != 'Y' AND GL.VENDOR_CODE = MCGL.VENDOR_CODE1) AS VENDOR_CODE1_TEXT   
+					,MCGL.PRE_AMT1
+					,MCGL.CON_AMT1
+					,MCGL.CON_TYPE2
+					,GETCODETEXT1('H002', MCGL.CON_TYPE2, 'KO') AS CON_TYPE2_TEXT
+					,MCGL.VENDOR_CODE2
+					,(SELECT GL.VENDOR_NAME_LOC FROM ICOMVNGL GL RIGHT OUTER JOIN ICOMADDR DR ON DR.HOUSE_CODE = GL.HOUSE_CODE AND DR.CODE_NO = GL.VENDOR_CODE WHERE GL.HOUSE_CODE = '000' AND GL.STATUS IN ('C','R') AND GL.JOB_STATUS = 'E' AND DR.CODE_TYPE = '2' AND GL.PURCHASE_BLOCK_FLAG != 'Y' AND GL.VENDOR_CODE = MCGL.VENDOR_CODE2) AS VENDOR_CODE2_TEXT
+					,MCGL.PRE_AMT2
+					,MCGL.CON_AMT2
+					,MCGL.CON_TYPE3
+					,GETCODETEXT1('H002', MCGL.CON_TYPE3, 'KO') AS CON_TYPE3_TEXT
+					,MCGL.VENDOR_CODE3
+					,(SELECT GL.VENDOR_NAME_LOC FROM ICOMVNGL GL RIGHT OUTER JOIN ICOMADDR DR ON DR.HOUSE_CODE = GL.HOUSE_CODE AND DR.CODE_NO = GL.VENDOR_CODE WHERE GL.HOUSE_CODE = '000' AND GL.STATUS IN ('C','R') AND GL.JOB_STATUS = 'E' AND DR.CODE_TYPE = '2' AND GL.PURCHASE_BLOCK_FLAG != 'Y' AND GL.VENDOR_CODE = MCGL.VENDOR_CODE3) AS VENDOR_CODE3_TEXT
+					,MCGL.PRE_AMT3
+					,MCGL.CON_AMT3
+					,MCGL.CON_TYPE4
+					,GETCODETEXT1('H002', MCGL.CON_TYPE4, 'KO') AS CON_TYPE4_TEXT
+					,MCGL.VENDOR_CODE4
+					,(SELECT GL.VENDOR_NAME_LOC FROM ICOMVNGL GL RIGHT OUTER JOIN ICOMADDR DR ON DR.HOUSE_CODE = GL.HOUSE_CODE AND DR.CODE_NO = GL.VENDOR_CODE WHERE GL.HOUSE_CODE = '000' AND GL.STATUS IN ('C','R') AND GL.JOB_STATUS = 'E' AND DR.CODE_TYPE = '2' AND GL.PURCHASE_BLOCK_FLAG != 'Y' AND GL.VENDOR_CODE = MCGL.VENDOR_CODE4) AS VENDOR_CODE4_TEXT
+					,MCGL.PRE_AMT4
+					,MCGL.CON_AMT4
+					,MCGL.CON_TYPE5
+					,GETCODETEXT1('H002', MCGL.CON_TYPE5, 'KO') AS CON_TYPE5_TEXT
+					,MCGL.VENDOR_CODE5
+					,(SELECT GL.VENDOR_NAME_LOC FROM ICOMVNGL GL RIGHT OUTER JOIN ICOMADDR DR ON DR.HOUSE_CODE = GL.HOUSE_CODE AND DR.CODE_NO = GL.VENDOR_CODE WHERE GL.HOUSE_CODE = '000' AND GL.STATUS IN ('C','R') AND GL.JOB_STATUS = 'E' AND DR.CODE_TYPE = '2' AND GL.PURCHASE_BLOCK_FLAG != 'Y' AND GL.VENDOR_CODE = MCGL.VENDOR_CODE5) AS VENDOR_CODE5_TEXT
+					,MCGL.PRE_AMT5
+					,MCGL.CON_AMT5
+					,MCGL.CON_TYPE6
+					,GETCODETEXT1('H002', MCGL.CON_TYPE6, 'KO') AS CON_TYPE6_TEXT
+					,MCGL.VENDOR_CODE6
+					,(SELECT GL.VENDOR_NAME_LOC FROM ICOMVNGL GL RIGHT OUTER JOIN ICOMADDR DR ON DR.HOUSE_CODE = GL.HOUSE_CODE AND DR.CODE_NO = GL.VENDOR_CODE WHERE GL.HOUSE_CODE = '000' AND GL.STATUS IN ('C','R') AND GL.JOB_STATUS = 'E' AND DR.CODE_TYPE = '2' AND GL.PURCHASE_BLOCK_FLAG != 'Y' AND GL.VENDOR_CODE = MCGL.VENDOR_CODE6) AS VENDOR_CODE6_TEXT
+					,MCGL.PRE_AMT6
+					,MCGL.CON_AMT6
+					,MCGL.CON_TYPE7
+					,GETCODETEXT1('H002', MCGL.CON_TYPE7, 'KO') AS CON_TYPE7_TEXT
+					,MCGL.VENDOR_CODE7
+					,(SELECT GL.VENDOR_NAME_LOC FROM ICOMVNGL GL RIGHT OUTER JOIN ICOMADDR DR ON DR.HOUSE_CODE = GL.HOUSE_CODE AND DR.CODE_NO = GL.VENDOR_CODE WHERE GL.HOUSE_CODE = '000' AND GL.STATUS IN ('C','R') AND GL.JOB_STATUS = 'E' AND DR.CODE_TYPE = '2' AND GL.PURCHASE_BLOCK_FLAG != 'Y' AND GL.VENDOR_CODE = MCGL.VENDOR_CODE7) AS VENDOR_CODE7_TEXT
+					,MCGL.PRE_AMT7
+					,MCGL.CON_AMT7
+					,MCGL.CON_TYPE8
+					,GETCODETEXT1('H002', MCGL.CON_TYPE8, 'KO') AS CON_TYPE8_TEXT
+					,MCGL.ETC_AMT1
+					,MCGL.ETC_AMT2
+					,MCGL.ETC_AMT3
+					,MCGL.ETC_AMT4
+					,MCGL.TOTAL_AMT
+					,MCGL.PA_TITLE
+					,MCGL.PA_NAME
+					,MCGL.BOSS_TITLE
+					,MCGL.BOSS_NAME
+					,MCGL.REMARK
+					,MCGL.ATTACH_FILE
+					,MCGL.ADD_USER_ID
+					,MCGL.ADD_DATE
+					,MCGL.ADD_TIME
+					,MCGL.CHANGE_USER_ID
+					,MCGL.CHANGE_DATE
+					,MCGL.CHANGE_TIME
+					FROM SMCGL MCGL
+				    WHERE 1=1
+				    AND CON_KIND 	  =  $S{con_kind}
+				    AND OWN_KIND LIKE '%' || $S{own_kind} || '%'
+				    AND DEPT 		  =  $S{dept}
+				    AND CON_NAME LIKE '%' || $S{con_name} || '%'
+				    AND PAY_TERM LIKE '%' || $S{pay_term} || '%'
+				    AND CON_DATE BETWEEN $S{con_from_date} 
+					AND $S{con_to_date}
+				   
+		]]>
+	</method>
+	
+	<method name="doDelete">
+	<![CDATA[
+		 	DELETE FROM SMCGL 		 
+			WHERE HOUSE_CODE =  ${HOUSE_CODE}
+				AND CON_NUMBER =  ${CON_NUMBER}
+	]]>
+	</method>
+</service>

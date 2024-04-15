@@ -1,0 +1,702 @@
+<html>
+<head>
+<title>XecureWeb File upload/ download Demo</title>
+<meta http-equiv="Content-Type" content="text/html; charset=euc-kr"><style type="text/css">
+<!--
+.font1 { font-size: 9pt;color:#666666;}
+td {  font-size: 9pt;color:#333333}
+A:link    {font-size:9pt;color:#010824;text-decoration:none; }
+A:active  {font-size:9pt;color:#010824;text-decoration:none; }
+A:visited {font-size:9pt;color:#010824;text-decoration:none; }
+A:hover   {font-size:9pt;color:#0066cc;text-decoration:none; }
+-->
+</style>
+</head><body bgcolor="#FFFFFF" text="#000000" leftmargin="0" topmargin="0" marginwidth="0" marginheight="0">
+
+<script language='javascript' src='/XecureObject/xecureweb.js'></script>
+<script language='javascript' src='/XecureObject/xecureweb_file.js'></script>
+<script language='javascript'>
+
+if (navigator.appName == 'Netscape') {
+
+  var XecureMime = navigator.mimeTypes["application/x-SoftForum-XWFile"];
+  if (XecureMime) {   // Xecure PlugIn 이 이미 설치되어 있는 경우
+        if ( file_isNewPlugin(XecureMime.enabledPlugin.description) == false) {
+                if (navigator.userAgent.indexOf("Mozilla/5") == 0)
+                	document.location.href = "/XecureObject/NPXecSSL60_Install.xpi";
+
+                if (navigator.userAgent.indexOf("Mozilla/4") == 0)  // Netscape 4.0 up. Using SmartUpdate
+                        file_downloadNow();
+        }
+   }
+   else {     // Xecure PlugIn 이 설치되어 있지 않은 경우
+                if (navigator.userAgent.indexOf("Mozilla/5") == 0)
+                        document.location.href = "/XecureObject/NPXecSSL60_Install.xpi";
+                if (navigator.userAgent.indexOf("Mozilla/4") == 0)  // Netscape 4.0 up. Using SmartUpdate
+                        file_downloadNow();
+   }
+}
+
+</script>
+
+
+<script language='javascript'>
+PrintObjectTag();
+</script>
+<OBJECT ID="FileAccess" CLASSID="CLSID:6AC69002-DAD5-11D4-B065-00C04F0CD404" CODEBASE="/XecureObject/xw_install.cab#Version=5,1,0,0">
+<PARAM name="lang" value="korean">
+<param name="license" value="30820695020101310b300906052b0e03021a0500307106092a864886f70d010701a0640462313a70686f626f732e736f6674666f72756d2e636f2e6b723a46696c655369676e2c46696c655665726966792c46696c65456e76656c6f702c46696c654465456e76656c6f702c46696c65436c6561722c46696c655a69702c46696c65556e5a6970a0820467308204633082034ba003020102020103300d06092a864886f70d01010505003077310b3009060355040613024b52311e301c060355040a1315536f6674666f72756d20436f72706f726174696f6e3121301f06035504031318536f6674666f72756d20526f6f7420417574686f726974793125302306092a864886f70d010901161663616d617374657240736f6674666f72756d2e636f6d301e170d3033303132313030303030305a170d3333303131333030303030305a308192310b3009060355040613024b52311e301c060355040a1315536f6674666f72756d20436f72706f726174696f6e311e301c060355040b1315536563757269747920522644204469766973696f6e311c301a06035504031313536f6674666f72756d205075626c69632043413125302306092a864886f70d010901161663616d617374657240736f6674666f72756d2e636f6d30820121300d06092a864886f70d01010105000382010e00308201090282010041a27ed4a985ee6b9a1e8823537a34a4da4cdad762478acfe7d8727ba227f7606a108eacbb991675865e374d7a700e537a1662bb9dcd27b89f99e0c91ac963390a11a0f6d945b97bde543a9f05ffe8bfeeb2cdfbbd939f1242d4ed645daa0e8be02813d5360eb3784b4859928df7d397d55febbaf00a83de11e047121cffc72c2bccd28b3cf8dd74f5dbb22b1b16b9c710f74a9b0243fc7c67000f8c1e343ac094e7b3a459ed7b9fb679019f4ef6ab425644ca895e63c0e67b9ada35034004f9eabf41d30bdcd62a6b3dc115e4c226b810b12e51c2b82414830b1995adc7aa94c3f37434aaa260ce4117f4e9d23f9ed9caa9e6b856815984009958e6271731490203010001a381de3081db301f0603551d2304183016801409b5e27e7d2ac24a8f56bb67accebb93f5318fd3301d0603551d0e0416041418053cf13370b5ae2123a28f9e68f75731330788300e0603551d0f0101ff04040302010630120603551d130101ff040830060101ff02010030750603551d1f046e306c306aa068a06686646c6461703a2f2f6c6461702e736f6674666f72756d2e636f6d3a3338392f434e3d58656375726543524c535256432c4f553d536563757269747920522644204469766973696f6e2c4f3d536f6674666f72756d20436f72706f726174696f6e2c433d4b52300d06092a864886f70d01010505000382010100329b1c2e5bf79586af02652e689f5451332746a7d4d290ff39c061612c93e8225837ee83eff242b50c27466961f4440f9900b202edbbcc1ebde1b63f31e76f6fe671c3afdf9ce8e513ec1e74ffd1b64658cdc3aa5db763b58dd1a9ca9671d50ea84c04fd491696a7dbf545d9058fef506da13ed4cbc292198a493d1a6225ec88cda9a94e79edc655655b223c5ec32ffacee0a8eaa3c87f2848e5085a32249426e66ee83611d1d3357113fc0a68e73f1d797430398d70a9a89b5ee124e3a7e1568582a74bc0b675988ffda2e34437cc0e303b98858c08fec39ad512c3a70f549716e82d6f4a79327cc71a1c20c03365af8b2898afb34b3b287e44b59731708d29318201a33082019f020101307c3077310b3009060355040613024b52311e301c060355040a1315536f6674666f72756d20436f72706f726174696f6e3121301f06035504031318536f6674666f72756d20526f6f7420417574686f726974793125302306092a864886f70d010901161663616d617374657240736f6674666f72756d2e636f6d020103300906052b0e03021a0500300d06092a864886f70d01010105000482010017307f4e786ce20bb82476126aac146451ef02c5b0608948f28017643039a82c2e5abbaa86ead353824c53e3a00216065a4b5e08670a98d54f17881e8efbf6a99a05ea38437405ea55891e050dacfdb91282a3060d5e8d83ebb892276c956157bc260340453e2efddee7bf99c84e107fa94a43375c5c788e9058739196aa294a94661a7147c1553a756a90724fef06dd9cc2f252bc50bdaeb78d7aa25989e691a57c81c00af3068462280a14d474e90f20732abcb6deadda178b9b36501b29587f85903e190df18283010613f741b6fa298491363b67ba9065d8f63e49c1638b01c85bc37452b2a24215d6145b306f17955c052d8829869837b6e59e1ea5362a">
+<!--
+<OBJECT ID="FileAccess" CLASSID="CLSID:A6C19300-D35F-4F92-980C-57CF091771E0" CODEBASE="/XecureObject/xw40_install.cab#Version=4,1,0,8"><PARAM name="lang" value="ENGLISH">
+-->
+<COMMENT>
+        <EMBED type='application/x-SoftForum-XWFile' hidden=true name='FileAccess' lang='ENGLISH'>
+      <NOEMBED>
+</COMMENT>
+           No XecureWeb 4.0 File PlugIn
+        </NOEMBED>
+        </EMBED>
+
+</OBJECT>
+
+
+<script language='javascript'>
+//PrintFileObjectTag();
+</script>
+
+<table width="100%" border="0" cellspacing="0" cellpadding="0" height="100%">
+  <tr> 
+    <td colspan="2" valign="top"> 
+      <p>&nbsp;</p>
+      <p>&nbsp;</p>
+      <table width="92%" border="0" cellspacing="0" cellpadding="0" align="center">
+        <tr> 
+          <td rowspan="2" valign="top" width="106"> 
+            <table width="106" border="0" cellspacing="0" cellpadding="0">
+              <tr> 
+                <td width="91"><img src="../img/img_main_web05.gif" width="91" height="110"></td>
+                <td width="14">&nbsp;</td>
+                <td width="1"><img src="../img/dot_gray01.gif" width="1" height="110"></td>
+              </tr>
+              <tr> 
+                <td width="91">&nbsp;</td>
+                <td width="11">&nbsp;</td>
+                <td width="1"><img src="../img/line_gray.gif" width="1" height="129"></td>
+              </tr>
+            </table>
+          </td>
+          <td valign="top" width="*%"> 
+            <table width="100%" border="0" cellspacing="0" cellpadding="0">
+              <tr> 
+                <td width="2%" height="30"></td>
+                <td height="34"><img src="../img/img_main_web04.gif" width="240" height="15"></td>
+              </tr>
+              <tr> 
+                <td colspan="2"><img src="../img/dot_gray01.gif" width="100%" height="1"></td>
+              </tr>
+              <tr> 
+                <td>&nbsp;</td>
+                <td align="right">
+                  <table width="25%" height=20 border="0" cellpadding="0" cellspacing="0">
+                    <tr>
+                      <td width="50%">
+                        <div align="center"><a href="../index.html">TOP 메뉴</a></div>
+                      </td>
+                      <td width="50%">
+                        <div align="center"><a href="../jsp/index.html">이전메뉴</a></div>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        <tr> 
+          <td valign="top"> 
+            <table width="85%" border="0" cellspacing="0" cellpadding="0">
+              <tr> 
+                <td height="100" width="8%">&nbsp;</td>
+                <td height="120" valign="middle"> 
+                  <p align="center"><font face="Times New Roman, Times, serif" size="5">XecureWeb 
+                    File upload/download Demo</font></p>
+                </td>
+              </tr>
+             <tr>
+                <td>&nbsp;</td>
+                <td> 
+                  <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                    <tr> 
+                      <td width="2%" height="24" bgcolor="#DEDBCB">&nbsp;</td>
+                      <td width="2%" height="24" bgcolor="#DEDBCB"><b>1.</b></td>
+                      <td height="24" bgcolor="#DEDBCB"><b>File Upload Test ( 
+                        Save at given path with original name )</b></td>
+                    </tr>
+                    <tr> 
+                      <td colspan="3" height="24"> 
+                        <p><a href='file_upload1.jsp?abc=def&pop=hi' onClick="FileUpload(this); return false;">확인</a></p>
+                      </td>
+                    </tr>
+
+
+                    <tr> 
+                      <td width="2%">&nbsp;</td>
+                      <td width="2%" valign="top">&nbsp;</td>
+                      <td> 
+                        <p>&nbsp;</p>
+                        </td>
+                    </tr>
+                    <tr> 
+                      <td width="2%" height="24" bgcolor="#DEDBCB">&nbsp;</td>
+                      <td width="2%" height="24" bgcolor="#DEDBCB"><b>2.</b></td>
+                      <td height="24" bgcolor="#DEDBCB"><b>File Upload Test ( 
+                        Save at given path with given name )</b></td>
+                    </tr>
+                    <tr> 
+                      <td colspan="3" height="24"> 
+                        <p><a href='file_upload2.jsp?abc=def&pop=hi' onClick="FileUpload(this); return false;">확인</a></p>
+                      </td>
+                    </tr>
+
+
+                    <tr> 
+                      <td width="2%">&nbsp;</td>
+                      <td width="2%" valign="top">&nbsp;</td>
+                      <td> 
+                        <p>&nbsp;</p>
+                        </td>
+                    </tr>
+                    <tr> 
+                      <td width="2%" height="24" bgcolor="#DEDBCB">&nbsp;</td>
+                      <td width="2%" height="24" bgcolor="#DEDBCB"><b>2.</b></td>
+                      <td height="24" bgcolor="#DEDBCB"><b>File Upload Test ( 
+                        Save at given path with given name & store encryption file)</b></td>
+                    </tr>
+                    <tr> 
+                      <td colspan="3" height="24"> 
+                        <p><a href='file_upload3.jsp?abc=def&pop=hi' onClick="FileUpload(this); return false;">확인</a></p>
+                      </td>
+                    </tr>
+
+                    <tr> 
+                      <td width="2%">&nbsp;</td>
+                      <td width="2%" valign="top">&nbsp; </td>
+                      <td> 
+                        <p>&nbsp;</p>
+                        </td>
+                    </tr>
+<!--
+                    <tr>
+                      <td height="24" bgcolor="#DEDBCB">&nbsp;</td>
+                      <td height="24" bgcolor="#DEDBCB"><b>2-1.</b></td>
+                      <td height="24" bgcolor="#DEDBCB"><b>DeEnvelope</b></td>
+                    </tr>
+                    <tr>
+                      <td height="24" colspan="3"> 
+                        <p><a href='file_deEnvelope.html'>확인</a></p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td width="2%">&nbsp;</td>
+                      <td width="2%" valign="top">&nbsp; </td>
+                      <td> 
+                        <p>&nbsp;</p>
+                        </td>
+                    </tr>
+-->
+                    <tr>
+                      <td height="24" bgcolor="#DEDBCB">&nbsp;</td>
+                      <td height="24" bgcolor="#DEDBCB"><b>3.</b></td>
+                      <td height="24" bgcolor="#DEDBCB"><b>실행 화일 (exe) 열기</b></td>
+                    </tr>
+                    <tr> 
+                      <td height="24" colspan="3"> 
+                        <p><a href='file_download.jsp?abc=def&pop=hi' onClick="FileDownload('/user2/jsbaek/xecureweb_ver4/demo/file/cup.exe', this, 0, 0); return false;">확인</a></p>
+                      </td>
+                    </tr>
+                    <tr> 
+                      <td width="2%">&nbsp;</td>
+                      <td valign="top" width="2%">&nbsp; </td>
+                      <td>&nbsp; </td>
+                    </tr>
+                    <tr> 
+                      <td height="24" bgcolor="#DEDBCB">&nbsp;</td>
+                      <td height="24" bgcolor="#DEDBCB"><b>4.</b></td>
+                      <td height="24" bgcolor="#DEDBCB"><b>실행 화일 (exe) 저장</b></td>
+                    </tr>
+                      <td height="24" colspan="3"> 
+                        <p><a href='file_download.jsp?abc=def&pop=hi' onClick="FileDownload('/user2/jsbaek/xecureweb_ver4/demo/file/cup.exe', this, 1, 0); return false;">확인</a></p>
+                      </td>
+                    </tr>
+                    <tr> 
+                      <td width="2%">&nbsp;</td>
+                      <td valign="top" width="2%"></td>
+                      <td>&nbsp; </td>
+                    </tr>
+                    <tr> 
+                      <td height="24" bgcolor="#DEDBCB">&nbsp;</td>
+                      <td height="24" bgcolor="#DEDBCB"><b>5.</b></td>
+                      <td height="24" bgcolor="#DEDBCB"><b>텍스트 화일 (txt) 열기</b></td>
+                    </tr>
+          
+		  
+		  
+		              
+                    <tr valign="middle"> 
+                      <td height="24" colspan="3"> 
+                        <p><a href='file_download.jsp?abc=한글&pop=hi' onClick="FileDownload('/user2/jsbaek/xecureweb_ver4/demo/file/hmm.txt', this, 0, 0); return false;">확인</a></p>
+                      </td>
+                    </tr>
+                    <tr> 
+                      <td width="2%">&nbsp;</td>
+                      <td valign="top" width="2%"></td>
+                      <td>&nbsp; </td>
+                    </tr>
+                    <tr> 
+                      <td height="24" bgcolor="#DEDBCB">&nbsp;</td>
+                      <td height="24" bgcolor="#DEDBCB"><b>6.</b></td>
+                      <td height="24" bgcolor="#DEDBCB"><b>텍스트 화일 (txt) 저장</b></td>
+                    </tr>
+                      <td height="24" colspan="3"> 
+                        <p><a href='file_download.jsp?abc=한글&pop=hi' onClick="FileDownload('/user2/jsbaek/xecureweb_ver4/demo/file/hmm.txt', this, 1, 0); return false;">확인</a></p>
+                      </td>
+                    </tr>
+                    
+                    <!--
+                    <tr> 
+                      <td width="2%">&nbsp;</td>
+                      <td valign="top" width="2%">&nbsp; </td>
+                      <td>&nbsp; </td>
+                    </tr>
+                    <tr> 
+                      <td height="24" bgcolor="#DEDBCB">&nbsp;</td>
+                      <td height="24" bgcolor="#DEDBCB"><b>6.</b></td>
+                      <td height="24" bgcolor="#DEDBCB"><b>파일다운로드(test1.a) 저장</b></td>
+                    </tr>
+          
+                      <td height="24" colspan="3"> 
+                        <p><a href='file_download.jsp?abc=한글&pop=hi' onClick="FileDownload('/user2/jsbaek/xecureweb_ver4/demo/file/fileup/test1.a', this, 1, 0); return false;">확인</a></p>
+                      </td>
+                    </tr>
+		    -->
+                    
+                    <tr> 
+                      <td width="2%">&nbsp;</td>
+                      <td valign="top" width="2%"></td>
+                      <td>&nbsp; </td>
+                    </tr>
+                    <tr> 
+                      <td height="24" bgcolor="#DEDBCB">&nbsp;</td>
+                      <td height="24" bgcolor="#DEDBCB"><b>7.</b></td>
+                      <td height="24" bgcolor="#DEDBCB"><b>도큐멘트 화일 (doc) 열기</b></td>
+                    </tr>
+          
+                      <td height="24" colspan="3"> 
+                        <p><a href='file_download.jsp?abc=한글&pop=hi' onClick="FileDownload('/user2/jsbaek/xecureweb_ver4/demo/file/a.doc', this, 0, 0); return false;">확인</a></p>
+                      </td>
+                    </tr>
+                    <tr> 
+                      <td width="2%">&nbsp;</td>
+                      <td valign="top" width="2%"></td>
+                      <td>&nbsp; </td>
+                    </tr>
+                    <tr> 
+                      <td height="24" bgcolor="#DEDBCB">&nbsp;</td>
+                      <td height="24" bgcolor="#DEDBCB"><b>8.</b></td>
+                      <td height="24" bgcolor="#DEDBCB"><b>도큐멘트 화일 (doc) 저장</b></td>
+                    </tr>
+          
+                      <td height="24" colspan="3"> 
+                        <p><a href='file_download.jsp?abc=한글&pop=hi' onClick="FileDownload('/user2/jsbaek/xecureweb_ver4/demo/file/a.doc', this, 1, 0); return false;">확인</a></p>
+                      </td>
+                    </tr>
+                    <tr> 
+                      <td width="2%">&nbsp;</td>
+                      <td valign="top" width="2%"></td>
+                      <td>&nbsp; </td>
+                    </tr>
+                    <tr> 
+                      <td height="24" bgcolor="#DEDBCB">&nbsp;</td>
+                      <td height="24" bgcolor="#DEDBCB"><b>9.</b></td>
+                      <td height="24" bgcolor="#DEDBCB"><b>파워포인트 화일 (ppt) 열기</b></td>
+                    </tr>
+          
+                      <td height="24" colspan="3"> 
+                        <p><a href='file_download.jsp?abc=한글&pop=hi' onClick="FileDownload('/user2/jsbaek/xecureweb_ver4/demo/file/b.ppt', this, 0, 0); return false;">확인</a></p>
+                      </td>
+                    </tr>
+                    <tr> 
+                      <td width="2%">&nbsp;</td>
+                      <td valign="top" width="2%"></td>
+                      <td>&nbsp; </td>
+                    </tr>
+                    <tr> 
+                      <td height="24" bgcolor="#DEDBCB">&nbsp;</td>
+                      <td height="24" bgcolor="#DEDBCB"><b>10.</b></td>
+                      <td height="24" bgcolor="#DEDBCB"><b>파워포인트 화일 (ppt) 저장</b></td>
+                    </tr>
+          
+                      <td height="24" colspan="3"> 
+                        <p><a href='file_download.jsp?abc=한글&pop=hi' onClick="FileDownload('/user2/jsbaek/xecureweb_ver4/demo/file/b.ppt', this, 1, 0); return false;">확인</a></p>
+                      </td>
+                    </tr>
+                    <tr> 
+                      <td width="2%">&nbsp;</td>
+                      <td valign="top" width="2%"></td>
+                      <td>&nbsp; </td>
+                    </tr>
+                    <tr> 
+                      <td height="24" bgcolor="#DEDBCB">&nbsp;</td>
+                      <td height="24" bgcolor="#DEDBCB"><b>11.</b></td>
+                      <td height="24" bgcolor="#DEDBCB"><b>액셀 화일 (xls) 열기</b></td>
+                    </tr>
+          
+                      <td height="24" colspan="3"> 
+                        <p><a href='file_download.jsp?abc=한글&pop=hi' onClick="FileDownload('/user2/jsbaek/xecureweb_ver4/demo/file/c.xls', this, 0, 0); return false;">확인</a></p>
+                      </td>
+                    </tr>
+                    <tr> 
+                      <td width="2%">&nbsp;</td>
+                      <td valign="top" width="2%"></td>
+                      <td>&nbsp; </td>
+                    </tr>
+                    <tr> 
+                      <td height="24" bgcolor="#DEDBCB">&nbsp;</td>
+                      <td height="24" bgcolor="#DEDBCB"><b>12.</b></td>
+                      <td height="24" bgcolor="#DEDBCB"><b>엑셀 화일 (xls) 새로운 창에서 
+                        열기</b></td>
+                    </tr>
+          
+                      <td height="24" colspan="3"> 
+                        <p><a href='file_download.jsp?abc=한글&pop=hi' onClick="FileDownload('/user2/jsbaek/xecureweb_ver4/demo/file/c.xls', this, 0, 1); return false;">확인</a></p>
+                      </td>
+                    </tr>
+					
+                    <tr> 
+                      <td width="2%">&nbsp;</td>
+                      <td valign="top" width="2%"></td>
+                      <td>&nbsp; </td>
+                    </tr>
+                    <tr> 
+                      <td height="24" bgcolor="#DEDBCB">&nbsp;</td>
+                      <td height="24" bgcolor="#DEDBCB"><b>13.</b></td>
+                      <td height="24" bgcolor="#DEDBCB"><b>엑셀 화일 (xls) 저장</b></td>
+                    </tr>
+          
+                      <td height="24" colspan="3"> 
+                        <p><a href='file_download.jsp?abc=한글&pop=hi' onClick="FileDownload('/user2/jsbaek/xecureweb_ver4/demo/file/c.xls', this, 1, 0); return false;">확인</a></p>
+                      </td>
+                    </tr>
+                    <tr> 
+                      <td width="2%">&nbsp;</td>
+                      <td valign="top" width="2%"></td>
+                      <td>&nbsp; </td>
+                    </tr>
+                    <tr> 
+                      <td height="24" bgcolor="#DEDBCB">&nbsp;</td>
+                      <td height="24" bgcolor="#DEDBCB"><b>14.</b></td>
+                      <td height="24" bgcolor="#DEDBCB"><b>콤마구분화일 (csv) 열기</b></td>
+                    </tr>
+          
+                      <td height="24" colspan="3"> 
+                        <p><a href='file_download.jsp?abc=한글&pop=hi' onClick="FileDownload('/user2/jsbaek/xecureweb_ver4/demo/file/g.csv', this, 0, 0); return false;">확인</a></p>
+                      </td>
+                    </tr>
+                    <tr> 
+                      <td width="2%">&nbsp;</td>
+                      <td valign="top" width="2%"></td>
+                      <td>&nbsp; </td>
+                    </tr>
+                    <tr> 
+                      <td height="24" bgcolor="#DEDBCB">&nbsp;</td>
+                      <td height="24" bgcolor="#DEDBCB"><b>15.</b></td>
+                      <td height="24" bgcolor="#DEDBCB"><b>콤마구분화일 (csv) 새로운 창에서 
+                        열기</b></td>
+                    </tr>
+          
+          
+		              <td height="24" colspan="3"> 
+                        <p><a href='file_download.jsp?abc=한글&pop=hi' onClick="FileDownload('/user2/jsbaek/xecureweb_ver4/demo/file/g.csv', this, 0, 1); return false;">확인</a></p>
+                      </td>
+                    </tr>
+			
+			
+                    <tr> 
+                      <td width="2%">&nbsp;</td>
+                      <td width="2%" valign="top">&nbsp;</td>
+                      <td> 
+                        <p>&nbsp;</p>
+                        </td>
+                    </tr>
+                    <tr> 
+                      <td width="2%" height="24" bgcolor="#DEDBCB">&nbsp;</td>
+                      <td width="2%" height="24" bgcolor="#DEDBCB"><b>16.</b></td>
+                      <td height="24" bgcolor="#DEDBCB"><b>콤마구분화일 (csv) 저장</b></td>
+                    </tr>
+                    <tr> 
+                      <td colspan="3" height="24"> 
+                        <p><a href='file_download.jsp?abc=한글&pop=hi' onClick="FileDownload('/user2/jsbaek/xecureweb_ver4/demo/file/g.csv', this, 1, 0); return false;">확인</a></p>
+                      </td>
+                    </tr>
+			
+
+                    <tr> 
+                      <td width="2%">&nbsp;</td>
+                      <td width="2%" valign="top">&nbsp;</td>
+                      <td> 
+                        <p>&nbsp;</p>
+                        </td>
+                    </tr>
+                    <tr> 
+                      <td width="2%" height="24" bgcolor="#DEDBCB">&nbsp;</td>
+                      <td width="2%" height="24" bgcolor="#DEDBCB"><b>17.</b></td>
+                      <td height="24" bgcolor="#DEDBCB"><b>한글워드프로세서 화일 (hwp) 열기</b></td>
+                    </tr>
+                    <tr> 
+                      <td colspan="3" height="24"> 
+                        <p><a href='file_download.jsp?abc=한글&pop=hi' onClick="FileDownload('/user2/jsbaek/xecureweb_ver4/demo/file/d.hwp', this, 0, 0); return false;">확인</a></p>
+                      </td>
+                    </tr>
+
+
+                    <tr> 
+                      <td width="2%">&nbsp;</td>
+                      <td width="2%" valign="top">&nbsp;</td>
+                      <td> 
+                        <p>&nbsp;</p>
+                        </td>
+                    </tr>
+                    <tr> 
+                      <td width="2%" height="24" bgcolor="#DEDBCB">&nbsp;</td>
+                      <td width="2%" height="24" bgcolor="#DEDBCB"><b>18.</b></td>
+                      <td height="24" bgcolor="#DEDBCB"><b>한글워드프로세서 화일 (hwp) 저장</b></td>
+                    </tr>
+                    <tr> 
+                      <td colspan="3" height="24"> 
+                        <p><a href='file_download.jsp?abc=한글&pop=hi' onClick="FileDownload('/user2/jsbaek/xecureweb_ver4/demo/file/d.hwp', this, 1, 0); return false;">확인</a></p>
+                      </td>
+                    </tr>
+
+                    <tr> 
+                      <td width="2%">&nbsp;</td>
+                      <td width="2%" valign="top">&nbsp;</td>
+                      <td> 
+                        <p>&nbsp;</p>
+                        </td>
+                    </tr>
+                    <tr> 
+                      <td width="2%" height="24" bgcolor="#DEDBCB">&nbsp;</td>
+                      <td width="2%" height="24" bgcolor="#DEDBCB"><b>19.</b></td>
+                      <td height="24" bgcolor="#DEDBCB"><b>비디오 화일 (avi) 열기</b></td>
+                    </tr>
+                    <tr> 
+                      <td colspan="3" height="24"> 
+                        <p><a href='file_download.jsp?abc=한글&pop=hi' onClick="FileDownload('/user2/jsbaek/xecureweb_ver4/demo/file/f.avi', this, 0, 0); return false;">확인</a></p>
+                      </td>
+                    </tr>
+
+                    <tr> 
+                      <td width="2%">&nbsp;</td>
+                      <td width="2%" valign="top">&nbsp;</td>
+                      <td> 
+                        <p>&nbsp;</p>
+                        </td>
+                    </tr>
+                    <tr> 
+                      <td width="2%" height="24" bgcolor="#DEDBCB">&nbsp;</td>
+                      <td width="2%" height="24" bgcolor="#DEDBCB"><b>20.</b></td>
+                      <td height="24" bgcolor="#DEDBCB"><b>비디오 화일 (avi) 저장</b></td>
+                    </tr>
+                    <tr> 
+                      <td colspan="3" height="24"> 
+                        <p><a href='file_download.jsp?abc=한글&pop=hi' onClick="FileDownload('/user2/jsbaek/xecureweb_ver4/demo/file/f.avi', this, 1, 0); return false;">확인</a></p>
+                      </td>
+                    </tr>
+
+                    <tr> 
+                      <td width="2%">&nbsp;</td>
+                      <td width="2%" valign="top">&nbsp;</td>
+                      <td> 
+                        <p>&nbsp;</p>
+                        </td>
+                    </tr>
+                    <tr> 
+                      <td width="2%" height="24" bgcolor="#DEDBCB">&nbsp;</td>
+                      <td width="2%" height="24" bgcolor="#DEDBCB"><b>21.</b></td>
+                      <td height="24" bgcolor="#DEDBCB"><b>Unknown File (aaa) 
+                        열기</b></td>
+                    </tr>
+                    <tr> 
+                      <td colspan="3" height="24"> 
+		                        <p><a href='file_download.jsp?abc=한글&pop=hi' onClick="FileDownload('/user2/jsbaek/xecureweb_ver4/demo/file/e.aaa', this, 0, 0); return false;">확인</a></p>
+<!--							<p><a href='file_download.jsp?abc=한글&pop=hi' onClick="window.showModalDialog('../jsp/sign_client.html','','center: Yes;resizable: Yes;'); return false;">확인</a></p> -->
+                      </td>
+                    </tr>
+
+                    <tr> 
+                      <td width="2%">&nbsp;</td>
+                      <td width="2%" valign="top">&nbsp;</td>
+                      <td> 
+                        <p>&nbsp;</p>
+                        </td>
+                    </tr>
+                    <tr> 
+                      <td width="2%" height="24" bgcolor="#DEDBCB">&nbsp;</td>
+                      <td width="2%" height="24" bgcolor="#DEDBCB"><b>22.</b></td>
+                      <td height="24" bgcolor="#DEDBCB"><b>Unknown File (aaa) 
+                        저장</b></td>
+                    </tr>
+                    <tr> 
+                      <td colspan="3" height="24"> 
+                        <p><a href='file_download.jsp?abc=한글&pop=hi' onClick="FileDownload('/user2/jsbaek/xecureweb_ver4/demo/file/e.aaa', this, 1, 0); return false;">확인</a></p>
+                      </td>
+                    </tr>
+                    
+                    <tr> 
+                      <td width="2%">&nbsp;</td>
+                      <td width="2%" valign="top">&nbsp;</td>
+                      <td> 
+                        <p>&nbsp;</p>
+                        </td>
+                    </tr>
+                    <tr> 
+                      <td width="2%" height="24" bgcolor="#DEDBCB">&nbsp;</td>
+                      <td width="2%" height="24" bgcolor="#DEDBCB"><b>23</b></td>
+                      <td height="24" bgcolor="#DEDBCB"><b>파일 서명</b></td>
+                    </tr>
+                    <tr> 
+                      <td colspan="3" height="24"> 
+                        <p><a href='file_download.jsp?abc=한글&pop=hi' onClick="FileSign(8+32+64); return false;">확인</a></p>
+                      </td>
+                    </tr>
+                                        
+                    <tr> 
+                      <td width="2%">&nbsp;</td>
+                      <td width="2%" valign="top">&nbsp;</td>
+                      <td> 
+                        <p>&nbsp;</p>
+                        </td>
+                    </tr>
+                    <tr> 
+                      <td width="2%" height="24" bgcolor="#DEDBCB">&nbsp;</td>
+                      <td width="2%" height="24" bgcolor="#DEDBCB"><b>24</b></td>
+                      <td height="24" bgcolor="#DEDBCB"><b>파일 검증</b></td>
+                    </tr>
+                    <tr> 
+                      <td colspan="3" height="24"> 
+                        <p><a href='file_download.jsp?abc=한글&pop=hi' onClick="FileVerify(0); return false;">확인</a></p>
+                      </td>
+                    </tr>
+                                        
+                    <tr> 
+                      <td width="2%">&nbsp;</td>
+                      <td width="2%" valign="top">&nbsp;</td>
+                      <td> 
+                        <p>&nbsp;</p>
+                        </td>
+                    </tr>
+                    <tr> 
+                      <td width="2%" height="24" bgcolor="#DEDBCB">&nbsp;</td>
+                      <td width="2%" height="24" bgcolor="#DEDBCB"><b>25.</b></td>
+                      <td height="24" bgcolor="#DEDBCB"><b>파일 Envelop</b></td>
+                    </tr>
+                    <tr> 
+                      <td colspan="3" height="24"> 
+                        <p><a href='file_download.jsp?abc=한글&pop=hi' onClick="FileEnvelop(); return false;">확인</a></p>
+                      </td>
+                    </tr>
+                    
+                    <tr> 
+                      <td width="2%">&nbsp;</td>
+                      <td width="2%" valign="top">&nbsp;</td>
+                      <td> 
+                        <p>&nbsp;</p>
+                        </td>
+                    </tr>
+                    <tr> 
+                      <td width="2%" height="24" bgcolor="#DEDBCB">&nbsp;</td>
+                      <td width="2%" height="24" bgcolor="#DEDBCB"><b>26.</b></td>
+                      <td height="24" bgcolor="#DEDBCB"><b>파일 Deenvelop</b></td>
+                    </tr>
+                    <tr> 
+                      <td colspan="3" height="24"> 
+                        <p><a href='file_download.jsp?abc=한글&pop=hi' onClick="FileDeEnvelop(); return false;">확인</a></p>
+                      </td>
+                    </tr>
+                    
+                    <tr> 
+                      <td width="2%">&nbsp;</td>
+                      <td width="2%" valign="top">&nbsp;</td>
+                      <td> 
+                        <p>&nbsp;</p>
+                        </td>
+                    </tr>
+                    <tr> 
+                      <td width="2%" height="24" bgcolor="#DEDBCB">&nbsp;</td>
+                      <td width="2%" height="24" bgcolor="#DEDBCB"><b>27.</b></td>
+                      <td height="24" bgcolor="#DEDBCB"><b>파일 압축</b></td>
+                    </tr>
+                    <tr> 
+                      <td colspan="3" height="24"> 
+                        <p><a href='file_download.jsp?abc=한글&pop=hi' onClick="FileZip(); return false;">확인</a></p>
+                      </td>
+                    </tr>
+                    
+                    <tr> 
+                      <td width="2%">&nbsp;</td>
+                      <td width="2%" valign="top">&nbsp;</td>
+                      <td> 
+                        <p>&nbsp;</p>
+                        </td>
+                    </tr>
+                    <tr> 
+                      <td width="2%" height="24" bgcolor="#DEDBCB">&nbsp;</td>
+                      <td width="2%" height="24" bgcolor="#DEDBCB"><b>28.</b></td>
+                      <td height="24" bgcolor="#DEDBCB"><b>압축 풀기</b></td>
+                    </tr>
+                    <tr> 
+                      <td colspan="3" height="24"> 
+                        <p><a href='file_download.jsp?abc=한글&pop=hi' onClick="FileUnZip(); return false;">확인</a></p>
+                      </td>
+                    </tr>                    
+					
+                    <tr> 
+                      <td width="2%">&nbsp;</td>
+                      <td valign="top" width="2%">&nbsp;</td>
+                      <td>
+<p>&nbsp; </p>
+                      </td>
+                    </tr>
+                    <tr> 
+                      <td width="2%">&nbsp;</td>
+                      <td width="2%">&nbsp;</td>
+                      <td>&nbsp;</td>
+                    </tr>
+                    <tr> 
+                      <td width="2%">&nbsp;</td>
+                      <td width="2%">&nbsp;</td>
+                      <td>&nbsp;</td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              <tr> 
+                <td height="40">&nbsp;</td>
+                <td height="40">&nbsp;</td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr> 
+    <td height="24" bgcolor="#345B87"> 
+      <div align="right"><font color="#FFFFFF"><b><font color="#CED2DB"><a href="http://www.softforum.com"><font color="#FFFFFF">www.softforum.com</font></a></font></b></font></div>
+    </td>
+    <td height="24" bgcolor="#345B87" width="3%">&nbsp;</td>
+  </tr>
+</table>
+</body>
+</html>
+

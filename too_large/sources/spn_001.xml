@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<service>
+	<method name="getCsBdPnListSeller">
+		<![CDATA[
+		     SELECT
+			     ${COMPANY_CODE} VENDOR_CODE
+			    ,GETVENDORNAME(${HOUSE_CODE}
+			                 , ${COMPANY_CODE}) AS VENDOR_NAME_LOC  
+				,A.PN_YY	 
+				,A.PN_UD
+				,DECODE(A.PN_UD,'0106','상반기','0712','하반기','전체') AS PN_UD_LOC
+				,A.DS_TCN
+				,A.BID_TCN
+				,A.NML_BID_TCN
+				,A.NOT_NML_BID_TCN
+				,A.BID_TPCP_RT
+				,A.PN_TGT_YN
+			FROM
+			(
+				SELECT 
+				    G_DS_TCN.PN_YY  PN_YY
+				    ,G_DS_TCN.PN_UD PN_UD
+					,G_DS_TCN.CNT  DS_TCN
+					,NVL(G_BID_TCN.CNT,0) BID_TCN
+					,(NVL(G_BID_TCN.CNT,0) - NVL(G_NOT_PN_PRIC.CNT,0)) NML_BID_TCN
+					,(G_DS_TCN.CNT - (NVL(G_BID_TCN.CNT,0) - NVL(G_NOT_PN_PRIC.CNT,0))) NOT_NML_BID_TCN
+					,CASE WHEN G_DS_TCN.CNT > 7 AND (NVL(G_BID_TCN.CNT,0) - NVL(G_NOT_PN_PRIC.CNT,0)) >= 0 THEN ROUND(((NVL(G_BID_TCN.CNT,0) - NVL(G_NOT_PN_PRIC.CNT,0))/G_DS_TCN.CNT)*100,2)
+					 ELSE NULL
+					 END AS BID_TPCP_RT
+					,CASE WHEN G_DS_TCN.CNT > 7 AND (NVL(G_BID_TCN.CNT,0) - NVL(G_NOT_PN_PRIC.CNT,0)) >= 0 THEN 
+						 CASE WHEN ROUND(((NVL(G_BID_TCN.CNT,0) - NVL(G_NOT_PN_PRIC.CNT,0))/G_DS_TCN.CNT)*100,2) < 30 THEN
+						 	'<font color="red">패널티 대상</font>'
+						 ELSE
+						 	NULL
+						 END 
+					 ELSE NULL
+					 END AS PN_TGT_YN
+				FROM 
+				(
+					SELECT PN_YY,PN_UD,COUNT(VENDOR_CODE) CNT
+					FROM
+					(
+						SELECT SUBSTR(PG.OPEN_DATE,1,4) PN_YY
+						      ,CASE WHEN TO_NUMBER(SUBSTR(OPEN_DATE,5,2)) < 7 THEN '0106' ELSE '0712' END PN_UD
+						      ,AP.VENDOR_CODE
+						FROM ICOYBDHD HD, ICOYBDPG PG, ICOYBDAP AP
+						WHERE HD.HOUSE_CODE  = PG.HOUSE_CODE
+						AND   HD.BID_NO      = PG.BID_NO                                              
+						AND   HD.BID_COUNT   = PG.BID_COUNT
+						AND   HD.HOUSE_CODE  = AP.HOUSE_CODE
+						AND   HD.BID_NO      = AP.BID_NO                                              
+						AND   HD.BID_COUNT   = AP.BID_COUNT
+						AND   HD.HOUSE_CODE  = ${HOUSE_CODE}
+						AND   HD.BID_STATUS  IN ('SB', 'NB')                                     
+						AND   HD.SIGN_STATUS  IN ('C')                                                
+						AND   HD.STATUS IN ('C' ,'R')                                                 
+						AND   PG.STATUS IN ('C' ,'R')
+						AND   AP.STATUS IN ('C' ,'R')                                              
+						AND   HD.BID_TYPE = 'C'
+						AND   HD.CONT_TYPE1 = 'NC'
+						AND   HD.PROM_CRIT = 'B'
+						AND   AP.VENDOR_CODE = ${COMPANY_CODE}
+						AND   PG.OPEN_DATE >= '20160101'
+					)
+					GROUP BY PN_YY,PN_UD
+				)G_DS_TCN,
+				(
+					SELECT PN_YY,PN_UD,COUNT(VENDOR_CODE) CNT
+					FROM
+					(
+						SELECT SUBSTR(PG.OPEN_DATE,1,4) PN_YY
+						      ,CASE WHEN TO_NUMBER(SUBSTR(OPEN_DATE,5,2)) < 7 THEN '0106' ELSE '0712' END PN_UD
+						      ,VO.VENDOR_CODE
+						FROM ICOYBDHD HD, ICOYBDPG PG, ICOYBDVO VO
+						WHERE HD.HOUSE_CODE  = PG.HOUSE_CODE
+						AND   HD.BID_NO      = PG.BID_NO                                              
+						AND   HD.BID_COUNT   = PG.BID_COUNT
+						AND   PG.HOUSE_CODE  = VO.HOUSE_CODE
+						AND   PG.BID_NO      = VO.BID_NO                                              
+						AND   PG.BID_COUNT   = VO.BID_COUNT					 
+						AND   VO.VOTE_COUNT  = 1
+						AND   HD.HOUSE_CODE  = ${HOUSE_CODE}
+						AND   HD.BID_STATUS  IN ('SB', 'NB')                                     
+						AND   HD.SIGN_STATUS  IN ('C')                                                
+						AND   HD.STATUS IN ('C' ,'R')                                                 
+						AND   PG.STATUS IN ('C' ,'R')                                              
+						AND   HD.BID_TYPE = 'C'
+						AND   HD.CONT_TYPE1 = 'NC'
+						AND   HD.PROM_CRIT = 'B'
+						AND   VO.BID_CANCEL = 'N'  
+						AND   VO.VENDOR_CODE = ${COMPANY_CODE}
+						AND   PG.OPEN_DATE >= '20160101'
+					)
+					GROUP BY PN_YY,PN_UD
+				)G_BID_TCN,
+				(
+					SELECT PN_YY,PN_UD,COUNT(VENDOR_CODE) CNT
+					FROM
+					(
+						SELECT SUBSTR(PG.OPEN_DATE,1,4) PN_YY
+						      ,CASE WHEN TO_NUMBER(SUBSTR(OPEN_DATE,5,2)) < 7 THEN '0106' ELSE '0712' END PN_UD
+						      ,VO.VENDOR_CODE
+						FROM ICOYBDHD HD, ICOYBDPG PG, ICOYBDVO VO, ICOYBDPN PN
+						WHERE HD.HOUSE_CODE  = PG.HOUSE_CODE
+						AND   HD.BID_NO      = PG.BID_NO                                              
+						AND   HD.BID_COUNT   = PG.BID_COUNT
+						AND   PG.HOUSE_CODE  = VO.HOUSE_CODE
+						AND   PG.BID_NO      = VO.BID_NO                                              
+						AND   PG.BID_COUNT   = VO.BID_COUNT
+						AND   VO.HOUSE_CODE  = PN.HOUSE_CODE
+						AND   VO.BID_NO      = PN.BID_NO
+						AND   VO.BID_COUNT   = PN.BID_COUNT						 
+						AND   VO.VOTE_COUNT  = 1
+						AND   HD.HOUSE_CODE  = ${HOUSE_CODE}
+						AND   HD.BID_STATUS  IN ('SB', 'NB')                                     
+						AND   HD.SIGN_STATUS  IN ('C')                                                
+						AND   HD.STATUS IN ('C' ,'R')                                                 
+						AND   PG.STATUS IN ('C' ,'R')                                              
+						AND   HD.BID_TYPE = 'C'
+						AND   HD.CONT_TYPE1 = 'NC'
+						AND   HD.PROM_CRIT = 'B'
+						AND   VO.BID_CANCEL = 'N'  
+						AND   VO.VENDOR_CODE = ${COMPANY_CODE}
+						AND   PG.OPEN_DATE >= '20160101'
+						AND   VO.BID_AMT_ENC NOT BETWEEN PN.PN_L_PRICE AND PN.PN_H_PRICE 
+					)
+					GROUP BY PN_YY,PN_UD
+				)G_NOT_PN_PRIC
+				WHERE G_DS_TCN.PN_YY  = G_BID_TCN.PN_YY(+)
+				AND G_DS_TCN.PN_UD = G_BID_TCN.PN_UD(+)
+				AND G_DS_TCN.PN_YY    = G_NOT_PN_PRIC.PN_YY(+)
+				AND G_DS_TCN.PN_UD = G_NOT_PN_PRIC.PN_UD(+)
+			)A
+			WHERE 1 = 1
+			  AND A.PN_YY = $S{bd_yy}	 
+			  AND A.PN_UD = $S{hy_ds}	
+			ORDER BY A.PN_YY, A.PN_UD 	
+		]]>
+	</method>                                
+</service>
+

@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<service>
+	
+	<method name="insertSosglInfo">
+		INSERT INTO SOSGL (                               
+			HOUSE_CODE,        OSQ_NO,         OSQ_COUNT,      STATUS,           COMPANY_CODE,
+			OSQ_DATE,          OSQ_CLOSE_DATE, OSQ_CLOSE_TIME, OSQ_TYPE,         PC_REASON,
+			SETTLE_TYPE,       BID_TYPE,       OSQ_FLAG,       TERM_CHANGE_FLAG, CREATE_TYPE,
+			BID_COUNT,         CTRL_CODE,      ADD_USER_ID,    ADD_DATE,         ADD_TIME,
+			CHANGE_DATE,       CHANGE_TIME,    CHANGE_USER_ID, SUBJECT,          REMARK,
+			DOM_EXP_FLAG,      ARRIVAL_PORT,   USANCE_DAYS,    SHIPPING_METHOD,  PAY_TERMS,
+			ARRIVAL_PORT_NAME, DELY_TERMS,     PRICE_TYPE,     SETTLE_COUNT,     RESERVE_PRICE,
+			CURRENT_PRICE,     BID_DEC_AMT,    TEL_NO,         EMAIL,            BD_TYPE,
+			CUR,               START_DATE,     START_TIME,     Z_SMS_SEND_FLAG,  Z_RESULT_OPEN_FLAG,
+			BID_REQ_TYPE,      BID_OSQ_TYPE,   ATTACH_NO,      SIGN_STATUS           
+		)
+		VALUES (         
+			${HOUSE_CODE},                                             
+			${OSQ_NO},         
+			${OSQ_COUNT},      
+			${STATUS},           
+			${COMPANY_CODE},
+			
+			${OSQ_DATE},                                               
+			${OSQ_CLOSE_DATE}, 
+			${OSQ_CLOSE_TIME}, 
+			${OSQ_TYPE},         
+			${PC_REASON},
+			
+			${SETTLE_TYPE},                                            
+			${BID_TYPE},       
+			${OSQ_FLAG},       
+			${TERM_CHANGE_FLAG}, 
+			${CREATE_TYPE},
+			
+			${BID_COUNT},                                              
+			${CTRL_CODE},      
+			${ADD_USER_ID},    
+			${ADD_DATE},         
+			${ADD_TIME},
+			
+			${CHANGE_DATE},                                            
+			${CHANGE_TIME},    
+			${CHANGE_USER_ID}, 
+			${SUBJECT},          
+			${REMARK},
+			
+			${DOM_EXP_FLAG},                                           
+			${ARRIVAL_PORT},   
+			${USANCE_DAYS},    
+			${SHIPPING_METHOD},  
+			${PAY_TERMS},
+			
+			GETICOMCODE2(
+				${HOUSE_CODE},
+				'M005',
+				${ARRIVAL_PORT_NAME}
+			), 
+			${DELY_TERMS},     
+			${PRICE_TYPE},     
+			${SETTLE_COUNT},     
+			${RESERVE_PRICE},
+			
+			${CURRENT_PRICE},                                          
+			${BID_DEC_AMT},    
+			${TEL_NO},         
+			${EMAIL},            
+			${BD_TYPE},
+			
+			${CUR},                                                    
+			${START_DATE},     
+			${START_TIME},     
+			${Z_SMS_SEND_FLAG},  
+			${Z_RESULT_OPEN_FLAG},
+			
+			${BID_REQ_TYPE},                                           
+			${CREATE_TYPE},    
+			${H_ATTACH_NO},      
+			${SIGN_STATUS}
+		)
+	</method>
+	
+	<method name="insertSoslnInfo">
+		INSERT INTO SOSLN(         
+			HOUSE_CODE,      OSQ_NO,              OSQ_COUNT,           OSQ_SEQ,          STATUS,
+			COMPANY_CODE,    PLANT_CODE,          OSQ_PROCEEDING_FLAG, ADD_DATE,         ADD_TIME,
+			ADD_USER_ID,     CHANGE_DATE,         CHANGE_TIME,         CHANGE_USER_ID,   ITEM_NO,
+			UNIT_MEASURE,    RD_DATE,             VALID_FROM_DATE,     VALID_TO_DATE,    PURCHASE_PRE_PRICE,
+			OSQ_QTY,         OSQ_AMT,             BID_COUNT,           CUR,              PR_NO,
+			PR_SEQ,          SETTLE_FLAG,         SETTLE_QTY,          TBE_FLAG,         TBE_DEPT,
+			PRICE_TYPE,      TBE_PROCEEDING_FLAG, SAMPLE_FLAG,         DELY_TO_LOCATION, ATTACH_NO,
+			SHIPPER_TYPE,    CONTRACT_FLAG,       COST_COUNT,          YEAR_QTY,         DELY_TO_ADDRESS,
+			MIN_PRICE,       MAX_PRICE,           STR_FLAG,            TBE_NO,           Z_REMARK,
+			TECHNIQUE_GRADE, TECHNIQUE_TYPE,      INPUT_FROM_DATE,     INPUT_TO_DATE,    TECHNIQUE_FLAG,
+			SPECIFICATION,   MAKER_NAME,          MAKE_AMT_CODE, P_ITEM_NO,  P_SEQ,
+			DELY_TO_DEPT,   WID,    HGT
+		)
+		VALUES (
+			${HOUSE_CODE},           
+			${OSQ_NO},              
+			${OSQ_COUNT},           
+			LPAD(${OSQ_SEQ}, 6, '0'), 
+			${STATUS},
+			
+			${COMPANY_CODE},         
+			${PLANT_CODE},          
+			${OSQ_PROCEEDING_FLAG}, 
+			${ADD_DATE},              
+			${ADD_TIME},
+			
+			${ADD_USER_ID},          
+			${CHANGE_DATE},         
+			${CHANGE_TIME},         
+			${CHANGE_USER_ID},        
+			${ITEM_NO},
+			
+			${UNIT_MEASURE},         
+			${RD_DATE},             
+			${VALID_FROM_DATE},     
+			${VALID_TO_DATE},         
+			${PURCHASE_PRE_PRICE},
+			
+			${OSQ_QTY},              
+			${OSQ_AMT},             
+			${BID_COUNT},           
+			${CUR},                   
+			${PR_NO},
+			
+			LPAD(${PR_SEQ}, 5, '0'), 
+			${SETTLE_FLAG},         
+			${SETTLE_QTY},          
+			${TBE_FLAG},              
+			${TBE_DEPT},
+			
+			${PRICE_TYPE},           
+			${TBE_PROCEEDING_FLAG}, 
+			${SAMPLE_FLAG},         
+			${DELY_TO_LOCATION},      
+			${ATTACH_NO},
+			
+			${SHIPPER_TYPE},         
+			${CONTRACT_FLAG},       
+			${COST_COUNT},          
+			${YEAR_QTY},              
+			${DELY_TO_ADDRESS},
+			
+			${MIN_PRICE},            
+			${MAX_PRICE},           
+			${STR_FLAG},            
+			${TBE_NO},                
+			${Z_REMARK},
+			
+			${TECHNIQUE_GRADE},      
+			${TECHNIQUE_TYPE},      
+			${INPUT_FROM_DATE},     
+			${INPUT_TO_DATE},         
+			${TECHNIQUE_FLAG},
+			
+			${SPECIFICATION},        
+			${MAKER_NAME},
+			${MAKE_AMT_CODE},
+			${P_ITEM_NO},
+			${P_SEQ},
+			
+			${DELY_TO_DEPT},
+			${WID},
+			${HGT}			
+		)
+	</method>
+	
+	<method name="setPRComfirm">
+	<![CDATA[
+		UPDATE
+			ICOYPRDT
+		SET				    		 
+			CONFIRM_QTY        = ${OSQ_QTY},
+			PR_PROCEEDING_FLAG = 'G',
+			BID_STATUS         = ${BID_STATUS}				 
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}  						 
+		AND
+			PR_NO      = ${PR_NO}				   		 
+		AND
+			PR_SEQ     = ${PR_SEQ} 	                                     
+	]]>
+	</method>
+	
+	<method name="setSosseCreate">
+	<![CDATA[
+		INSERT INTO SOSSE (
+			HOUSE_CODE, OSQ_NO,       OSQ_COUNT,      OSQ_SEQ,    VENDOR_CODE,
+			STATUS,     COMPANY_CODE, CONFIRM_FLAG,   ADD_DATE,   ADD_USER_ID,
+			ADD_TIME,   CHANGE_DATE,  CHANGE_USER_ID, CHANGE_TIME
+		)
+		VALUES(
+			${HOUSE_CODE},
+			${OSQ_NO},
+			${OSQ_COUNT},
+			LPAD(${OSQ_SEQ}, 6, '0'), 
+			${VENDOR_CODE},
+			
+			${STATUS},
+			${COMPANY_CODE},
+			${CONFIRM_FLAG},
+			TO_CHAR(SYSDATE, 'YYYYMMDD'),
+			${ADD_USER_ID},
+			
+			TO_CHAR(SYSDATE, 'HH24MISS'),
+			TO_CHAR(SYSDATE, 'YYYYMMDD'),
+			${ADD_USER_ID},
+			TO_CHAR(SYSDATE, 'HH24MISS')
+		)                            
+	]]>
+	</method>
+</service>

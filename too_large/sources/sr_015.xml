@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+<service>
+	  <method name ="getEvaList">
+    <![CDATA[
+		SELECT 	VEFH.E_FACTOR_REFITEM, 					                      
+			  	VEFH.FACTOR_NAME,                           
+			  	VEFH.SCALE_COUNT,                           
+			  	VEFH.ADD_DATE as systime_updated,                              
+			  	LUSR.USER_NAME_LOC, 
+			  	GETICOMCODE1(VEFH.HOUSE_CODE,'M124',VEFH.FACTOR_TYPE) FACTOR_TYPE
+                , DECODE(VEFH.QNT_FLAG, 'Y', '정량평가', '정성평가') QNT_NAME                            
+			  	, VEFH.QNT_FLAG
+			  	
+		FROM ICOMVEFH VEFH, ICOMLUSR LUSR                   
+ 		WHERE VEFH.ADD_USER_ID = LUSR.USER_ID 
+ 		AND VEFH.USE_FLAG ='Y'              
+		AND LUSR.HOUSE_CODE= ${session.HOUSE_CODE}		
+		AND VEFH.FACTOR_NAME  LIKE '%' || $S{item_name}  || '%'
+   		AND LUSR.USER_NAME_LOC  LIKE '%' || $S{operator}  || '%'	
+		order by systime_updated asc   	
+	 ]]>
+	 
+	 
+	 
+    </method>
+    
+    
+    <method name = "setEvaDelete_1">
+    <![CDATA[
+		UPDATE ICOMVEFH SET USE_FLAG = 'N'		
+		WHERE E_FACTOR_REFITEM IN ( ${e_factor_refitem} ) 		
+    ]]>
+    </method>
+    
+    <method name = "setEvaDelete_2">
+    <![CDATA[
+		UPDATE ICOMVEFD SET USE_FLAG = 'N' 
+		WHERE E_FACTOR_REFITEM IN ( ${e_factor_refitem} ) 	
+    ]]>
+    </method>
+    
+   
+
+</service>

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+<service>
+	<method name="selectBizList">
+			<![CDATA[
+				SELECT BIZ_NO
+					  ,BIZ_NM 
+				FROM ICOYRQBZ_ICT
+				WHERE STATUS IN ('C','R')
+				AND	  BIZ_NO LIKE '%' || $S{biz_no} || '%' 
+				AND	  BIZ_NM LIKE '%' || $S{biz_nm} || '%' 
+				AND   CHANGE_DATE  BETWEEN   $S{start_change_date} 
+			    AND   $S{end_change_date}      
+			    AND BIZ_STATUS IN ('P','E')
+			    ORDER BY BIZ_NO DESC                                  
+			]]>			        
+	</method>
+	
+	<method name="getBottomSupiList">
+			<![CDATA[
+				SELECT A.VENDOR_CODE AS SELLER_CODE
+					 , GETCOMPANYNAMELOC_ICT( '000',A.VENDOR_CODE, 'S' ) AS SELLER_NAME
+					 , B.USER_NAME										 AS USER_NAME
+					 , B.MOBILE_NO										 AS MOBILE_NO
+					 , B.EMAIL											 AS EMAIL
+				FROM ICOYRQOP_ICT A, 
+				     ( SELECT * 
+				       FROM ICOMVNCP_ICT
+				       WHERE BIZ_RPS_YN = 'Y' ) B
+				WHERE A.VENDOR_CODE = B.VENDOR_CODE(+)
+				AND A.STATUS IN ('C','R')
+				AND A.RFQ_NO = ${RFQ_NUMBER} 
+				AND A.RFQ_COUNT = ${RFQ_COUNT}                
+			]]>			        
+	</method>
+</service>

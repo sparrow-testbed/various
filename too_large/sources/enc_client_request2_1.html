@@ -1,0 +1,204 @@
+<html>
+<head>
+<title>XecureHttpJspPage 클래스 암호 데모</title>
+<meta http-equiv="Content-Type" content="text/html; charset=euc-kr"><style type="text/css">
+<!--
+.font1 { font-size: 9pt;color:#666666;}
+td {  font-size: 9pt;color:#333333}
+A:link    {font-size:9pt;color:#010824;text-decoration:none; }
+A:active  {font-size:9pt;color:#010824;text-decoration:none; }
+A:visited {font-size:9pt;color:#010824;text-decoration:none; }
+A:hover   {font-size:9pt;color:#0066cc;text-decoration:none; }
+-->
+</style>
+</head><body bgcolor="#FFFFFF" text="#000000" leftmargin="0" topmargin="0" marginwidth="0" marginheight="0">
+
+<form name='xecure'><input type=hidden name='p'></form>
+<script language='javascript' src='/XecureObject/xecureweb.js'></script>
+<script language='javascript'>
+PrintObjectTag();
+</script>
+
+<script language='javascript'>
+function escape_2(url) {
+	var i, j, pos, k;
+	var out = "";
+
+	pos = 0;
+	j = -2;
+	k = -2;
+	while (pos > -1) {
+		if(j == -2)
+			j = url.indexOf('+', pos);
+		if(k == -2)
+			k = url.indexOf('=', pos);
+		if(j < 0 && k < 0) break;
+		if ((j < k && j > -1) || (j > -1 && k < 0)){
+			out += url.substring(pos, j);
+			out += '%2B';
+			pos = j + 1; 
+			j = -2;
+		}
+		else if ((j > k && k > -1) || (k > -1 && j < 0)){
+			out += url.substring(pos, k);
+			out += '%3D';
+			pos = k + 1; 
+			k = -2;
+		}
+		else
+			pos = -1;
+	}
+	return out;
+}
+
+function XSubmit( form, x, y )
+{
+	var qs ;
+	var path ;
+	var cipher;
+	var plain;
+
+	document.xecure.method = "post";
+	path = getPath(form.action);
+	cipher = document.XecureWeb.BlockEnc(xgate_addr, path, "","GET");
+	document.xecure.action = path + "?q=" + cipher;
+	alert("plain before " + cipher);
+	plain = x + "=" + y;
+	alert("plain after");
+	cipher = document.XecureWeb.BlockEnc ( xgate_addr, path, plain, "POST" );
+	alert("Encrypt after");
+	if( cipher == "" )	return XecureWebError() ;
+	alert(cipher);
+	document.xecure.p.value = escape_2(cipher);
+	alert("Set after");
+	document.xecure.submit();
+	return false;
+}
+
+</script>
+
+
+<table width="100%" border="0" cellspacing="0" cellpadding="0" height="100%">
+  <tr> 
+    <td colspan="2" valign="top"> 
+      <p>&nbsp;</p>
+      <p>&nbsp;</p>
+      <table width="92%" border="0" cellspacing="0" cellpadding="0" align="center">
+        <tr> 
+          <td rowspan="2" valign="top" width="106"> 
+            <table width="106" border="0" cellspacing="0" cellpadding="0">
+              <tr> 
+                <td width="91"><img src="../img/img_main_web05.gif" width="91" height="110"></td>
+                <td width="14">&nbsp;</td>
+                <td width="1"><img src="../img/dot_gray01.gif" width="1" height="110"></td>
+              </tr>
+              <tr> 
+                <td width="91">&nbsp;</td>
+                <td width="11">&nbsp;</td>
+                <td width="1"><img src="../img/line_gray.gif" width="1" height="129"></td>
+              </tr>
+            </table>
+          </td>
+          <td valign="top" width="*%"> 
+            <table width="100%" border="0" cellspacing="0" cellpadding="0">
+              <tr> 
+                <td width="2%" height="30"></td>
+                <td height="34"><img src="../img/img_main_web04.gif" width="240" height="15"></td>
+              </tr>
+              <tr> 
+                <td colspan="2"><img src="../img/dot_gray01.gif" width="100%" height="1"></td>
+              </tr>
+              <tr> 
+                <td>&nbsp;</td>
+                <td align="right">
+                  <table width="25%" height=20 border="0" cellpadding="0" cellspacing="0">
+                    <tr>
+                      <td width="50%">
+                        <div align="center"><a href="../index.html">TOP 메뉴</a></div>
+                      </td>
+                      <td width="50%">
+                        <div align="center"><a href="index.html">이전메뉴</a></div>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        <tr> 
+          <td valign="top"> 
+            <table width="85%" border="0" cellspacing="0" cellpadding="0">
+              <tr> 
+                <td height="100" width="8%">&nbsp;</td>
+                <td height="120" valign="middle"> 
+                  <p align="center"><font size="6" face="Times New Roman, Times, serif">XecureHttpJspPage 
+                    클래스 암호 데모</font></p>
+                </td>
+              </tr>
+              <tr> 
+                <td>&nbsp;</td>
+                <td> 
+                  <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                    <tr> 
+                      <td height="24" bgcolor="#DEDBCB">&nbsp;</td>
+                      <td height="24" bgcolor="#DEDBCB"><b>7.</b></td>
+                      <td height="24" bgcolor="#DEDBCB"><b>XecureSubmit을 이용한 클라이언트 
+                        절대 경로 ( http:// 포함 ) FORM Request ( POST )</b></td>
+                    </tr>
+          
+                      <td height="24" colspan="3"> 
+                        <p>&lt;form action=&quot;http://&lt;hostname&gt;/XecureDemo/jsp/enc_server_response.jsp?abc=def&amp;pop=hi&quot;<br>
+                          method=&quot;post&quot; onSubmit=&quot;return XecureSubmit(this);&quot;&gt;<br>
+                          &lt;input type=text name=&quot;text_field1&quot; &gt;&lt;br&gt;<br>
+                          &lt;input type=text name=&quot;text_field2&quot;&gt;&lt;br&gt;<br>
+                          &lt;input type=submit value=&quot;전송&quot;&gt;<br>
+                          &lt;/form&gt; </p>
+                        <blockquote> 
+                          <p></p>
+                        </blockquote>
+
+<script language=javascript>
+var s = "1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111";
+var t = "", y= "";
+for(i = 0; i< 1; i++)
+	y = y + s;
+alert("seed length " + y.length);
+for(i = 0; i< 7; i++)
+	t = t + y;
+alert("text length " + t.length);
+document.writeln("<form action='http://" + window.location.host + "/XecureDemo/jsp/enc_server_response.jsp' method='post' onSubmit='return XSubmit(this,\"text_field1\" , text_field1.value);'>");
+document.writeln("<input type=text name='text_field1' value='" + t + "'><br>");
+document.writeln("<input type=submit value='전송'>");
+document.writeln("</form>");
+</script>
+
+                      </td>
+                    </tr>
+                    <tr> 
+                      <td width="2%">&nbsp;</td>
+                      <td valign="top" width="2%"></td>
+                      <td>&nbsp; </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              <tr> 
+                <td height="40">&nbsp;</td>
+                <td height="40">&nbsp;</td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr> 
+    <td height="24" bgcolor="#345B87"> 
+      <div align="right"><font color="#FFFFFF"><b><font color="#CED2DB"><a href="http://www.softforum.com"><font color="#FFFFFF">www.softforum.com</font></a></font></b></font></div>
+    </td>
+    <td height="24" bgcolor="#345B87" width="3%">&nbsp;</td>
+  </tr>
+</table>
+</body>
+</html>

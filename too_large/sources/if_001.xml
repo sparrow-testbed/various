@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="EUC-KR" ?> 
+<service>
+	<method name="insert_if_msg">
+	<![CDATA[
+	INSERT INTO IFLOG(             
+	   IF_SEQ
+	  ,IF_NAME
+	  ,SEND_NO
+	  ,SEND_SEQ
+	  ,CONTS
+	  ,ADD_DATE
+	  ,ADD_TIME
+	  ,ADD_USER_ID
+	)VALUES(
+	   IFLOG_SEQ.NEXTVAL
+	  ,${IF_NAME}
+	  ,${SEND_NO}
+	  ,(SELECT COUNT(*)+1 FROM IFLOG WHERE ADD_DATE = TO_CHAR(SYSDATE,'YYYYMMDD') AND SEND_NO = ${SEND_NO})
+	  ,${CONTS}
+	  ,TO_CHAR(SYSDATE,'YYYYMMDD') 
+	  ,TO_CHAR(SYSDATE,'HH24MISS') 
+	  ,${session.ID}
+	)                               
+	]]>
+    </method>
+
+</service>

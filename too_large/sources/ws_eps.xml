@@ -1,0 +1,1900 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<service>
+	<method name="insertTestEps003">
+		INSERT INTO TEST_EPS003 (
+			EPS_MODE,
+			ITEM_CODE,
+			ITEM_NAME,
+			IMG_URL
+		)
+		VALUES (
+			${EPS_MODE},
+			${ITEM_CODE},
+			${ITEM_NAME},
+			${IMG_URL}
+		)
+	</method>
+	
+	<method name="insertIcomrehdInfo">
+		INSERT INTO ICOMREHD(
+			HOUSE_CODE,           REQ_ITEM_NO,       ITEM_NO,           RFQ_NO,                  REQ_USER_ID,
+			REQ_DATE,             CONFIRM_USER_ID,   CONFIRM_DATE,      CONFIRM_USER_TEXT,       DATA_OCCUR_TYPE,
+			REQ_TYPE,             CONFIRM_STATUS,    DATA_TYPE,         MATERIAL_TYPE,           MATERIAL_CTRL_TYPE,
+			MATERIAL_CLASS1,      MATERIAL_CLASS2,   DESCRIPTION_LOC,   DESCRIPTION_ENG,         SPECIFICATION,
+			COMPANY_CODE,         BASIC_UNIT,        UNIT_PRICE,        CUR,                     PAY_TERMS,
+			DELY_TERMS,           MIN_ORDER_QTY,     SHIPPER_TYPE,      ORIGIN_COUNTRY,          MODEL_NO,
+			OLD_ITEM_NO,          IMAGE_FILE_PATH,   PR_NO,             PR_SEQ,                  STATUS,
+			ADD_USER_ID,          ADD_USER_NAME_LOC, ADD_DATE,          ADD_TIME,                CHANGE_USER_ID,
+			CHANGE_USER_NAME_LOC, CHANGE_DATE,       CHANGE_TIME,       Z_ITEM_DESC,             Z_PURCHASE_TYPE,
+			ITEM_GROUP,           APP_TAX_CODE,      MAKER_CODE,        MAKER_NAME,              MAKER_ITEM_NO,
+			DELIVERY_LT,          DO_FLAG,           Z_WORK_STAGE_FLAG, Z_DELIVERY_CONFIRM_FLAG, ATTACH_NO,
+			SIGN_STATUS,          DRAWING_NO1,       DRAWING_NO2,       PROXY_ITEM_NO,           MARKET_TYPE,
+			ITEM_ABBREVIATION,    REMARK,            ITEM_BLOCK_FLAG,   QI_FLAG,                 MAKER_FLAG,
+			MODEL_FLAG,           REJECT_REMARK,     MTART,             MATKL,                   TAXKM,
+			KTGRM,                BKLAS,             MAKE_AMT_CODE,     THUMNAIL_FILE_PATH,      EFFECTIVE_START_DATE,
+			EFFECTIVE_END_DATE,   PUB_NO,            MAXREQAMNT,        MINREQAMNT,              MINAMNT,
+			MLOBHOCD,             USEDFLAG
+		)
+		VALUES(
+			${HOUSE_CODE},
+			${REQ_ITEM_NO},
+			${ITEM_NO},
+			NULL,
+			${USER_ID},
+			
+			TO_CHAR(SYSDATE, 'YYYYMMDD'),
+			NULL,
+			NULL,
+			NULL,
+			'L',
+			
+			'C',
+			'P',
+			NULL,
+			NULL,
+			NULL,
+			
+			NULL,
+			NULL,
+			${DESCRIPTION_LOC},
+			NULL,
+			${SPECIFICATION},
+			
+			${COMPANY_CODE},
+			NULL,
+			NULL,
+			NULL,
+			NULL,
+			
+			NULL,
+			NULL,
+			NULL,
+			NULL,
+			${MODEL_NO},
+			
+			NULL,
+			${IMAGE_FILE_PATH},
+			NULL,
+			NULL,
+			'C',
+			
+			NULL,
+			NULL,
+			TO_CHAR(SYSDATE, 'YYYYMMDD'),
+			TO_CHAR(SYSDATE, 'HH24MISS'),
+			NULL,
+			
+			NULL,
+			TO_CHAR(SYSDATE, 'YYYYMMDD'),
+			TO_CHAR(SYSDATE, 'HH24MISS'),
+			NULL,
+			NULL,
+			
+			NULL,
+			NULL,
+			NULL,
+			NULL,
+			NULL,
+			
+			NULL,
+			'N',
+			'N',
+			'N',
+			NULL,
+			
+			'E',
+			NULL,
+			NULL,
+			NULL,
+			NULL,
+			
+			NULL,
+			${REMARK},
+			NULL,
+			NULL,
+			'N',
+			
+			NULL,
+			NULL,
+			NULL,
+			NULL,
+			NULL,
+			
+			NULL,
+			NULL,
+			NULL,
+			${THUMNAIL_FILE_PATH},
+			${EFFECTIVE_START_DATE},
+			
+			${EFFECTIVE_END_DATE},
+			${PUB_NO},
+			${MAXREQAMNT},
+			${MINREQAMNT},
+			
+			${MINAMNT},
+			${MLOBHOCD},
+			${USEDFLAG}
+		)
+	</method>
+	
+	<method name="updateIcomrehdInfo">
+		UPDATE
+			ICOMREHD
+		SET
+		<if test="${DESCRIPTION_LOC}" operator="ne" value="">
+			DESCRIPTION_LOC      = ${DESCRIPTION_LOC},
+		</if>
+		<if test="${SPECIFICATION}" operator="ne" value="">
+			SPECIFICATION        = ${SPECIFICATION},
+		</if>
+		<if test="${IMAGE_FILE_PATH}" operator="ne" value="">
+			IMAGE_FILE_PATH      = ${IMAGE_FILE_PATH},
+		</if>
+		<if test="${THUMNAIL_FILE_PATH}" operator="ne" value="">
+			THUMNAIL_FILE_PATH   = ${THUMNAIL_FILE_PATH},
+		</if>
+		<if test="${EFFECTIVE_START_DATE}" operator="ne" value="">
+			EFFECTIVE_START_DATE = ${EFFECTIVE_START_DATE},
+		</if>
+		<if test="${EFFECTIVE_END_DATE}" operator="ne" value="">	
+			EFFECTIVE_END_DATE   = ${EFFECTIVE_END_DATE},
+		</if>
+		<if test="${PUB_NO}" operator="ne" value="">
+			PUB_NO               = ${PUB_NO},
+		</if>
+		<if test="${MAXREQAMNT}" operator="ne" value="">
+			MAXREQAMNT           = ${MAXREQAMNT},
+		</if>
+		<if test="${MINREQAMNT}" operator="ne" value="">
+			MINREQAMNT           = ${MINREQAMNT},
+		</if>
+		<if test="${MINAMNT}" operator="ne" value="">
+			MINAMNT              = ${MINAMNT},
+		</if>
+		<if test="${MLOBHOCD}" operator="ne" value="">
+			MLOBHOCD             = ${MLOBHOCD},
+		</if>
+		<if test="${USEDFLAG}" operator="ne" value="">
+			USEDFLAG             = ${USEDFLAG},
+		</if>
+		<if test="${MODEL}" operator="ne" value="">
+			MODEL_NO             = ${MODEL},
+		</if>
+			CHANGE_USER_ID       = ${CHANGE_USER_ID},
+			CHANGE_USER_NAME_LOC = ${CHANGE_USER_NAME_LOC},
+			CHANGE_DATE          = TO_CHAR(SYSDATE, 'YYYYMMDD'),
+			
+			CHANGE_TIME          = TO_CHAR(SYSDATE, 'HH24MISS'),
+			STATUS               = 'R'
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			ITEM_NO    = ${ITEM_NO}
+		AND
+			STATUS     != 'D'
+	</method>
+	
+	<method name="updateIcommtglInfo">
+		UPDATE
+			ICOMMTGL
+		SET
+		<if test="${DESCRIPTION_LOC}" operator="ne" value="">
+			DESCRIPTION_LOC      = ${DESCRIPTION_LOC},
+		</if>
+		<if test="${SPECIFICATION}" operator="ne" value="">
+			SPECIFICATION        = ${SPECIFICATION},
+		</if>
+		<if test="${IMAGE_FILE_PATH}" operator="ne" value="">
+			IMAGE_FILE_PATH      = ${IMAGE_FILE_PATH},
+		</if>
+		<if test="${THUMNAIL_FILE_PATH}" operator="ne" value="">
+			THUMNAIL_FILE_PATH   = ${THUMNAIL_FILE_PATH},
+		</if>
+		<if test="${EFFECTIVE_START_DATE}" operator="ne" value="">
+			EFFECTIVE_START_DATE = ${EFFECTIVE_START_DATE},
+		</if>
+		<if test="${EFFECTIVE_END_DATE}" operator="ne" value="">	
+			EFFECTIVE_END_DATE   = ${EFFECTIVE_END_DATE},
+		</if>
+		<if test="${PUB_NO}" operator="ne" value="">
+			PUB_NO               = ${PUB_NO},
+		</if>
+		<if test="${MAXREQAMNT}" operator="ne" value="">
+			MAX_REQ_CNT           = ${MAXREQAMNT},
+		</if>
+		<if test="${MINREQAMNT}" operator="ne" value="">
+			MIN_REQ_CNT           = ${MINREQAMNT},
+		</if>
+		<if test="${MINAMNT}" operator="ne" value="">
+			MINAMNT              = ${MINAMNT},
+		</if>
+		<if test="${MLOBHOCD}" operator="ne" value="">
+			MLOBHOCD             = ${MLOBHOCD},
+		</if>
+		<if test="${USEDFLAG}" operator="ne" value="">
+			USEDFLAG             = ${USEDFLAG},
+		</if>
+		<if test="${MODEL}" operator="ne" value="">
+			MODEL_NO             = ${MODEL},
+		</if>
+			CHANGE_USER_ID       = ${CHANGE_USER_ID},
+			CHANGE_DATE          = TO_CHAR(SYSDATE, 'YYYYMMDD')
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			ITEM_NO    = ${ITEM_NO}
+	</method>
+	
+	<method name="deleteIcomrehdInfo">
+		UPDATE
+			ICOMREHD
+		SET
+			STATUS = 'D'
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			ITEM_NO    = ${ITEM_NO}
+		AND
+			STATUS     != 'D'
+	</method>
+	
+	<method name="insertSinfhdInfo">
+		INSERT INTO SINFHD(
+			HOUSE_CODE,     INF_NO,       INF_TYPE,   INF_CODE,   INF_DATE,
+			INF_START_TIME, INF_END_TIME, INF_STATUS, INF_REASON, INF_SEND,
+			INF_ID
+		)
+		VALUES(
+			${HOUSE_CODE},
+			${INF_NO},
+			${INF_TYPE},
+			${INF_CODE},
+			TO_CHAR(SYSDATE, 'YYYYMMDD'),
+			
+			TO_CHAR(SYSDATE, 'HH24MISS'),
+			NULL,
+			NULL,
+			NULL,
+			${INF_SEND},
+			
+			${INF_ID}
+		)
+	</method>
+	
+	<method name="updateSinfhdInfo">
+		UPDATE
+			SINFHD
+		SET
+			INF_END_TIME   = TO_CHAR(SYSDATE, 'HH24MISS'),
+			INF_STATUS     = ${STATUS},
+			INF_REASON     = ${REASON},
+			INF_RECEIVE_NO = ${INF_RECEIVE_NO}
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			INF_NO     = ${INF_NO}
+	</method>
+	
+	<method name="insertSinfep003Info">
+		INSERT INTO SINFEP003(
+			HOUSE_CODE, INF_NO,        INF_MODE, ITEM_CODE,  ITEM_NAME,
+			IMG_URL,    SPECIFICATION, RETURN,   USEDFLAG
+		)
+		VALUES(
+			${HOUSE_CODE},
+			${INF_NO},
+			${INF_MODE},
+			${ITEM_CODE},
+			${ITEM_NAME},
+			
+			${IMG_URL},
+			${SPECIFICATION},
+			NULL,
+			${USEDFLAG}
+		)
+	</method>
+	
+	<method name="updateSinfep003Info">
+		UPDATE
+			SINFEP003
+		SET
+			RETURN = ${RETURN}
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			INF_NO     = ${INF_NO}
+	</method>
+	
+	<method name="insertSinfep004Info">
+		INSERT INTO SINFEP004(
+			HOUSE_CODE, INF_NO, INF_MODE, ITEM_CODE, ITEM_NAME,
+			IMG_URL,    MODEL,  RETURN,   USEDFLAG
+		)
+		VALUES(
+			${HOUSE_CODE},
+			${INF_NO},
+			${INF_MODE},
+			${ITEM_CODE},
+			${ITEM_NAME},
+			
+			${IMG_URL},
+			${MODEL},
+			NULL,
+			${USEDFLAG}
+		)
+	</method>
+	
+	<method name="updateSinfep004Info">
+		UPDATE
+			SINFEP004
+		SET
+			RETURN = ${RETURN}
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			INF_NO     = ${INF_NO}
+	</method>
+	
+	<method name="insertSinfep005Info">
+		INSERT INTO SINFEP005(
+			HOUSE_CODE,
+			INF_NO,
+			INF_MODE,             
+			RETURN
+		)
+		VALUES(
+			${HOUSE_CODE},
+			${INF_NO},
+			${INF_MODE},
+			NULL
+		)
+	</method>
+	
+	<method name="insertSinfep005PrInfo">
+		INSERT INTO SINFEP005_PR(
+			HOUSE_CODE,    INF_NO,     SEQ,                  ITEM_CODE,          ITEM_NAME,
+			IMG_URL1,      IMG_URL2,   EFFECTIVE_START_DATE, EFFECTIVE_END_DATE, PUB_NO,
+			SPECIFICATION, MAXREQAMNT, MINREQAMNT,           MINAMNT,            MLOBHOCD,
+			USEDFLAG
+		)
+		VALUES(
+			${HOUSE_CODE},
+			${INF_NO},
+			${SEQ},
+			${ITEM_CODE},
+			${ITEM_NAME},
+			
+			${IMG_URL1},
+			${IMG_URL2},
+			${EFFECTIVE_START_DATE},
+			${EFFECTIVE_END_DATE},
+			${PUB_NO},
+			
+			${SPECIFICATION},
+			${MAXREQAMNT},
+			${MINREQAMNT},
+			${MINAMNT},
+			${MLOBHOCD},
+			
+			${USEDFLAG}
+		)
+	</method>
+	
+	<method name="updateSinfep005Info">
+		UPDATE
+			SINFEP005
+		SET
+			RETURN = ${RETURN}
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			INF_NO     = ${INF_NO}
+	</method>
+	
+	
+	
+	
+	<method name="insertSinfep0031Info">
+		INSERT INTO SINFEP0031(
+			HOUSE_CODE,
+			INF_NO,
+			INF_MODE,
+			ABOL_REQ_USER_ID,             
+			RETURN
+		)
+		VALUES(
+			${HOUSE_CODE},
+			${INF_NO},
+			${INF_MODE},
+			${ABOL_REQ_USER_ID},			
+			NULL
+		)
+	</method>
+	
+	<method name="insertSinfep0031PrInfo">
+		INSERT INTO SINFEP0031_PR(
+			HOUSE_CODE,    INF_NO,     SEQ,                  ITEM_CODE,          ABOL_RSN,
+			ABOL_RSN_ETC,  ABOL_DATE
+		)
+		VALUES(
+			${HOUSE_CODE},
+			${INF_NO},
+			${SEQ},
+			${ITEM_CODE},
+			${ABOL_RSN},
+			
+			${ABOL_RSN_ETC},
+			${ABOL_DATE}
+		)
+	</method>
+	
+	
+	
+	
+	<method name="insertSinfep006Info">
+		INSERT INTO SINFEP006(
+			HOUSE_CODE, INF_NO,        INF_MODE, ITEM_CODE, ITEM_NAME,
+			IMG_URL,    SPECIFICATION, RETURN
+		)
+		VALUES(
+			${HOUSE_CODE},
+			${INF_NO},
+			${INF_MODE},
+			${ITEM_CODE},
+			${ITEM_NAME},
+			
+			${IMG_URL},
+			${SPECIFICATION},
+			NULL
+		)
+	</method>
+	
+	<method name="updateSinfep006Info">
+		UPDATE
+			SINFEP006
+		SET
+			RETURN = ${RETURN}
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			INF_NO     = ${INF_NO}
+	</method>
+	
+	<method name="insertSinfep007Info">
+		INSERT INTO SINFEP007(
+			HOUSE_CODE,
+			INF_NO,
+			RETURN1,
+			RETURN2
+		)
+		VALUES(
+			${HOUSE_CODE},
+			${INF_NO},
+			NULL,
+			NULL
+		)
+	</method>
+	
+	<method name="insertSinfep007PrInfo">
+		INSERT INTO SINFEP007_PR(
+			HOUSE_CODE, INF_NO,    SEQ,      INF_MODE,    INV_NUMBER,
+			INV_SEQ,    ITEM_CODE, ITEM_QTY, ITEM_LETTER, ITEM_START_NUMBER,
+			INV_SE_NO
+		)
+		VALUES(
+			${HOUSE_CODE},
+			${INF_NO},
+			${SEQ},
+			${INF_MODE},
+			${INV_NUMBER},
+			
+			${INV_SEQ},
+			${ITEM_CODE},
+			${ITEM_QTY},
+			${ITEM_LETTER},
+			${ITEM_START_NUMBER},
+			
+			${INV_SE_NO}
+		)
+	</method>
+	
+	<method name="updateSinfep007Info">
+		UPDATE
+			SINFEP007
+		SET
+			RETURN1 = ${RETURN1},
+			RETURN2 = ${RETURN2}
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			INF_NO     = ${INF_NO}
+	</method>
+	
+	<method name="insertSinfep0011Info">
+		INSERT INTO SINFEP0011(
+			HOUSE_CODE,    INF_NO, SRMS_NO, SUBJECT, ADD_USER_ID,
+			ADD_USER_NAME, RESULT1
+		)
+		VALUES(
+			${HOUSE_CODE},
+			${INF_NO},
+			${SRMS_NO},
+			${SUBJECT},
+			${ADD_USER_ID},
+			
+			${ADD_USER_NAME},
+			NULL
+		)
+	</method>
+	
+	<method name="insertSinfep0011InfoPr">
+		INSERT INTO SINFEP0011PR(
+			HOUSE_CODE,     INF_NO,     SEQ,   SRMS_SEQ, ITEM_NO,
+			PR_QTY,         UNIT_PRICE, PR_AMT
+		)
+		VALUES(
+			${HOUSE_CODE},
+			${INF_NO},
+			${SEQ},
+			${SRMS_SEQ},
+			${ITEM_NO},
+			
+			${PR_QTY},
+			${UNIT_PRICE},
+			${PR_AMT}
+		)
+	</method>
+	
+	<method name="updateSinfep0011Info">
+		UPDATE
+			SINFEP0011
+		SET
+			RESULT1    = ${RETURN}
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			INF_NO     = ${INF_NO}
+	</method>
+	
+	<method name="insertSinfep0015Info">
+		INSERT INTO SINFEP0015(
+			HOUSE_CODE,	INF_NO,	  INF_MODE, BNKCD,    PUMPUMYY,
+			PUMPUMNO,   APPAPPNO, APPAPPAM,	USRUSRID, RETURN1,
+			RETURN2,    RETURN3
+		)
+		VALUES(
+			${HOUSE_CODE},
+			${INF_NO},
+			${INF_MODE},
+			${BNKCD},
+			${PUMPUMYY},
+			
+			${PUMPUMNO},
+			${APPAPPNO},
+			${APPAPPAM},
+			${USRUSRID},
+			NULL,
+			
+			NULL,
+			NULL
+		)
+	</method>
+	
+	<method name="insertSinfep0015PrInfo">
+		INSERT INTO SINFEP0015PR(
+			HOUSE_CODE, INF_NO,   SEQ, JUMJUMCD, PMKPMKCD,
+			PMKSRLNO,   MDLMDLNM, CNT, AMT,      BUYBUYNM,
+			ETCETCNY
+		)
+		VALUES(
+			${HOUSE_CODE},
+			${INF_NO},
+			${SEQ},
+			${JUMJUMCD},
+			${PMKPMKCD},
+			
+			${PMKSRLNO},
+			${MDLMDLNM},
+			${CNT},
+			${AMT},
+			${BUYBUYNM},
+			
+			${ETCETCNY}
+		)
+	</method>
+	
+	<method name="updateSinfep0015Info">
+		UPDATE
+			SINFEP0015
+		SET
+			RETURN1 = ${RETURN1},
+			RETURN2 = ${RETURN2},
+			RETURN3 = ${RETURN3}
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			INF_NO     = ${INF_NO}
+	</method>
+	
+	<method name="insertSinfep0016Info">
+		INSERT INTO SINFEP0016(
+			HOUSE_CODE, INF_NO,   INF_MODE, BNKBNKCD, PUMPUMYY,
+			PUMPUMNO,   APPAPPNO, APPAPPAM, RETURN1,  RETURN2,
+			RETURN3
+		)
+		VALUES(
+			${HOUSE_CODE},
+			${INF_NO},
+			${INF_MODE},
+			${BNKBNKCD},
+			${PUMPUMYY},
+			
+			${PUMPUMNO},
+			${APPAPPNO},
+			${APPAPPAM},
+			NULL,
+			NULL,
+			
+			NULL
+		)
+	</method>
+	
+	<method name="insertSinfep0016PrInfo">
+		INSERT INTO SINFEP0016PR(
+			HOUSE_CODE, INF_NO, SEQ, DOSUNQNO, UPDJBMT,
+			ETCETCNY
+		)
+		VALUES(
+			${HOUSE_CODE},
+			${INF_NO},
+			${SEQ},
+			${DOSUNQNO},
+			${UPDJBMT},
+			
+			${ETCETCNY}
+		)
+	</method>
+	
+	<method name="updateSinfep0016Info">
+		UPDATE
+			SINFEP0016
+		SET
+			RETURN1 = ${RETURN1},
+			RETURN2 = ${RETURN2},
+			RETURN3 = ${RETURN3}
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			INF_NO     = ${INF_NO}
+	</method>
+	
+	<method name="insertSinfep0017Info">
+		INSERT INTO SINFEP0017(
+			HOUSE_CODE, INF_NO,   INF_MODE, PUMPUMYY, PUMPUMNO,
+			APPAPPNO,   APPAPPAM, JUMJUMCD, ASTASTGB, UNQUNQNO,
+			ACTACTGB,   CHGCHGAM, TRNTRNGB, USRUSRID, RETURN1,
+			RETURN2,    RETURN3
+		)
+		VALUES(
+			${HOUSE_CODE},
+			${INF_NO},
+			${INF_MODE},
+			${PUMPUMYY},
+			${PUMPUMNO},
+			
+			${APPAPPNO},
+			${APPAPPAM},
+			${JUMJUMCD},
+			${ASTASTGB},
+			${UNQUNQNO},
+			
+			${ACTACTGB},
+			${CHGCHGAM},
+			${TRNTRNGB},
+			${USRUSRID},
+			NULL,
+			
+			NULL,
+			NULL
+		)
+	</method>
+	
+	<method name="updateSinfep0017Info">
+		UPDATE
+			SINFEP0017
+		SET
+			RETURN1 = ${RETURN1},
+			RETURN2 = ${RETURN2},
+			RETURN3 = ${RETURN3}
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			INF_NO     = ${INF_NO}
+	</method>
+	
+	<method name="insertSinfep0018Info">
+		INSERT INTO SINFEP0018(
+			HOUSE_CODE, INF_NO,   PUMPUMYY, PUMPUMNO, APPAPPNO,
+			APPAPPAM,   JUMJUMCD, ASTASTGB, UNQUNQNO, ACTACTGB,
+			CHGCHGAM,   TRNTRNGB, USRUSRID, DURTERMY, USEUSEVL,
+			TOTBCBAM,   RETURN1,  RETURN2,  RETURN3,  INF_MODE
+		)
+		VALUES(
+			${HOUSE_CODE},
+			${INF_NO},
+			${PUMPUMYY},
+			${PUMPUMNO},
+			${APPAPPNO},
+			
+			${APPAPPAM},
+			${JUMJUMCD},
+			${ASTASTGB},
+			${UNQUNQNO},
+			${ACTACTGB},
+			
+			${CHGCHGAM},
+			${TRNTRNGB},
+			${USRUSRID},
+			${DURTERMY},
+			${USEUSEVL},
+			
+			${TOTBCBAM},
+			NULL,
+			NULL,
+			NULL,
+			${INF_MODE}
+		)
+	</method>
+	
+	<method name="updateSinfep0018Info">
+		UPDATE
+			SINFEP0018
+		SET
+			RETURN1 = ${RETURN1},
+			RETURN2 = ${RETURN2},
+			RETURN3 = ${RETURN3}
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			INF_NO     = ${INF_NO}
+	</method>
+	
+	<method name="insertSinfep0019Info">
+		INSERT INTO SINFEP0019(
+			HOUSE_CODE, INF_NO,   INF_MODE, BNKBNKCD, BMSBMSYY,
+			SOGSOGCD,   ASTASTGB, MNGMNGNO, BSSBSSNO, PUMPUMDT,
+			PUMPUMAM,   ETCETCNY, USRUSRID, RETURN1,  RETURN2,
+			RETURN3,    RETURN4,  RETURN5
+		)
+		VALUES(
+			${HOUSE_CODE},
+			${INF_NO},
+			${INF_MODE},
+			${BNKBNKCD},
+			${BMSBMSYY},
+			
+			${SOGSOGCD},
+			${ASTASTGB},
+			${MNGMNGNO},
+			${BSSBSSNO},
+			${PUMPUMDT},
+			
+			${PUMPUMAM},
+			${ETCETCNY},
+			${USRUSRID},
+			NULL,
+			NULL,
+			
+			NULL,
+			NULL,
+			NULL
+		)
+	</method>
+	
+	<method name="updateSinfep0019Info">
+		UPDATE
+			SINFEP0019
+		SET
+			RETURN1 = ${RETURN1},
+			RETURN2 = ${RETURN2},
+			RETURN3 = ${RETURN3},
+			RETURN4 = ${RETURN4},
+			RETURN5 = ${RETURN5}
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			INF_NO     = ${INF_NO}
+	</method>
+	
+	<method name="insertSinfep0019_1Info">
+		INSERT INTO SINFEP0019_1(
+			INF_NO,   INF_MODE, BMSBMSYY,
+			BMSSRLNO, APPAPPNO, USRUSRID
+		)
+		VALUES(
+			${INF_NO},
+			${INF_MODE},
+			${BMSBMSYY},			
+			${BMSSRLNO},
+			${APPAPPNO},
+			${USRUSRID}
+		)
+	</method>
+	
+	<method name="insertSinfep0020Info">
+		INSERT INTO SINFEP0020(
+			HOUSE_CODE, INF_NO,  INF_MODE, JUMJUMCD, ASTASTCD,
+			USRUSRID,   RETURN1, RETURN2,  RETURN3
+		)
+		VALUES(
+			${HOUSE_CODE},
+			${INF_NO},
+			${INF_MODE},
+			${JUMJUMCD},
+			${ASTASTCD},
+			
+			${USRUSRID},
+			NULL,
+			NULL,
+			NULL
+		)
+	</method>
+	
+	<method name="updateSinfep0020Info">
+		UPDATE
+			SINFEP0020
+		SET
+			RETURN1 = ${RETURN1},
+			RETURN2 = ${RETURN2},
+			RETURN3 = ${RETURN3}
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			INF_NO     = ${INF_NO}
+	</method>
+	
+	<method name="insertSinfep0037Info">
+		INSERT INTO SINFEP0037(
+			HOUSE_CODE, INF_NO,  INF_MODE, JUMJUMCD,
+			USRUSRID,   RETURN1, RETURN2,  RETURN3
+		)
+		VALUES(
+			${HOUSE_CODE},
+			${INF_NO},
+			${INF_MODE},
+			${JUMJUMCD},
+			
+			${USRUSRID},
+			NULL,
+			NULL,
+			NULL
+		)
+	</method>
+	
+	<method name="updateSinfep0037Info">
+		UPDATE
+			SINFEP0037
+		SET
+			RETURN1 = ${RETURN1},
+			RETURN2 = ${RETURN2},
+			RETURN3 = ${RETURN3}
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			INF_NO     = ${INF_NO}
+	</method>
+	
+	<method name="insertSinfep0021Info">
+		INSERT INTO SINFEP0021(
+			HOUSE_CODE, INF_NO,   INF_MODE, UNQUNQNO, DURTERMY,
+			USEUSEVL,   USRUSRID, RETURN1,  RETURN2,  RETURN3
+		)
+		VALUES(
+			${HOUSE_CODE},
+			${INF_NO},
+			${INF_MODE},
+			${UNQUNQNO},
+			${DURTERMY},
+			
+			${USEUSEVL},
+			${USRUSRID},
+			NULL,
+			NULL,
+			NULL
+		)
+	</method>
+	
+	<method name="updateSinfep0021Info">
+		UPDATE
+			SINFEP0021
+		SET
+			RETURN1 = ${RETURN1},
+			RETURN2 = ${RETURN2},
+			RETURN3 = ${RETURN3}
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			INF_NO     = ${INF_NO}
+	</method>
+	
+	<method name="insertSinfep0022_2Info">
+		INSERT INTO SINEP0022_2(
+			HOUSE_CODE, INF_NO,   DOC_NO,        STATUS,          GW_COD_NO,
+			APP_DATE,   APP_TIME, GW_TITLE,      DOC_LINK,        RETURN1,
+			RETURN2,    RETURN3,  REGISTER_DATE, APPROVAL_PRO_ID, APPROVAL_INS_ID
+		)
+		VALUES(
+			${HOUSE_CODE},
+			${INF_NO},
+			${DOC_NO},
+			${STATUS},
+			${GW_COD_NO},
+			
+			${APP_DATE},
+			${APP_TIME},
+			${GW_TITLE},
+			${DOC_LINK},
+			NULL,
+			
+			NULL,
+			NULL,
+			${REGISTER_DATE},
+			${APPROVAL_PRO_ID},
+			${APPROVAL_INS_ID}
+		)
+	</method>
+	
+	<method name="updateSinfep0022_2Info">
+		UPDATE
+			SINEP0022_2
+		SET
+			RETURN1 = ${RETURN1},
+			RETURN2 = ${RETURN2},
+			RETURN3 = ${RETURN3}
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			INF_NO     = ${INF_NO}
+	</method>
+	
+	<method name="updateSinfep0022_2GwInfo">	              
+		UPDATE
+			SINEP0022_2
+		SET
+		    STATUS  = $S{STATUS},
+		    DOC_NO  = $S{DOC_NO},
+			GW_TITLE = $S{GW_TITLE},
+			DOC_LINK = $S{DOC_LINK},
+			RETURN1 = ${RETURN1},
+			RETURN2 = ${RETURN2},
+			RETURN3 = ${RETURN3}
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			INF_NO     = ${INF_NO}
+	</method>
+	
+	<method name="insertSinfep0024Info">
+		INSERT INTO SINFEP0024(
+			HOUSE_CODE, INF_NO,   INF_MODE, JUMJUMCD, PMKPMKCD,
+			PMKPMKNY,   USRUSRID, RETURN1,  RETURN2,  RETURN3
+		)
+		VALUES(
+			${HOUSE_CODE},
+			${INF_NO},
+			${INF_MODE},
+			${JUMJUMCD},
+			${PMKPMKCD},
+			
+			${PMKPMKNY},
+			${USRUSRID},
+			NULL,
+			NULL,
+			NULL
+		)
+	</method>
+	
+	<method name="updateSinfep0024Info">
+		UPDATE
+			SINFEP0024
+		SET
+			RETURN1 = ${RETURN1},
+			RETURN2 = ${RETURN2},
+			RETURN3 = ${RETURN3}
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			INF_NO     = ${INF_NO}
+	</method>
+	
+	<method name="insertSinfep0029Info">
+		INSERT INTO SINFEP0029(
+			HOUSE_CODE, INF_NO,  REQUDATE, REQUIDNT, RETURN1,
+			RETURN2,    RETURN3, RETURN4
+		)
+		VALUES(
+			${HOUSE_CODE},
+			${INF_NO},
+			${REQUDATE},
+			${REQUIDNT},
+			NULL,
+			
+			NULL,
+			NULL,
+			NULL
+		)
+	</method>
+	
+	<method name="updateSinfep0029Info">
+		UPDATE
+			SINFEP0029
+		SET
+			RETURN1 = ${RETURN1},
+			RETURN2 = ${RETURN2},
+			RETURN3 = ${RETURN3},
+			RETURN4 = ${RETURN4}
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			INF_NO     = ${INF_NO}
+	</method>
+	
+	<method name="insertSinfep0029PrInfo">
+		INSERT INTO SINFEP0029PR(
+			HOUSE_CODE, INF_NO,   SEQ,     INF_MODE, BSDEPTCD,
+			MLOBSMCD,   REQUAMNT, BDNDSEQT
+		)
+		VALUES(
+			${HOUSE_CODE},
+			${INF_NO},
+			${SEQ},
+			${INF_MODE},
+			${BSDEPTCD},
+			
+			${MLOBSMCD},
+			${REQUAMNT},
+			${BDNDSEQT}
+		)
+	</method>
+	
+	<method name="insertSinfep0030Info">
+		INSERT INTO SINFEP0030(
+			HOUSE_CODE, INF_NO, OUTXDATE, OUTXIDNT, REF_INF_NO,
+			RETURN1
+		)
+		VALUES(
+			${HOUSE_CDOE},
+			${INF_NO},
+			${OUTXDATE},
+			${OUTXIDNT},
+			${REF_INF_NO},
+			
+			NULL
+		)
+	</method>
+	
+	<method name="insertSinfep0030PrInfo">
+		INSERT INTO SINFEP0030PR(
+			HOUSE_CODE, INF_NO,   SEQ,     INF_MODE, BSDEPTCD,
+			BSNDSEQT,   MLOBSMCD, OUTXAMNT
+		)
+		VALUES(
+			${HOUSE_CODE},
+			${INF_NO},
+			${SEQ},
+			${INF_MODE},
+			${BSDEPTCD},
+			
+			${BSNDSEQT},
+			${MLOBSMCD},
+			${OUTXAMNT}
+		)
+	</method>
+	
+	<method name="updateSinfep0030Info">
+		UPDATE
+			SINFEP0030
+		SET
+			RETURN1 = ${RETURN1}
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			INF_NO     = ${INF_NO}
+	</method>
+	
+	<method name="setPBHD_1">
+		<![CDATA[
+	    SELECT COUNT(*) AS CNT
+		FROM ICOYPBHD
+		WHERE HOUSE_CODE = ${house_code}
+		  AND DEPT = ${dept}	
+		  AND ITEM_NO = ${item_no}
+		]]>	
+	</method>
+	
+	<method name="setPBHD_2">
+			<![CDATA[
+		    INSERT INTO ICOYPBHD
+	        (
+	            HOUSE_CODE          ,
+				DEPT                ,   
+			    ITEM_NO             ,
+				
+				CRE_GB              , 
+				DSTR_GB             ,
+				
+				STK_QTY             ,
+				
+				STK_USER_ID         ,
+				STK_USER_NAME_LOC   ,
+				STK_DATE            ,
+				STK_TIME            ,
+				
+				NTC_YN              ,				
+				ABOL_YN             				           
+	        )
+	        SELECT
+	            ${house_code},
+				${dept},
+	            ${item_no},
+				
+				'1',
+	            '2',
+	            
+	            ${gr_qty},
+				
+				A.REQ_I_USER_ID,
+                 (SELECT USER_NAME_LOC FROM ICOMLUSR WHERE USER_ID = A.REQ_I_USER_ID),
+	             TO_CHAR(SYSDATE,'YYYYMMDD'),    
+				 TO_CHAR(SYSDATE,'HH24MISS'),   
+				  
+	            'N',
+	            'N'	    			  
+			FROM SIOGL A
+			WHERE 
+				A.HOUSE_CODE = ${house_code}
+			AND
+				A.DEPT_CODE  = ${dept}
+			AND
+				A.IO_NUMBER  = ${bsndSeqt}
+			AND
+				A.ITEM_NO    = ${item_no}		   
+			]]>
+	</method>
+	
+	<method name="setPBHD_3">
+			<![CDATA[
+			UPDATE ICOYPBHD
+			SET CRE_GB = '1',
+			    DSTR_GB = '2',
+			    STK_QTY = TO_CHAR(TO_NUMBER(NVL(STK_QTY,'0')) + TO_NUMBER(${gr_qty})),
+			    ABOL_YN = 'N',
+			    ABOL_USER_ID = NULL,       
+				ABOL_USER_NAME_LOC = NULL, 
+				ABOL_DATE = NULL,           
+				ABOL_TIME = NULL				        			    			           
+			WHERE HOUSE_CODE = ${house_code} 
+			AND ITEM_NO = ${item_no}
+			AND DEPT = ${dept}	
+			]]>
+	</method>
+	
+	<method name="delPBHD_1">
+		<![CDATA[
+	    SELECT NVL(STK_QTY,'0') STK_QTY
+		FROM ICOYPBHD
+		WHERE HOUSE_CODE = ${house_code}
+		  AND DEPT = ${dept}	
+		  AND ITEM_NO = ${item_no}
+		]]>	
+	</method>
+	
+	<method name="delPBHD_2">
+			<![CDATA[
+			DELETE FROM ICOYPBHD
+			WHERE HOUSE_CODE = ${house_code} 
+			AND ITEM_NO = ${item_no}
+			AND DEPT = ${dept}	
+			]]>
+	</method>
+	
+	<method name="delPBHD_3">
+			<![CDATA[
+			UPDATE ICOYPBHD
+			SET STK_QTY = TO_CHAR(TO_NUMBER(NVL(STK_QTY,'0')) - TO_NUMBER(${gr_qty}))		    				        			    			          
+			WHERE HOUSE_CODE = ${house_code} 
+			AND ITEM_NO = ${item_no}
+			AND DEPT = ${dept}	
+			]]>
+	</method>
+	
+<!-- 	불출신청 이후 출고 현황 업데이트 -->
+	<method name="updateIOList">
+		UPDATE
+			SIOGL
+		SET
+			REQ_O_QTY = NVL(${OUTXAMNT}, 0),
+			REQ_O_DATE = ${OUTXDATE},
+			REQ_O_TIME = '',
+			REQ_O_USER_ID = ${OUTXIDNT},
+			STATUS = '0130'
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			DEPT_CODE  = ${BSDEPTCD}
+		AND
+			IO_NUMBER  = ${BSNDSEQT}
+		AND
+			ITEM_NO    = ${MLOBSMCD}
+	</method>
+	
+<!-- 	불출취소의 경우 출고수량 업데이트를 위한 기존수량 확인-->	
+	<method name="selectIOOqty">
+		SELECT
+			REQ_O_QTY
+		FROM SIOGL
+		WHERE	HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			DEPT_CODE  = ${BSDEPTCD}
+		AND
+			IO_NUMBER  = ${BSNDSEQT}
+		AND
+			ITEM_NO    = ${MLOBSMCD}
+	</method>
+	
+	<method name="insertIcoyPrHdInfo">
+		INSERT INTO ICOYPRHD (
+			HOUSE_CODE,     PR_NO,              STATUS,           COMPANY_CODE,        PLANT_CODE,
+			PR_TOT_AMT,     PR_TYPE,            DEMAND_DEPT,      SIGN_STATUS,         SIGN_DATE,
+			SIGN_PERSON_ID, SIGN_PERSON_NAME,   DEMAND_DEPT_NAME, REMARK,              SUBJECT,
+			PR_LOCATION,    ORDER_NO,           SALES_USER_DEPT,  SALES_USER_ID,       CONTRACT_HOPE_DAY,
+			CUST_CODE,      CUST_NAME,          EXPECT_AMT,       SALES_TYPE,          ORDER_NAME,
+			REQ_TYPE,       RETURN_HOPE_DAY,    ATTACH_NO,        HARD_MAINTANCE_TERM, SOFT_MAINTANCE_TERM,
+			CREATE_TYPE,    SHIPPER_TYPE,       ADD_TIME,         ADD_USER_ID,         CHANGE_DATE,
+			CHANGE_TIME,    CHANGE_USER_ID,     BSART,            CUST_TYPE,           ADD_DATE,
+			AHEAD_FLAG,     CONTRACT_FROM_DATE, CONTRACT_TO_DATE, SALES_AMT,           PROJECT_PM,
+			ORDER_COUNT,    WBS,                WBS_NAME,         DELY_TO_LOCATION,    DELY_TO_ADDRESS,
+			DELY_TO_USER,   DELY_TO_PHONE,      PC_FLAG,          PC_REASON
+		) VALUES (
+			${HOUSE_CODE},                
+			${PR_NO},              
+			${STATUS},                    
+			${COMPANY_CODE},        
+			${PLANT_CODE},
+			
+			${PR_TOT_AMT},                
+			${PR_TYPE},            
+			${DEMAND_DEPT},               
+			${SIGN_STATUS},         
+			${SIGN_DATE},
+			
+			${SIGN_PERSON_ID},            
+			${SIGN_PERSON_NAME},   
+			${DEMAND_DEPT_NAME},          
+			${REMARK},              
+			${SUBJECT},
+			
+			${PR_LOCATION},               
+			${ORDER_NO},           
+			${SALES_USER_DEPT},           
+			${SALES_USER_ID},       
+			${CONTRACT_HOPE_DAY},
+			
+			${CUST_CODE},                 
+			${CUST_NAME},          
+			${EXPECT_AMT},                
+			${SALES_TYPE},          
+			${ORDER_NAME},
+			
+			${REQ_TYPE},                  
+			${RETURN_HOPE_DAY},    
+			${ATTACH_NO},                 
+			${HARD_MAINTANCE_TERM}, 
+			${SOFT_MAINTANCE_TERM},
+			
+			${CREATE_TYPE},               
+			'D',                   
+			TO_CHAR(SYSDATE, 'HH24MISS'), 
+			${ADD_USER_ID},         
+			TO_CHAR(SYSDATE, 'YYYYMMDD'),
+			
+			TO_CHAR(SYSDATE, 'HH24MISS'), 
+			${CHANGE_USER_ID},     
+			${BSART},                     
+			${CUST_TYPE},           
+			${ADD_DATE},
+			
+			${AHEAD_FLAG},                
+			${CONTRACT_FROM_DATE}, 
+			${CONTRACT_TO_DATE},          
+			${SALES_AMT},           
+			${PROJECT_PM},
+			
+			${ORDER_COUNT},               
+			${WBS},                
+			${WBS_NAME},                  
+			${DELY_TO_LOCATION},    
+			${DELY_TO_ADDRESS},
+			
+			${DELY_TO_USER},              
+			${DELY_TO_PHONE},      
+			${PC_FLAG},                   
+			${PC_REASON} 		
+		)
+	</method>
+	
+	<method name="selectIcomMtglInfo">
+		SELECT
+			B.ITEM_NO,
+			NVL(
+				CTRL.CTRL_CODE,
+        		'P01'
+			) AS CTRL_CODE,
+			B.BASIC_UNIT,
+			B.DESCRIPTION_LOC,
+			B.SPECIFICATION,
+			B.MAKER_CODE,
+			B.MAKER_NAME,
+			B.KTGRM
+		FROM
+			( SELECT
+                  DISTINCT  BACP.CTRL_PERSON_ID,
+                  MCPM.HOUSE_CODE,
+                  MCPM.MATERIAL_CLASS1,
+                  MCPM.CTRL_CODE,
+                  NVL(BAPR.PURCHASE_LOCATION, '00') AS PURCHASE_LOCATION,
+                  BAPR.PR_LOCATION,
+                  MCPM.CTRL_TYPE
+              FROM   ICOMMCPM MCPM,
+                     ICOMBACP BACP,
+                     ICOMBAPR BAPR,
+                     SCODE    CODE
+              WHERE    BAPR.HOUSE_CODE        =  ${HOUSE_CODE}
+                  AND  BAPR.PR_LOCATION       =  ${PR_LOCATION}
+                  AND  MCPM.HOUSE_CODE        =  BAPR.HOUSE_CODE
+                  AND  MCPM.PURCHASE_LOCATION =  BAPR.PURCHASE_LOCATION
+                  AND  BACP.HOUSE_CODE        =  MCPM.HOUSE_CODE
+                  AND  MCPM.CTRL_CODE         =  BACP.CTRL_CODE
+                  AND  MCPM.CTRL_TYPE         =  BACP.CTRL_TYPE
+                  AND  BAPR.STATUS            IN ('C','R')
+                  AND  MCPM.STATUS            IN ('C','R')
+                  AND  BACP.STATUS            IN ('C','R')
+                  AND  CODE.HOUSE_CODE        =  ${HOUSE_CODE}
+                  AND  CODE.TYPE              =  'M122'
+                  AND  MCPM.MATERIAL_CLASS1   =  CODE.CODE
+                  AND ROWNUM = 1
+            ) CTRL,
+			ICOMMTGL B
+		WHERE
+			B.HOUSE_CODE      = CTRL.HOUSE_CODE(+)
+		AND
+			B.MATERIAL_CLASS2 = CTRL.MATERIAL_CLASS1(+)
+		AND
+			B.ITEM_NO         = ${ITEM_NO}
+	</method>
+	
+	<method name="insertIcoyPrDtInfo">
+		INSERT INTO ICOYPRDT (
+			HOUSE_CODE,         PR_NO,             PR_SEQ,             STATUS,          COMPANY_CODE,
+			PLANT_CODE,         ITEM_NO,           PR_PROCEEDING_FLAG, CTRL_CODE,       UNIT_MEASURE,
+			PR_QTY,             CUR,               UNIT_PRICE,         PR_AMT,          RD_DATE,
+			ATTACH_NO,          REC_VENDOR_CODE,   DELY_TO_LOCATION,   REC_VENDOR_NAME, DESCRIPTION_LOC,
+			SPECIFICATION,      MAKER_NAME,        MAKER_CODE,         REMARK,          SAMPLE_FLAG,
+			TBE_FLAG,           PURCHASE_LOCATION, PURCHASER_ID,       PURCHASER_NAME,  PURCHASE_DEPT,
+			PURCHASE_DEPT_NAME, TECHNIQUE_GRADE,   TECHNIQUE_TYPE,     INPUT_FROM_DATE, INPUT_TO_DATE,
+			ADD_DATE,           ADD_TIME,          ADD_USER_ID,        CHANGE_DATE,     CHANGE_TIME,
+			CHANGE_USER_ID,     KNTTP,             ZEXKN,              ORDER_NO,        ORDER_SEQ,
+			WBS_NO,             WBS_SUB_NO,        WBS_TXT,            CONTRACT_DIV,    DELY_TO_ADDRESS,
+			WARRANTY,           EXCHANGE_RATE,     SHIPPER_TYPE,       WBS_NAME,        ORDER_COUNT,
+			PRE_TYPE,           PRE_PO_NO,         PRE_PO_SEQ,         ACCOUNT_TYPE,    ASSET_TYPE,
+			DELY_TO_ADDRESS_CD
+		)
+		VALUES(
+			${HOUSE_CODE},                
+			${PR_NO},                     
+			lpad(${PR_SEQ}, 5, '0'),  
+			${STATUS},                   
+			${COMPANY_CODE},
+			
+			${PLANT_CODE},                
+			${ITEM_NO},                   
+			${PR_PROCEEDING_FLAG},    
+			${CTRL_CODE},                 
+			${UNIT_MEASURE},
+			
+			NVL(${PR_QTY},0),            
+			${CUR},                       
+			NVL(${UNIT_PRICE}, 0),   
+			NVL(${PR_AMT}, 0),           
+			${RD_DATE},
+			
+			${ATTACH_NO},                 
+			${REC_VENDOR_CODE},           
+			${DELY_TO_LOCATION},      
+			${REC_VENDOR_NAME},           
+			${DESCRIPTION_LOC},
+			
+			${SPECIFICATION},             
+			${MAKER_NAME},                
+			${MAKER_CODE},            
+			${REMARK},                    
+			'N',
+			
+			'N',                          
+			${PURCHASE_LOCATION},         
+			${PURCHASER_ID},          
+			${PURCHASER_NAME},            
+			${PURCHASE_DEPT},
+			
+			${PURCHASE_DEPT_NAME},        
+			${TECHNIQUE_GRADE},           
+			${TECHNIQUE_TYPE},        
+			${INPUT_FROM_DATE},           
+			${INPUT_TO_DATE},
+			
+			TO_CHAR(SYSDATE, 'YYYYMMDD'), 
+			TO_CHAR(SYSDATE, 'HH24MISS'), 
+			${ADD_USER_ID},           
+			TO_CHAR(SYSDATE, 'YYYYMMDD'), 
+			TO_CHAR(SYSDATE, 'HH24MISS'),
+			
+			${CHANGE_USER_ID},            
+			${KNTTP},                     
+			${ZEXKN},                 
+			${ORDER_NO},                  
+			${ORDER_SEQ},
+			
+			SUBSTR(${WBS_NO}, 1, 8),      
+			${WBS_SUB_NO},                
+			${WBS_TXT},               
+			${CONTRACT_DIV},              
+			(
+    			SELECT
+    				DEPT_NAME_LOC 
+				FROM
+					ICOMOGDP 
+				WHERE
+					STATUS != 'D' 
+				AND
+					HOUSE_CODE =  '000'  
+				AND
+					COMPANY_CODE =  'WOORI'  
+				AND
+					DEPT = ${DELY_TO_ADDRESS_CD}
+   			),
+			
+			${WARRANTY},                  
+			${EXCHANGE_RATE},             
+			'D',                      
+			${WBS_NAME},                  
+			${ORDER_COUNT},
+			
+		    ${PRE_TYPE},                  
+		    ${PRE_PO_NO},                 
+		    ${PRE_PO_SEQ},            
+		    ${ACCOUNT_TYPE},              
+		    ${ASSET_TYPE},
+		    
+		    
+   			${DELY_TO_ADDRESS_CD}
+		)
+	</method>
+	
+	
+	<!-- 사전품의 신규생성시 -->
+	<method name="insertGwappInfo">
+		<![CDATA[
+		INSERT INTO GWAPP(
+			HOUSE_CODE,
+			INF_NO,
+			BODY_CONTENT,
+			TYPE
+		)
+		VALUES(
+			${HOUSE_CODE},
+			${INF_NO},
+			${BODY_CONTENT},
+			'P'		
+		)
+		]]>
+	</method>
+	
+	<!-- 계약품의 신규생성시 -->
+	<method name="insertGwappInfo2">
+		<![CDATA[
+		INSERT INTO GWAPP(
+			HOUSE_CODE,
+			INF_NO,
+			BODY_CONTENT,
+			TYPE
+		)
+		VALUES(
+			${HOUSE_CODE},
+			${INF_NO},
+			${BODY_CONTENT},
+			'G'			
+		)
+		]]>
+	</method>
+		
+	<method name="insertGwappprInfo">
+		INSERT INTO GWAPPPR(
+			HOUSE_CODE, INF_NO, SEQ, PR_NO, PR_SEQ
+		)
+		VALUES(
+			${HOUSE_CODE},
+			${INF_NO},
+			${SEQ},
+			${PR_NO},
+			${PR_SEQ}
+		)
+	</method>
+	
+	<method name="updateIcoyprdtGwStatus">
+		UPDATE
+			ICOYPRDT
+		SET
+			GW_STATUS      = ${GW_STATUS},
+			GW_INF_NO      = ${GW_INF_NO},
+			CHANGE_DATE    = TO_CHAR(SYSDATE, 'YYYYMMDD'),
+			CHANGE_TIME    = TO_CHAR(SYSDATE, 'HH24MISS'),
+			CHANGE_USER_ID = ${CHANGE_USER_ID}
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			PR_NO      = ${PR_NO}
+		AND
+			PR_SEQ     = ${PR_SEQ}
+	</method>
+	
+	<method name="updateIcoyprdtGwStatus2">
+		UPDATE
+			ICOYPRDT
+		SET
+			GW_STATUS2     = ${GW_STATUS},
+			GW_INF_NO2     = ${GW_INF_NO},
+			CHANGE_DATE    = TO_CHAR(SYSDATE, 'YYYYMMDD'),
+			CHANGE_TIME    = TO_CHAR(SYSDATE, 'HH24MISS'),
+			CHANGE_USER_ID = ${CHANGE_USER_ID}
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			PR_NO      = ${PR_NO}
+		AND
+			PR_SEQ     = ${PR_SEQ}
+	</method>
+	
+	<method name="selectGwappTypeInfo">
+		SELECT
+			TYPE
+		FROM
+			GWAPP
+		WHERE
+			INF_NO = ${DOC_NO}
+	</method>
+	
+	<method name="updateIcoyprdtGwStatusList">
+		UPDATE
+			ICOYPRDT
+		SET
+			GW_STATUS      = ${STATUS},
+			CHANGE_DATE    = TO_CHAR(SYSDATE, 'YYYYMMDD'),
+			CHANGE_TIME    = TO_CHAR(SYSDATE, 'HH24MISS'),
+			CHANGE_USER_ID = ${CHANGE_USER_ID}
+		WHERE
+			(HOUSE_CODE, PR_NO, PR_SEQ) IN (
+				SELECT
+					HOUSE_CODE,
+					PR_NO,
+					PR_SEQ
+				FROM
+					GWAPPPR
+				WHERE
+					INF_NO = ${DOC_NO}
+			)
+	</method>
+	
+	<method name="updateIcoyprdtGwStatusList2">
+		UPDATE
+			ICOYPRDT
+		SET
+			GW_STATUS2     = ${STATUS},
+			CHANGE_DATE    = TO_CHAR(SYSDATE, 'YYYYMMDD'),
+			CHANGE_TIME    = TO_CHAR(SYSDATE, 'HH24MISS'),
+			CHANGE_USER_ID = ${CHANGE_USER_ID}
+		WHERE
+			(HOUSE_CODE, PR_NO, PR_SEQ) IN (
+				SELECT
+					HOUSE_CODE,
+					PR_NO,
+					PR_SEQ
+				FROM
+					GWAPPPR
+				WHERE
+					INF_NO = ${DOC_NO}
+			)
+	</method>
+	
+	<method name="selectDeptInfoByUserId">
+		SELECT
+			GETDEPTCODEBYID(
+				${HOUSE_CODE},
+				${COMPANY_CODE},
+				${USER_ID}
+			) AS DEPT_CODE,
+			GETDEPTNAMEBYID(
+				${HOUSE_CODE},
+				${COMPANY_CODE},
+				${USER_ID}
+			) AS DEPT_NAME
+		FROM
+			DUAL
+	</method>
+
+	<method name="updateIcommtglAbolInfo">
+		UPDATE
+			ICOMMTGL
+		SET		  
+		<if test="${ABOL_RSN}" operator="ne" value="">
+			ABOL_RSN      = ${ABOL_RSN},
+		</if>
+		<if test="${ABOL_RSN_ETC}" operator="ne" value="">
+			ABOL_RSN_ETC        = ${ABOL_RSN_ETC},
+		</if>
+		<if test="${ABOL_DATE}" operator="ne" value="">
+			ABOL_DATE      = ${ABOL_DATE},
+		</if>
+		<if test="${ABOL_REQ_USER_ID}" operator="ne" value="">
+			ABOL_REQ_USER_ID     = ${ABOL_REQ_USER_ID},
+		</if>		    
+			ABOL_REQ_DATE       = TO_CHAR(SYSDATE, 'YYYYMMDD'),
+			ABOL_REQ_TIME       = TO_CHAR(SYSDATE, 'HH24MISS'),
+			ITEM_BLOCK_FLAG = 'Y',
+            USEDFLAG = 'N'
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			ITEM_NO    = ${ITEM_NO}
+	</method>
+	
+	<method name="deleteIcommtglAbolInfo">
+		UPDATE
+			ICOMMTGL
+		SET
+			ABOL_RSN            = NULL,
+			ABOL_RSN_ETC        = NULL,
+			ABOL_DATE           = NULL,
+			ABOL_REQ_USER_ID    = NULL,
+			ABOL_REQ_DATE       = NULL,
+			ABOL_REQ_TIME       = NULL,
+			ITEM_BLOCK_FLAG     = 'N',
+            USEDFLAG            = 'Y'
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			ITEM_NO    = ${ITEM_NO}
+	</method>
+	
+	<method name="updateSinfep0031Info">
+		UPDATE
+			SINFEP0031
+		SET
+			RETURN = ${RETURN}
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			INF_NO     = ${INF_NO}
+	</method>
+	
+	<method name="insertSinfep0032Info">
+		INSERT INTO SINFEP0032(
+			HOUSE_CODE,
+			INF_NO,
+			INF_MODE,
+			RETURN
+		)
+		VALUES(
+			${HOUSE_CODE},
+			${INF_NO},
+			${INF_MODE},
+			NULL
+		)
+	</method>
+	
+	<method name="insertSinfep0032PrInfo">
+		INSERT INTO SINFEP0032_PR(
+			HOUSE_CODE,    INF_NO,      SEQ,    MLOBSMCD,    OUTXSEQT,
+            CENTERCD,    OUTXAMNT, STATCODE,    OUTXDATE,    OUTXTIME,
+            OUTXIDNT
+		)
+		VALUES(
+			${HOUSE_CODE},
+			${INF_NO},
+			${SEQ},			
+			${MLOBSMCD},
+			${OUTXSEQT},
+			${CENTERCD},
+			${OUTXAMNT},
+			${STATCODE},
+			${OUTXDATE},
+			${OUTXTIME},
+			${OUTXIDNT}			
+		)
+	</method>
+	
+	<method name="getIcommtglInfo">
+		<![CDATA[
+		SELECT ITEM_NO
+		       ,DESCRIPTION_LOC
+		       ,NVL(ITEM_BLOCK_FLAG,'N') ITEM_BLOCK_FLAG
+		       ,NVL(USEDFLAG,'Y') USEDFLAG
+		       ,NVL(ABOL_RSN,'N') ABOL_RSN 
+		FROM ICOMMTGL 
+		WHERE HOUSE_CODE = ${HOUSE_CODE}  
+		AND ITEM_NO = ${ITEM_NO}
+		]]>	
+	</method>
+	
+	
+	<method name="getTbaif02_2011Cnt">
+		<![CDATA[
+		SELECT MLOBSMCD,
+			OUTXSEQT,
+			CENTERCD,
+			OUTXAMNT,
+			STATCODE,
+			OUTXDATE,
+			OUTXTIME,
+			OUTXIDNT		       
+		FROM TBAIF02 
+		WHERE MLOBSMCD = ${ITEM_NO}
+		AND STATCODE = '2011'
+		]]>	
+	</method>
+	
+	<method name="insertTbaif02List">
+		INSERT INTO TBAIF02(
+			MLOBSMCD,
+			OUTXSEQT,
+			CENTERCD,
+			OUTXAMNT,
+			STATCODE,
+			OUTXDATE,
+			OUTXTIME,
+			OUTXIDNT
+		)
+		VALUES(
+			${MLOBSMCD},
+			${OUTXSEQT},
+			${CENTERCD},
+			${OUTXAMNT},
+			${STATCODE},
+			${OUTXDATE},
+			${OUTXTIME},
+			${OUTXIDNT}
+		)
+	</method>
+	
+	<method name="updateSinfep0032Info">
+		UPDATE
+			SINFEP0032
+		SET
+			RETURN = ${RETURN}
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			INF_NO     = ${INF_NO}
+	</method>
+	
+	<method name="getTbaif02Info">
+		<![CDATA[
+		SELECT CENTERCD
+               ,OUTXAMNT
+               ,STATCODE
+               ,OUTXDATE
+               ,OUTXIDNT
+		FROM TBAIF02 
+		WHERE
+			MLOBSMCD    = ${MLOBSMCD}
+		AND
+			OUTXSEQT    = ${OUTXSEQT}
+		]]>	
+	</method>
+	
+	<method name="deleteTbaif02List">
+		UPDATE
+			TBAIF02
+		SET
+			STATCODE    = ${STATCODE}
+		WHERE
+			MLOBSMCD    = ${MLOBSMCD}
+		AND
+			OUTXSEQT    = ${OUTXSEQT}
+	</method>
+	
+	<method name="deleteIcoyPbhdList">
+		 <![CDATA[
+		 DELETE FROM ICOYPBHD
+		 WHERE 
+		 	ITEM_NO = ${MLOBSMCD}
+		 AND CRE_GB = '1'
+		 AND DSTR_GB = '1'
+		 AND STK_QTY = 0
+		 AND ABOL_YN <> 'Y'
+		 ]]>	
+	</method>
+	
+	
+
+  <!-- TOBE 2017-07-01 추가 EPS0033 재산관리 입지대사 -->
+	<method name="insertSinfep0033Info">
+		INSERT INTO SINFEP0033(
+			HOUSE_CODE,	INF_NO,	  INF_MODE, BNKCD,    TRNTRNDT,
+			TRNTRNCD,   USRUSRID, RETURN1 ,	RETURN2,    RETURN3
+		)
+		VALUES(
+			${HOUSE_CODE},
+			${INF_NO},
+			${INF_MODE},
+			${BNKCD},
+			${TRNTRNDT},
+			${TRNTRNCD},
+			${USRUSRID},
+			NULL,			
+			NULL,
+			NULL
+		)
+	</method>
+	
+	<method name="insertSinfep0033PrInfo">
+		INSERT INTO SINFEP0033PR(
+			HOUSE_CODE, INF_NO,   SEQ, IGJM, BSIS,
+			GWCD,   IJGB, TSAM
+		)
+		VALUES(
+			${HOUSE_CODE},
+			${INF_NO},
+			${SEQ},
+			${IGJM},
+			${BSIS},
+			${GWCD},
+			${IJGB},
+			${TSAM}
+		)
+	</method>
+	
+	<method name="updateSinfep0033Info">
+		UPDATE
+			SINFEP0033
+		SET
+			RETURN1 = ${RETURN1},
+			RETURN2 = ${RETURN2},
+			RETURN3 = ${RETURN3}
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			INF_NO     = ${INF_NO}
+	</method>
+	
+	
+</service>

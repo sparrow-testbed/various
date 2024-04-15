@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<service>
+	<method name="getRfqBzList">
+	<![CDATA[
+			SELECT
+			    'R' CRUD,
+			    A.BIZ_NO,
+				A.BIZ_NM,
+				A.BIZ_STATUS,
+				A.ADD_USER_ID,
+				A.ADD_USER_NAME,
+				A.ADD_DATE,
+				A.ADD_TIME,
+				A.CHANGE_USER_ID,
+				A.CHANGE_USER_NAME,
+				A.CHANGE_DATE,
+				A.CHANGE_TIME,
+				A.BIZ_STATUS BIZ_STATUS_OLD
+			FROM ICOYRQBZ_ICT A
+			WHERE A.STATUS IN ('C', 'R')    
+			AND A.BIZ_STATUS = $S{biz_status}
+			AND A.ADD_DATE  BETWEEN   $S{add_date_start} 
+			AND $S{add_date_end}   
+			AND A.RFQ_NO = $S{rfq_no}                                                                               
+			AND A.BIZ_NM LIKE '%' || $S{biz_nm} || '%'                                                                               
+			AND A.ADD_USER_ID = $S{ctrl_person_id}   
+			ORDER BY A.BIZ_NO DESC                        
+	]]>
+			
+	</method>
+	
+	<method name="et_insertItem">
+	<![CDATA[
+	insert into ICOYRQBZ_ICT 
+	( 
+	    BIZ_NO                ,    --사업번호
+		BIZ_NM                ,   --사업명
+		STATUS                ,     --상태
+		BIZ_STATUS            ,     --사업상태  (T작성중,P진행중,E종료)
+		ADD_USER_ID           ,    --생성자ID
+		ADD_USER_NAME         ,    --생성자명
+		ADD_DATE              ,     --생성일자
+		ADD_TIME              ,     --생성시간
+		CHANGE_USER_ID        ,    --변경자ID
+		CHANGE_USER_NAME      ,    --변경자명
+		CHANGE_DATE           ,     --변경일자
+		CHANGE_TIME                 --변경시간
+	) values ( 
+	    ?           ,
+		?           ,	 
+		'C'         ,	 
+		?           ,	 
+		?,
+		(SELECT USER_NAME_LOC FROM ICOMLUSR_ICT WHERE USER_ID = ?),    	 
+		TO_CHAR(SYSDATE,'YYYYMMDD'),
+		TO_CHAR(SYSDATE,'HH24MISS'), 
+	    ?,
+		(SELECT USER_NAME_LOC FROM ICOMLUSR_ICT WHERE USER_ID = ?),    	 
+	    TO_CHAR(SYSDATE,'YYYYMMDD'),
+		TO_CHAR(SYSDATE,'HH24MISS')           
+	)	 
+	]]>
+    </method>
+        
+    <method name="et_updateRfgBz">
+	<![CDATA[
+        update ICOYRQBZ_ICT set
+        	STATUS           = 'R',          	
+            BIZ_NM           = ?,          	
+            BIZ_STATUS       = ?,
+            CHANGE_USER_ID   = ?,
+            CHANGE_USER_NAME = (SELECT USER_NAME_LOC FROM ICOMLUSR_ICT WHERE USER_ID = ?),
+            CHANGE_DATE      = TO_CHAR(SYSDATE,'YYYYMMDD'),
+            CHANGE_TIME      = TO_CHAR(SYSDATE,'HH24MMSS')        
+        where BIZ_NO = ?       
+	]]>
+    </method>
+    
+    <method name="et_deleteRfqBzList_ctivSelect">
+	<![CDATA[
+		  SELECT COUNT(*) cnt
+		  FROM ICOYCTIV_ICT
+		  WHERE STATUS IN ('C','R')
+<OPT=F,S> AND BIZ_NO = ? </OPT>
+	]]>
+    </method>
+    
+    <method name="et_deleteRfqBzList_bdhdSelect">
+	<![CDATA[
+		  SELECT COUNT(*) cnt
+		  FROM ICOYBDHD_ICT
+		  WHERE STATUS IN ('C','R')
+<OPT=F,S> AND BIZ_NO = ? </OPT>
+	]]>
+    </method>
+    
+    <method name="et_deleteRfqBzList_select">
+	<![CDATA[
+		  SELECT COUNT(*) cnt
+		  FROM ICOYRQHD_ICT
+		  WHERE STATUS IN ('C','R')
+		  AND SIGN_STATUS IN ('P','E')
+		  AND RFQ_STATUS IN ('B','E')
+<OPT=F,S> AND BIZ_NO = ? </OPT>
+	]]>
+    </method>
+    
+    <method name="et_deleteRfgBz">
+	<![CDATA[
+        update ICOYRQBZ_ICT set
+        	STATUS           = 'D',          	
+            CHANGE_USER_ID   = ?,
+            CHANGE_USER_NAME = (SELECT USER_NAME_LOC FROM ICOMLUSR_ICT WHERE USER_ID = ?),
+            CHANGE_DATE      = TO_CHAR(SYSDATE,'YYYYMMDD'),
+            CHANGE_TIME      = TO_CHAR(SYSDATE,'HH24MMSS')        
+        where BIZ_NO = ?       
+	]]>
+    </method>
+    
+    <method name="getQuery_BIZNO">
+	<![CDATA[
+		SELECT BIZ_NO
+			  ,BIZ_NM 
+		FROM ICOYRQBZ_ICT
+		WHERE STATUS IN ('C','R')
+	]]>
+		<if test="${flag}" operator="eq" value="1">
+			<![CDATA[
+			 AND BIZ_STATUS = 'P'                                                                                                     
+			 ]]>              
+		</if>
+		<if test="${flag}" operator="eq" value="">
+			<![CDATA[
+			 AND BIZ_STATUS IN ('P','E')                                                                                                     
+			 ]]>              
+		</if>
+		
+		
+		ORDER BY BIZ_NO DESC                                                
+	
+	</method>
+	
+</service>
+
+

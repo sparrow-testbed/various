@@ -1,0 +1,2505 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+<service>
+	<method name="et_getEvabdlis1">
+	<![CDATA[
+        SELECT A.EVAL_NAME AS EVAL_NAME,
+            GETICOMCODE2('#house_code#', 'M126', A.EVAL_STATUS) AS STATUS,
+            (SELECT TEMPLATE_NAME 
+               FROM ICOMVETH
+              WHERE HOUSE_CODE         = '#house_code#'
+                AND E_TEMPLATE_REFITEM = A.E_TEMPLATE_REFITEM) AS EVAL_TEMP,
+            TO_CHAR(TO_DATE(a.from_date,'YYYY/MM/DD'),'YYYY/MM/DD') || '~' || 
+            TO_CHAR(TO_DATE(a.to_date,'YYYY/MM/DD'),'YYYY/MM/DD') AS INTERVAL,
+            A.CHANGE_DATE AS UPDATED,
+            B.USER_NAME_LOC AS OPERATOR,
+            A.EVAL_REFITEM AS EVAL_REFITEM,
+            A.EVAL_STATUS AS EVAL_STATUS,
+            A.E_TEMPLATE_REFITEM AS E_TEMPLATE_REFITEM,
+            (SELECT COUNT(*) 
+               FROM ICOMVEVL 
+              WHERE HOUSE_CODE = A.HOUSE_CODE
+                AND EVAL_ITEM_REFITEM IN (SELECT EVAL_ITEM_REFITEM 
+                                            FROM ICOMVEVD
+                                           WHERE HOUSE_CODE = A.HOUSE_CODE
+                							 AND EVAL_REFITEM = A.EVAL_REFITEM)) AS ASSI_CNT,
+            (SELECT COUNT(*) FROM ICOMVEVL WHERE HOUSE_CODE = A.HOUSE_CODE
+                							 AND EVAL_ITEM_REFITEM IN (
+              SELECT EVAL_ITEM_REFITEM FROM ICOMVEVD
+               WHERE HOUSE_CODE = A.HOUSE_CODE
+                 AND EVAL_REFITEM = A.EVAL_REFITEM
+                 AND COMPLETE_MARK = 'Y')) AS COMP_CNT
+          FROM ICOMVEVH A, ICOMLUSR B
+         WHERE A.HOUSE_CODE = '#house_code#'
+           AND A.CHANGE_DATE BETWEEN '#from_date#' AND '#to_date#'
+           AND B.HOUSE_CODE = A.HOUSE_CODE
+           AND B.USER_ID    = A.ADD_USER_ID
+         <OPT=S,S> AND A.EVAL_STATUS  = ? </OPT>
+         <OPT=S,S> AND A.EVAL_NAME LIKE '%' || ? || '%' </OPT>
+        ORDER BY  A.EVAL_REFITEM DESC
+	]]>
+	</method>
+
+	<method name="et_setEvabdcom1_1">
+	<![CDATA[
+		SELECT E.TEMPLATE_TYPE, A.DOC_TYPE, A.DOC_NO, A.DOC_COUNT
+		FROM ICOMVEVH A, ICOMVETH E
+		WHERE A.HOUSE_CODE = '#house_code#' 
+		  AND A.HOUSE_CODE = E.HOUSE_CODE
+		  AND A.E_TEMPLATE_REFITEM = E.E_TEMPLATE_REFITEM
+		  AND A.EVAL_REFITEM = #eval_refitem#
+	]]>
+	</method>
+
+	<method name="et_setEvabdcom1_2">
+	<![CDATA[
+		SELECT EVAL_ITEM_REFITEM
+		  FROM ICOMVEVD
+		 WHERE EVAL_REFITEM = #eval_refitem#
+	]]>
+	</method>
+
+	<method name="et_setEvabdcom1_3">
+	<![CDATA[
+		SELECT T1.EVAL_VALUER_REFITEM, T1.COMPLETE_MARK,
+			   CASE WHEN T2.SCORE IS NULL THEN 0 ELSE T2.SCORE END SCORE, T1.DEPT
+		FROM ICOMVEVL T1,
+			   (SELECT B.EVAL_VALUER_REFITEM, SUM(B.SELECTED_SEQ_SCORE) AS SCORE
+				  FROM ICOMVEVL A,ICOMVESI B
+				 WHERE A.EVAL_ITEM_REFITEM = #eval_item_refitem#
+					   AND A.EVAL_VALUER_REFITEM = B.EVAL_VALUER_REFITEM
+					   GROUP BY  B.EVAL_VALUER_REFITEM, A.COMPLETE_MARK
+				) T2
+		WHERE T1.EVAL_ITEM_REFITEM = #eval_item_refitem#
+		  AND T1.COMPLETE_MARK = 'Y'
+		  AND T1.EVAL_VALUER_REFITEM(+) = T2.EVAL_VALUER_REFITEM
+	]]>
+	</method>
+
+	<method name="et_setEvabdcom1_4">
+	<![CDATA[
+		 UPDATE ICOMVEVD 
+		 	SET EVAL_SCORE = '#eval_score#'
+		 WHERE EVAL_REFITEM = #eval_refitem#
+		   AND EVAL_ITEM_REFITEM = #eval_item_refitem#
+	]]>
+	</method>
+
+	<method name="et_setEvabdcom1_5">
+	<![CDATA[
+		 UPDATE ICOMVEVD 
+		 	SET EVAL_SCORE = '#ret_score#'
+		 WHERE EVAL_REFITEM = #eval_refitem#
+		   AND EVAL_ITEM_REFITEM = #eval_item_refitem#
+	]]>
+	</method>
+
+	<method name="et_setEvabdcom1_6">
+	<![CDATA[
+		  UPDATE ICOMVEVH 
+		  	SET EVAL_STATUS = 3
+		  WHERE EVAL_REFITEM = #eval_refitem#
+	]]>
+	</method>
+
+	<method name="et_setEvabdcom1_7">
+	<![CDATA[
+	  	SELECT B.E_FACTOR_REFITEM,  B.WEIGHT ,  C.FACTOR_NAME
+		FROM ICOMVEVH A, ICOMVETD B, ICOMVEFH C
+	   	WHERE A.EVAL_REFITEM = #eval_refitem# 
+	   	  AND A.E_TEMPLATE_REFITEM = B.E_TEMPLATE_REFITEM
+		  AND B.E_FACTOR_REFITEM = C.E_FACTOR_REFITEM 
+		  AND A.HOUSE_CODE = '#house_code#'
+		  AND A.HOUSE_CODE = B.HOUSE_CODE
+		  AND A.HOUSE_CODE = C.HOUSE_CODE
+		  AND C.IS_QNT = 'Y'
+
+	]]>
+	</method>
+
+	<method name="et_setEvabdcom1_8">
+	<![CDATA[
+	 	SELECT  C.*, B.EVAL_ITEM_REFITEM
+	  	FROM ICOMVEVH A, ICOMVEVD B, ICOMVEQD C
+	  	WHERE A.EVAL_REFITEM = #eval_refitem#
+		  AND B.EVAL_ITEM_REFITEM = #ceval_item_refitem#
+		  AND A.EVAL_REFITEM = B.EVAL_REFITEM
+		  AND A.HOUSE_CODE = '#house_code#'
+		  AND A.HOUSE_CODE = B.HOUSE_CODE
+		  AND A.HOUSE_CODE = C.HOUSE_CODE
+		  AND B.VENDOR_CODE = C.VENDOR_CODE
+
+	]]>
+	</method>
+
+	<method name="et_setEvabdcom1_9">
+	<![CDATA[
+	  		INSERT INTO ICOMVEQR (
+				   EVAL_QNT_RESULT_REFITEM,
+				   EVAL_ITEM_REFITEM,
+				   EVALUATION_TERM,
+				   E_FACTOR_REFITEM  ,
+				   EVAL_SCORE,
+				   DSTB_SCORE,
+				   CNVT_SCORE )
+			select NVL(max(EVAL_QNT_RESULT_REFITEM),0)+1,
+				   ?,
+				   ?,
+				   ?,
+				   ?,
+				   ?,
+				   ? 
+			from icomveqr
+
+	]]>
+	</method>
+
+	<method name="et_setEvabddel1_1">
+	<![CDATA[
+	 	DELETE FROM ICOMVEVL
+		WHERE 	EVAL_ITEM_REFITEM IN
+				  ( SELECT EVAL_ITEM_REFITEM
+					  FROM ICOMVEVD
+					 WHERE EVAL_REFITEM = '#i_eval_refitem#')
+
+	]]>
+	</method>
+
+	<method name="et_setEvabddel1_2">
+	<![CDATA[
+		DELETE FROM ICOMVEVD
+	 	WHERE EVAL_REFITEM = '#i_eval_refitem#'
+
+	]]>
+	</method>
+
+	<method name="et_setEvabddel1_3">
+	<![CDATA[
+		DELETE FROM ICOMVEVH
+		WHERE EVAL_REFITEM = '#i_eval_refitem#'
+
+	]]>
+	</method>
+
+	<method name="et_getEvabdlis3">
+	<![CDATA[
+		SELECT A.EVAL_NAME AS EVAL_NAME,
+		   (SELECT TEMPLATE_NAME FROM ICOMVETH
+			 WHERE E_TEMPLATE_REFITEM = A.E_TEMPLATE_REFITEM) AS EVAL_TEMP,
+            TO_CHAR(TO_DATE(a.from_date,'YYYY/MM/DD'),'YYYY/MM/DD') || '~' || 
+            TO_CHAR(TO_DATE(a.to_date,'YYYY/MM/DD'),'YYYY/MM/DD') AS INTERVAL,
+		   getsgname(B.SG_REFITEM) AS SG_NAME,
+		   GETVENDORNAME('#house_code#', B.VENDOR_CODE) AS VENDOR_NAME,
+		    GETUSERNAME('#house_code#', C.EVAL_VALUER_ID, 'LOC') AS VALUER,
+			C.COMPLETE_MARK AS COMP_FLAG,
+			A.EVAL_REFITEM AS EVAL_REFITEM,
+			A.E_TEMPLATE_REFITEM AS E_TEMPLATE_REFITEM,
+			C.EVAL_VALUER_ID AS E_VALUER_ID,
+			B.EVAL_ITEM_REFITEM AS EVAL_ITEM_REFITEM,
+			D.TEMPLATE_TYPE AS TEMPLATE_TYPE
+		FROM ICOMVEVH A, ICOMVEVD B, ICOMVEVL C, ICOMVETH D
+		WHERE 	A.EVAL_REFITEM = '#eval_refitem#'
+		AND 	A.EVAL_REFITEM = B.EVAL_REFITEM
+		AND 	B.EVAL_ITEM_REFITEM = C.EVAL_ITEM_REFITEM
+		AND 	A.E_TEMPLATE_REFITEM = D.E_TEMPLATE_REFITEM
+		AND A.HOUSE_CODE = '#house_code#'
+		AND A.HOUSE_CODE = B.HOUSE_CODE
+		AND A.HOUSE_CODE = C.HOUSE_CODE
+		AND A.HOUSE_CODE = D.HOUSE_CODE
+ 		ORDER BY B.SG_REFITEM DESC
+
+	]]>
+	</method>
+
+
+	<method name="SR_getEvalProperty">
+	<![CDATA[
+		SELECT B.SG_NAME
+			, A.FROM_DATE
+			, A.TO_DATE
+			, C.TEMPLATE_NAME
+			, A.E_TEMPLATE_REFITEM  
+			, A.FROM_DATE as EVAL_from_date
+			, A.TO_DATE as EVAL_to_date
+	  	FROM ICOMVEVH A,
+		(
+			SELECT DISTINCT SG_NAME, A.EVAL_REFITEM, A.HOUSE_CODE
+		  	FROM ICOMVEVH A, ICOMVEVD B, SSGGL C
+		 	WHERE A.EVAL_REFITEM = B.EVAL_REFITEM  
+		 	  AND B.SG_REFITEM = C.SG_REFITEM
+		 	  AND A.HOUSE_CODE = B.HOUSE_CODE
+			  AND A.HOUSE_CODE = C.HOUSE_CODE
+		) B, ICOMVETH C
+	 	WHERE A.E_TEMPLATE_REFITEM = C.E_TEMPLATE_REFITEM 
+	      AND A.EVAL_REFITEM = #eval_refitem# 
+	      AND A.EVAL_REFITEM = B.EVAL_REFITEM
+	      AND A.HOUSE_CODE = '#house_code#'
+	      AND A.HOUSE_CODE = C.HOUSE_CODE
+		  AND A.HOUSE_CODE = B.HOUSE_CODE
+		  
+	]]>
+	</method>
+
+	<method name="et_getEvabdupd1">
+	<![CDATA[
+	SELECT  A.VENDOR_CODE AS VENDOR_CODE,
+			GETVENDORNAME('#house_code#', A.VENDOR_CODE) AS NAME_LOC,
+			getsgname(A.SG_REFITEM) AS SG_NAME,
+			(SELECT COUNT(*) FROM ICOMVEVL WHERE EVAL_ITEM_REFITEM = A.EVAL_ITEM_REFITEM) AS CNT,
+			(SELECT CASE AUTO_FLAG WHEN 'N' THEN 'Y' ELSE 'N' END FROM ICOMVEVH 
+			 WHERE EVAL_REFITEM = '#eval_refitem#'
+			   AND HOUSE_CODE = '#house_code#') AS QTY_YN,
+			A.SG_REFITEM AS SG_REFITEM,
+			A.EVAL_ITEM_REFITEM AS EVAL_ITEM_REFITEM
+		FROM 	ICOMVEVD A
+		WHERE A.HOUSE_CODE = '#house_code#'
+		  AND A.EVAL_REFITEM = '#eval_refitem#' 
+	]]>
+	</method>
+
+	<method name="et_getEvabdupd2">
+	<![CDATA[
+	SELECT A.DEPT AS DEPT,
+			GETDEPTNAMELOC('#house_code#', '#company_code#', A.DEPT) AS DEPT_NAME,
+			GETUSERINFO('#house_code#', A.EVAL_VALUER_ID, 'NAME') AS USER_NAME,
+			A.EVAL_VALUER_ID AS EVAL_VALUER_ID
+		FROM 	ICOMVEVL A
+		WHERE A.HOUSE_CODE = '#house_code#'	
+		  AND A.EVAL_ITEM_REFITEM= '#eval_item_refitem#'
+
+	]]>
+	</method>
+
+	<method name="getEvaluatorList">
+	<![CDATA[
+
+		SELECT  A.DEPT AS CODE,
+				A.DEPT_NAME_LOC AS NAME,
+				B.USER_NAME_LOC AS NAME1,
+				B.USER_ID AS CODE1
+		FROM 	ICOMOGDP A, ICOMLUSR B
+		WHERE 	A.HOUSE_CODE = ${session.HOUSE_CODE}
+		AND 	A.COMPANY_CODE = ${session.COMPANY_CODE}
+		AND 	A.HOUSE_CODE = B.HOUSE_CODE
+		AND	A.DEPT = B.DEPT
+		AND 	B.COMPANY_CODE = ${session.COMPANY_CODE}
+		AND	A.STATUS <> 'D'
+		AND	B.STATUS <> 'D'
+            AND  B.USER_ID  LIKE '%' || $S{user_id} || '%'
+            AND  B.USER_NAME_LOC LIKE '%' || $S{user_name} || '%'
+
+	]]>
+	</method>
+
+	<method name="et_getEvaTemp">
+	<![CDATA[
+		SELECT      A.E_FACTOR_REFITEM,
+					A.FACTOR_NAME,
+					B.E_FACTOR_ITEM_REFITEM,
+					B.ITEM_NAME ,
+					B.ITEM_SCORE,
+					A.SCALE_COUNT,
+					A.QNT_FLAG,
+					GETICOMCODE1(a.HOUSE_CODE,'M124',a.FACTOR_TYPE) FACTOR_TYPE,
+					C.E_TEMPLATE_REFITEM,
+					C.TEMPLATE_NAME ,
+					C.WEIGHT,
+					C.E_TEMPLATE_ITEM_REFITEM,
+					C.TEMPLATE_TYPE,
+					DECODE(A.QNT_FLAG, 'Y', '정량', '정성') QNT_NAME
+		FROM    ICOMVEFH A , ICOMVEFD B ,
+				(SELECT A.E_TEMPLATE_REFITEM,
+						A.TEMPLATE_NAME ,
+						B.E_TEMPLATE_ITEM_REFITEM,
+						B.E_FACTOR_REFITEM ,
+						B.WEIGHT,
+						A.TEMPLATE_TYPE,
+						A.HOUSE_CODE
+				FROM ICOMVETH A, ICOMVETD B
+				WHERE A.E_TEMPLATE_REFITEM = B.E_TEMPLATE_REFITEM
+				AND A.HOUSE_CODE = '#house_code#'
+				AND A.HOUSE_CODE = B.HOUSE_CODE
+				AND A.E_TEMPLATE_REFITEM = #e_template_refitem# ) C
+		WHERE  C.E_FACTOR_REFITEM = B.E_FACTOR_REFITEM                    
+		   AND A.USE_FLAG = 'Y'                                              
+		   AND B.USE_FLAG = 'Y'                                              
+		   AND A.E_FACTOR_REFITEM = C.E_FACTOR_REFITEM
+		   AND A.HOUSE_CODE = '#house_code#'  
+		   AND A.HOUSE_CODE = B.HOUSE_CODE 
+		/*		2012-05-29 조건절이 이상하여 변경
+		WHERE  C.E_FACTOR_REFITEM = B.E_FACTOR_REFITEM
+		AND A.USE_FLAG = 'Y'
+		AND B.USE_FLAG = 'Y'
+		AND A.E_FACTOR_REFITEM = C.E_FACTOR_REFITEM
+		AND A.HOUSE_CODE = B.HOUSE_CODE
+		AND A.HOUSE_CODE = C.HOUSE_CODE */
+		/*
+		UNION ALL (
+		SELECT 	C.E_FACTOR_REFITEM,
+				C.FACTOR_NAME,
+				NULL,
+				NULL,
+				NULL,
+				C.SCALE_COUNT,
+				C.QNT_FLAG,
+				CASE WHEN (C.FACTOR_TYPE = 1) THEN '구매'
+				ELSE '제작' END FACTOR_TYPE ,
+				NULL,
+				A.TEMPLATE_NAME,
+				B.WEIGHT,
+				NULL,
+				A.TEMPLATE_TYPE
+				, DECODE(C.QNT_FLAG, 'Y', '정량', '정성') QNT_NAME
+		FROM ICOMVETH A, ICOMVETD B, ICOMVEFH C
+		WHERE C.QNT_FLAG = 'Y'
+		AND C.USE_FLAG = 'Y'
+		AND A.E_TEMPLATE_REFITEM = B.E_TEMPLATE_REFITEM
+		AND B.E_FACTOR_REFITEM = C.E_FACTOR_REFITEM
+		AND A.HOUSE_CODE = B.HOUSE_CODE
+		AND A.HOUSE_CODE = C.HOUSE_CODE
+		AND A.E_TEMPLATE_REFITEM = #e_template_refitem#
+		)*/ 
+		ORDER BY QNT_FLAG, E_FACTOR_REFITEM , E_FACTOR_ITEM_REFITEM
+
+	]]>
+	</method>
+
+	<method name="et_getEvabdlis4">
+	<![CDATA[
+		SELECT A.EVAL_NAME AS EVAL_NAME,
+			   (SELECT TEMPLATE_NAME FROM ICOMVETH
+				 WHERE E_TEMPLATE_REFITEM = A.E_TEMPLATE_REFITEM) AS EVAL_TEMP,
+                TO_CHAR(TO_DATE(a.from_date,'YYYY/MM/DD'),'YYYY/MM/DD') || '~' || 
+                TO_CHAR(TO_DATE(a.to_date,'YYYY/MM/DD'),'YYYY/MM/DD') AS INTERVAL,
+				getsgname(B.SG_REFITEM) AS SG_NAME,
+				GETVENDORNAME('#house_code#', B.VENDOR_CODE) AS VENDOR_NAME,
+				B.EVAL_SCORE AS EVAL_SCORE,
+				A.EVAL_REFITEM AS EVAL_REFITEM,
+				A.E_TEMPLATE_REFITEM AS E_TEMPLATE_REFITEM,
+				B.EVAL_ITEM_REFITEM AS EVAL_ITEM_REFITEM,
+				D.TEMPLATE_TYPE AS TEMPLATE_TYPE
+				, NVL(B.QUANTITY_SCORE, 0) QUANTITY_SCORE
+				, B.VENDOR_CODE
+				, B.HUMAN_NO
+    			, (SELECT NAME_LOC FROM ICOMHUMT WHERE HOUSE_CODE = B.HOUSE_CODE AND HUMAN_NO = B.HUMAN_NO) HUMAN_NAME
+    			, (SELECT NVL(SUM(VESI.SELECTED_SEQ_SCORE) / COUNT(DISTINCT EVAL_VALUER_ID) ,0) AS SCORE   
+			       FROM ICOMVEVL VEVL,ICOMVESI VESI, ICOMVEFH VEFH                                       
+			       WHERE VEVL.HOUSE_CODE = B.HOUSE_CODE
+			         AND VEVL.HOUSE_CODE = VESI.HOUSE_CODE
+			         AND VESI.HOUSE_CODE = VEFH.HOUSE_CODE
+			         AND VESI.E_SELECTED_FACTOR = VEFH.E_FACTOR_REFITEM
+			         AND VEVL.EVAL_ITEM_REFITEM = B.EVAL_ITEM_REFITEM
+			         AND VEVL.EVAL_VALUER_REFITEM = VESI.EVAL_VALUER_REFITEM
+			         AND VEFH.QNT_FLAG = 'Y') AS QNT_Y_SCORE
+			          , (SELECT NVL(SUM(VESI.SELECTED_SEQ_SCORE) / COUNT(DISTINCT EVAL_VALUER_ID) ,0) AS SCORE   
+			       FROM ICOMVEVL VEVL,ICOMVESI VESI, ICOMVEFH VEFH                                       
+			       WHERE VEVL.HOUSE_CODE = B.HOUSE_CODE
+			         AND VEVL.HOUSE_CODE = VESI.HOUSE_CODE
+			         AND VESI.HOUSE_CODE = VEFH.HOUSE_CODE
+			         AND VESI.E_SELECTED_FACTOR = VEFH.E_FACTOR_REFITEM
+			         AND VEVL.EVAL_ITEM_REFITEM = B.EVAL_ITEM_REFITEM
+			         AND VEVL.EVAL_VALUER_REFITEM = VESI.EVAL_VALUER_REFITEM
+			         AND VEFH.QNT_FLAG = 'N') AS QNT_N_SCORE
+		  FROM ICOMVEVH A, ICOMVEVD B, ICOMVETH D
+		WHERE 	A.EVAL_REFITEM = '#eval_refitem#'
+		AND 	A.EVAL_REFITEM = B.EVAL_REFITEM
+		AND 	A.E_TEMPLATE_REFITEM = D.E_TEMPLATE_REFITEM
+		AND A.HOUSE_CODE = '#house_code#'
+ 		AND A.HOUSE_CODE = B.HOUSE_CODE
+		AND A.HOUSE_CODE = D.HOUSE_CODE
+		ORDER BY B.SG_REFITEM DESC
+
+	]]>
+	</method>
+
+	<method name="SR_getValuerList">
+	<![CDATA[
+		SELECT 	B.EVAL_VALUER_REFITEM,
+				C.USER_NAME_LOC,
+				C.DEPT,
+				B.NOTE
+		  FROM 	ICOMVEVD A, ICOMVEVL B, ICOMLUSR C
+		 WHERE 	A.EVAL_ITEM_REFITEM = #eval_item_refitem#
+		   AND 	A.EVAL_ITEM_REFITEM = B.EVAL_ITEM_REFITEM
+		   AND  A.HOUSE_CODE = B.HOUSE_CODE
+		   AND  A.HOUSE_CODE = C.HOUSE_CODE
+		   AND 	C.HOUSE_CODE = '#house_code#'
+		   AND 	B.EVAL_VALUER_ID = C.USER_ID
+		   AND  B.EVAL_VALUER_ID != 'SYSTEM'	/* 정량평가자  */
+	]]>
+	</method>
+
+	<method name="SR_getQntEvalTempSelectedFactor">
+	<![CDATA[
+	    /* house_code 추가 예정 (2012-05-30)*/
+		SELECT A.*
+ 		  FROM (
+ 			SELECT A.*
+ 			  FROM (
+ 				SELECT 	EVAL_QNT_RESULT_REFITEM, EVALUATION_TERM,
+ 						DSTB_SCORE, EVAL_SCORE, CNVT_SCORE, E_FACTOR_REFITEM, EVAL_ITEM_REFITEM, 1 AS SEQ
+ 				  FROM 	ICOMVEQR
+ 				 WHERE 	EVAL_ITEM_REFITEM = #eval_item_refitem#
+ 				   AND  E_FACTOR_REFITEM = -1
+ 				 UNION
+ 				SELECT 	0 AS EVAL_QNT_RESULT_REFITEM, '' AS EVALUATION_TERM,
+ 						0 AS DSTB_SCORE, 0 AS EVAL_SCORE, 0 AS CNVT_SCORE, -1 AS E_FACTOR_REFITEM,
+ 						#eval_item_refitem# AS EVAL_ITEM_REFITEM, 2 AS SEQ
+ 				  FROM 	DUAL
+ 				 --ORDER BY SEQ ASC
+ 				) A
+ 			 WHERE 	ROWNUM < 2
+ 			UNION
+ 			SELECT A.*
+ 			  FROM (
+ 				SELECT 	EVAL_QNT_RESULT_REFITEM, EVALUATION_TERM,
+ 						DSTB_SCORE, EVAL_SCORE, CNVT_SCORE, E_FACTOR_REFITEM, EVAL_ITEM_REFITEM, 1 AS SEQ
+ 				  FROM 	ICOMVEQR
+ 				 WHERE 	EVAL_ITEM_REFITEM = #eval_item_refitem#
+ 				   AND  E_FACTOR_REFITEM = -2
+ 				 UNION
+ 				SELECT 	0 AS EVAL_QNT_RESULT_REFITEM, '' AS EVALUATION_TERM,
+ 						0 AS DSTB_SCORE, 0 AS EVAL_SCORE, 0 AS CNVT_SCORE, -2 AS E_FACTOR_REFITEM,
+ 						#eval_item_refitem# AS EVAL_ITEM_REFITEM, 2 AS SEQ
+ 				  FROM 	DUAL
+ 				 --ORDER BY SEQ ASC
+ 				) A
+ 			 WHERE 	ROWNUM < 2
+ 			UNION
+ 			SELECT A.*
+ 			  FROM (
+ 				SELECT 	EVAL_QNT_RESULT_REFITEM, EVALUATION_TERM,
+ 						DSTB_SCORE, EVAL_SCORE, CNVT_SCORE, E_FACTOR_REFITEM, EVAL_ITEM_REFITEM, 1 AS SEQ
+ 				  FROM 	ICOMVEQR
+ 				 WHERE 	EVAL_ITEM_REFITEM = #eval_item_refitem#
+ 				   AND  E_FACTOR_REFITEM = -3
+ 				 UNION
+ 				SELECT 	0 AS EVAL_QNT_RESULT_REFITEM, '' AS EVALUATION_TERM,
+ 						0 AS DSTB_SCORE, 0 AS EVAL_SCORE, 0 AS CNVT_SCORE, -3 AS E_FACTOR_REFITEM,
+ 						#eval_item_refitem# AS EVAL_ITEM_REFITEM, 2 AS SEQ
+ 				  FROM 	DUAL
+ 				 --ORDER BY SEQ ASC
+ 				) A
+ 			 WHERE 	ROWNUM < 2
+ 			UNION
+ 			SELECT A.*
+ 			  FROM (
+ 				SELECT 	EVAL_QNT_RESULT_REFITEM, EVALUATION_TERM,
+ 						DSTB_SCORE, EVAL_SCORE, CNVT_SCORE, E_FACTOR_REFITEM, EVAL_ITEM_REFITEM, 1 AS SEQ
+ 				  FROM 	ICOMVEQR
+ 				 WHERE 	EVAL_ITEM_REFITEM = #eval_item_refitem#
+ 				   AND  E_FACTOR_REFITEM = -4
+ 				 UNION
+ 				SELECT 	0 AS EVAL_QNT_RESULT_REFITEM, '' AS EVALUATION_TERM,
+ 						0 AS DSTB_SCORE, 0 AS EVAL_SCORE, 0 AS CNVT_SCORE, -4 AS E_FACTOR_REFITEM,
+ 						#eval_item_refitem# AS EVAL_ITEM_REFITEM, 2 AS SEQ
+ 				  FROM 	DUAL
+ 				 --ORDER BY SEQ ASC
+ 				) A
+ 			 WHERE 	ROWNUM < 2
+ 			UNION
+ 			SELECT A.*
+ 			  FROM (
+ 				SELECT 	EVAL_QNT_RESULT_REFITEM, EVALUATION_TERM,
+ 						DSTB_SCORE, EVAL_SCORE, CNVT_SCORE, E_FACTOR_REFITEM, EVAL_ITEM_REFITEM, 1 AS SEQ
+ 				  FROM 	ICOMVEQR
+ 				 WHERE 	EVAL_ITEM_REFITEM = #eval_item_refitem#
+ 				   AND  E_FACTOR_REFITEM = -5
+ 				 UNION
+ 				SELECT 	0 AS EVAL_QNT_RESULT_REFITEM, '' AS EVALUATION_TERM,
+ 						0 AS DSTB_SCORE, 0 AS EVAL_SCORE, 0 AS CNVT_SCORE, -5 AS E_FACTOR_REFITEM,
+ 						#eval_item_refitem# AS EVAL_ITEM_REFITEM, 2 AS SEQ
+ 				  FROM 	DUAL
+ 				 --ORDER BY SEQ ASC
+ 				) A
+ 			 WHERE 	ROWNUM < 2
+ 			) A
+ 		ORDER BY E_FACTOR_REFITEM DESC
+
+	]]>
+	</method>
+
+	<method name="SR_getEvalTempSelectedFactor">
+	
+		SELECT A.TEMPLATE_NAME, C.FACTOR_NAME, C.SCALE_COUNT, C.E_FACTOR_REFITEM, D.ITEM_NAME 
+			, D.SEQ, MIN(F.SELECTED_SEQ) AS SELECTED_SEQ , D.E_FACTOR_ITEM_REFITEM, MAX(F.SELECTED_SEQ_SCORE) AS SELECTED_SEQ_SCORE
+	   	FROM ICOMVETH A, ICOMVETD B,
+	   	 	ICOMVEFH C, ICOMVEFD D, ICOMVEVL E, ICOMVESI F
+		WHERE A.HOUSE_CODE = '#house_code#'
+		AND A.HOUSE_CODE = B.HOUSE_CODE 
+		AND A.E_TEMPLATE_REFITEM = #e_template_refitem# 
+		AND A.E_TEMPLATE_REFITEM = B.E_TEMPLATE_REFITEM
+		AND B.HOUSE_CODE = C.HOUSE_CODE 
+		AND B.E_FACTOR_REFITEM = C.E_FACTOR_REFITEM 
+		AND C.HOUSE_CODE = D.HOUSE_CODE 
+		AND C.E_FACTOR_REFITEM = D.E_FACTOR_REFITEM
+		AND E.HOUSE_CODE = '#house_code#'
+		AND E.EVAL_VALUER_REFITEM = #eval_valuer_refitem#
+		AND E.HOUSE_CODE = F.HOUSE_CODE 
+		AND E.EVAL_VALUER_REFITEM = F.EVAL_VALUER_REFITEM
+		AND C.E_FACTOR_REFITEM = F.E_SELECTED_FACTOR
+		AND A.USE_FLAG = 'Y' 
+		AND C.USE_FLAG = 'Y' 
+		AND D.USE_FLAG = 'Y'
+		<if test="${qnt_flag}" operator="eq" value="Y">
+			AND C.QNT_FLAG = '#qnt_flag#'
+		</if>
+		<if test="${qnt_flag}" operator="eq" value="N">
+			AND C.QNT_FLAG = '#qnt_flag#'
+		</if>
+		GROUP BY A.TEMPLATE_NAME, C.FACTOR_NAME, C.SCALE_COUNT, C.E_FACTOR_REFITEM, D.ITEM_NAME, D.SEQ, D.E_FACTOR_ITEM_REFITEM		
+		ORDER BY C.E_FACTOR_REFITEM , D.SEQ
+
+
+	</method>
+
+	<method name="et_getEvabdlis6">
+	<![CDATA[
+		SELECT A.EVAL_NAME AS EVAL_NAME,
+			    D.TEMPLATE_NAME AS EVAL_TEMP,
+                a.from_date || '~' || a.to_date AS INTERVAL,
+				getsgname(B.SG_REFITEM) AS SG_NAME,
+				GETVENDORNAME('#house_code#', B.VENDOR_CODE) AS VENDOR_NAME,
+				B.EVAL_SCORE AS EVAL_SCORE,
+				A.EVAL_REFITEM AS EVAL_REFITEM,
+				A.E_TEMPLATE_REFITEM AS E_TEMPLATE_REFITEM,
+				B.EVAL_ITEM_REFITEM AS EVAL_ITEM_REFITEM,
+				D.TEMPLATE_TYPE AS TEMPLATE_TYPE
+		     , B.HUMAN_NO
+       		 , (SELECT NAME_LOC FROM ICOMHUMT WHERE HOUSE_CODE = B.HOUSE_CODE AND HUMAN_NO = B.HUMAN_NO) HUMAN_NAME
+       		 , (SELECT NVL(SUM(VESI.SELECTED_SEQ_SCORE) / COUNT(DISTINCT EVAL_VALUER_ID) ,0) AS SCORE   
+			    FROM ICOMVEVL VEVL,ICOMVESI VESI, ICOMVEFH VEFH                                       
+			    WHERE VEVL.HOUSE_CODE = B.HOUSE_CODE
+			      AND VEVL.HOUSE_CODE = VESI.HOUSE_CODE
+			      AND VESI.HOUSE_CODE = VEFH.HOUSE_CODE
+			      AND VESI.E_SELECTED_FACTOR = VEFH.E_FACTOR_REFITEM
+			      AND VEVL.EVAL_ITEM_REFITEM = B.EVAL_ITEM_REFITEM
+			      AND VEVL.EVAL_VALUER_REFITEM = VESI.EVAL_VALUER_REFITEM
+			      AND VEFH.QNT_FLAG = 'Y') AS QNT_Y_SCORE
+       		 , (SELECT NVL(SUM(VESI.SELECTED_SEQ_SCORE) / COUNT(DISTINCT EVAL_VALUER_ID) ,0) AS SCORE   
+			    FROM ICOMVEVL VEVL,ICOMVESI VESI, ICOMVEFH VEFH                                       
+			    WHERE VEVL.HOUSE_CODE = B.HOUSE_CODE
+			      AND VEVL.HOUSE_CODE = VESI.HOUSE_CODE
+			      AND VESI.HOUSE_CODE = VEFH.HOUSE_CODE
+			      AND VESI.E_SELECTED_FACTOR = VEFH.E_FACTOR_REFITEM
+			      AND VEVL.EVAL_ITEM_REFITEM = B.EVAL_ITEM_REFITEM
+			      AND VEVL.EVAL_VALUER_REFITEM = VESI.EVAL_VALUER_REFITEM
+			      AND VEFH.QNT_FLAG = 'N') AS QNT_N_SCORE
+        FROM ICOMVEVH A, ICOMVEVD B, ICOMVETH D
+		 WHERE A.HOUSE_CODE = '#house_code#'
+		   AND A.HOUSE_CODE = B.HOUSE_CODE
+		   AND A.HOUSE_CODE = D.HOUSE_CODE
+		   AND A.EVAL_REFITEM = B.EVAL_REFITEM
+		   AND A.EVAL_STATUS = '3'
+		   AND A.E_TEMPLATE_REFITEM = D.E_TEMPLATE_REFITEM
+        <OPT=S,S>   AND  A.EVAL_NAME LIKE '%' || ? || '%' </OPT>
+        <OPT=S,S>   AND  B.VENDOR_CODE = ? </OPT>
+ 		ORDER BY B.SG_REFITEM DESC,   B.VENDOR_CODE
+
+	]]>
+	</method>
+
+	<method name="et_getEvabdlis2">
+	<![CDATA[
+		SELECT DISTINCT A.EVAL_NAME AS EVAL_NAME,
+			   (SELECT TEMPLATE_NAME FROM ICOMVETH
+				 WHERE E_TEMPLATE_REFITEM = A.E_TEMPLATE_REFITEM) AS EVAL_TEMP,
+				--TO_CHAR(SYSDATE, 'YYYY/MM/DD') || '~' ||
+				--TO_CHAR(SYSDATE, 'YYYY/MM/DD') AS INTERVAL,
+				SUBSTR(A.FROM_DATE,0,4) || '/' || SUBSTR(A.FROM_DATE,5,2) ||  '/' || SUBSTR(A.FROM_DATE,7,2) || ' ~ ' ||
+    			SUBSTR(A.TO_DATE,0,4) || '/' || SUBSTR(A.TO_DATE,5,2) ||  '/' || SUBSTR(A.TO_DATE,7,2) AS INTERVAL,
+    			B.USER_NAME_LOC AS OPERATOR,
+ 				A.EVAL_REFITEM AS EVAL_REFITEM,
+				A.E_TEMPLATE_REFITEM AS E_TEMPLATE_REFITEM,
+				(SELECT COUNT(*) FROM ICOMVEVD WHERE EVAL_REFITEM = A.EVAL_REFITEM) AS V_CNT
+		  FROM ICOMVEVH A, ICOMLUSR B, ICOMVEVD C, ICOMVEVL D
+		 WHERE B.HOUSE_CODE = '#house_code#'
+		   AND A.ADD_USER_ID = B.USER_ID
+		   AND	A.EVAL_STATUS = '2'
+		   --AND A.E_TEMPLATE_REFITEM = 6
+		   AND A.EVAL_REFITEM = C.EVAL_REFITEM
+		   AND C.EVAL_ITEM_REFITEM = D.EVAL_ITEM_REFITEM
+		   AND D.EVAL_VALUER_ID = '#user_id#'
+		   AND D.COMPLETE_MARK = 'N'
+        <OPT=S,S>   AND  A.EVAL_NAME LIKE '%' || ? || '%' </OPT>
+ 		ORDER BY A.EVAL_REFITEM DESC
+
+	]]>
+	</method>
+
+	<method name="SR_getEvaluationVendorList">
+	<![CDATA[
+		SELECT E.EVAL_VALUER_REFITEM
+			, B.VENDOR_CODE
+			,  GETVENDORNAME(B.HOUSE_CODE,B.VENDOR_CODE) as NAME_LOC
+			, C.SG_NAME 
+			, (SELECT NAME_LOC FROM ICOMHUMT WHERE HOUSE_CODE = B.HOUSE_CODE AND HUMAN_NO = B.HUMAN_NO) HUMAN_NAME
+			, CASE WHEN E.COMPLETE_MARK = 'Y' THEN '완료'
+				WHEN E.COMPLETE_MARK = 'N' THEN '미완료'
+			  END COMPLETE
+			, A.E_TEMPLATE_REFITEM
+			, F.TEMPLATE_TYPE
+			, E.EVAL_ITEM_REFITEM
+			, B.HUMAN_NO
+			, B.EVAL_REFITEM
+			, B.EVAL_SCORE AS EVAL_SCORE_1
+			,(SELECT SUM(MAX(F1.SELECTED_SEQ_SCORE)) AS SCORE
+		       FROM  ICOMVETH A1, ICOMVETD B1, ICOMVEFH C1, ICOMVEFD D1, ICOMVEVL E1, ICOMVESI F1                                  
+		        WHERE A1.HOUSE_CODE = A.HOUSE_CODE
+		              AND A1.HOUSE_CODE = B1.HOUSE_CODE 
+		              AND A1.E_TEMPLATE_REFITEM = A.E_TEMPLATE_REFITEM 
+		              AND A1.E_TEMPLATE_REFITEM = B1.E_TEMPLATE_REFITEM
+		              AND B1.HOUSE_CODE = C1.HOUSE_CODE 
+		              AND B1.E_FACTOR_REFITEM = C1.E_FACTOR_REFITEM 
+		              AND C1.HOUSE_CODE = D1.HOUSE_CODE 
+		              AND C1.E_FACTOR_REFITEM = D1.E_FACTOR_REFITEM
+		              AND E1.HOUSE_CODE = E.HOUSE_CODE
+		              AND E1.EVAL_VALUER_REFITEM = E.EVAL_VALUER_REFITEM
+		              AND E1.HOUSE_CODE = F1.HOUSE_CODE 
+		              AND E1.EVAL_VALUER_REFITEM = F1.EVAL_VALUER_REFITEM
+		              AND C1.E_FACTOR_REFITEM = F1.E_SELECTED_FACTOR
+		              AND F1.SELECTED_SEQ = D1.E_FACTOR_ITEM_REFITEM
+		              AND A1.USE_FLAG = 'Y' 
+		              AND C1.USE_FLAG = 'Y' 
+		              AND D1.USE_FLAG = 'Y'   
+		       GROUP BY E1.HOUSE_CODE, F1.EVAL_VALUER_REFITEM, E1.COMPLETE_MARK, F1.E_SELECTED_FACTOR , F1.E_SELECTED_FACTOR ) AS EVAL_SCORE
+		FROM ICOMVEVH A, ICOMVEVD B , SSGGL C, ICOMVNGL D, ICOMVEVL E, ICOMVETH F
+		WHERE  A.HOUSE_CODE = '#house_code#' 
+		AND A.EVAL_REFITEM = #eval_refitem#
+		AND A.HOUSE_CODE = B.HOUSE_CODE
+  		AND B.HOUSE_CODE = C.HOUSE_CODE(+)
+  		AND A.HOUSE_CODE = D.HOUSE_CODE
+  		AND A.HOUSE_CODE = E.HOUSE_CODE
+  		AND A.HOUSE_CODE = F.HOUSE_CODE
+		AND A.EVAL_REFITEM = B.EVAL_REFITEM
+		AND B.SG_REFITEM = C.SG_REFITEM(+)
+		AND B.VENDOR_CODE = D.VENDOR_CODE
+		AND A.E_TEMPLATE_REFITEM = F.E_TEMPLATE_REFITEM
+		AND B.EVAL_ITEM_REFITEM = E.EVAL_ITEM_REFITEM 
+	--	AND E.EVAL_VALUER_ID = '#user_id#'
+ 		ORDER BY E.EVAL_VALUER_REFITEM ASC
+	]]>
+	</method>
+	
+	<method name="SR_getEvaluationVendorList_2">
+	<![CDATA[
+		SELECT E.EVAL_VALUER_REFITEM
+			, B.VENDOR_CODE
+			,  GETVENDORNAME(B.HOUSE_CODE,B.VENDOR_CODE) as VENDOR_NAME
+			, C.SG_NAME 
+			, (SELECT NAME_LOC FROM ICOMHUMT WHERE HOUSE_CODE = B.HOUSE_CODE AND HUMAN_NO = B.HUMAN_NO) HUMAN_NAME
+			, CASE WHEN E.COMPLETE_MARK = 'Y' THEN '완료'
+				WHEN E.COMPLETE_MARK = 'N' THEN '미완료'
+			  END COMPLETE
+			, A.E_TEMPLATE_REFITEM
+			, F.TEMPLATE_TYPE
+			, E.EVAL_ITEM_REFITEM
+			, B.HUMAN_NO
+			, CASE WHEN B.INPUT_FROM_DATE IS NULL OR B.INPUT_FROM_DATE = '' THEN '' ELSE B.INPUT_FROM_DATE || '~' || B.INPUT_TO_DATE END AS INPUT_PERIOD 
+			, B.EVAL_REFITEM
+			,(SELECT EVAL_SCORE 
+		      FROM ICOMVEVD
+		       WHERE HOUSE_CODE = A.HOUSE_CODE
+		       AND EVAL_REFITEM = A.EVAL_REFITEM      
+		     ) AS EVAL_SCORE
+		FROM ( SELECT * 
+	             FROM ICOMVEVH 
+	            WHERE DOC_NO IN ( SELECT DOC_NO 
+	                                FROM ICOMVEVH
+	                               WHERE EVAL_REFITEM = #eval_refitem#
+	                            ) 
+	              AND EVAL_REFITEM != #eval_refitem#
+             )  A, ICOMVEVD B , SSGGL C, ICOMVNGL D, ICOMVEVL E, ICOMVETH F
+		WHERE  A.HOUSE_CODE = '#house_code#' 
+		AND A.HOUSE_CODE = B.HOUSE_CODE
+  		AND B.HOUSE_CODE = C.HOUSE_CODE(+)
+  		AND A.HOUSE_CODE = D.HOUSE_CODE
+  		AND A.HOUSE_CODE = E.HOUSE_CODE
+  		AND A.HOUSE_CODE = F.HOUSE_CODE
+		AND A.EVAL_REFITEM = B.EVAL_REFITEM
+		AND B.SG_REFITEM = C.SG_REFITEM(+)
+		AND B.VENDOR_CODE = D.VENDOR_CODE
+		AND A.E_TEMPLATE_REFITEM = F.E_TEMPLATE_REFITEM
+		AND B.EVAL_ITEM_REFITEM = E.EVAL_ITEM_REFITEM 
+	--	AND E.EVAL_VALUER_ID = '#user_id#'
+ 		ORDER BY E.EVAL_VALUER_REFITEM ASC
+	]]>
+	</method>
+	
+	<method name="et_getEvabdlis5">
+	<![CDATA[
+		SELECT	C.EVAL_NAME AS EVAL_NAME,
+ 			    D.TEMPLATE_NAME AS EVAL_TEMP,
+ 			    TO_CHAR(SYSDATE, 'YYYY/MM/DD') || '~' ||
+ 			    TO_CHAR(SYSDATE, 'YYYY/MM/DD') AS INTERVAL,
+ 				getsgname(B.SG_REFITEM) AS SG_NAME,
+ 				GETVENDORNAME('#house_code#', B.VENDOR_CODE) AS EVAL_VENDOR,
+ 				GETUSERNAME('#house_code#', A.EVAL_VALUER_ID, 'LOC') AS OPERATOR,
+ 				C.E_TEMPLATE_REFITEM AS E_TEMPLATE_REFITEM,
+ 				B.VENDOR_CODE AS VENDOR_CODE,
+ 				C.EVAL_REFITEM AS EVAL_REFITEM,
+ 				B.EVAL_ITEM_REFITEM AS EVAL_ITEM_REFITEM,
+				D.TEMPLATE_TYPE AS TEMPLATE_TYPE
+ 		FROM   ICOMVEVL A, ICOMVEVD B, ICOMVEVH C, ICOMVETH D
+ 		WHERE  A.COMPLETE_MARK = 'Y'
+ 		AND    A.EVAL_VALUER_ID = '#user_id#'
+ 		AND	A.EVAL_ITEM_REFITEM = B.EVAL_ITEM_REFITEM
+ 		AND	B.EVAL_REFITEM = C.EVAL_REFITEM
+		AND 	C.E_TEMPLATE_REFITEM = D.E_TEMPLATE_REFITEM
+        <OPT=S,S>   AND  C.EVAL_NAME LIKE '%' || ? || '%' </OPT>
+        <OPT=S,S>   AND  B.VENDOR_CODE = ? </OPT>
+ 		ORDER BY B.SG_REFITEM DESC, C.EVAL_REFITEM 
+	]]>
+	</method>
+
+	<method name="et_setEvabdupd1_1">
+	<![CDATA[
+			 UPDATE ICOMVEVH
+			 SET	 FROM_DATE = '#fromdate#',
+			 	 	 TO_DATE = '#todate#',
+			 	 	 EVAL_STATUS = '#flag#',
+			   	 CHANGE_DATE = TO_CHAR(SYSDATE,'YYYYMMDD')
+			 WHERE	 EVAL_REFITEM = '#eval_refitem#'
+			   and	 house_code = '#house_code#'
+	]]>
+	</method>
+
+	<method name="et_setEvabdupd1_2">
+	<![CDATA[
+		 DELETE FROM ICOMVEVD
+					 WHERE  EVAL_REFITEM = '#eval_refitem#'
+	]]>
+	</method>
+
+	<method name="et_setEvabdupd1_3">
+	<![CDATA[
+		 INSERT INTO ICOMVEVD (
+				   house_code,
+				   EVAL_ITEM_REFITEM,
+				   SG_REFITEM,
+				   VENDOR_CODE,
+				   EVAL_REFITEM)
+				 select  '#house_code#',
+				   NVL(max(EVAL_ITEM_REFITEM),0)+1,
+				   '#i_sg_refitem#',
+				   '#i_vendor_code#',
+				   '#eval_refitem#' from icomvevd
+	]]>
+	</method>
+
+	<method name="et_setEvabdupd1_4">
+	<![CDATA[
+		 DELETE FROM ICOMVEVL
+				 WHERE  EVAL_ITEM_REFITEM IN (SELECT EVAL_ITEM_REFITEM FROM ICOMVEVD
+					 							WHERE  EVAL_REFITEM = '#eval_refitem#')
+	]]>
+	</method>
+
+	<method name="et_setEvabdupd1_5">
+	<![CDATA[
+		INSERT INTO ICOMVEVL (
+					   house_code,
+					   EVAL_VALUER_REFITEM,
+					   DEPT,
+					   EVAL_VALUER_ID,
+					   EVAL_DATE,
+					   EVAL_ITEM_REFITEM )
+
+		select '#house_code#',
+					   NVL(max(EVAL_VALUER_REFITEM),0)+1,
+					   '#i_dept#',
+					   '#i_id#',
+					   TO_CHAR(SYSDATE,'YYYYMMDD'),
+					   #getCurrVal# 
+		from icomvevl
+	]]>
+	</method>
+
+	<method name="currvalForMssql">
+	<![CDATA[
+		select NVL(max(#columnName#),0) as currVal
+  		  from #tableName#
+  		 where house_code='#house_code#'
+	]]>
+	</method>
+
+	<method name="SR_getTmpList">
+		SELECT A.E_TEMPLATE_REFITEM
+			, A.TEMPLATE_NAME
+			, A.CHANGE_DATE
+			, B.USER_NAME_LOC
+			, (CASE WHEN A.TEMPLATE_TYPE = 1 THEN '일반'
+			   WHEN A.TEMPLATE_TYPE= 2 THEN '공동'
+			   END) AS TEMP_TYPE
+	 	FROM ICOMVETH A,ICOMLUSR B
+		WHERE A.ADD_USER_ID = B.USER_ID
+		  AND A.USE_FLAG = 'Y'
+		  AND A.HOUSE_CODE = B.HOUSE_CODE
+		  AND B.HOUSE_CODE = '#house_code#'
+		  
+		<if test="${tmp_value}" operator="eq" value="true">
+			AND A.TEMPLATE_NAME LIKE '%#tmp_name#%'
+		</if>
+		
+	 	ORDER BY A.E_TEMPLATE_REFITEM
+	</method>
+
+
+
+	<method name="et_getEvabdins1">
+	
+		 SELECT A.VENDOR_CODE     AS VENDOR_CODE,
+				B.VENDOR_NAME_LOC AS NAME_LOC,
+				GETICOMCODE1(B.HOUSE_CODE,'M634', B.CLASS_GRADE) AS CLASS_GRADE ,
+				C.SG_NAME AS SG_NAME,
+				CASE GETQTYCOUNT(#evaltemp_num#) WHEN '0' THEN 'N' ELSE 'Y' END AS QTY_YN,
+				C.SG_REFITEM AS SG_REFITEM
+		   FROM SSGVN A, ICOMVNGL B, SSGGL C
+		
+		  WHERE	1 = 1
+		 <if test="${mode_type}"  operator="eq" value="ITEM3">
+		 	AND A.SG_REFITEM IN	('#sg_refitem#')
+		 </if>
+		 <if test="${mode_type}"  operator="eq" value="ITEM2">
+		 	AND A.SG_REFITEM IN	(SELECT  
+									    L3.SG_REFITEM   
+									FROM   
+									    (SELECT
+									        HOUSE_CODE,
+									        SG_REFITEM,
+									        SG_NAME,
+									        PARENT_SG_REFITEM    
+									    FROM SSGGL
+									    WHERE LEVEL_COUNT = 3
+									      AND USE_FLAG = 'Y') L3,
+									    (SELECT
+									        HOUSE_CODE,
+									        SG_REFITEM,
+									        SG_NAME,
+									        PARENT_SG_REFITEM    
+									    FROM SSGGL
+									    WHERE LEVEL_COUNT = 2
+									      AND USE_FLAG = 'Y'
+									      AND SG_REFITEM = '#sg_refitem#') L2     
+									WHERE 1 = 1
+									  AND L3.HOUSE_CODE = '#house_code#'
+									  AND L3.HOUSE_CODE = L2.HOUSE_CODE
+									  AND L3.PARENT_SG_REFITEM = L2.SG_REFITEM )
+		 </if>
+		 <if test="${mode_type}"  operator="eq" value="ITEM1">
+		 	AND A.SG_REFITEM IN	(SELECT  
+								    L3.SG_REFITEM   
+								FROM   
+								    (SELECT
+								        HOUSE_CODE,
+								        SG_REFITEM,
+								        SG_NAME,
+								        PARENT_SG_REFITEM    
+								    FROM SSGGL
+								    WHERE LEVEL_COUNT = 3
+								      AND USE_FLAG = 'Y') L3,
+								    (SELECT
+								        HOUSE_CODE,
+								        SG_REFITEM,
+								        SG_NAME,
+								        PARENT_SG_REFITEM    
+								    FROM SSGGL
+								    WHERE LEVEL_COUNT = 2
+								      AND USE_FLAG = 'Y') L2 ,
+								    (SELECT
+								        HOUSE_CODE,
+								        SG_REFITEM, 
+								        SG_NAME    
+								    FROM SSGGL
+								    WHERE LEVEL_COUNT = 1
+								      AND USE_FLAG = 'Y'
+								      AND SG_REFITEM = '#sg_refitem#') L1     
+								WHERE 1 = 1
+								  AND L3.HOUSE_CODE = '#house_code#'
+								  AND L3.HOUSE_CODE = L2.HOUSE_CODE
+								  AND L2.HOUSE_CODE = L1.HOUSE_CODE
+								  AND L3.PARENT_SG_REFITEM = L2.SG_REFITEM 
+								  AND L2.PARENT_SG_REFITEM = L1.SG_REFITEM)
+		 </if>		 
+			AND	A.REGISTRY_FLAG = 'Y'
+			AND	A.APPLY_FLAG    = 'Y'
+			AND	A.VENDOR_CODE   = B.VENDOR_CODE
+			AND	A.HOUSE_CODE    = B.HOUSE_CODE
+			AND	A.HOUSE_CODE    = C.HOUSE_CODE
+			AND	B.HOUSE_CODE    = '#house_code#'
+			AND	B.STATUS <![CDATA[<>]]> 'D'
+			AND A.SG_REFITEM    = C.SG_REFITEM
+	</method>
+	<method name="et_setEvabdins1_0">
+	<![CDATA[
+		 SELECT NVL(max(EVAL_REFITEM),0)+1 as MAX_EVAL_REFITEM
+		   FROM ICOMVEVH 
+		  WHERE HOUSE_CODE  = '#house_code#'
+	]]>
+	</method>
+
+	<method name="et_setEvabdins1_1">
+	<![CDATA[
+		 INSERT INTO ICOMVEVH (
+				   HOUSE_CODE,
+				   EVAL_REFITEM,
+				   EVAL_NAME,
+				   EVAL_STATUS,
+				   E_TEMPLATE_REFITEM,
+				   FROM_DATE,
+				   TO_DATE,
+				   AUTO_FLAG,
+				   ADD_DATE,
+				   CHANGE_DATE,
+				   ADD_USER_ID,
+				   DOC_TYPE,
+				   DOC_NO,
+				   DOC_COUNT)
+				select
+				   '#house_code#',
+				   #max_eval_refitem#,
+				   '#evalname#',
+				   '#flag#',
+				   '#evaltemp_num#',
+				   '#fromdate#',
+				   '#todate#',
+				   '#auto#',
+				   TO_CHAR(SYSDATE,'YYYYMMDD'),
+				   TO_CHAR(SYSDATE,'YYYYMMDD'),
+				   '#user_id#' ,
+				   '#DOC_TYPE#',
+				   '#DOC_NO#',
+				   '#DOC_COUNT#'
+				  from dual
+	]]>
+	</method>
+
+	<method name="et_setEvabdins1_prop">
+	<![CDATA[
+		 INSERT INTO ICOMVEVH (
+				   HOUSE_CODE,
+				   EVAL_REFITEM,
+				   EVAL_NAME,
+				   EVAL_STATUS,
+				   E_TEMPLATE_REFITEM,
+				   FROM_DATE,
+				   TO_DATE,
+				   AUTO_FLAG,
+				   ADD_DATE,
+				   CHANGE_DATE,
+				   ADD_USER_ID,
+				   DOC_TYPE,
+				   DOC_NO,
+				   DOC_COUNT,
+				   ATTACH_NO)
+				select
+				   '#house_code#',
+				   #max_eval_refitem#,
+				   '#evalname#',
+				   '#flag#',
+				   '#evaltemp_num#',
+				   '#fromdate#',
+				   '#todate#',
+				   '#auto#',
+				   TO_CHAR(SYSDATE,'YYYYMMDD'),
+				   TO_CHAR(SYSDATE,'YYYYMMDD'),
+				   '#user_id#' ,
+				   '#DOC_TYPE#',
+				   '#DOC_NO#',
+				   '#DOC_COUNT#',
+				   '#ATTACH_NO#'
+				  from dual
+	]]>
+	</method>
+
+	<method name="et_setEvabdins1_2">
+	<![CDATA[
+		 INSERT INTO ICOMVEVD (
+					house_code,
+					EVAL_ITEM_REFITEM,
+					SG_REFITEM,
+					VENDOR_CODE,
+					EVAL_REFITEM)
+				select
+					'#house_code#',
+					NVL(max(EVAL_ITEM_REFITEM),0)+1,
+					'#i_sg_refitem#',
+					'#i_vendor_code#',
+					#max_eval_refitem#
+				  from icomvevd
+				 where house_code = '#house_code#'
+	]]>
+	</method>
+
+	<method name="et_setEvabdins1_2_1">
+	<![CDATA[
+		 INSERT INTO ICOMVEVD (
+					house_code,
+					EVAL_ITEM_REFITEM,
+					SG_REFITEM,
+					VENDOR_CODE,
+					EVAL_REFITEM,
+					HUMAN_NO)
+				select
+					'#house_code#',
+					NVL(max(EVAL_ITEM_REFITEM),0)+1,
+					'#i_sg_refitem#',
+					'#i_vendor_code#',
+					#max_eval_refitem#,
+					'#i_human_no#'
+				  from icomvevd
+				 where house_code = '#house_code#'
+	]]>
+	</method>
+	
+	<method name="et_setEvabdins1_2_2">
+	<![CDATA[
+		 INSERT INTO ICOMVEVD (
+					house_code,
+					EVAL_ITEM_REFITEM,
+					SG_REFITEM,
+					VENDOR_CODE,
+					EVAL_REFITEM,
+					HUMAN_NO,
+					INPUT_FROM_DATE,
+					INPUT_TO_DATE)
+				select
+					'#house_code#',
+					NVL(max(EVAL_ITEM_REFITEM),0)+1,
+					'#i_sg_refitem#',
+					'#i_vendor_code#',
+					#max_eval_refitem#,
+					'#i_human_no#',
+					'#input_from_date#',
+					'#input_to_date#'
+				  from icomvevd
+				 where house_code = '#house_code#'
+	]]>
+	</method>
+
+	<method name="et_setEvabdins1_3">
+	<![CDATA[
+		 INSERT INTO ICOMVEVL (
+					HOUSE_CODE,
+					EVAL_VALUER_REFITEM,
+					DEPT,
+					EVAL_VALUER_ID,
+					EVAL_DATE,
+					EVAL_ITEM_REFITEM )
+
+		select
+					'#house_code#',
+					NVL(max(EVAL_VALUER_REFITEM),0)+1,
+					'#i_dept#',
+					'#i_id#',
+					TO_CHAR(SYSDATE,'YYYYMMDD'),
+					#getCurrVal# 
+		from icomvevl
+	]]>
+	</method>
+	
+		<method name="et_setEvabdins1_3_1">
+	<![CDATA[
+		 INSERT INTO ICOMVEVL (
+					HOUSE_CODE,
+					EVAL_VALUER_REFITEM,
+					EVAL_VALUER_DEPT_NAME,
+					EVAL_VALUER_ID,
+					EVAL_VALUER_NAME,
+					EVAL_DATE,
+					EVAL_ITEM_REFITEM )
+
+		select
+					'#house_code#',
+					NVL(max(EVAL_VALUER_REFITEM),0)+1,
+					'#i_dept#',
+					'#i_id#',
+					'#i_name#',
+					TO_CHAR(SYSDATE,'YYYYMMDD'),
+					#getCurrVal# 
+		from icomvevl
+	]]>
+	</method>
+
+	<method name="SR_getEvalTempFactorList">
+	<![CDATA[
+		SELECT A.TEMPLATE_NAME
+			, C.FACTOR_NAME
+			, C.SCALE_COUNT
+			, C.E_FACTOR_REFITEM
+			, D.ITEM_NAME 
+			, D.SEQ
+			, B.WEIGHT
+			, D.ITEM_SCORE 
+			, D.E_FACTOR_ITEM_REFITEM 
+		FROM ICOMVETH A, ICOMVETD B, ICOMVEFH C, ICOMVEFD D
+		WHERE A.HOUSE_CODE = '#house_code#'
+		 AND A.HOUSE_CODE = B.HOUSE_CODE
+		 AND A.HOUSE_CODE = C.HOUSE_CODE
+		 AND A.HOUSE_CODE = D.HOUSE_CODE
+		 AND A.E_TEMPLATE_REFITEM = #e_template_refitem# 
+		 AND A.E_TEMPLATE_REFITEM = B.E_TEMPLATE_REFITEM
+		 AND B.E_FACTOR_REFITEM = C.E_FACTOR_REFITEM 
+		 AND C.E_FACTOR_REFITEM = D.E_FACTOR_REFITEM
+		 AND A.USE_FLAG = 'Y' 
+		 AND C.USE_FLAG = 'Y' 
+		 AND D.USE_FLAG = 'Y'
+		/*  AND C.QNT_FLAG = 'N'	정성 정량 상관없이 평가가능하게 수정 (2012-07-27) */
+	     ORDER BY  C.E_FACTOR_REFITEM , D.SEQ
+	]]>
+	</method>
+
+	<method name="SR_insertEvaluerScore_1">
+	<![CDATA[
+		 INSERT INTO ICOMVESI (
+		  		   HOUSE_CODE,
+				   E_SELECTED_ITEM_REFITEM,
+				   E_SELECTED_FACTOR,
+				   SELECTED_SEQ,
+				   EVAL_VALUER_REFITEM,
+				   SELECTED_SEQ_SCORE )
+		 select
+				   ?,
+				   NVL(max(E_SELECTED_ITEM_REFITEM),0)+1,
+				   ?,
+				   ?,
+				   ?,
+				   ? 
+		from icomvesi
+	]]>
+	</method>
+
+	<method name="SR_insertEvaluerScore_2">
+	<![CDATA[
+		 UPDATE ICOMVEVL SET
+				   NOTE = ? ,
+				   EVAL_VALUER_ID = ?,
+				   COMPLETE_MARK = 'Y'
+		  WHERE HOUSE_CODE = ?
+		    AND EVAL_VALUER_REFITEM = ?
+	]]>
+	</method>
+
+	<method name="SR_checkComplete_1">
+	<![CDATA[
+		SELECT E.TEMPLATE_TYPE, A.DOC_TYPE, A.DOC_NO, A.DOC_COUNT
+		FROM ICOMVEVH A, ICOMVETH E
+		WHERE A.HOUSE_CODE = '#house_code#' 
+		  AND A.HOUSE_CODE = E.HOUSE_CODE
+		  AND A.E_TEMPLATE_REFITEM = E.E_TEMPLATE_REFITEM
+		  AND A.EVAL_REFITEM = #eval_refitem#
+	]]>
+	</method>
+
+	<method name="SR_checkComplete_2">
+	<![CDATA[
+		SELECT T1.EVAL_VALUER_REFITEM
+		 	  ,T1.COMPLETE_MARK
+		 	  ,CASE WHEN T2.SCORE IS NULL THEN 0 ELSE T2.SCORE END SCORE
+		 	  , T1.DEPT 
+		FROM ICOMVEVL T1,                                                  
+			(   SELECT A.HOUSE_CODE, B.EVAL_VALUER_REFITEM, SUM(B.SELECTED_SEQ_SCORE) AS SCORE 
+    			FROM ICOMVEVL A,ICOMVESI B                                        
+    			WHERE A.HOUSE_CODE = '#house_code#'
+    			  AND A.HOUSE_CODE = B.HOUSE_CODE
+    			  AND A.EVAL_ITEM_REFITEM = #eval_item_refitem#
+    			  AND A.EVAL_VALUER_REFITEM = B.EVAL_VALUER_REFITEM 
+    			GROUP BY A.HOUSE_CODE, B.EVAL_VALUER_REFITEM, A.COMPLETE_MARK
+			) T2                                                    
+		WHERE T1.HOUSE_CODE = T2.HOUSE_CODE (+)
+		  AND T1.EVAL_ITEM_REFITEM = #eval_item_refitem#
+		  AND T1.EVAL_VALUER_REFITEM = T2.EVAL_VALUER_REFITEM(+) 
+	]]>
+	</method>
+
+	<method name="SR_checkComplete_3">
+	<![CDATA[
+		 UPDATE ICOMVEVD 
+		 SET EVAL_SCORE = TRUNC('#eval_score#', 2)
+		 WHERE HOUSE_CODE = '#house_code#'
+		   AND EVAL_REFITEM = '#eval_refitem#'
+		   AND EVAL_ITEM_REFITEM = '#eval_item_refitem#'
+	]]>
+	</method>
+
+	<method name="SR_checkComplete_4">
+	<![CDATA[
+		SELECT COUNT(C.COMPLETE_MARK) AS CNT
+		FROM ICOMVEVH A, ICOMVEVD B, ICOMVEVL C
+		WHERE A.HOUSE_CODE = '#house_code#'
+		  AND A.HOUSE_CODE = B.HOUSE_CODE
+		  AND A.HOUSE_CODE = C.HOUSE_CODE
+		  AND A.EVAL_REFITEM = B.EVAL_REFITEM
+		  AND B.EVAL_ITEM_REFITEM = C.EVAL_ITEM_REFITEM
+		  AND A.EVAL_REFITEM = #eval_refitem#
+		  AND C.COMPLETE_MARK = 'N'
+	]]>
+	</method>
+	
+	<method name="SR_checkComplete_4_1">
+	<![CDATA[
+		SELECT COUNT(C.COMPLETE_MARK) AS CNT
+		FROM ICOMVEVH A, ICOMVEVD B, ICOMVEVL C
+		WHERE A.HOUSE_CODE = '#house_code#'
+		  AND A.HOUSE_CODE = B.HOUSE_CODE
+		  AND A.HOUSE_CODE = C.HOUSE_CODE
+		  AND A.EVAL_REFITEM = B.EVAL_REFITEM
+		  AND B.EVAL_ITEM_REFITEM = C.EVAL_ITEM_REFITEM
+		  AND A.DOC_NO = ( SELECT DOC_NO FROM ICOMVEVH WHERE HOUSE_CODE = '#house_code#' AND EVAL_REFITEM = #eval_refitem# )
+		  AND C.COMPLETE_MARK = 'N'
+	]]>
+	</method>
+
+	<method name="SR_checkComplete_5">
+	<![CDATA[
+		 UPDATE ICOMVEVH 
+		 SET EVAL_STATUS = 3
+		 WHERE HOUSE_CODE = '#house_code#' 
+		   AND EVAL_REFITEM = '#eval_refitem#'
+	]]>
+	</method>
+
+	<method name="SR_getValuerList1">
+	<![CDATA[
+		SELECT 	B.EVAL_VALUER_REFITEM,
+	 					DECODE(B.EVAL_VALUER_NAME, NULL, C.USER_NAME_LOC, B.EVAL_VALUER_NAME)  USER_NAME_LOC,
+	 					C.DEPT,
+	 					B.NOTE
+			  FROM 	ICOMVEVD A, ICOMVEVL B, ICOMLUSR C
+			 WHERE 	A.HOUSE_CODE = '#house_code#'
+			   AND  A.HOUSE_CODE = B.HOUSE_CODE
+			   AND  A.HOUSE_CODE = C.HOUSE_CODE
+			   AND  A.EVAL_ITEM_REFITEM = #eval_item_refitem#
+			   AND 	A.EVAL_ITEM_REFITEM = B.EVAL_ITEM_REFITEM
+			   AND 	B.EVAL_VALUER_ID = C.USER_ID
+			 --  AND 	B.EVAL_VALUER_ID = '#user_id#'
+	]]>
+	</method>
+
+	
+	<method name="SR_checkComplete_BD">
+		<![CDATA[
+			UPDATE ICOYBDHD
+			SET EVAL_FLAG = '#eval_flag#'
+			WHERE HOUSE_CODE = '#house_code#'
+			AND BID_NO = '#doc_no#'
+			AND BID_COUNT = '#doc_count#'
+		]]>
+	</method>
+	
+	<method name="SR_checkComplete_RA">
+		<![CDATA[
+			UPDATE ICOYRAHD
+			SET EVAL_FLAG = '#eval_flag#'
+			WHERE HOUSE_CODE = '#house_code#'
+			AND RA_NO = '#doc_no#'
+			AND RA_COUNT = '#doc_count#'
+		]]>
+	</method>
+	
+	<method name="SR_checkComplete_RQ">
+		<![CDATA[
+			UPDATE ICOYRQHD
+			SET EVAL_FLAG = '#eval_flag#'
+			WHERE HOUSE_CODE = '#house_code#'
+			AND RFQ_NO = '#doc_no#'
+			AND RFQ_COUNT = '#doc_count#'
+		]]>
+	</method>
+	
+	<method name="SR_checkComplete_IV">
+		<![CDATA[
+			UPDATE ICOYIVHD
+			SET EVAL_FLAG = (  SELECT CASE WHEN COUNT(*) = 0 THEN 'C'
+							               ELSE 'P' END
+							     FROM ICOMVEVH VH, ICOMVEVD VD, ICOMVEVL VL
+							    WHERE VH.HOUSE_CODE = VD.HOUSE_CODE
+							      AND VH.EVAL_REFITEM = VD.EVAL_REFITEM
+							      AND VD.HOUSE_CODE = VL.HOUSE_CODE
+							      AND VD.EVAL_ITEM_REFITEM = VL.EVAL_ITEM_REFITEM
+							      AND VL.COMPLETE_MARK = 'N'
+							      AND VH.HOUSE_CODE = '#house_code#'
+							      AND DOC_NO = '#doc_no#'
+							 )
+			WHERE HOUSE_CODE = '#house_code#'
+			AND INV_NO = '#doc_no#'
+
+		]]>
+	</method>
+	
+	<method name="SR_checkComplete_PO">
+		<![CDATA[
+			UPDATE ICOYPOHD
+			SET EVAL_FLAG = '#eval_flag#'
+			WHERE HOUSE_CODE = '#house_code#'
+			AND PO_NO = '#doc_no#'
+
+		]]>
+	</method>
+	
+	<method name="SR_getEvaluationVendorList_1">
+	<![CDATA[
+		SELECT E.EVAL_VALUER_REFITEM
+			, B.VENDOR_CODE
+			, GETVENDORNAME(B.HOUSE_CODE,B.VENDOR_CODE)as NAME_LOC
+			, '' SG_NAME
+			, CASE WHEN E.COMPLETE_MARK = 'Y' THEN '완료'
+				WHEN E.COMPLETE_MARK = 'N' THEN '미완료'
+			  END COMPLETE
+			, A.E_TEMPLATE_REFITEM
+			, F.TEMPLATE_TYPE
+			, E.EVAL_ITEM_REFITEM
+			, A.FROM_DATE || ' ~ ' || A.TO_DATE AS EVAL_DATE
+			, E.EVAL_VALUER_ID
+   			, E.EVAL_VALUER_NAME
+   			, E.EVAL_VALUER_DEPT_NAME
+   			, A.ATTACH_NO
+   			, (SELECT SUM(SELECTED_SEQ_SCORE) FROM ICOMVESI WHERE HOUSE_CODE = E.HOUSE_CODE AND EVAL_VALUER_REFITEM = E.EVAL_VALUER_REFITEM) 
+   			  * (SELECT BID_EVAL_SCORE FROM ICOYBDHD WHERE HOUSE_CODE = A.HOUSE_CODE AND BID_NO = A.DOC_NO AND BID_COUNT = A.DOC_COUNT) EVAL_SCORE
+		FROM ICOMVEVH A, ICOMVEVD B , ICOMVNGL D, ICOMVEVL E, ICOMVETH F
+		WHERE  A.HOUSE_CODE = '#house_code#' 
+		AND A.EVAL_REFITEM = #eval_refitem#
+		AND A.HOUSE_CODE = B.HOUSE_CODE
+  		AND A.HOUSE_CODE = D.HOUSE_CODE
+  		AND A.HOUSE_CODE = E.HOUSE_CODE
+  		AND A.HOUSE_CODE = F.HOUSE_CODE
+		AND A.EVAL_REFITEM = B.EVAL_REFITEM
+		AND B.VENDOR_CODE = D.VENDOR_CODE
+		AND A.E_TEMPLATE_REFITEM = F.E_TEMPLATE_REFITEM
+		AND B.EVAL_ITEM_REFITEM = E.EVAL_ITEM_REFITEM 
+		AND E.EVAL_VALUER_ID = '#user_id#'
+ 		ORDER BY E.EVAL_VALUER_REFITEM ASC
+	]]>
+	</method>
+	
+	<method name="et_getEvaluationValuerList">
+	<![CDATA[
+		SELECT DISTINCT
+     		  A.E_TEMPLATE_REFITEM
+    		, E.EVAL_VALUER_DEPT_NAME
+    		, E.EVAL_VALUER_ID
+    		, E.EVAL_VALUER_NAME
+  		FROM ICOMVEVH A, ICOMVEVD B , ICOMVEVL E, ICOMVETH F
+  		WHERE A.HOUSE_CODE = '#house_code#' 
+  		  AND A.EVAL_REFITEM =  #eval_refitem#
+  		  AND A.HOUSE_CODE = B.HOUSE_CODE
+  		  AND A.HOUSE_CODE = E.HOUSE_CODE
+  		  AND A.HOUSE_CODE = F.HOUSE_CODE
+  		  AND A.EVAL_REFITEM = B.EVAL_REFITEM
+  		  AND A.E_TEMPLATE_REFITEM = F.E_TEMPLATE_REFITEM
+ 		  AND B.EVAL_ITEM_REFITEM = E.EVAL_ITEM_REFITEM 
+   		ORDER BY  E.EVAL_VALUER_NAME
+	]]>
+	</method>
+	
+	
+	
+	<method name="et_getEvabdlis7">
+		 <![CDATA[
+		 
+SELECT VENDOR_CODE
+    , GETVENDORNAME(A.HOUSE_CODE, A.VENDOR_CODE) AS VENDOR_NAME
+    , ROUND(A.AVG_SCORE_1/B.SUM_SCORE * B.TECH_DQ * B.BID_EVAL_SCORE, 2)  AS AVG_SCORE_1      
+    , ROUND(A.AVG_SCORE_2/B.SUM_SCORE * B.TECH_DQ * B.BID_EVAL_SCORE, 2)  AS AVG_SCORE_2  
+    , ROUND(A.AVG_SCORE_3/B.SUM_SCORE * B.TECH_DQ * B.BID_EVAL_SCORE, 2)  AS AVG_SCORE_3  
+FROM (
+		 SELECT HOUSE_CODE, VENDOR_CODE
+            , GETVENDORNAME(HOUSE_CODE, VENDOR_CODE) AS VENDOR_NAME
+            , SUM(AVG_SCORE_1) AVG_SCORE_1
+            , SUM(AVG_SCORE_2) AVG_SCORE_2
+            , SUM(AVG_SCORE_3) AVG_SCORE_3
+            , DOC_NO
+            , DOC_COUNT
+        FROM (
+            SELECT A.HOUSE_CODE
+                , B.VENDOR_CODE
+                , B.EVAL_SCORE AS AVG_SCORE_1
+                , 0 AS AVG_SCORE_2
+                , 0 AS AVG_SCORE_3
+                , A.DOC_NO
+                , A.DOC_COUNT
+              FROM ICOMVEVH A, ICOMVEVD B, ICOMVETH D
+              WHERE  A.EVAL_REFITEM = #eval_refitem#
+              AND A.EVAL_REFITEM = B.EVAL_REFITEM
+              AND A.E_TEMPLATE_REFITEM = D.E_TEMPLATE_REFITEM
+              AND A.HOUSE_CODE = '#house_code#' 
+              AND A.HOUSE_CODE = B.HOUSE_CODE
+              AND A.HOUSE_CODE = D.HOUSE_CODE
+            UNION
+            SELECT HOUSE_CODE
+                , VENDOR_CODE
+                , 0 AS AVG_SCORE_1
+                ,  AVG(EVAL_SCORE) AS AVG_SCORE_2
+                , 0 AS AVG_SCORE_3
+                , A.DOC_NO
+                , A.DOC_COUNT
+            FROM (
+              SELECT A.HOUSE_CODE
+              		, B.VENDOR_CODE 
+               		, SUM(D.SELECTED_SEQ_SCORE) EVAL_SCORE
+                 	, ROW_NUMBER() OVER (PARTITION BY  B.VENDOR_CODE ORDER BY SUM(D.SELECTED_SEQ_SCORE) DESC) MAX_SCORE 
+                 	, ROW_NUMBER() OVER (PARTITION BY B.VENDOR_CODE ORDER BY SUM(D.SELECTED_SEQ_SCORE) ASC) MIN_SCORE
+                 	, A.DOC_NO
+                	, A.DOC_COUNT
+              FROM ICOMVEVH A, ICOMVEVD B, ICOMVEVL C, ICOMVESI D
+              WHERE  A.EVAL_REFITEM = #eval_refitem#
+              AND A.EVAL_REFITEM = B.EVAL_REFITEM
+              AND B.EVAL_ITEM_REFITEM = C.EVAL_ITEM_REFITEM
+              AND C.EVAL_VALUER_REFITEM = D.EVAL_VALUER_REFITEM
+              AND A.HOUSE_CODE = '#house_code#' 
+              AND A.HOUSE_CODE = B.HOUSE_CODE
+              AND A.HOUSE_CODE = C.HOUSE_CODE
+              AND A.HOUSE_CODE = D.HOUSE_CODE
+              GROUP BY B.VENDOR_CODE, A.HOUSE_CODE,  A.EVAL_REFITEM, A.E_TEMPLATE_REFITEM, B.EVAL_ITEM_REFITEM
+              			,C.EVAL_VALUER_NAME,C.EVAL_VALUER_DEPT_NAME, A.DOC_NO, A.DOC_COUNT
+            ) A
+            WHERE MAX_SCORE != 1
+            AND MIN_SCORE != 1 
+            GROUP BY A.VENDOR_CODE, A.HOUSE_CODE, A.DOC_NO, A.DOC_COUNT
+            UNION
+            SELECT HOUSE_CODE
+                , VENDOR_CODE
+                , 0 AS AVG_SCORE_1
+                , 0 AS AVG_SCORE_2
+                , AVG(EVAL_SCORE) AS AVG_SCORE_3
+                , DOC_NO
+                , DOC_COUNT
+            FROM 
+            (
+                SELECT HOUSE_CODE, VENDOR_CODE, EVAL_SCORE, DOC_NO, DOC_COUNT
+                FROM 
+                (
+                    SELECT A.HOUSE_CODE,B.VENDOR_CODE, C.EVAL_VALUER_NAME,C.EVAL_VALUER_DEPT_NAME
+                       , SUM(D.SELECTED_SEQ_SCORE) EVAL_SCORE
+                       , A.DOC_NO, A.DOC_COUNT
+                    FROM ICOMVEVH A, ICOMVEVD B, ICOMVEVL C, ICOMVESI D
+                    WHERE  A.EVAL_REFITEM = #eval_refitem#
+                      AND A.EVAL_REFITEM = B.EVAL_REFITEM
+                      AND B.EVAL_ITEM_REFITEM = C.EVAL_ITEM_REFITEM
+                      AND C.EVAL_VALUER_REFITEM = D.EVAL_VALUER_REFITEM
+                      AND A.HOUSE_CODE = '#house_code#' 
+                      AND A.HOUSE_CODE = B.HOUSE_CODE
+                      AND A.HOUSE_CODE = C.HOUSE_CODE
+                      AND A.HOUSE_CODE = D.HOUSE_CODE
+                      GROUP BY C.EVAL_VALUER_NAME,C.EVAL_VALUER_DEPT_NAME, B.VENDOR_CODE, A.HOUSE_CODE
+                      			, A.EVAL_REFITEM, A.E_TEMPLATE_REFITEM, B.EVAL_ITEM_REFITEM, A.DOC_NO, A.DOC_COUNT
+                 ) A  
+                 WHERE EXISTS (
+                    SELECT EVAL_VALUER_NAME, EVAL_VALUER_DEPT_NAME
+                    FROM(
+                        SELECT EVAL_VALUER_NAME, EVAL_VALUER_DEPT_NAME 
+                            , MAX(EVAL_SCORE) MAX_SCORE, MIN(EVAL_SCORE) MIN_SCORE
+                            , (MAX(EVAL_SCORE) -MIN(EVAL_SCORE) ) INTERVAL_SCORE
+                            , ROW_NUMBER() OVER ( ORDER BY (MAX(EVAL_SCORE) -MIN(EVAL_SCORE)) DESC) SEQ
+                        FROM (
+                              SELECT C.EVAL_VALUER_NAME,C.EVAL_VALUER_DEPT_NAME
+                                   ,   SUM(D.SELECTED_SEQ_SCORE) EVAL_SCORE
+                              FROM ICOMVEVH A, ICOMVEVD B, ICOMVEVL C, ICOMVESI D
+                              WHERE  A.EVAL_REFITEM = #eval_refitem#
+                              AND A.EVAL_REFITEM = B.EVAL_REFITEM
+                              AND B.EVAL_ITEM_REFITEM = C.EVAL_ITEM_REFITEM
+                              AND C.EVAL_VALUER_REFITEM = D.EVAL_VALUER_REFITEM
+                              AND A.HOUSE_CODE = '#house_code#' 
+                              AND A.HOUSE_CODE = B.HOUSE_CODE
+                              AND A.HOUSE_CODE = C.HOUSE_CODE
+                              AND A.HOUSE_CODE = D.HOUSE_CODE
+                              GROUP BY C.EVAL_VALUER_NAME,C.EVAL_VALUER_DEPT_NAME, B.VENDOR_CODE, A.HOUSE_CODE,  A.EVAL_REFITEM, A.E_TEMPLATE_REFITEM, B.EVAL_ITEM_REFITEM
+                              )
+                        GROUP BY EVAL_VALUER_NAME, EVAL_VALUER_DEPT_NAME
+                        ORDER BY (MAX(EVAL_SCORE) -MIN(EVAL_SCORE) ) DESC
+                    )
+                    WHERE SEQ != 1 
+                    AND EVAL_VALUER_NAME = A.EVAL_VALUER_NAME
+                    AND EVAL_VALUER_DEPT_NAME = A.EVAL_VALUER_DEPT_NAME
+                    )
+                ) A
+            GROUP BY A.HOUSE_CODE, A.VENDOR_CODE, A.DOC_NO, A.DOC_COUNT
+        ) A      
+        GROUP BY HOUSE_CODE, VENDOR_CODE, A.DOC_NO, A.DOC_COUNT
+) A,        
+(    
+	SELECT VH.HOUSE_CODE
+    	, BD.BID_NO     DOC_NO
+    	, BD.BID_COUNT  DOC_COUNT
+    	, BD.TECH_DQ
+    	, BD.BID_EVAL_SCORE
+    	, ( SELECT SUM(VT.WEIGHT) 
+        	FROM ICOMVETD VT 
+        	WHERE VH.HOUSE_CODE = VT.HOUSE_CODE
+        	AND VH.E_TEMPLATE_REFITEM = VT.E_TEMPLATE_REFITEM
+        	AND VT.STATUS != 'D'
+        	) SUM_SCORE
+	FROM ICOYBDHD BD, ICOMVEVH VH
+	WHERE BD.HOUSE_CODE = '#house_code#'
+	AND BD.HOUSE_CODE = VH.HOUSE_CODE
+	AND BD.BID_NO = VH.DOC_NO
+	AND BD.BID_COUNT = VH.DOC_COUNT
+	AND VH.EVAL_REFITEM = #eval_refitem# 
+) B
+WHERE A.HOUSE_CODE = '#house_code#'
+AND A.HOUSE_CODE = B.HOUSE_CODE
+AND A.DOC_NO = B.DOC_NO
+AND A.DOC_COUNT = B.DOC_COUNT
+
+
+		]]>
+	</method>
+	
+	<method name="et_getEvalQuantityFactorList">
+	<![CDATA[
+		SELECT A.TEMPLATE_NAME
+            , C.FACTOR_NAME
+            , C.E_FACTOR_REFITEM
+            , F.E_TEMPLATE_REFITEM
+            , B.E_TEMPLATE_ITEM_REFITEM
+            , B.WEIGHT
+        FROM ICOMVETH A, ICOMVETD B, ICOMVEFH C,  ICOMVEVH F
+        WHERE A.HOUSE_CODE = B.HOUSE_CODE
+         AND A.HOUSE_CODE = C.HOUSE_CODE
+         AND F.HOUSE_CODE = A.HOUSE_CODE
+         AND F.EVAL_REFITEM = #eval_refitem# 
+         AND F.HOUSE_CODE = '#house_code#'
+         AND F.E_TEMPLATE_REFITEM = A.E_TEMPLATE_REFITEM 
+         AND A.E_TEMPLATE_REFITEM = B.E_TEMPLATE_REFITEM
+         AND B.E_FACTOR_REFITEM = C.E_FACTOR_REFITEM 
+         AND A.USE_FLAG = 'Y' 
+         AND C.USE_FLAG = 'Y' 
+         AND C.QNT_FLAG = 'Y'        /* 정량평가 */
+         ORDER BY  C.E_FACTOR_REFITEM 
+	]]>
+	</method>
+	
+	<method name="getReduceCost">
+		<![CDATA[
+		   
+            SELECT  VENDOR_CODE
+            	/* , RANKNUM/VENDOR_CNT*100 RANKNUM */
+                , CASE WHEN RANKNUM/VENDOR_CNT*100 <= 20 THEN 5
+                    WHEN 20 < RANKNUM/VENDOR_CNT*100 AND RANKNUM/VENDOR_CNT*100 <= 30 THEN 4
+                    WHEN 30 < RANKNUM/VENDOR_CNT*100 AND RANKNUM/VENDOR_CNT*100 <= 40 THEN 3
+                    WHEN 40 < RANKNUM/VENDOR_CNT*100 AND RANKNUM/VENDOR_CNT*100 <= 50 THEN 2
+                    WHEN 50 < RANKNUM/VENDOR_CNT*100       THEN 1
+                  END SCORE
+            FROM(
+            SELECT QT.VENDOR_CODE
+               -- , SUM(RQ.RFQ_AMT) PO_TTL_AMT
+               -- , SUM(QT.UNIT_PRICE * QT.ITEM_QTY) ITEM_AMT
+               -- , (SUM(RQ.RFQ_AMT)-SUM(QT.UNIT_PRICE * QT.ITEM_QTY)) INTERVAL_AMT
+                , RANK() OVER(order by (SUM(RQ.RFQ_AMT)-SUM(QT.UNIT_PRICE * QT.ITEM_QTY)) desc) RANKNUM
+                , ( SELECT COUNT(DISTINCT(VENDOR_CODE)) 
+                    FROM ICOYQTDT 
+                    WHERE HOUSE_CODE = QT.HOUSE_CODE   
+                    AND RFQ_NO = QT.RFQ_NO 
+                    AND RFQ_COUNT = QT.RFQ_COUNT 
+                  ) AS VENDOR_CNT
+            FROM ICOYQTDT QT, ICOYRQDT RQ , ICOMVEVH VH
+            WHERE VH.HOUSE_CODE = '#house_code#'
+            AND VH.EVAL_REFITEM = #eval_refitem# 
+            AND QT.HOUSE_CODE = VH.HOUSE_CODE
+            AND QT.RFQ_NO = VH.DOC_NO
+            AND QT.RFQ_COUNT = VH.DOC_COUNT
+            AND RQ.HOUSE_CODE = QT.HOUSE_CODE
+            AND RQ.RFQ_NO = QT.RFQ_NO
+            AND RQ.RFQ_COUNT = QT.RFQ_COUNT
+            AND RQ.RFQ_SEQ = QT.RFQ_SEQ
+            AND QT.STATUS !='D'
+            AND RQ.STATUS != 'D'
+            GROUP BY QT.HOUSE_CODE, QT.RFQ_NO, QT.RFQ_COUNT,   QT.VENDOR_CODE
+            )
+            UNION
+            SELECT  VENDOR_CODE
+            	/* , RANKNUM/VENDOR_CNT*100 RANKNUM */
+                , CASE WHEN RANKNUM/VENDOR_CNT*100 <= 20 THEN 5
+                    WHEN 20 < RANKNUM/VENDOR_CNT*100 AND RANKNUM/VENDOR_CNT*100 <= 30 THEN 4
+                    WHEN 30 < RANKNUM/VENDOR_CNT*100 AND RANKNUM/VENDOR_CNT*100 <= 40 THEN 3
+                    WHEN 40 < RANKNUM/VENDOR_CNT*100 AND RANKNUM/VENDOR_CNT*100 <= 50 THEN 2
+                    WHEN 50 < RANKNUM/VENDOR_CNT*100       THEN 1
+                  END SCORE
+            FROM(
+            SELECT  RB.VENDOR_CODE
+                --, RB.HOUSE_CODE, RB.RA_NO, RB.RA_COUNT
+                --, (RD.UNIT_PRICE * RD.RA_QTY) AS RA_AMT
+                --, MIN(RB.BID_AMT) BID_AMT
+                , RANK() OVER(order by ((RD.UNIT_PRICE * RD.RA_QTY )-MIN(RB.BID_AMT)) desc) RANKNUM
+                , ( SELECT COUNT(DISTINCT(VENDOR_CODE)) 
+                    FROM ICOYRABD 
+                    WHERE HOUSE_CODE = RB.HOUSE_CODE   
+                    AND RA_NO = RB.RA_NO 
+                    AND RA_COUNT = RB.RA_COUNT 
+                    AND RA_SEQ = RB.RA_SEQ
+                  ) AS VENDOR_CNT
+            FROM ICOYRADT RD, ICOYRABD RB, ICOMVEVH VH 
+            WHERE VH.HOUSE_CODE = '#house_code#'
+            AND VH.EVAL_REFITEM = #eval_refitem#  
+            AND RD.RA_NO = VH.DOC_NO
+            AND RD.RA_COUNT = VH.DOC_COUNT
+            AND RD.HOUSE_CODE = VH.HOUSE_CODE
+            AND RD.HOUSE_CODE = RB.HOUSE_CODE
+            AND RD.RA_NO = RB.RA_NO
+            AND RD.RA_COUNT = RB.RA_COUNT
+            AND RD.RA_SEQ = RB.RA_SEQ
+            AND RD.STATUS != 'D'
+            AND RB.STATUS != 'D'
+            GROUP BY RB.HOUSE_CODE, RB.RA_NO, RB.RA_COUNT, RB.RA_SEQ, RD.UNIT_PRICE, RD.RA_QTY, RB.VENDOR_CODE
+            )
+             
+		]]>
+	</method>
+	
+	<method name="et_getEvalVendorInfo">
+		<![CDATA[
+		SELECT VD.VENDOR_CODE
+			, VD.EVAL_ITEM_REFITEM
+			, VN.CREDIT_RATING
+			, VN.IRS_NO
+		FROM ICOMVEVH VH, ICOMVEVD VD, ICOMVNGL VN
+		WHERE VH.HOUSE_CODE = '#house_code#'
+		AND VH.EVAL_REFITEM = #eval_refitem#  
+		AND VH.HOUSE_CODE =  VD.HOUSE_CODE
+		AND VH.EVAL_REFITEM = VD.EVAL_REFITEM
+		AND VD.HOUSE_CODE = VN.HOUSE_CODE
+		AND VD.VENDOR_CODE = VN.VENDOR_CODE
+		AND VH.STATUS != 'D'
+		AND VD.STATUS != 'D'
+		
+		]]>
+	</method>
+	
+	<method name="et_getOwnerWork">
+		<![CDATA[
+		SELECT WORK_Y
+		FROM DBK_REPORT824 NICE, ICOMVNGL VN
+		WHERE NICE.BIZ_NO = '#irs_no#'
+		AND NICE.BIZ_NO = VN.IRS_NO
+		AND VN.JOB_STATUS != 'D'
+		AND  (NICE.E_DATE, NICE.SEQ) IN (SELECT  MAX(E_DATE), MAX(SEQ) FROM DBK_REPORT824 WHERE BIZ_NO = NICE.BIZ_NO GROUP BY BIZ_NO)
+		]]>
+	</method>
+	
+	<method name="getHumanUnitPriceAppropriacy">
+		<![CDATA[
+		
+        SELECT RQ.VENDOR_CODE
+            , CASE WHEN TRUNC((SUM(RQ.GAP)/COUNT(RQ.HUMAN_NO)) * 100, 0) <= 5 THEN 5
+                    WHEN  5 < TRUNC((SUM(RQ.GAP)/COUNT(RQ.HUMAN_NO)) * 100, 0) AND TRUNC((SUM(RQ.GAP)/COUNT(RQ.HUMAN_NO)) * 100, 0) <= 10 THEN 4
+                    WHEN 10 < TRUNC((SUM(RQ.GAP)/COUNT(RQ.HUMAN_NO)) * 100, 0) AND TRUNC((SUM(RQ.GAP)/COUNT(RQ.HUMAN_NO)) * 100, 0) <= 15 THEN 3
+                    WHEN 15 < TRUNC((SUM(RQ.GAP)/COUNT(RQ.HUMAN_NO)) * 100, 0) AND TRUNC((SUM(RQ.GAP)/COUNT(RQ.HUMAN_NO)) * 100, 0) <= 20 THEN 2
+                    WHEN 20 < TRUNC((SUM(RQ.GAP)/COUNT(RQ.HUMAN_NO)) * 100, 0) THEN 1
+            END SCORE  
+        FROM (
+            SELECT RQ.VENDOR_CODE, QT.HUMAN_NO, QT.UNIT_PRICE AS VENDOR_UNIT_PRICE, QT.ITEM_QTY
+                , (SELECT TEXT3 FROM ICOMCODE WHERE TYPE = 'M960' AND CODE = TO_CHAR(SYSDATE, 'YYYY') || QT.TECHNIQUE_GRADE) 
+                  AS IBKS_UNIT_PRICE
+                , ((QT.UNIT_PRICE 
+                    - (SELECT TEXT3 FROM ICOMCODE WHERE TYPE = 'M960' AND CODE = TO_CHAR(SYSDATE, 'YYYY') || QT.TECHNIQUE_GRADE)) * QT.ITEM_QTY) 
+                  AS CAL_PRICE
+                , ((SELECT TEXT3 FROM ICOMCODE WHERE TYPE = 'M960' AND CODE = TO_CHAR(SYSDATE, 'YYYY') || QT.TECHNIQUE_GRADE) * QT.ITEM_QTY) 
+                  AS CAL_IBKS_PRICE
+                , ((QT.UNIT_PRICE 
+                    - (SELECT TEXT3 FROM ICOMCODE WHERE TYPE = 'M960' AND CODE = TO_CHAR(SYSDATE, 'YYYY') || QT.TECHNIQUE_GRADE)) * QT.ITEM_QTY)
+                   / ((SELECT TEXT3 FROM ICOMCODE WHERE TYPE = 'M960' AND CODE = TO_CHAR(SYSDATE, 'YYYY') || QT.TECHNIQUE_GRADE) * QT.ITEM_QTY) 
+                  AS GAP
+            FROM ICOYRQSE RQ, ICOYQTDT QT
+            WHERE RQ.HOUSE_CODE = '#house_code#'
+            AND (RQ.RFQ_NO, RQ.RFQ_COUNT) = (SELECT DOC_NO, DOC_COUNT FROM ICOMVEVH WHERE HOUSE_CODE = RQ.HOUSE_CODE AND EVAL_REFITEM =  #eval_refitem#  )
+            AND RQ.HOUSE_CODE = QT.HOUSE_CODE
+            AND RQ.RFQ_NO = QT.RFQ_NO
+            AND RQ.RFQ_COUNT = QT.RFQ_COUNT
+            AND RQ.RFQ_SEQ = QT.RFQ_SEQ
+            AND RQ.VENDOR_CODE = QT.VENDOR_CODE
+            AND QT.HUMAN_NO IS NOT NULL
+        ) RQ
+        GROUP BY RQ.VENDOR_CODE
+     ]]>       
+	</method>
+	
+	
+	<method name="getVendorInvestWeight">
+	<![CDATA[
+		SELECT VENDOR_CODE
+          , CASE WHEN (INVEST_AMT/SALES_AMT) * 100 >= 15 THEN 5
+                    WHEN 12 <= (INVEST_AMT/SALES_AMT) * 100 AND (INVEST_AMT/SALES_AMT) * 100 < 15 THEN 4
+                    WHEN 8 <=  (INVEST_AMT/SALES_AMT) * 100 AND (INVEST_AMT/SALES_AMT) * 100 < 12 THEN 3
+                    WHEN 5 <=  (INVEST_AMT/SALES_AMT) * 100 AND (INVEST_AMT/SALES_AMT) * 100 < 8  THEN 2
+                    WHEN 5 >   (INVEST_AMT/SALES_AMT) * 100 THEN 1
+            END SCORE 
+        FROM (
+        SELECT VD.VENDOR_CODE
+            , (SELECT RND_INVEST + RND_INVEST_P +  RND_INVEST_PP
+                FROM DBK_REPORT832 NICE
+                WHERE BIZ_NO = VN.IRS_NO 
+                AND E_DATE = (SELECT  MAX(E_DATE) FROM DBK_REPORT832 WHERE BIZ_NO = NICE.BIZ_NO GROUP BY BIZ_NO)
+                AND SUBSTR(BASE_YMD, 1, 4) >= TO_CHAR(ADD_MONTHS(SYSDATE, -12), 'YYYY')
+            ) INVEST_AMT
+            , (SELECT SUM(SON0701) FROM DBK_REPORT07 NICE
+                WHERE BIZ_NO = VN.IRS_NO 
+                AND E_DATE = (SELECT  MAX(E_DATE) FROM DBK_REPORT07 WHERE BIZ_NO = NICE.BIZ_NO GROUP BY BIZ_NO)
+                AND SUBSTR(BASE_YMD, 1, 4) >= TO_CHAR(ADD_MONTHS(SYSDATE, -36), 'YYYY')) SALES_AMT
+        FROM ICOMVEVH VH, ICOMVEVD VD, ICOMVNGL VN 
+        WHERE VH.HOUSE_CODE = '#house_code#'
+        AND VH.EVAL_REFITEM = #eval_refitem#  
+        AND VH.HOUSE_CODE =  VD.HOUSE_CODE
+        AND VH.EVAL_REFITEM = VD.EVAL_REFITEM
+        AND VD.HOUSE_CODE = VN.HOUSE_CODE
+        AND VD.VENDOR_CODE = VN.VENDOR_CODE
+        AND VH.STATUS != 'D'
+        AND VD.STATUS != 'D'
+        )
+        WHERE INVEST_AMT IS NOT NULL
+        AND SALES_AMT IS NOT NULL
+     ]]>       
+	</method>
+	
+	
+	<method name="et_setEvalTunkey_1">
+	<![CDATA[
+		INSERT INTO ICOMVEVL (
+		   	HOUSE_CODE,
+		   	EVAL_VALUER_REFITEM,
+		   	EVAL_VALUER_ID,
+		   	EVAL_DATE,
+		   	EVAL_ITEM_REFITEM,
+		   	COMPLETE_MARK 
+		   	)
+		select 
+			?
+		   	,NVL(max(EVAL_VALUER_REFITEM),0)+1
+			,?
+			,TO_CHAR(SYSDATE,'YYYYMMDD')
+			,? 
+			,'Y'
+		from icomvevl
+	]]>
+	</method>
+	
+
+	<method name="et_setEvalTunkey_2">
+	<![CDATA[
+		 INSERT INTO ICOMVESI (
+		  		   HOUSE_CODE,
+				   E_SELECTED_ITEM_REFITEM,
+				   E_SELECTED_FACTOR,
+				   SELECTED_SEQ,
+				   EVAL_VALUER_REFITEM,
+				   SELECTED_SEQ_SCORE )
+		 select
+				   ?,
+				   NVL( (SELECT max(E_SELECTED_ITEM_REFITEM) FROM ICOMVESI ), 0)+1,
+				   ?,
+				   ?,
+				   (	SELECT VL.EVAL_VALUER_REFITEM
+						FROM ICOMVEVL VL 
+						WHERE EVAL_ITEM_REFITEM = ?
+						AND VL.EVAL_VALUER_ID = ?
+						AND VL.HOUSE_CODE = ?
+					),
+				   ? 
+		from DUAL
+	]]>
+	</method>
+	
+	<method name="et_setEvalTunkey_3">
+	<![CDATA[
+		 UPDATE ICOMVEVD 
+		 	SET EVAL_SCORE = EVAL_SCORE + #eval_score# 
+		 	,	QUANTITY_SCORE =  #eval_score# 
+		 WHERE HOUSE_CODE = '#house_code#'
+		   AND EVAL_ITEM_REFITEM = #eval_item_refitem#
+	]]>
+	</method>
+	
+	<method name="et_getEvalFactorItemInfo">
+	<![CDATA[
+		SELECT B.E_FACTOR_ITEM_REFITEM
+		FROM ICOMVEFH A, ICOMVEFD B
+		WHERE A.HOUSE_CODE = B.HOUSE_CODE
+		AND A.E_FACTOR_REFITEM = B.E_FACTOR_REFITEM
+		AND A.HOUSE_CODE = '#house_code#'
+		AND A.E_FACTOR_REFITEM = '#e_factor_refitem#'
+		AND B.ITEM_SCORE = '#item_score#'
+	]]>
+	</method>
+	
+	<method name="et_getEvalQuantityScore">
+	<![CDATA[
+		SELECT A.EVAL_ITEM_REFITEM, SUM(B.SELECTED_SEQ_SCORE) AS SCORE, B.EVAL_VALUER_REFITEM
+        FROM ICOMVEVL A, ICOMVESI B    
+        WHERE A.HOUSE_CODE = '#house_code#'
+        AND A.EVAL_ITEM_REFITEM IN (SELECT EVAL_ITEM_REFITEM FROM ICOMVEVD WHERE HOUSE_CODE = A.HOUSE_CODE AND EVAL_REFITEM = #eval_refitem# )
+        AND A.EVAL_VALUER_ID = '#eval_valuer_id#'
+        AND A.HOUSE_CODE = B.HOUSE_CODE
+        AND A.EVAL_VALUER_REFITEM = B.EVAL_VALUER_REFITEM
+        GROUP BY A.EVAL_ITEM_REFITEM , B.EVAL_VALUER_REFITEM
+	]]>
+	</method>
+	
+	<method name="et_getEvalScheduleVendorInfo">
+		<![CDATA[
+        SELECT VD.VENDOR_CODE
+            , VD.EVAL_ITEM_REFITEM
+            , VH.FROM_DATE
+            , VH.TO_DATE
+            , VN.CREDIT_RATING
+            , , (SELECT WORK_Y FROM DBK_REPORT824 NICE WHERE BIZ_NO = VN.IRS_NO AND E_DATE = (SELECT  MAX(E_DATE) FROM DBK_REPORT824 WHERE BIZ_NO = NICE.BIZ_NO GROUP BY BIZ_NO)) WORK_Y
+        	, VN.CASH_GRADE
+        	, VN.IRS_NO
+        FROM ICOMVEVH VH, ICOMVEVD VD, ICOMVNGL VN
+        WHERE VH.HOUSE_CODE = '#house_code#'
+        AND VH.EVAL_REFITEM = #eval_refitem#  
+        AND VH.HOUSE_CODE =  VD.HOUSE_CODE
+        AND VH.EVAL_REFITEM = VD.EVAL_REFITEM
+        AND VD.HOUSE_CODE = VN.HOUSE_CODE
+        AND VD.VENDOR_CODE = VN.VENDOR_CODE
+        AND VH.STATUS != 'D'
+        AND VD.STATUS != 'D'
+		]]>
+	</method>
+	
+	
+	<method name="getReduceCostRate">
+		<![CDATA[
+			SELECT VENDOR_CODE
+             , CASE WHEN REDUCE_COST >= 40 THEN 5
+                        WHEN 30 <= REDUCE_COST AND REDUCE_COST < 40 THEN 4
+                        WHEN 20 <= REDUCE_COST AND REDUCE_COST < 30 THEN 3
+                        WHEN 10 <= REDUCE_COST AND REDUCE_COST < 20 THEN 2
+                        WHEN 10 > REDUCE_COST THEN 1
+                END SCORE  
+            FROM (
+            	SELECT  CND.VENDOR_CODE, TRUNC((SUM(CND.PR_UNIT_PRICE * CND.SETTLE_QTY) - SUM(CND.UNIT_PRICE * CND.SETTLE_QTY))/ SUM(CND.PR_UNIT_PRICE * CND.SETTLE_QTY) * 100) REDUCE_COST
+            	FROM ICOYCNHD CNH, ICOYCNDT CND, ICOYPRHD PRH
+            	WHERE CNH.HOUSE_CODE =  '#house_code#'
+            	AND CNH.HOUSE_CODE = CND.HOUSE_CODE
+            	AND CNH.EXEC_NO = CND.EXEC_NO
+            	AND CND.HOUSE_CODE = PRH.HOUSE_CODE
+            	AND CND.PR_NO = PRH.PR_NO
+            	AND (CNH.SIGN_DATE >= '#eval_from_date#' AND CNH.SIGN_DATE <= '#eval_to_date#')
+            	AND CNH.SIGN_STATUS = 'E'
+            	AND PRH.REQ_TYPE = 'P'
+            	AND CNH.STATUS != 'D' 
+            	AND CND.STATUS != 'D'
+            	GROUP BY CND.VENDOR_CODE
+            )
+			
+		]]>
+	</method>
+	
+	
+	<method name="getHumanWorkDayAppropriacy">
+		<![CDATA[
+			SELECT VENDOR_CODE
+                 , CASE WHEN        CAL_SCORE >= 4 THEN 5
+                        WHEN 3   <= CAL_SCORE AND CAL_SCORE < 4   THEN 4
+                        WHEN 2.5 <= CAL_SCORE AND CAL_SCORE < 3   THEN 3
+                        WHEN 2   <= CAL_SCORE AND CAL_SCORE < 2.5 THEN 2
+                        WHEN 2   >  CAL_SCORE THEN 1
+                   END SCORE  
+            FROM(
+                SELECT A.VENDOR_CODE, TRUNC((SUM(B.EVAL_SCORE * B.VENDOR_PRICE) / SUM(A.EXEC_AMT_KRW)),1) AS CAL_SCORE
+                FROM
+                (
+                    SELECT   DISTINCT CND.HOUSE_CODE, CND.EXEC_NO,  CND.VENDOR_CODE, CNH.EXEC_AMT_KRW
+                    FROM ICOYCNHD CNH, ICOYCNDT CND, ICOYPRHD PRH
+                    WHERE CNH.HOUSE_CODE = '#house_code#'
+                    AND CNH.HOUSE_CODE = CND.HOUSE_CODE
+                    AND CNH.EXEC_NO = CND.EXEC_NO
+                    AND CND.HOUSE_CODE = PRH.HOUSE_CODE
+                    AND CND.PR_NO = PRH.PR_NO
+                    AND (CNH.SIGN_DATE >= '#eval_from_date#' AND CNH.SIGN_DATE <= '#eval_to_date#')
+            	    AND CNH.SIGN_STATUS = 'E'
+                    AND PRH.REQ_TYPE = 'P'
+                    AND CND.STATUS != 'D'
+                    AND CNH.STATUS != 'D' 
+                ) A,
+                (
+                    SELECT VEVD.HOUSE_CODE, VEVD.VENDOR_CODE
+                        , TRUNC(AVG(VESI.SELECTED_SEQ_SCORE),1) EVAL_SCORE
+                        , ( SELECT SUM(UNIT_PRICE * SETTLE_QTY) FROM ICOYCNDT 
+                            WHERE HOUSE_CODE = VEVD.HOUSE_CODE
+                            AND (EXEC_NO, EXEC_SEQ) IN ( SELECT EXEC_NO, EXEC_SEQ FROM ICOYPODT 
+                                                           WHERE HOUSE_CODE = VEVD.HOUSE_CODE
+                                                           AND VENDOR_CODE = VEVD.VENDOR_CODE
+                                                           AND (PO_NO, PO_SEQ) IN ( SELECT PO_NO, PO_SEQ FROM ICOYIVDT 
+                                                                                    WHERE HOUSE_CODE = VEVD.HOUSE_CODE AND INV_NO = VEVH.DOC_NO)
+                                                         )
+                            )  VENDOR_PRICE
+                        , ( SELECT EXEC_NO FROM ICOYPODT
+                            WHERE HOUSE_CODE = VEVD.HOUSE_CODE
+                            AND PO_NO IN ( SELECT PO_NO FROM ICOYIVDT 
+                                           WHERE HOUSE_CODE = VEVD.HOUSE_CODE AND INV_NO = VEVH.DOC_NO)
+                            )  EXEC_NO
+                    FROM ICOMVEVH VEVH, ICOMVEVD VEVD, ICOMVEVL VEVL, ICOMVESI VESI /*, ICOMVETH VETH*/
+					WHERE VESI.HOUSE_CODE = '#house_code#'
+					AND VESI.E_SELECTED_FACTOR = #e_selected_factor#   -- 투입공수적절성 
+					AND VESI.HOUSE_CODE = VEVL.HOUSE_CODE
+					AND VESI.EVAL_VALUER_REFITEM = VEVL.EVAL_VALUER_REFITEM
+					AND VEVL.HOUSE_CODE = VEVD.HOUSE_CODE
+					AND VEVL.EVAL_ITEM_REFITEM = VEVD.EVAL_ITEM_REFITEM
+					AND VEVD.HOUSE_CODE = VEVH.HOUSE_CODE
+					AND VEVD.EVAL_REFITEM = VEVH.EVAL_REFITEM
+					/* 도급업체 수행평가에 한정할 경우
+					AND VEVH.HOUSE_CODE = VETH.HOUSE_CODE
+					AND VEVH.E_TEMPLATE_REFITEM = VETH.E_TEMPLATE_REFITEM 
+					AND VETH.TEMPLATE_TYPE = 4 -- 도급업체 수행평가   코드
+					*/
+					AND VEVH.STATUS != 'D'
+					AND VEVD.STATUS != 'D'
+                    GROUP BY VEVD.HOUSE_CODE, VEVD.VENDOR_CODE, VEVH.DOC_NO, VEVH.DOC_COUNT
+                ) B
+                WHERE A.HOUSE_CODE = '#house_code#'
+                AND A.HOUSE_CODE = B.HOUSE_CODE
+                AND A.EXEC_NO = B.EXEC_NO
+                AND A.VENDOR_CODE = B.VENDOR_CODE
+                GROUP BY A.VENDOR_CODE
+            )
+			
+		]]>
+	</method>
+	
+	
+	<method name="getHumanUnitPriceAppropriacyYear">
+		<![CDATA[
+			SELECT VENDOR_CODE
+                , CASE WHEN TRUNC(SUM(GAP)/COUNT(GAP), 1) <= 5 THEN 5
+                        WHEN  5 < TRUNC(SUM(GAP)/COUNT(GAP), 1) AND TRUNC(SUM(GAP)/COUNT(GAP), 1) <= 10 THEN 4
+                        WHEN 10 < TRUNC(SUM(GAP)/COUNT(GAP), 1) AND TRUNC(SUM(GAP)/COUNT(GAP), 1) <= 15 THEN 3
+                        WHEN 15 < TRUNC(SUM(GAP)/COUNT(GAP), 1) AND TRUNC(SUM(GAP)/COUNT(GAP), 1) <= 20 THEN 2
+                        WHEN 20 < TRUNC(SUM(GAP)/COUNT(GAP), 1) THEN 1
+                  END SCORE  
+            FROM (
+            	SELECT    CND.HOUSE_CODE, CND.EXEC_NO,  CND.VENDOR_CODE, CND.UNIT_PRICE, CND.SETTLE_QTY , CND.ASSOCIATION_GRADE
+                	, (SELECT TEXT3 FROM ICOMCODE WHERE TYPE = 'M960' AND CODE = TO_CHAR(ADD_MONTHS(SYSDATE, -12), 'YYYY') || CND.ASSOCIATION_GRADE) 
+                  	AS IBKS_UNIT_PRICE
+                	, ((CND.UNIT_PRICE 
+	                    - (SELECT TEXT3 FROM ICOMCODE WHERE TYPE = 'M960' AND CODE = TO_CHAR(ADD_MONTHS(SYSDATE, -12), 'YYYY') || CND.ASSOCIATION_GRADE)) * CND.SETTLE_QTY) 
+                  	AS CAL_PRICE
+                	, ((SELECT TEXT3 FROM ICOMCODE WHERE TYPE = 'M960' AND CODE = TO_CHAR(ADD_MONTHS(SYSDATE, -12), 'YYYY') || CND.ASSOCIATION_GRADE) * CND.SETTLE_QTY) 
+                  	AS CAL_IBKS_PRICE
+                	, ((CND.UNIT_PRICE 
+	                    - (SELECT TEXT3 FROM ICOMCODE WHERE TYPE = 'M960' AND CODE = TO_CHAR(ADD_MONTHS(SYSDATE, -12), 'YYYY') || CND.ASSOCIATION_GRADE)) * CND.SETTLE_QTY)
+                   	/ ((SELECT TEXT3 FROM ICOMCODE WHERE TYPE = 'M960' AND CODE = TO_CHAR(ADD_MONTHS(SYSDATE, -12), 'YYYY') || CND.ASSOCIATION_GRADE) * CND.SETTLE_QTY) 
+                  	AS GAP
+            	FROM ICOYCNHD CNH, ICOYCNDT CND, ICOYPRHD PRH
+            	WHERE CNH.HOUSE_CODE = '#house_code#'
+            	AND CNH.HOUSE_CODE = CND.HOUSE_CODE
+            	AND CNH.EXEC_NO = CND.EXEC_NO
+            	AND CND.HOUSE_CODE = PRH.HOUSE_CODE
+            	AND CND.PR_NO = PRH.PR_NO
+            	AND CND.STATUS != 'D'
+            	AND (CNH.SIGN_DATE >= '#eval_from_date#' AND CNH.SIGN_DATE <= '#eval_to_date#')
+            	AND CNH.SIGN_STATUS = 'E'
+            	AND PRH.REQ_TYPE = 'P'
+            	AND CND.HUMAN_NO IS NOT NULL
+            	AND CNH.STATUS != 'D' 
+            )
+            GROUP BY VENDOR_CODE
+			
+		]]>
+	</method>
+	
+	
+	<method name="getCalCommon01Year">
+		 <![CDATA[
+		    SELECT VENDOR_CODE
+                 , CASE WHEN        CAL_SCORE >= 4 THEN 5
+                        WHEN 3   <= CAL_SCORE AND CAL_SCORE < 4   THEN 4
+                        WHEN 2.5 <= CAL_SCORE AND CAL_SCORE < 3   THEN 3
+                        WHEN 2   <= CAL_SCORE AND CAL_SCORE < 2.5 THEN 2
+                        WHEN 2   >  CAL_SCORE THEN 1
+                   END SCORE  
+            FROM(
+                SELECT A.VENDOR_CODE, TRUNC((SUM(B.EVAL_SCORE * A.EXEC_AMT_KRW) / SUM(A.EXEC_AMT_KRW)),1) AS CAL_SCORE
+                FROM
+                (
+                    SELECT   DISTINCT CND.HOUSE_CODE, CND.EXEC_NO,  CND.VENDOR_CODE, CNH.EXEC_AMT_KRW
+                    FROM ICOYCNHD CNH, ICOYCNDT CND, ICOYPRHD PRH
+                    WHERE CNH.HOUSE_CODE = '#house_code#'
+                    AND CNH.HOUSE_CODE = CND.HOUSE_CODE
+                    AND CNH.EXEC_NO = CND.EXEC_NO
+                    AND CNH.HOUSE_CODE = PRH.HOUSE_CODE
+                    AND CND.PR_NO = PRH.PR_NO
+                    AND (CNH.SIGN_DATE >= '#eval_from_date#' AND CNH.SIGN_DATE <= '#eval_to_date#')
+            		AND CNH.SIGN_STATUS = 'E'
+                    AND PRH.REQ_TYPE = 'P'
+                    AND CND.STATUS != 'D'
+                    AND CNH.STATUS != 'D' 
+                ) A,
+                (
+                    SELECT VEVD.HOUSE_CODE, VEVD.VENDOR_CODE
+                        , TRUNC(AVG(VESI.SELECTED_SEQ_SCORE),1) EVAL_SCORE
+                        , ( SELECT SUM(UNIT_PRICE * SETTLE_QTY) FROM ICOYCNDT 
+                            WHERE HOUSE_CODE = VEVD.HOUSE_CODE
+                            AND HOUSE_CODE = '#house_code#'
+                            AND (EXEC_NO, EXEC_SEQ) IN ( SELECT EXEC_NO, EXEC_SEQ FROM ICOYPODT 
+                                                           WHERE HOUSE_CODE = VEVD.HOUSE_CODE
+                                                           AND VENDOR_CODE = VEVD.VENDOR_CODE
+                                                           AND (PO_NO, PO_SEQ) IN ( SELECT PO_NO, PO_SEQ FROM ICOYIVDT 
+                                                                                    WHERE HOUSE_CODE = VEVD.HOUSE_CODE AND INV_NO = VEVH.DOC_NO AND HOUSE_CODE = '#house_code#')
+                                                         )
+                            )  VENDOR_PRICE
+                        , ( SELECT EXEC_NO FROM ICOYPODT
+                            WHERE HOUSE_CODE = VEVD.HOUSE_CODE
+                            AND HOUSE_CODE = '#house_code#'
+                            AND PO_NO IN ( SELECT PO_NO FROM ICOYIVDT 
+                                           WHERE HOUSE_CODE = VEVD.HOUSE_CODE AND INV_NO = VEVH.DOC_NO AND HOUSE_CODE = '#house_code#')
+                            )  EXEC_NO
+                    FROM ICOMVEVH VEVH, ICOMVEVD VEVD, ICOMVEVL VEVL, ICOMVESI VESI /*, ICOMVETH VETH*/
+                    WHERE VESI.HOUSE_CODE = '#house_code#'
+                    AND VESI.E_SELECTED_FACTOR = #e_selected_factor# 
+                    AND VESI.HOUSE_CODE = VEVL.HOUSE_CODE
+                    AND VESI.EVAL_VALUER_REFITEM = VEVL.EVAL_VALUER_REFITEM
+                    AND VEVL.HOUSE_CODE = VEVD.HOUSE_CODE
+                    AND VEVL.EVAL_ITEM_REFITEM = VEVD.EVAL_ITEM_REFITEM
+                    AND VEVD.HOUSE_CODE = VEVH.HOUSE_CODE
+                    AND VEVD.EVAL_REFITEM = VEVH.EVAL_REFITEM
+                    /* 도급업체 수행평가에 한정할 경우
+                    AND VEVH.HOUSE_CODE = VETH.HOUSE_CODE
+                    AND VEVH.E_TEMPLATE_REFITEM = VETH.E_TEMPLATE_REFITEM 
+                    AND VETH.TEMPLATE_TYPE = 4 -- 도급업체 수행평가   코드
+                    */
+                    AND VEVH.STATUS != 'D'
+                    AND VEVD.STATUS != 'D'
+                    GROUP BY VEVD.HOUSE_CODE, VEVD.VENDOR_CODE, VEVH.DOC_NO, VEVH.DOC_COUNT
+                ) B
+                WHERE A.HOUSE_CODE = '#house_code#' 
+                AND A.HOUSE_CODE = B.HOUSE_CODE
+                AND A.EXEC_NO = B.EXEC_NO
+                AND A.VENDOR_CODE = B.VENDOR_CODE
+                GROUP BY A.VENDOR_CODE
+            )
+		 ]]>
+	</method>
+	
+	
+	<method name="getCalCommon02Year">
+		 <![CDATA[
+		    SELECT VENDOR_CODE
+                 , CASE WHEN        CAL_SCORE >= 4 THEN 5
+                        WHEN 3   <= CAL_SCORE AND CAL_SCORE < 4   THEN 4
+                        WHEN 2.5 <= CAL_SCORE AND CAL_SCORE < 3   THEN 3
+                        WHEN 2   <= CAL_SCORE AND CAL_SCORE < 2.5 THEN 2
+                        WHEN 2   >  CAL_SCORE THEN 1
+                   END SCORE  
+            FROM(
+                SELECT A.VENDOR_CODE, TRUNC((SUM(B.EVAL_SCORE * B.VENDOR_PRICE) / SUM(A.EXEC_AMT_KRW)),1) AS CAL_SCORE
+                FROM
+                (
+                    SELECT   DISTINCT CND.HOUSE_CODE, CND.EXEC_NO,  CND.VENDOR_CODE, CNH.EXEC_AMT_KRW
+                    FROM ICOYCNHD CNH, ICOYCNDT CND, ICOYPRHD PRH
+                    WHERE CNH.HOUSE_CODE = '#house_code#'
+                    AND CNH.HOUSE_CODE = CND.HOUSE_CODE
+                    AND CNH.EXEC_NO = CND.EXEC_NO
+                    AND CND.HOUSE_CODE = PRH.HOUSE_CODE
+                    AND CND.PR_NO = PRH.PR_NO
+                    AND (CNH.SIGN_DATE >= '#eval_from_date#' AND CNH.SIGN_DATE <= '#eval_to_date#')
+            		AND CNH.SIGN_STATUS = 'E'
+                    AND PRH.REQ_TYPE = 'P'
+                    AND CND.STATUS != 'D'
+                    AND CNH.STATUS != 'D' 
+                ) A,
+                (
+                    SELECT VEVD.HOUSE_CODE, VEVD.VENDOR_CODE
+                        , TRUNC(AVG(VESI.SELECTED_SEQ_SCORE),1) EVAL_SCORE
+                        , ( SELECT SUM(UNIT_PRICE * SETTLE_QTY) FROM ICOYCNDT 
+                            WHERE HOUSE_CODE = VEVD.HOUSE_CODE
+                            AND HOUSE_CODE = '#house_code#'
+                            AND (EXEC_NO, EXEC_SEQ) IN ( SELECT EXEC_NO, EXEC_SEQ FROM ICOYPODT 
+                                                           WHERE HOUSE_CODE = VEVD.HOUSE_CODE
+                                                           AND HOUSE_CODE = '#house_code#'
+                                                           AND VENDOR_CODE = VEVD.VENDOR_CODE
+                                                           AND (PO_NO, PO_SEQ) IN ( SELECT PO_NO, PO_SEQ FROM ICOYIVDT 
+                                                                                    WHERE HOUSE_CODE = VEVD.HOUSE_CODE AND INV_NO = VEVH.DOC_NO AND HOUSE_CODE = '#house_code#')
+                                                         )
+                            )  VENDOR_PRICE
+                        , ( SELECT EXEC_NO FROM ICOYPODT
+                            WHERE HOUSE_CODE = VEVD.HOUSE_CODE
+                            AND HOUSE_CODE = '#house_code#'
+                            AND PO_NO IN ( SELECT PO_NO FROM ICOYIVDT 
+                                           WHERE HOUSE_CODE = VEVD.HOUSE_CODE AND INV_NO = VEVH.DOC_NO AND HOUSE_CODE = '#house_code#')
+                            )  EXEC_NO
+                    FROM ICOMVEVH VEVH, ICOMVEVD VEVD, ICOMVEVL VEVL, ICOMVESI VESI /*, ICOMVETH VETH*/
+                    WHERE VESI.HOUSE_CODE = '#house_code#'
+                    AND VESI.E_SELECTED_FACTOR = #e_selected_factor#
+                    AND VESI.HOUSE_CODE = VEVL.HOUSE_CODE
+                    AND VESI.EVAL_VALUER_REFITEM = VEVL.EVAL_VALUER_REFITEM
+                    AND VEVL.HOUSE_CODE = VEVD.HOUSE_CODE
+                    AND VEVL.EVAL_ITEM_REFITEM = VEVD.EVAL_ITEM_REFITEM
+                    AND VEVD.HOUSE_CODE = VEVH.HOUSE_CODE
+                    AND VEVD.EVAL_REFITEM = VEVH.EVAL_REFITEM
+                    /* 도급업체 수행평가에 한정할 경우
+                    AND VEVH.HOUSE_CODE = VETH.HOUSE_CODE
+                    AND VEVH.E_TEMPLATE_REFITEM = VETH.E_TEMPLATE_REFITEM 
+                    AND VETH.TEMPLATE_TYPE = 4 -- 도급업체 수행평가   코드
+                    */
+                    AND VEVH.STATUS != 'D'
+                    AND VEVD.STATUS != 'D'
+                    GROUP BY VEVD.HOUSE_CODE, VEVD.VENDOR_CODE, VEVH.DOC_NO, VEVH.DOC_COUNT
+                ) B
+                WHERE A.HOUSE_CODE = B.HOUSE_CODE
+                AND A.EXEC_NO = B.EXEC_NO
+                AND A.VENDOR_CODE = B.VENDOR_CODE
+                GROUP BY A.VENDOR_CODE
+            )
+		 ]]>
+	</method>
+	
+	<method name="getCalExceHumanRateYear">
+		 <![CDATA[
+            SELECT VENDOR_CODE
+                , CASE WHEN SUM(AVG_CNT) / SUM(GR_QTY) * 100 >= 50 THEN 5
+                    WHEN 40 <= SUM(AVG_CNT) / SUM(GR_QTY) * 100 AND SUM(AVG_CNT) / SUM(GR_QTY) * 100 < 50 THEN 4
+                    WHEN 30 <= SUM(AVG_CNT) / SUM(GR_QTY) * 100 AND SUM(AVG_CNT) / SUM(GR_QTY) * 100 < 40 THEN 3
+                    WHEN 20 <= SUM(AVG_CNT) / SUM(GR_QTY) * 100 AND SUM(AVG_CNT) / SUM(GR_QTY) * 100 < 30 THEN 2
+                    WHEN 20 >  SUM(AVG_CNT) / SUM(GR_QTY) * 100 THEN 1
+                  END SCORE  
+            FROM (
+            	SELECT VENDOR_CODE, SUM(AVG_CNT)*SUM(ITEM_QTY) AVG_CNT, MAX(GR_QTY) GR_QTY
+            	FROM (
+                	SELECT   CND.VENDOR_CODE
+	                    , CASE WHEN (VEVD.EVAL_SCORE 
+                        	/ ( SELECT COUNT(*) FROM ICOMVETD 
+	                            WHERE HOUSE_CODE = VETH.HOUSE_CODE 
+                            	AND E_TEMPLATE_REFITEM = VETH.E_TEMPLATE_REFITEM 
+                            	AND STATUS != 'D')) >= 4 THEN 1
+                      		ELSE 0 END AVG_CNT   
+                    	, IVDT.ITEM_QTY
+                    	, PODT.GR_QTY
+                    	, PODT.PO_NO
+                    	, PODT.PO_SEQ
+                	FROM ICOYCNHD CNH, ICOYCNDT CND, ICOYPRHD PRH, ICOMVEVH VEVH
+                 		, ICOMVETH VETH, ICOMVEVD VEVD, ICOYIVDT IVDT, ICOYPODT PODT
+                	WHERE VETH.HOUSE_CODE = '#house_code#'
+                    AND VETH.TEMPLATE_TYPE = 6 -- 투입인력 수행평가   코드
+                    AND VETH.HOUSE_CODE = VEVH.HOUSE_CODE
+                    AND VETH.E_TEMPLATE_REFITEM = VEVH.E_TEMPLATE_REFITEM 
+                    AND VEVH.HOUSE_CODE = VEVD.HOUSE_CODE
+                    AND VEVH.EVAL_REFITEM = VEVD.EVAL_REFITEM
+                    AND VEVH.HOUSE_CODE = IVDT.HOUSE_CODE
+                    AND IVDT.PO_NO = PODT.PO_NO
+                    AND IVDT.PO_SEQ = PODT.PO_SEQ
+                    AND VEVH.DOC_NO = IVDT.INV_NO
+                    AND IVDT.HOUSE_CODE = PODT.HOUSE_CODE
+                    AND PODT.HOUSE_CODE = CNH.HOUSE_CODE
+                    AND PODT.EXEC_NO = CND.EXEC_NO
+                    AND PODT.EXEC_SEQ = CND.EXEC_SEQ
+                    AND CNH.HOUSE_CODE = CND.HOUSE_CODE
+                    AND CNH.EXEC_NO = CND.EXEC_NO
+                    AND CND.HOUSE_CODE = PRH.HOUSE_CODE
+                    AND CND.PR_NO = PRH.PR_NO
+                    AND (CNH.SIGN_DATE >= '#eval_from_date#' AND CNH.SIGN_DATE <= '#eval_to_date#')
+                    AND CNH.SIGN_STATUS = 'E'
+                    AND PRH.REQ_TYPE = 'P'
+                    AND CND.STATUS != 'D'
+                    AND CNH.STATUS != 'D' 
+                    AND VEVH.STATUS != 'D' 
+                    AND VEVD.STATUS != 'D' 
+                    AND IVDT.STATUS != 'D' 
+            	)
+            	GROUP BY VENDOR_CODE, PO_NO, PO_SEQ
+            )
+            GROUP BY VENDOR_CODE
+		 ]]>
+	</method>
+	
+	
+	<method name="getCalCommon03Year">
+		 <![CDATA[
+            SELECT VENDOR_CODE
+                  , CASE WHEN SUM(EVAL_SCORE) / SUM(GR_QTY) >= 4 THEN 5
+                    WHEN 3   <= SUM(EVAL_SCORE) / SUM(GR_QTY) AND SUM(EVAL_SCORE) / SUM(GR_QTY) < 4   THEN 4
+                    WHEN 2.5 <= SUM(EVAL_SCORE) / SUM(GR_QTY) AND SUM(EVAL_SCORE) / SUM(GR_QTY) < 3   THEN 3
+                    WHEN 2   <= SUM(EVAL_SCORE) / SUM(GR_QTY) AND SUM(EVAL_SCORE) / SUM(GR_QTY) < 2.5 THEN 2
+                    WHEN 2   >  SUM(EVAL_SCORE) / SUM(GR_QTY) THEN 1
+                  END SCORE
+            FROM (
+                SELECT VENDOR_CODE, SUM(EVAL_SCORE)*SUM(ITEM_QTY)  EVAL_SCORE, MAX(GR_QTY)  GR_QTY
+                FROM(
+                    SELECT   CND.VENDOR_CODE
+                        , VESI.SELECTED_SEQ_SCORE AS EVAL_SCORE
+                        , IVDT.ITEM_QTY
+                        , PODT.GR_QTY
+                        , PODT.PO_NO
+                        , PODT.PO_SEQ
+                    FROM ICOYCNHD CNH, ICOYCNDT CND, ICOYPRHD PRH, ICOMVEVH VEVH
+                     , ICOMVETH VETH, ICOMVEVD VEVD, ICOMVEVL VEVL, ICOMVESI VESI 
+                     , ICOYIVDT IVDT, ICOYPODT PODT
+                    WHERE VETH.HOUSE_CODE = '#house_code#'
+                    AND VETH.TEMPLATE_TYPE = 6 -- 투입인력 수행평가   코드
+                    AND VETH.HOUSE_CODE = VEVH.HOUSE_CODE
+                    AND VETH.E_TEMPLATE_REFITEM = VEVH.E_TEMPLATE_REFITEM 
+                    AND CNH.HOUSE_CODE = VEVH.HOUSE_CODE
+                    AND VEVH.HOUSE_CODE = VEVD.HOUSE_CODE
+                    AND VEVH.EVAL_REFITEM = VEVD.EVAL_REFITEM
+                    AND VEVD.HOUSE_CODE = VEVL.HOUSE_CODE
+                    AND VEVD.EVAL_ITEM_REFITEM = VEVL.EVAL_ITEM_REFITEM
+                    AND VEVL.HOUSE_CODE = VESI.HOUSE_CODE
+                    AND VEVL.EVAL_VALUER_REFITEM = VESI.EVAL_VALUER_REFITEM
+                    AND VESI.E_SELECTED_FACTOR = #e_selected_factor#
+                    AND CNH.HOUSE_CODE = CND.HOUSE_CODE
+                    AND CNH.EXEC_NO = CND.EXEC_NO
+                    AND VEVH.HOUSE_CODE = PRH.HOUSE_CODE
+                    AND CND.PR_NO = PRH.PR_NO
+                    AND (CNH.SIGN_DATE >= '#eval_from_date#' AND CNH.SIGN_DATE <= '#eval_to_date#')
+                    AND CNH.SIGN_STATUS = 'E'
+                    AND PRH.REQ_TYPE = 'P'
+                    AND CND.STATUS != 'D'
+                    AND CNH.STATUS != 'D' 
+                    AND VEVH.HOUSE_CODE = IVDT.HOUSE_CODE
+                    AND VEVH.DOC_NO = IVDT.INV_NO
+                    AND IVDT.HOUSE_CODE = PODT.HOUSE_CODE
+                    AND IVDT.PO_NO = PODT.PO_NO
+                    AND IVDT.PO_SEQ = PODT.PO_SEQ
+                    AND CNH.EXEC_NO =  PODT.EXEC_NO
+                )
+                GROUP BY VENDOR_CODE, PO_NO, PO_SEQ
+            ) GROUP BY VENDOR_CODE
+ 
+ 
+			 ]]>
+	</method>
+	
+	
+	<method name="getCalCommon04Year">
+		 <![CDATA[
+  			SELECT VEVD.VENDOR_CODE
+                , TRUNC(AVG(VESI.SELECTED_SEQ_SCORE),1) EVAL_SCORE
+            FROM ICOMVEVH VEVH, ICOMVEVD VEVD, ICOMVEVL VEVL, ICOMVESI VESI
+            WHERE VESI.HOUSE_CODE = '#house_code#'
+            AND VESI.E_SELECTED_FACTOR = #e_selected_factor#
+            AND VESI.HOUSE_CODE = VEVL.HOUSE_CODE
+            AND VESI.EVAL_VALUER_REFITEM = VEVL.EVAL_VALUER_REFITEM
+            AND VEVL.HOUSE_CODE = VEVD.HOUSE_CODE
+            AND VEVL.EVAL_ITEM_REFITEM = VEVD.EVAL_ITEM_REFITEM
+            AND VEVD.HOUSE_CODE = VEVH.HOUSE_CODE
+            AND VEVD.EVAL_REFITEM = VEVH.EVAL_REFITEM
+            AND (VEVH.ADD_DATE >= '#eval_from_date#' AND VEVH.ADD_DATE <= '#eval_to_date#')
+            AND VEVH.STATUS != 'D'
+            AND VEVD.STATUS != 'D'
+            GROUP BY VEVD.VENDOR_CODE
+			 ]]>
+	</method>
+	
+	
+	<method name="getCalHumanAccuracyYear">
+		 <![CDATA[
+            SELECT VENDOR_CODE
+                 , CASE WHEN        CAL_SCORE >= 4 THEN 5
+                        WHEN 3   <= CAL_SCORE AND CAL_SCORE < 4   THEN 4
+                        WHEN 2.5 <= CAL_SCORE AND CAL_SCORE < 3   THEN 3
+                        WHEN 1   <= CAL_SCORE AND CAL_SCORE < 2.5 THEN 2
+                        WHEN 1   >  CAL_SCORE THEN 1
+                   END SCORE  
+            FROM
+            (
+                SELECT A.VENDOR_CODE, TRUNC((SUM(B.EVAL_SCORE * A.VENDOR_AMT) / SUM(A.EXEC_AMT_KRW)),1) AS CAL_SCORE
+                FROM
+                (
+                    SELECT   DISTINCT CND.HOUSE_CODE, CND.EXEC_NO,  CND.VENDOR_CODE, CNH.EXEC_AMT_KRW, (CND.UNIT_PRICE * CND.SETTLE_QTY) AS VENDOR_AMT
+                    FROM ICOYCNHD CNH, ICOYCNDT CND, ICOYPRHD PRH
+                    WHERE CNH.HOUSE_CODE = '#house_code#'
+                    AND CNH.HOUSE_CODE = CND.HOUSE_CODE
+                    AND CNH.EXEC_NO = CND.EXEC_NO
+                    AND CNH.HOUSE_CODE = PRH.HOUSE_CODE
+                    AND CND.PR_NO = PRH.PR_NO
+                    AND (CNH.SIGN_DATE >= '#eval_from_date#' AND CNH.SIGN_DATE <= '#eval_to_date#')
+                    AND CND.HUMAN_NO IS NOT NULL
+                    AND CNH.SIGN_STATUS = 'E'
+                    AND PRH.REQ_TYPE = 'P'
+                    AND CND.STATUS != 'D'
+                    AND CNH.STATUS != 'D' 
+                ) A,
+                (
+                    SELECT VEVD.HOUSE_CODE, VEVD.VENDOR_CODE
+                       , TRUNC(AVG(VESI.SELECTED_SEQ_SCORE),1) EVAL_SCORE
+                       , ( SELECT DISTINCT EXEC_NO FROM ICOYPODT
+                            WHERE HOUSE_CODE = VEVD.HOUSE_CODE
+                            AND PO_NO IN ( SELECT PO_NO FROM ICOYIVDT 
+                                           WHERE HOUSE_CODE = VEVD.HOUSE_CODE AND INV_NO = VEVH.DOC_NO AND HOUSE_CODE = '#house_code#')
+                            )  EXEC_NO
+                    FROM ICOMVEVH VEVH, ICOMVEVD VEVD, ICOMVEVL VEVL, ICOMVESI VESI
+                    WHERE VESI.HOUSE_CODE = '#house_code#'
+                    AND VESI.E_SELECTED_FACTOR = #e_selected_factor# 
+                    AND VESI.HOUSE_CODE = VEVL.HOUSE_CODE
+                    AND VESI.EVAL_VALUER_REFITEM = VEVL.EVAL_VALUER_REFITEM
+                    AND VEVL.HOUSE_CODE = VEVD.HOUSE_CODE
+                    AND VEVL.EVAL_ITEM_REFITEM = VEVD.EVAL_ITEM_REFITEM
+                    AND VEVD.HOUSE_CODE = VEVH.HOUSE_CODE
+                    AND VEVD.EVAL_REFITEM = VEVH.EVAL_REFITEM
+                    AND VEVH.STATUS != 'D'
+                    AND VEVD.STATUS != 'D'
+                    GROUP BY VEVD.HOUSE_CODE, VEVD.VENDOR_CODE, VEVH.DOC_NO, VEVH.DOC_COUNT
+                ) B
+                WHERE A.HOUSE_CODE = '#house_code#'
+                AND A.HOUSE_CODE = B.HOUSE_CODE
+                AND A.EXEC_NO = B.EXEC_NO
+                AND A.VENDOR_CODE = B.VENDOR_CODE
+                GROUP BY A.VENDOR_CODE
+            )
+			 ]]>
+	</method>
+	
+	
+	<method name="getCalRegularEmpRateYear">
+		 <![CDATA[
+        SELECT VENDOR_CODE
+            , CASE WHEN EVAL_PCT >= 80 THEN 5
+                    WHEN 70 <= EVAL_PCT AND EVAL_PCT < 80 THEN 4
+                    WHEN 60 <= EVAL_PCT AND EVAL_PCT < 70 THEN 3
+                    WHEN 50 <= EVAL_PCT AND EVAL_PCT < 60 THEN 2
+                    WHEN 50 >  EVAL_PCT THEN 1
+              END SCORE
+        FROM
+        (
+        SELECT VD.VENDOR_CODE, TRUNC(PROJ_EMP_NO/PROJ_RGLR_NO * 100) EVAL_PCT 
+        FROM DBK_REPORT832 DBK, ICOMVEVH VH, ICOMVEVD VD, ICOMVNGL VN
+        WHERE VH.HOUSE_CODE =  '#house_code#'
+        AND VH.EVAL_REFITEM = #eval_refitem#
+        AND VH.HOUSE_CODE = VD.HOUSE_CODE
+        AND VH.EVAL_REFITEM = VD.EVAL_REFITEM
+        AND VD.HOUSE_CODE = VN.HOUSE_CODE
+        AND VD.VENDOR_CODE = VN.VENDOR_CODE
+        AND VN.IRS_NO = DBK.BIZ_NO 
+        AND DBK.E_DATE = (SELECT MAX(E_DATE) FROM DBK_REPORT832 WHERE DBK.BIZ_NO = VN.IRS_NO  )
+        AND VD.STATUS != 'D'
+        )
+  
+			 ]]>
+	</method>
+	
+	
+	<method name="getCalBidRateYear">
+		 <![CDATA[
+        SELECT VENDOR_CODE
+            , CASE WHEN TRUNC(VO_CNT/AP_CNT*100) >= 99 THEN 5
+                    WHEN 90 <= TRUNC(VO_CNT/AP_CNT*100) AND TRUNC(VO_CNT/AP_CNT*100) < 99 THEN 4
+                    WHEN 80 <= TRUNC(VO_CNT/AP_CNT*100) AND TRUNC(VO_CNT/AP_CNT*100) < 90 THEN 3
+                    WHEN 70 <= TRUNC(VO_CNT/AP_CNT*100) AND TRUNC(VO_CNT/AP_CNT*100) < 80 THEN 2
+                    WHEN 70 >  TRUNC(VO_CNT/AP_CNT*100) THEN 1
+              END SCORE
+        FROM
+        (
+            SELECT  BDAP.VENDOR_CODE, COUNT(BDAP.VENDOR_CODE) AP_CNT, COUNT(BDVO.VENDOR_CODE) VO_CNT
+            FROM    ICOYBDHD BDHD, ICOYBDAP BDAP, ICOYBDVO BDVO
+            WHERE   BDHD.HOUSE_CODE = '#house_code#'
+              AND   BDHD.HOUSE_CODE = BDAP.HOUSE_CODE
+              AND   BDHD.BID_NO     = BDAP.BID_NO
+              AND   BDHD.BID_COUNT  = BDAP.BID_COUNT
+              AND   (BDHD.ADD_DATE >= '#eval_from_date#' AND BDHD.ADD_DATE <= '#eval_to_date#')
+              AND   BDAP.HOUSE_CODE = BDVO.HOUSE_CODE(+)   
+              AND   BDAP.BID_NO     = BDVO.BID_NO(+)       
+              AND   BDAP.BID_COUNT  = BDVO.BID_COUNT(+)    
+              AND   BDAP.VENDOR_CODE= BDVO.VENDOR_CODE(+)  
+              AND   BDHD.STATUS != 'D'
+              AND   BDHD.CONT_TYPE1 = 'NC'  
+            GROUP BY BDAP.VENDOR_CODE
+        )
+			 ]]>
+	</method>
+	
+	
+	<method name="et_getQntEvalSelectedFactor">
+		 <![CDATA[
+		 /*		SELECT A.TEMPLATE_NAME, C.FACTOR_NAME, C.SCALE_COUNT, C.E_FACTOR_REFITEM, D.ITEM_NAME 
+			, D.SEQ, F.SELECTED_SEQ, D.E_FACTOR_ITEM_REFITEM, F.SELECTED_SEQ_SCORE
+	   	FROM ICOMVETH A, ICOMVETD B,
+	   	 	ICOMVEFH C, ICOMVEFD D, ICOMVEVL E, ICOMVESI F
+		WHERE A.HOUSE_CODE = '#house_code#'
+		AND A.HOUSE_CODE = B.HOUSE_CODE 
+		AND A.E_TEMPLATE_REFITEM = #e_template_refitem# 
+		AND A.E_TEMPLATE_REFITEM = B.E_TEMPLATE_REFITEM
+		AND B.HOUSE_CODE = C.HOUSE_CODE 
+		AND B.E_FACTOR_REFITEM = C.E_FACTOR_REFITEM 
+		AND C.HOUSE_CODE = D.HOUSE_CODE 
+		AND C.E_FACTOR_REFITEM = D.E_FACTOR_REFITEM
+		AND E.HOUSE_CODE = '#house_code#'
+		AND E.EVAL_VALUER_REFITEM = #eval_valuer_refitem#
+		AND E.HOUSE_CODE = F.HOUSE_CODE 
+		AND E.EVAL_VALUER_REFITEM = F.EVAL_VALUER_REFITEM
+		AND C.E_FACTOR_REFITEM = F.E_SELECTED_FACTOR
+		AND A.USE_FLAG = 'Y' 
+		AND C.USE_FLAG = 'Y' 
+		AND D.USE_FLAG = 'Y'
+		AND C.QNT_FLAG = 'Y'
+		ORDER BY C.E_FACTOR_REFITEM , D.SEQ */
+		 
+		 
+    		 SELECT A.TEMPLATE_NAME, C.FACTOR_NAME, C.SCALE_COUNT, C.E_FACTOR_REFITEM, D.ITEM_NAME 
+                , D.SEQ, F.SELECTED_SEQ, D.E_FACTOR_ITEM_REFITEM, F.SELECTED_SEQ_SCORE
+            FROM ICOMVETH A, ICOMVETD B,
+               ICOMVEFH C, ICOMVEFD D, ICOMVEVL E, ICOMVESI F, ICOMVEVH G, ICOMVEVD H
+            WHERE A.HOUSE_CODE = '#house_code#'
+            AND A.HOUSE_CODE = B.HOUSE_CODE 
+            AND A.E_TEMPLATE_REFITEM = #e_template_refitem#
+            AND A.E_TEMPLATE_REFITEM = B.E_TEMPLATE_REFITEM
+            AND A.HOUSE_CODE = C.HOUSE_CODE 
+            AND B.E_FACTOR_REFITEM = C.E_FACTOR_REFITEM 
+            AND C.HOUSE_CODE = D.HOUSE_CODE 
+            AND C.E_FACTOR_REFITEM = D.E_FACTOR_REFITEM
+            AND G.HOUSE_CODE = '#house_code#'
+            AND G.EVAL_REFITEM = #eval_refitem#
+            AND G.HOUSE_CODE = H.HOUSE_CODE
+            AND G.EVAL_REFITEM = H.EVAL_REFITEM
+            AND H.EVAL_ITEM_REFITEM = E.EVAL_ITEM_REFITEM
+            AND E.EVAL_VALUER_ID = 'SYSTEM'  /* 정량 평가자 */ 
+            AND H.VENDOR_CODE = '#vendor_code#'
+            AND E.HOUSE_CODE = F.HOUSE_CODE 
+            AND E.EVAL_VALUER_REFITEM = F.EVAL_VALUER_REFITEM
+            AND C.HOUSE_CODE = F.HOUSE_CODE
+            AND C.E_FACTOR_REFITEM = F.E_SELECTED_FACTOR
+            AND A.USE_FLAG = 'Y' 
+            AND C.USE_FLAG = 'Y' 
+            AND C.QNT_FLAG = 'Y'
+            ORDER BY C.E_FACTOR_REFITEM , D.SEQ 
+		]]>
+	</method>
+	
+	
+	<method name="et_getEvaVendorList">
+	   SELECT 
+	        VENDOR_CODE 
+	       ,GETVENDOR_NAME_LOC_OOC(HOUSE_CODE,VENDOR_CODE) AS VENDOR_NAME  
+	   FROM ICOMVEVD
+	   WHERE HOUSE_CODE = '#house_code#'
+	     AND EVAL_REFITEM = #eval_refitem#
+	</method>
+<method name="getEvaTempDetail">
+	<![CDATA[
+		SELECT      A.E_FACTOR_REFITEM,
+					A.FACTOR_NAME,
+					B.E_FACTOR_ITEM_REFITEM,
+					B.ITEM_NAME ,
+					B.ITEM_SCORE,
+					A.SCALE_COUNT,
+					A.QNT_FLAG,
+					GETICOMCODE1(a.HOUSE_CODE,'M124',a.FACTOR_TYPE) FACTOR_TYPE,
+					C.E_TEMPLATE_REFITEM,
+					C.TEMPLATE_NAME ,
+					C.WEIGHT,
+					C.E_TEMPLATE_ITEM_REFITEM,
+					C.TEMPLATE_TYPE,
+					DECODE(A.QNT_FLAG, 'Y', '정량', '정성') QNT_NAME
+		FROM    ICOMVEFH A , ICOMVEFD B ,
+				(SELECT A.E_TEMPLATE_REFITEM,
+						A.TEMPLATE_NAME ,
+						B.E_TEMPLATE_ITEM_REFITEM,
+						B.E_FACTOR_REFITEM ,
+						B.WEIGHT,
+						A.TEMPLATE_TYPE,
+						A.HOUSE_CODE
+				FROM ICOMVETH A, ICOMVETD B
+				WHERE A.E_TEMPLATE_REFITEM = B.E_TEMPLATE_REFITEM
+				AND A.HOUSE_CODE = ${session.HOUSE_CODE}
+				AND A.HOUSE_CODE = B.HOUSE_CODE
+				AND A.E_TEMPLATE_REFITEM = ${e_template_refitem}) C
+		WHERE  C.E_FACTOR_REFITEM = B.E_FACTOR_REFITEM                    
+		   AND A.USE_FLAG = 'Y'                                              
+		   AND B.USE_FLAG = 'Y'                                              
+		   AND A.E_FACTOR_REFITEM = C.E_FACTOR_REFITEM
+		   AND A.HOUSE_CODE = ${session.HOUSE_CODE}  
+		   AND A.HOUSE_CODE = B.HOUSE_CODE 
+	
+		ORDER BY QNT_FLAG, E_FACTOR_REFITEM , E_FACTOR_ITEM_REFITEM
+
+	]]>
+	</method>
+
+</service>

@@ -1,0 +1,18 @@
+<script language=javascript src="/XecureObject/xecureweb.js"></script>
+<script language='javascript'>
+PrintObjectTag();
+
+ret = document.XecureWeb.UpdateModules("http://phobos.softforum.co.kr:8188/XecureDemo/jsp/info.ini.sig");
+//ret = document.XecureWeb.UpdateModules("http://210.124.178.147/TestUpdate/XWeb_Update.aspx");
+if( ret < 0 )
+	XecureWebError();
+else if( ret == 1 )
+	alert("cancel");
+else if( ret == 2 )
+	alert("file(s) holded");
+else if( ret == 0 )
+	alert("update succeeds");
+
+history.back();
+
+</script>

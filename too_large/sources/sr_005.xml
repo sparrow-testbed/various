@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+<service>
+<method name="getSgVnLinkList">
+	<![CDATA[
+				SELECT                                                          		
+						GETSGNAME(A.PARENT1) AS S_TYPE1,                         		
+						GETSGNAME(A.PARENT2) AS S_TYPE2,                         		
+						GETSGNAME(A.SG) AS S_TYPE3,                              		
+						A.NOTICE_FLAG AS ANNOU_FLAG,  									
+						A.VENDOR_CODE AS VENDOR_CODE,  									
+						GETCOMPANYNAMELOC(B.HOUSE_CODE, B.VENDOR_CODE, 'S') AS NAME_LOC,
+						A.VENDOR_SG_REFITEM AS MAPPING_ID   							
+				FROM                                                            		
+				(                                                               		
+					SELECT                                                       		
+						   (SELECT PARENT_SG_REFITEM                             		
+							   FROM SSGGL                                  			
+							  WHERE SG_REFITEM = B.PARENT_SG_REFITEM
+							    AND HOUSE_CODE = ${session.HOUSE_CODE} ) AS PARENT1,		
+							B.PARENT_SG_REFITEM AS PARENT2,                      		
+							A.SG_REFITEM AS SG,                                  		
+							A.VENDOR_CODE AS VENDOR_CODE,                          		
+							A.VENDOR_SG_REFITEM AS VENDOR_SG_REFITEM,              		
+							B.NOTICE_FLAG, A.HOUSE_CODE    								
+					FROM 	SSGVN A, SSGGL B          							
+					WHERE	A.HOUSE_CODE = B.HOUSE_CODE									
+					AND     A.SG_REFITEM = B.SG_REFITEM                          		
+					AND		A.HOUSE_CODE = ${session.HOUSE_CODE}								
+					AND		B.LEVEL_COUNT = '3'                                  		
+					AND		A.REGISTRY_FLAG = 'Y'                      					
+					AND		A.APPLY_FLAG = 'Y'                                      	
+					--ORDER BY PARENT1, PARENT2, SG, VENDOR_CODE                    		
+				) A, ICOMVNGL B                                                   		
+				WHERE	A.HOUSE_CODE = B.HOUSE_CODE										
+				AND	A.VENDOR_CODE = B.VENDOR_CODE									
+				AND	A.HOUSE_CODE = ${session.HOUSE_CODE}									
+				 AND  A.VENDOR_CODE  = $S{vendor_code}                          	
+				 AND  GETCOMPANYNAMELOC(B.HOUSE_CODE, B.VENDOR_CODE, 'S') LIKE '%' || $S{vendor_code_name} || '%'             
+ 	]]>	     
+	</method>
+		
+		
+	<method name="setSgVnLinkInsert_1">
+				SELECT COUNT(*) CNT						
+				FROM SSGVN							
+				WHERE SG_REFITEM = ${type3_code}	
+				AND VENDOR_CODE = ${vendor_code}	
+				AND HOUSE_CODE = ${session.HOUSE_CODE}	          	   
+	</method>
+	
+	<method name="setSgVnLinkInsert_2">	
+				INSERT INTO SSGVN	(				
+				 	HOUSE_CODE,							
+				 	VENDOR_SG_REFITEM,					
+				 	PROGRESS_STATUS,					
+				 	REGISTRY_FLAG,						
+				 	S_TEMPLATE_REFITEM,					
+				 	C_TEMPLATE_REFITEM,					
+				 	REQ_DATE,							
+				 	VENDOR_CODE,						
+				 	SG_REFITEM,							
+				 	APPLY_FLAG) 				
+				 select  				
+				 	${session.HOUSE_CODE},					
+				 	NVL(max(VENDOR_SG_REFITEM),0) + 1,				
+				 	'0',								
+				 	'Y',								
+				 	'1',								
+				 	'0',					
+				 	TO_CHAR(SYSDATE,'YYYYMMDD'),		
+				 	${vendor_code},					
+				 	${type3_code},					
+				 	'Y'									
+				 	from SSGVN									
+	</method> 
+	      
+	<method name="setSgVnLinkInsert_3">	
+				UPDATE SSGVN							
+				SET	 REGISTRY_FLAG = 'Y',				
+				APPLY_FLAG = 'Y'					
+				WHERE  VENDOR_CODE = ${vendor_code}	
+				AND HOUSE_CODE = ${session.HOUSE_CODE}	
+				AND  SG_REFITEM = ${type3_code}								
+	</method>   
+	
+	<method name="setSgVnLinkDelete">	
+				UPDATE SSGVN								
+				SET	 REGISTRY_FLAG = 'N',					
+				APPLY_FLAG = 'N'						
+				WHERE  VENDOR_SG_REFITEM = ${mapping_id}	
+				AND HOUSE_CODE = ${session.HOUSE_CODE}												
+	</method>  
+	
+</service>

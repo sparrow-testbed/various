@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+<service>
+	 
+ 	<method name = "getTempDetail">
+   	<![CDATA[
+		SELECT  A.E_FACTOR_REFITEM,										
+			 	A.FACTOR_NAME,                                              
+			 	B.E_FACTOR_ITEM_REFITEM,                                    
+		 		B.ITEM_NAME ,                                               
+		 		B.ITEM_SCORE,                                               
+		 		A.SCALE_COUNT,                                              
+		 		A.QNT_FLAG,      
+	 		    GETICOMCODE1(A.HOUSE_CODE,'M124',A.FACTOR_TYPE) FACTOR_TYPE,                                           
+		 		C.E_TEMPLATE_REFITEM,                                       
+		 		C.TEMPLATE_NAME ,                                           
+		 		C.WEIGHT,                                                   
+		 		C.E_TEMPLATE_ITEM_REFITEM,                                  
+		 		C.TEMPLATE_TYPE,
+		 		DECODE(A.QNT_FLAG, 'Y', '정량', '정성') QNT_NAME                                             
+		FROM ICOMVEFH A ,                                                 
+		 	 ICOMVEFD B ,                                                   
+			 	 (SELECT A.E_TEMPLATE_REFITEM,                                  
+			 			 A.TEMPLATE_NAME ,                                      
+			 			 B.E_TEMPLATE_ITEM_REFITEM,                             
+			 			 B.E_FACTOR_REFITEM ,                                    
+			 			 B.WEIGHT,                                              
+			 			 A.TEMPLATE_TYPE                                        
+			 	 FROM ICOMVETH A, ICOMVETD B                                    
+			   	 WHERE A.E_TEMPLATE_REFITEM = B.E_TEMPLATE_REFITEM          
+			 	 AND A.E_TEMPLATE_REFITEM = ${e_template_refitem}) C       
+		WHERE  C.E_FACTOR_REFITEM = B.E_FACTOR_REFITEM                    
+		   AND A.USE_FLAG = 'Y'                                              
+		   AND B.USE_FLAG = 'Y'                                              
+		   AND A.E_FACTOR_REFITEM = C.E_FACTOR_REFITEM  
+		   AND A.HOUSE_CODE = B.HOUSE_CODE                     
+			
+		ORDER BY A.QNT_FLAG,
+		    E_FACTOR_REFITEM ASC,                                 
+		    E_FACTOR_ITEM_REFITEM ASC                                
+   	]]>
+   	</method>
+   	
+   	
+   	 
+    <method name = "getEvaDetail">
+   	<![CDATA[
+       SELECT A.E_FACTOR_REFITEM
+             ,A.FACTOR_NAME
+             ,B.E_FACTOR_ITEM_REFITEM
+             ,B.ITEM_NAME
+             ,B.ITEM_SCORE
+             ,A.SCALE_COUNT
+             ,A.QNT_FLAG
+             , GETICOMCODE1(a.HOUSE_CODE,'M124',a.FACTOR_TYPE) FACTOR_TYPE
+             ,'' E_TEMPLATE_REFITEM                                       
+             ,'' TEMPLATE_NAME                                        
+             ,'' WEIGHT                                                   
+             ,'' E_TEMPLATE_ITEM_REFITEM                                  
+             ,'' TEMPLATE_TYPE
+     		 ,DECODE(A.QNT_FLAG, 'Y', '정량', '정성') QNT_NAME
+         FROM ICOMVEFH A , ICOMVEFD B
+        WHERE A.HOUSE_CODE = B.HOUSE_CODE
+          AND A.E_FACTOR_REFITEM = B.E_FACTOR_REFITEM
+          AND A.HOUSE_CODE = ${session.HOUSE_CODE}
+          AND A.USE_FLAG         = 'Y'
+          AND B.USE_FLAG         = 'Y'
+       ORDER BY e_factor_refitem asc, E_FACTOR_ITEM_REFITEM ASC, A.QNT_FLAG 
+   	]]>
+   	</method>
+   	
+   		<method name ="setTempInsert_1">
+   	<![CDATA[
+		INSERT INTO ICOMVETH ( 					
+						HOUSE_CODE,                 			
+			   			E_TEMPLATE_REFITEM, 					
+			   			TEMPLATE_NAME,    						
+			   			TEMPLATE_TYPE,    						
+			   			ADD_DATE,								
+			   			CHANGE_DATE,							
+			   			ADD_USER_ID)							
+					 select  								
+					   ${session.HOUSE_CODE},						 
+					   ${e_template_refitem},   				
+					   ${evaTempName},										
+					   ${template_type},										
+					   TO_CHAR(SYSDATE,'YYYYMMDD'), 		
+					   TO_CHAR(SYSDATE,'YYYYMMDD'), 		
+					   ${session.ID} from dual						
+   	]]>
+   	</method>
+    
+    <method name ="setTempInsert_2">
+   	<![CDATA[
+		INSERT INTO ICOMVETD ( 		
+   					HOUSE_CODE,                 
+				   	E_TEMPLATE_ITEM_REFITEM, 	
+				   	WEIGHT, 					
+				   	E_TEMPLATE_REFITEM, 		
+				  	E_FACTOR_REFITEM) 			
+				 select  					
+				   ${session.HOUSE_CODE},			
+				   NVL(max(E_TEMPLATE_ITEM_REFITEM),0) + 1,   	
+				   ${weight},							
+				   ${e_template_refitem}, 							
+				   ${e_factor_refitem} from icomvetd 							
+   	]]>
+   	</method>
+   	
+   		<method name = "setTempUpdate_1">
+   	<![CDATA[
+		UPDATE ICOMVETH SET  										
+			        TEMPLATE_NAME = ${evaTempName},    														
+			        TEMPLATE_TYPE = ${template_type},    															
+			        CHANGE_DATE = TO_CHAR(SYSDATE,'YYYYMMDD') 	
+			 WHERE  E_TEMPLATE_REFITEM = ${e_template_refitem}							
+   	]]>
+   	</method>
+	
+	<method name = "setTempUpdate_2">
+   	<![CDATA[
+   			UPDATE ICOMVETD SET  								
+			        WEIGHT = ${weight}   																		
+			 WHERE  E_FACTOR_REFITEM = ${e_factor_refitem} 
+			 AND E_TEMPLATE_REFITEM = ${e_template_refitem}
+    ]]>
+   	</method>
+   	
+   	<method name ="chkUpdateEvaTemp">
+   	<![CDATA[
+		SELECT * FROM ICOMVEVH  													
+	    where E_TEMPLATE_REFITEM = ${e_template_refitem}		
+   	]]>
+   	</method>
+    
+    <method name="currvalForMssql">
+    <![CDATA[
+		select NVL(max(e_template_refitem),0) + 1 as currVal
+			from icomveth
+    ]]>
+    </method>
+</service>

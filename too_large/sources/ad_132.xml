@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<service>
+	<method name="et_setPwdReset">
+		UPDATE
+			ICOMLUSR
+		SET
+			PW_RESET_FLAG   = 'Y',
+			PW_RESET_DATE   = TO_CHAR(SYSDATE, 'YYYYMMDD'),
+			LAST_LOGIN_DATE = TO_CHAR(SYSDATE, 'YYYYMMDD'),
+			PASSWORD        = ${password},
+			PASS_CHECK_CNT  = 0
+		WHERE
+			USER_ID = ${sel_user_id}
+	</method>
+	<method name="setLogin_Pwd_History">
+			INSERT INTO ICOMPWDL  
+        	(
+	           HOUSE_CODE 
+			 , USER_ID    
+			 , PASSWORD   
+			 , ADD_DATE   
+        	)
+        	VALUES
+        	(
+        	 ${house_code}      
+        	 , upper(${sel_user_id})         
+        	 , ${password}        
+        	 , TO_CHAR(SYSDATE, 'YYYY/MM/DD HH24:MI:SS')
+        	)
+	</method>
+</service>

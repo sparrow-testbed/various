@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+<service>
+	 
+     <method name = "getTempDetail">
+    <![CDATA[
+    	select a.s_factor_refitem, a.factor_name, b.s_factor_item_refitem, 	
+			   b.item_name , b.item_score, NVL(c.weight,0) AS weight, c.s_template_refitem, 				
+       		   c.template_name , c.s_template_item_refitem							
+    	from icomvsfh a , icomvsfd b ,										
+   			       ( select a.s_template_refitem, a.template_name , 				
+   			         	b.s_template_item_refitem, b.weight, b.s_factor_refitem	
+                     from icomvsth a, icomvstd b 									
+                     where a.house_code = b.house_code								
+                       and a.s_template_refitem = b.s_template_refitem 				
+                       and a.s_template_refitem = ${s_template_refitem}
+                    ) c		
+        where a.house_code = b.house_code and a.house_code = ${session.HOUSE_CODE}	
+        and a.s_factor_refitem = b.s_factor_refitem and a.use_flag = 'Y' 	
+        and b.use_flag = 'Y' and a.S_FACTOR_REFITEM = c.s_factor_refitem	
+    ]]>
+    </method>
+	 
+	 
+	 <method name ="getScrDetail">
+    	<![CDATA[
+			select a.s_factor_refitem, a.factor_name, b.s_factor_item_refitem, 
+    	           b.item_name , nvl(b.item_score,0) as item_score				
+				from icomvsfh a , icomvsfd b 					
+    		where a.S_factor_refitem = b.s_factor_refitem 	
+    		  and a.use_flag = 'Y' and b.use_flag = 'Y' 	
+    		  and a.house_code = ${session.HOUSE_CODE}			
+    		  and a.house_code = b.house_code				
+    	    order by a.s_factor_refitem, b.s_factor_item_refitem  				
+    	]]>
+    </method>    
+    
+    
+    
+     <method name = "setTempInsert_1">
+    <![CDATA[
+		insert into icomvsth ( 			
+   			   house_code, 					
+   			   s_template_refitem, 			
+   			   template_name,    				
+   			   add_date,						
+   			   change_date,					
+   			   status, 						
+   			   add_user_id)					
+		select ${session.HOUSE_CODE},				
+    			   		${s_template_refitem}, 
+    			   		${templateName},								
+    			   		TO_CHAR(SYSDATE,'YYYYMMDD'), 
+	    			    TO_CHAR(SYSDATE,'YYYYMMDD'), 
+	    			    'C',							
+	    			    ${session.ID} 
+	    from dual				
+    ]]>
+    </method>
+    
+    <method name = "setTempInsert_2">
+    <![CDATA[
+    	insert into icomvstd ( 					
+        		    house_code, 							
+    			    s_template_item_refitem, 				
+    			    status, 								
+    			    weight,    						
+    			    s_template_refitem, 					
+    			    s_factor_refitem) 						
+    	select 								
+    			   ${session.HOUSE_CODE},						
+    			   NVL(max(s_template_item_refitem),0) + 1,   	
+    			   'C',									
+    			   ${weight},										
+    			   ${s_template_refitem} ,    
+    			   ${s_factor_refitem}
+    	from icomvstd 										
+    ]]>
+    </method>
+  	
+    
+     <method name = "setTempUpdate_1">
+    <![CDATA[
+		update icomvsth set  								
+    		   	template_name = ${templateName},    							
+    			change_date = TO_CHAR(SYSDATE,'YYYYMMDD') 	
+    	where house_code = ${session.HOUSE_CODE}			
+    	   and s_template_refitem = ${s_template_refitem}			
+    ]]>
+    </method>
+    
+    <method name = "setTempUpdate_2">
+    <![CDATA[
+		update icomvstd set 							
+    			weight = ${weight}   					
+    	where house_code = ${session.HOUSE_CODE}
+			and s_factor_refitem = ${s_factor_refitem}					
+   			and s_template_refitem = ${s_template_refitem}		
+    ]]>
+    </method>
+    
+    
+    <method name = "chkUpdateTemp">
+    <![CDATA[
+		SELECT * FROM ICOMVSTH a,SSGVN b 						
+		WHERE a.S_TEMPLATE_REFITEM = b.S_TEMPLATE_REFITEM 			
+          AND a.S_TEMPLATE_REFITEM = ${s_template_refitem}	
+          AND a.HOUSE_CODE = ${session.HOUSE_CODE}						
+          AND A.HOUSE_CODE = B.HOUSE_CODE							
+    ]]>
+    </method>
+    
+    
+     <method name="currvalForMssql">
+    <![CDATA[
+		select NVL(max(s_template_refitem),0) + 1 as currVal
+			from icomvsth
+    ]]>
+    </method>
+    
+    
+</service>

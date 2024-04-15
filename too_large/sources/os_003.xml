@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<service>
+	<method name="getSosglInfo">
+		SELECT
+			SUBJECT,
+			CONVERT_DATE(OSQ_CLOSE_DATE) AS OSQ_DATE,
+			REMARK,
+			ATTACH_NO,
+			GETFILEATTCOUNT(ATTACH_NO) AS ATT_COUNT
+		FROM
+			SOSGL
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			OSQ_NO     = ${OSQ_NO}
+		AND
+			OSQ_COUNT  = ${OSQ_COUNT}
+	</method>
+	
+	<method name="getSoslnList">
+		SELECT
+			A.ITEM_NO
+			, A.UNIT_MEASURE AS BASIC_UNIT
+			, CONVERT_DATE(A.RD_DATE) AS RD_DATE
+			, A.OSQ_QTY AS PR_QTY
+			, A.OSQ_AMT AS INFO_UNIT_PRICE
+			, A.PR_NO
+			, A.PR_SEQ
+			, A.DELY_TO_ADDRESS
+			, A.DELY_TO_DEPT AS DELY_TO_ADDRESS_CD
+			, GETFILEATTCOUNT(A.ATTACH_NO) AS ATTACH_COUNT
+			, A.ATTACH_NO
+			, A.SPECIFICATION
+			, A.MAKE_AMT_CODE
+			, GETCODETEXT2('M799', A.MAKE_AMT_CODE, 'KO') AS MAKE_AMT_NAME
+			, A.Z_REMARK AS REMARK
+			, B.VENDOR_CODE
+			, D.VENDOR_NAME_LOC AS VENDOR_NAME
+			, C.DESCRIPTION_LOC
+			--, NVL(E.PURCHASE_LOCATION, '01') AS PURCHASE_LOCATION
+			, '' AS PURCHASE_LOCATION
+			, A.P_ITEM_NO
+			, OMGL.DESCRIPTION_LOC AS P_DESCRIPTION_LOC
+		    , OMGL.BOM_NAME AS P_BOM_NAME
+		    , A.P_SEQ		    
+		    , F.ITEM_WIDTH
+		   	, F.ITEM_HEIGHT
+		   	, F.ITEM_AMT
+		   	, F.ITEM_QTY			
+		FROM SOSLN A
+		INNER JOIN SOSSE    B 
+		  	ON A.HOUSE_CODE = B.HOUSE_CODE  
+		  		AND A.OSQ_NO = B.OSQ_NO 
+		  		AND A.OSQ_COUNT = B.OSQ_COUNT 
+		  		AND A.OSQ_SEQ = B.OSQ_SEQ
+		INNER JOIN ICOMMTGL C 
+		  	ON A.ITEM_NO = C.ITEM_NO
+		INNER JOIN ICOMVNGL D 
+			ON B.VENDOR_CODE = D.VENDOR_CODE
+		--INNER JOIN ICOYPRDT E 
+		--	ON E.HOUSE_CODE = E.HOUSE_CODE  
+		--		AND A.PR_NO = E.PR_NO  
+		--		AND A.PR_SEQ = E.PR_SEQ
+		LEFT OUTER JOIN (
+						SELECT
+							A.HOUSE_CODE
+							, B.ITEM_NO
+							, A.SEQ
+							, B.DESCRIPTION_LOC
+							, A.BOM_NAME
+							, ( 
+								SELECT
+									COUNT(1)
+								FROM SBOMLN
+								WHERE HOUSE_CODE = A.HOUSE_CODE
+									AND P_ITEM_NO = A.P_ITEM_NO
+									AND SEQ = A.SEQ
+							) AS CNT
+						FROM SBOMGL A
+						INNER JOIN ICOMMTGL B 
+							ON A.P_ITEM_NO = B.ITEM_NO
+						) OMGL
+			ON A.HOUSE_CODE = OMGL.HOUSE_CODE
+				AND A.P_ITEM_NO = OMGL.ITEM_NO 
+				AND A.P_SEQ = OMGL.SEQ
+		LEFT OUTER JOIN(
+					SELECT A.HOUSE_CODE
+					             , A.OSQ_NO
+					             , A.OSQ_COUNT
+					             , A.OSQ_SEQ
+					             , C.ITEM_WIDTH
+		   	                     , C.ITEM_HEIGHT
+		   	                     , C.ITEM_AMT
+		   	                     , C.ITEM_QTY					             
+					FROM SOSLN A, SOSGL B, SORLN C
+					WHERE A.HOUSE_CODE = B.HOUSE_CODE
+					AND A.OSQ_NO = B.OSQ_NO
+					AND A.OSQ_COUNT = B.OSQ_COUNT
+					AND A.HOUSE_CODE = C.HOUSE_CODE
+					AND A.OSQ_NO = C.OSQ_NO
+					AND A.OSQ_COUNT = C.OSQ_COUNT
+					AND A.OSQ_SEQ = C.OSQ_SEQ
+					AND A.STATUS IN ('C','R')
+					AND B.STATUS IN ('C','R')
+					AND C.STATUS IN ('C','R')
+					AND B.OSQ_FLAG = 'C'
+					AND C.SETTLE_FLAG = 'Y'
+					AND A.HOUSE_CODE = ${HOUSE_CODE}
+					AND A.OSQ_NO = ${OSQ_NO}
+					AND A.OSQ_COUNT = ${OSQ_COUNT}
+					) F
+			  ON A.HOUSE_CODE = F.HOUSE_CODE 
+			AND A.OSQ_NO  = F.OSQ_NO  
+			AND A.OSQ_COUNT = F.OSQ_COUNT 
+			AND A.OSQ_SEQ = F.OSQ_SEQ			
+		WHERE A.HOUSE_CODE = ${HOUSE_CODE}
+		AND A.OSQ_NO = ${OSQ_NO}
+		AND A.OSQ_COUNT = ${OSQ_COUNT}
+		ORDER BY A.OSQ_SEQ
+	</method>
+</service>

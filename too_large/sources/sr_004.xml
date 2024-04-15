@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+<service>
+	<method name="getSgLinkList">
+	<![CDATA[
+				SELECT                                                          		
+						GETSGNAME(A.PARENT1) AS S_TYPE1,                         		
+						GETSGNAME(A.PARENT2) AS S_TYPE2,                         		
+						GETSGNAME(A.SG) AS S_TYPE3,                              		
+						GETICOMCODE2(${session.HOUSE_CODE},'M040', A.MATERIAL1) AS M_TYPE1,  
+						GETICOMCODE2(${session.HOUSE_CODE},'M041', A.MATERIAL2) AS M_TYPE2,  
+						GETICOMCODE2(${session.HOUSE_CODE},'M042', A.MATERIAL3) AS M_TYPE3,  
+						GETICOMCODE2(${session.HOUSE_CODE},'M122', A.MATERIAL4) AS M_TYPE4   
+				
+				FROM                                                            		
+				(                                                               		
+					SELECT                                                       		
+						   (SELECT PARENT_SG_REFITEM                             		
+							   FROM SSGGL                                  		
+							  WHERE SG_REFITEM = B.PARENT_SG_REFITEM AND HOUSE_CODE =${session.HOUSE_CODE}) AS PARENT1,		
+							B.PARENT_SG_REFITEM AS PARENT2,                      		
+							A.SG_REFITEM AS SG,                                  		
+							C.TEXT3 AS MATERIAL1,                                		
+							C.TEXT4 AS MATERIAL2,                                		
+							C.TEXT5 AS MATERIAL3,                                		
+							A.CLASS_CODE AS MATERIAL4                              		
+					FROM 	ICOMSGMP A, SSGGL B, SCODE C          		
+					WHERE   A.SG_REFITEM = B.SG_REFITEM                          		
+					AND		A.HOUSE_CODE = B.HOUSE_CODE		                      		
+					AND		A.HOUSE_CODE = C.HOUSE_CODE		                      		
+					AND		B.LEVEL_COUNT = '3'                                  		
+					AND		A.HOUSE_CODE = ${session.HOUSE_CODE}                      		
+					AND		C.TYPE = 'M122'                                      		
+					AND		C.CODE = A.CLASS_CODE    
+					AND 	NVL(C.DEL_FLAG, 'N') = 'N'                              		                 		
+				) A                                                             		
+				 WHERE  A.PARENT1  = ${s_type1}                              	
+				 AND  A.PARENT2  = $S{s_type2}                              	
+				 AND  A.SG  	  = $S{s_type3}            
+ 	]]>	     
+	</method>		 
+		
+</service>

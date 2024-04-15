@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+<service>
+
+	<method name="et_confirm_bd_lis1_getQuery">
+	<![CDATA[
+		SELECT
+			CONVERT_DATE(RHD.REQ_DATE) AS REQ_DATE,                                                                              
+			RHD.SPECIFICATION,                                                                     
+			RHD.DESCRIPTION_LOC,                                                                       
+			GETICOMCODE2(${HOUSE_CODE},'M183', RHD.REQ_TYPE) REQ_TYPE,                          	  
+			RHD.REQ_TYPE as REQ_CODE,                                                                   
+			(
+				SELECT
+					USER_NAME_LOC
+				FROM
+					ICOMLUSR
+				WHERE
+					HOUSE_CODE = ${HOUSE_CODE}
+				AND
+					USER_ID = RHD.REQ_USER_ID
+			) as REQ_NAME_LOC,                                                                       	  
+			GETICOMCODE2(${HOUSE_CODE},'M184',RHD.DATA_TYPE) DATA_TYPE,                         	 
+			RHD.CONFIRM_DATE,                                                                          
+			(
+				SELECT
+					USER_NAME_LOC
+				FROM
+					ICOMLUSR
+				WHERE
+					HOUSE_CODE = ${HOUSE_CODE}
+				AND
+					USER_ID = RHD.CONFIRM_USER_ID
+			) CONFIRM_NAME_LOC,               
+			GETICOMCODE2(${HOUSE_CODE},'M185',RHD.CONFIRM_STATUS) CONFIRM_STATUS,               	 
+			RHD.CONFIRM_STATUS as CONFIRM_CODE,                                                        
+			RHD.REQ_ITEM_NO,                                                                           
+			RHD.IMAGE_FILE_PATH,                                                                       
+			RHD.ITEM_NO,
+			ITEM_GROUP,
+			REMARK,                                                                               
+			GETCOMPANYNAME(VDR.HOUSE_CODE, VDR.VENDOR_CODE, 'S', 'KR') VENDOR_NAME,                    
+			RHD.ITEM_GROUP,
+			RHD.DATA_OCCUR_TYPE,                                                                       
+			CASE
+				WHEN RHD.DATA_OCCUR_TYPE='L' THEN '통합'                                              
+	            WHEN RHD.DATA_OCCUR_TYPE='V' THEN '공급사'                                            
+	            ELSE ''
+			END AS DATA_OCCUR_NAME,                                    					 
+			RHD.BASIC_UNIT,                                                                            
+			RHD.Z_PURCHASE_TYPE,  		  															 
+			RHD.DELIVERY_LT,       		  															   
+			RHD.QI_FLAG,        			  															   
+			RHD.DO_FLAG,        			  															   
+			RHD.Z_WORK_STAGE_FLAG,           															 
+			RHD.Z_DELIVERY_CONFIRM_FLAG,     															 
+			GETICOMCODE3('100','M602',RHD.Z_PURCHASE_TYPE) as Z_PURCHASE_TYPE_COLOR,					 
+			RHD.REJECT_REMARK,           															 	 
+			RHD.MAKER_NAME           															 	 
+		FROM
+			ICOMREHD RHD  
+		LEFT OUTER JOIN                                                                 				 
+			(
+				SELECT
+					USR.USER_ID,                                                           
+					USR.HOUSE_CODE,                                                        
+					NGL.VENDOR_CODE                                                        
+				FROM
+					ICOMLUSR USR,
+					ICOMVNGL NGL                                   
+				WHERE
+					USR.HOUSE_CODE   = ${HOUSE_CODE}                                     
+				AND
+					USR.HOUSE_CODE   = NGL.HOUSE_CODE                                       
+				AND
+					USR.COMPANY_CODE = NGL.VENDOR_CODE                                    
+			) VDR                                                                         
+		ON  
+			RHD.HOUSE_CODE = VDR.HOUSE_CODE                                                              
+		AND
+			RHD.REQ_USER_ID = VDR.USER_ID                                                                 
+		WHERE
+			RHD.HOUSE_CODE  = ${HOUSE_CODE}                                                          
+		AND
+			RHD.STATUS      <> 'D'                                                                             
+		AND
+			RHD.SIGN_STATUS = 'E'                                                                         
+		AND
+			RHD.DATA_OCCUR_TYPE IN ('L','V')                                                           
+		AND RHD.REQ_DATE      >=  $S{create_date_from}                                               
+		AND RHD.REQ_DATE      <=  $S{create_date_to}
+	]]>
+		AND RHD.REQ_USER_ID = $S{REQ_USER_ID}
+		AND UPPER(RHD.DESCRIPTION_LOC) LIKE '%' || UPPER($S{description}) || '%'                                         
+		AND RHD.CONFIRM_STATUS = $S{sel_proceeding_flag}                                                                                                       
+	 ORDER BY
+	 	RHD.REQ_DATE DESC, RHD.REQ_ITEM_NO DESC
+	</method>
+	
+	
+	<method name="et_confirm_getCount">	
+	SELECT COUNT(REQ_ITEM_NO)                                
+	  FROM ICOMREHD                                            
+	 WHERE HOUSE_CODE = '#HOUSE_CODE#'                      
+	   AND ( CONFIRM_STATUS IN ('E','R') OR STATUS = 'D' )                                  
+	   AND REQ_ITEM_NO = '#REQ_ITEM_NO#'                   
+	</method>
+		
+		
+	<method name="et_confirm_bd_upd2_getUpdate">
+	<![CDATA[
+		UPDATE
+			ICOMREHD
+		SET
+			CONFIRM_STATUS       = 'R',                   
+			REJECT_REMARK        = ${REJECT_REMARK},        
+			CONFIRM_USER_ID      = ${CONFIRM_USER_ID},        
+			CONFIRM_DATE         = TO_CHAR(SYSDATE, 'YYYYMMDD'),                  
+			CHANGE_USER_ID       = ${CONFIRM_USER_ID},          
+			CHANGE_USER_NAME_LOC = ${CHANGE_USER_NAME_LOC},   
+			CHANGE_DATE          = TO_CHAR(SYSDATE, 'YYYYMMDD'),           
+			CHANGE_TIME          = TO_CHAR(SYSDATE, 'HH24MISS')             
+		WHERE
+			HOUSE_CODE  = ${HOUSE_CODE}                 
+		AND
+			REQ_ITEM_NO = ${REQ_ITEM_NO}               
+		AND
+			STATUS     <> 'D'                                 
+	]]>                       	
+	</method>
+	
+	
+	
+	<method name="et_confirm_pp_upd3_getUpdate">
+	<![CDATA[
+	UPDATE ICOMREHD SET                         
+	    DESCRIPTION_LOC    = ?                   
+	    ,MAKER_NAME        = ?                   
+	    ,MAKER_CODE        = ?                   
+	    ,MODEL_NO          = ?                   
+	    ,BASIC_UNIT        = ?                   
+	    ,MATERIAL_TYPE     = ?                   
+	    ,MATERIAL_CTRL_TYPE= ?                   
+	    ,MATERIAL_CLASS1   = ?                   
+	    ,APP_TAX_CODE      = ?                   
+	    ,Z_ITEM_DESC       = ?                   
+	    ,REMARK            = ?                   
+	    ,ITEM_BLOCK_FLAG   = ?                   
+	    ,MAKER_FLAG        = ?                   
+	    ,MODEL_FLAG        = ?                   
+	    ,CHANGE_DATE     = '#ADD_DATE#'        
+	    ,CHANGE_TIME     = '#ADD_TIME#'        
+	    ,CHANGE_USER_ID  = '#USER_ID#'         
+	    ,CHANGE_USER_NAME_LOC = '#NAME_LOC#'    
+	WHERE HOUSE_CODE  =  '#HOUSE_CODE#'        
+	  AND REQ_ITEM_NO =  '#REQ_ITEM_NO#'       
+	  AND STATUS     <>  'D'                         
+	]]>                       	
+	</method>   
+	
+	
+	<method name="et_confirm_pp_upd3_getUpdate1">
+	<![CDATA[
+	UPDATE ICOMMTGL  SET                         
+	    DESCRIPTION_LOC    = ?                   
+	    ,MAKER_NAME        = ?                   
+	    ,MAKER_CODE        = ?                   
+	    ,MODEL_NO          = ?                   
+	    ,BASIC_UNIT        = ?                   
+	    ,MATERIAL_TYPE     = ?                   
+	    ,MATERIAL_CTRL_TYPE= ?                   
+	    ,MATERIAL_CLASS1   = ?                    
+	    ,APP_TAX_CODE      = ?                   
+	    ,Z_ITEM_DESC       = ?                    
+	    ,ITEM_BLOCK_FLAG   = ?                   
+	    ,MAKER_FLAG        = ?                   
+	    ,MODEL_FLAG        = ?                    
+	   ,CHANGE_DATE     = '#ADD_DATE#'        
+	   ,CHANGE_TIME     = '#ADD_TIME#'        
+	   ,CHANGE_USER_ID  = '#USER_ID#'          
+	WHERE HOUSE_CODE =  '#HOUSE_CODE#'        
+	 AND ITEM_NO =  '#ITEM_NO#'       
+ AND STATUS <>  'D'                         
+	]]>                       	
+	</method>   
+	
+		    
+       			
+</service>

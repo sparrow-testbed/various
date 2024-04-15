@@ -1,0 +1,510 @@
+<html>
+<head>
+<title>XecureServlet 클래스 암호 데모</title>
+<meta http-equiv="Content-Type" content="text/html; charset=euc-kr"><style type="text/css">
+<!--
+.font1 { font-size: 9pt;color:#666666;}
+td {  font-size: 9pt;color:#333333}
+A:link    {font-size:9pt;color:#010824;text-decoration:none; }
+A:active  {font-size:9pt;color:#010824;text-decoration:none; }
+A:visited {font-size:9pt;color:#010824;text-decoration:none; }
+A:hover   {font-size:9pt;color:#0066cc;text-decoration:none; }
+-->
+</style>
+</head><body bgcolor="#FFFFFF" text="#000000" leftmargin="0" topmargin="0" marginwidth="0" marginheight="0">
+
+<form name='xecure'><input type=hidden name='p'></form>
+<script language='javascript' src='/XecureObject/xecureweb.js'>
+</script>
+<script language='javascript'>
+PrintObjectTag();
+</script>
+
+
+<table width="100%" border="0" cellspacing="0" cellpadding="0" height="100%">
+  <tr> 
+    <td colspan="2" valign="top"> 
+      <p>&nbsp;</p>
+      <p>&nbsp;</p>
+      <table width="92%" border="0" cellspacing="0" cellpadding="0" align="center">
+        <tr> 
+          <td rowspan="2" valign="top" width="106"> 
+            <table width="106" border="0" cellspacing="0" cellpadding="0">
+              <tr> 
+                <td width="91"><img src="../img/img_main_web05.gif" width="91" height="110"></td>
+                <td width="14">&nbsp;</td>
+                <td width="1"><img src="../img/dot_gray01.gif" width="1" height="110"></td>
+              </tr>
+              <tr> 
+                <td width="91">&nbsp;</td>
+                <td width="11">&nbsp;</td>
+                <td width="1"><img src="../img/line_gray.gif" width="1" height="129"></td>
+              </tr>
+            </table>
+          </td>
+          <td valign="top" width="*%"> 
+            <table width="100%" border="0" cellspacing="0" cellpadding="0">
+              <tr> 
+                <td width="2%" height="30"></td>
+                <td height="34"><img src="../img/img_main_web04.gif" width="240" height="15"></td>
+              </tr>
+              <tr> 
+                <td colspan="2"><img src="../img/dot_gray01.gif" width="100%" height="1"></td>
+              </tr>
+              <tr> 
+                <td>&nbsp;</td>
+                <td align="right">
+                  <table width="25%" height=20 border="0" cellpadding="0" cellspacing="0">
+                    <tr>
+                      <td width="50%">
+                        <div align="center"><a href="../index.html">TOP 메뉴</a></div>
+                      </td>
+                      <td width="50%">
+                        <div align="center"><a href="index.html">이전메뉴</a></div>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        <tr> 
+          <td valign="top"> 
+            <table width="85%" border="0" cellspacing="0" cellpadding="0">
+              <tr> 
+                <td height="100" width="8%">&nbsp;</td>
+                <td height="120" valign="middle"> 
+                  <p align="center"><font size="3"><font size="6" face="Times New Roman, Times, serif">XecureServlet 
+                    클래스 암호 데모</font></font></p>
+                </td>
+              </tr>
+              <tr> 
+                <td>&nbsp;</td>
+                <td> 
+                  <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                    <tr> 
+                      <td width="2%" height="24" bgcolor="#DEDBCB">&nbsp;</td>
+                      <td width="2%" height="24" bgcolor="#DEDBCB"><b>1.</b></td>
+                      <td height="24" bgcolor="#DEDBCB"><b>XecureLink를 이용하지 않은 
+                        클라이언트 Request</b></td>
+                    </tr>
+                    <tr> 
+                      <td colspan="3" height="24"> 
+                        <p>&lt;a href=&quot;/XecureDemo/jsp/enc_server_res_xw.jsp?abc=def&amp;pop=hi&quot; 
+                          &gt;&lt;/a&gt;</p>
+<a href="/XecureDemo/jsp/enc_server_res_xw.jsp?abc=def&pop=hi" >전송</a>
+                        </td>
+                    </tr>
+                    <tr> 
+                      <td width="2%">&nbsp;</td>
+                      <td width="2%" valign="top">&nbsp;</td>
+                      <td> 
+                        <p>&nbsp;</p>
+                        </td>
+                    </tr>
+                    <tr> 
+                      <td width="2%" height="24" bgcolor="#DEDBCB">&nbsp;</td>
+                      <td width="2%" height="24" bgcolor="#DEDBCB"><b>2.</b></td>
+                      <td height="24" bgcolor="#DEDBCB"><b>XecureLink를 이용한 클라이언트 
+                        절대 경로 ( http:// 포함 ) Request</b></td>
+                    </tr>
+                    <tr> 
+                      <td colspan="3" height="24"> 
+                        <p>&lt;a href=&quot;http://&lt;hostname&gt;/XecureDemo/jsp/enc_server_res_xw.jsp?abc=def&amp;pop=hi&quot; 
+                          onClick=&quot;return XecureLink(this);&quot;&gt;&lt;/a&gt;</p>
+                        
+<script language=javascript>
+document.writeln ("<a href='http://"+window.location.host+"/XecureDemo/jsp/enc_server_res_xw.jsp?abc=def&pop=hi' onClick='return XecureLink(this);'>전송</a><br><br>");
+</script>
+					  </td>
+                    </tr>
+                    <tr> 
+                      <td width="2%">&nbsp;</td>
+                      <td width="2%" valign="top">&nbsp; </td>
+                      <td> 
+                        <p>&nbsp;</p>
+                        </td>
+                    </tr>
+                    <tr> 
+                      <td height="24" bgcolor="#DEDBCB">&nbsp;</td>
+                      <td height="24" bgcolor="#DEDBCB"><b>3.</b></td>
+                      <td height="24" bgcolor="#DEDBCB"><b>XecureLink를 이용한 클라이언트 
+                        절대 경로 Request</b></td>
+                    </tr>
+                    <tr> 
+                      <td height="24" colspan="3">
+                        <p>&lt;a href=&quot;/XecureDemo/jsp/enc_server_res_xw.jsp?abc=def&amp;pop=hi&quot; 
+                          onClick=&quot;return XecureLink(this);&quot;&gt;&lt;/a&gt;</p>
+<a href="/XecureDemo/jsp/enc_server_res_xw.jsp?abc=def&pop=hi" onClick="return XecureLink(this);">전송</a>
+                      </td>
+                    </tr>
+                    <tr> 
+                      <td width="2%">&nbsp;</td>
+                      <td valign="top" width="2%">&nbsp; </td>
+                      <td>&nbsp; </td>
+                    </tr>
+                    <tr> 
+                      <td height="24" bgcolor="#DEDBCB">&nbsp;</td>
+                      <td height="24" bgcolor="#DEDBCB"><b>4.</b></td>
+                      <td height="24" bgcolor="#DEDBCB"><b>XecureLink를 이용한 클라이언트 
+                        상대 경로 Request</b></td>
+                    </tr>
+                      <td height="24" colspan="3">
+                        <p>&lt;a href=&quot;enc_server_res_xw.jsp?abc=def&amp;pop=hi&quot; 
+                          onClick=&quot;return XecureLink(this);&quot;&gt;&lt;/a&gt;</p>
+<a href="enc_server_res_xw.jsp?abc=def&pop=hi" onClick="return XecureLink(this);">전송</a>
+                      </td>
+                    </tr>
+                    <tr> 
+                      <td width="2%">&nbsp;</td>
+                      <td valign="top" width="2%"></td>
+                      <td>&nbsp; </td>
+                    </tr>
+                    <tr> 
+                      <td height="24" bgcolor="#DEDBCB">&nbsp;</td>
+                      <td height="24" bgcolor="#DEDBCB"><b>5.</b></td>
+                      <td height="24" bgcolor="#DEDBCB"><b>XecureLink를 이용한 클라이언트 
+                        상대 경로 Request</b></td>
+                    </tr>
+          
+		  
+		  
+		              <td height="24" colspan="3">
+                        <p>&lt;a href=&quot;./enc_server_res_xw.jsp?abc=def&amp;pop=hi&quot; 
+                          onClick=&quot;return XecureLink(this);&quot;&gt;&lt;/a&gt;</p>
+<a href="./enc_server_res_xw.jsp?abc=def&pop=hi" onClick="return XecureLink(this);">전송</a>
+                      </td>
+                    </tr>
+                    <tr> 
+                      <td width="2%">&nbsp;</td>
+                      <td valign="top" width="2%"></td>
+                      <td>&nbsp; </td>
+                    </tr>
+                    <tr> 
+                      <td height="24" bgcolor="#DEDBCB">&nbsp;</td>
+                      <td height="24" bgcolor="#DEDBCB"><b>6.</b></td>
+                      <td height="24" bgcolor="#DEDBCB"><b>XecureSubmit을 이용하지 
+                        않은 클라이언트 FORM Request</b></td>
+                    </tr>
+          
+                      <td height="24" colspan="3">
+                        <p>&lt;form action=&quot;/XecureDemo/jsp/enc_server_res_xw.jsp?abc=def&amp;pop=hi&quot;<br>
+                          method=&quot;post&quot; &gt;<br>
+                          &lt;input type=text name=&quot;text_field1&quot; &gt;&lt;br&gt;<br>
+                          &lt;input type=text name=&quot;text_field2&quot;&gt;&lt;br&gt;<br>
+                          &lt;input type=submit value=&quot;전송&quot;&gt;<br>
+                          &lt;/form&gt;</p>
+<form action="/XecureDemo/jsp/enc_server_res_xw.jsp?abc=def&pop=hi" method="post" >
+<input type=text name="text_field1" ><br>
+<input type=text name="text_field2"><br>
+<input type=submit value="전송">
+</form>
+                      </td>
+                    </tr>
+                    <tr> 
+                      <td width="2%">&nbsp;</td>
+                      <td valign="top" width="2%"></td>
+                      <td>&nbsp; </td>
+                    </tr>
+                    <tr> 
+                      <td height="24" bgcolor="#DEDBCB">&nbsp;</td>
+                      <td height="24" bgcolor="#DEDBCB"><b>7.</b></td>
+                      <td height="24" bgcolor="#DEDBCB"><b>XecureSubmit을 이용한 클라이언트 
+                        절대 경로 ( http:// 포함 ) FORM Request ( POST )</b></td>
+                    </tr>
+          
+                      <td height="24" colspan="3">
+                        <p>&lt;form action=&quot;http://&lt;hostname&gt;/XecureDemo/jsp/enc_server_res_xw.jsp?abc=def&amp;pop=hi&quot;<br>
+                          method=&quot;post&quot; onSubmit=&quot;return XecureSubmit(this);&quot;&gt;<br>
+                          &lt;input type=text name=&quot;text_field1&quot; &gt;&lt;br&gt;<br>
+                          &lt;input type=text name=&quot;text_field2&quot;&gt;&lt;br&gt;<br>
+                          &lt;input type=submit value=&quot;전송&quot;&gt;<br>
+                          &lt;/form&gt;</p>
+<script language=javascript>
+document.writeln("<form action='http://" + window.location.host + "/XecureDemo/jsp/enc_server_res_xw.jsp?abc=def&pop=hi' method='post' onSubmit='return XecureSubmit(this);'>");
+document.writeln("<input type=text name='text_field1' ><br>");
+document.writeln("<input type=text name='text_field2'><br>");
+document.writeln("<input type=submit value='전송'>");
+document.writeln("</form>");
+document.writeln("<br>");
+</script>
+                      </td>
+                    </tr>
+                    <tr> 
+                      <td width="2%">&nbsp;</td>
+                      <td valign="top" width="2%"></td>
+                      <td>&nbsp; </td>
+                    </tr>
+                    <tr> 
+                      <td height="24" bgcolor="#DEDBCB">&nbsp;</td>
+                      <td height="24" bgcolor="#DEDBCB"><b>8.</b></td>
+                      <td height="24" bgcolor="#DEDBCB"><b>XecureSubmit을 이용한 클라이언트 
+                        절대 경로 FORM Request ( POST )</b></td>
+                    </tr>
+          
+                      <td height="24" colspan="3">
+                        <p>&lt;form action=&quot;/XecureDemo/jsp/enc_server_res_xw.jsp?abc=def&amp;pop=hi&quot;<br>
+                          method=&quot;post&quot; onSubmit='return XecureSubmit(this);' 
+                          &gt;<br>
+                          &lt;input type=text name=&quot;text_field1&quot; &gt;&lt;br&gt;<br>
+                          &lt;input type=text name=&quot;text_field2&quot;&gt;&lt;br&gt;<br>
+                          &lt;input type=submit value=&quot;전송&quot;&gt;<br>
+                          &lt;/form&gt;</p>
+<form action="/XecureDemo/jsp/enc_server_res_xw.jsp?abc=def&pop=hi" method="post" onSubmit='return XecureSubmit(this);' >
+<input type=text name="text_field1" ><br>
+<input type=text name="text_field2"><br>
+<input type=submit value="전송">
+</form>
+                      </td>
+                    </tr>
+                    <tr> 
+                      <td width="2%">&nbsp;</td>
+                      <td valign="top" width="2%"></td>
+                      <td>&nbsp; </td>
+                    </tr>
+                    <tr> 
+                      <td height="24" bgcolor="#DEDBCB">&nbsp;</td>
+                      <td height="24" bgcolor="#DEDBCB"><b>9.</b></td>
+                      <td height="24" bgcolor="#DEDBCB"><b>XecureSubmit을 이용한 클라이언트 
+                        상대 경로 FORM Request ( POST )</b></td>
+                    </tr>
+          
+                      <td height="24" colspan="3">
+                        <p>&lt;form action=&quot;enc_server_res_xw.jsp?abc=def&amp;pop=hi&quot;<br>
+                          method=&quot;post&quot; onSubmit='return XecureSubmit(this);' 
+                          &gt;<br>
+                          &lt;input type=text name=&quot;text_field1&quot; &gt;&lt;br&gt;<br>
+                          &lt;input type=text name=&quot;text_field2&quot;&gt;&lt;br&gt;<br>
+                          &lt;input type=submit value=&quot;전송&quot;&gt;<br>
+                          &lt;/form&gt;</p>
+<form action="enc_server_res_xw.jsp?abc=def&pop=hi" method="post" onSubmit='return XecureSubmit(this);' >
+<input type=text name="text_field1" ><br>
+<input type=text name="text_field2"><br>
+<input type=submit value="전송">
+</form>
+                      </td>
+                    </tr>
+                    <tr> 
+                      <td width="2%">&nbsp;</td>
+                      <td valign="top" width="2%"></td>
+                      <td>&nbsp; </td>
+                    </tr>
+                    <tr> 
+                      <td height="24" bgcolor="#DEDBCB">&nbsp;</td>
+                      <td height="24" bgcolor="#DEDBCB"><b>10.</b></td>
+                      <td height="24" bgcolor="#DEDBCB"><b>XecureSubmit을 이용한 클라이언트 
+                        상대 경로 FORM Request ( POST )</b></td>
+                    </tr>
+          
+                      <td height="24" colspan="3">
+                        <p>&lt;form action=&quot;./enc_server_res_xw.jsp?abc=def&amp;pop=hi&quot;<br>
+                          method=&quot;post&quot; onSubmit='return XecureSubmit(this);' 
+                          &gt;<br>
+                          &lt;input type=text name=&quot;text_field1&quot; &gt;&lt;br&gt;<br>
+                          &lt;input type=text name=&quot;text_field2&quot;&gt;&lt;br&gt;<br>
+                          &lt;input type=submit value=&quot;전송&quot;&gt;<br>
+                          &lt;/form&gt;</p>
+<form action="./enc_server_res_xw.jsp?abc=def&pop=hi" method="post" onSubmit='return XecureSubmit(this);' >
+<input type=text name="text_field1" ><br>
+<input type=text name="text_field2"><br>
+<input type=submit value="전송">
+</form>
+                      </td>
+                    </tr>
+                    <tr> 
+                      <td width="2%">&nbsp;</td>
+                      <td valign="top" width="2%"></td>
+                      <td>&nbsp; </td>
+                    </tr>
+                    <tr> 
+                      <td height="24" bgcolor="#DEDBCB">&nbsp;</td>
+                      <td height="24" bgcolor="#DEDBCB"><b>11.</b></td>
+                      <td height="24" bgcolor="#DEDBCB"><b>XecureSubmit을 이용한 클라이언트 
+                        FORM Request ( GET )</b></td>
+                    </tr>
+          
+                      <td height="24" colspan="3">
+                        <p>&lt;form action=&quot;/XecureDemo/jsp/enc_server_res_xw.jsp?abc=def&amp;pop=hi&quot;<br>
+                          method=&quot;GET&quot; onSubmit=&quot;return XecureSubmit(this);&quot;&gt;<br>
+                          &lt;input type=text name=&quot;text_field1&quot; &gt;&lt;br&gt;<br>
+                          &lt;input type=text name=&quot;text_field2&quot;&gt;&lt;br&gt;<br>
+                          &lt;input type=submit value=&quot;전송&quot;&gt;<br>
+                          &lt;/form&gt;</p>
+<form action="/XecureDemo/jsp/enc_server_res_xw.jsp?abc=def&pop=hi" method="GET" onSubmit="return XecureSubmit(this);">
+<input type=text name="text_field1" ><br>
+<input type=text name="text_field2"><br>
+<input type=submit value="전송">
+</form>
+                      </td>
+                    </tr>
+                    <tr> 
+                      <td width="2%">&nbsp;</td>
+                      <td valign="top" width="2%"></td>
+                      <td>&nbsp; </td>
+                    </tr>
+                    <tr> 
+                      <td height="24" bgcolor="#DEDBCB">&nbsp;</td>
+                      <td height="24" bgcolor="#DEDBCB"><b>12.</b></td>
+                      <td height="24" bgcolor="#DEDBCB"><b>XecureNavigate를 이용한 
+                        클라이언트 절대 경로 Request 암호</b></td>
+                    </tr>
+          
+                      <td height="24" colspan="3">
+                        <p>&lt;script language=javascript&gt;<br>
+                          function navigate(url, target)<br>
+                          {<br>
+                          url += &quot;?abc=def&amp;amp;pop=hi&quot;;<br>
+                          XecureNavigate( url, target);<br>
+                          }<br>
+                          &lt;/script&gt;<br>
+                          &lt;a href=&quot;javascript:navigate('http://&lt;hostname&gt;/XecureDemo/jsp/enc_server_res_xw.jsp','_self');&quot;&gt;전송&lt;/a&gt;</p>
+<script language=javascript>
+function navigate(url, target)
+{
+	url += "?abc=def&pop=hi";
+	XecureNavigate( url, target );
+}
+</script>
+<a href="javascript:navigate('http://' + window.location.host + '/XecureDemo/jsp/enc_server_res_xw.jsp','_self');">전송</a>
+
+                      </td>
+                    </tr>
+                    <tr> 
+                      <td width="2%">&nbsp;</td>
+                      <td valign="top" width="2%"></td>
+                      <td>&nbsp; </td>
+                    </tr>
+                    <tr> 
+                      <td height="24" bgcolor="#DEDBCB">&nbsp;</td>
+                      <td height="24" bgcolor="#DEDBCB"><b>13.</b></td>
+                      <td height="24" bgcolor="#DEDBCB"><b>XecureNavigate를 이용한 
+                        클라이언트 절대 경로 Request 암호</b></td>
+                    </tr>
+          
+                      <td height="24" colspan="3">
+                        <p>&lt;script language=javascript&gt;<br>
+                          function navigate(url, target)<br>
+                          {<br>
+                          url += &quot;?abc=def&amp;amp;pop=hi&quot;;<br>
+                          XecureNavigate( url, target);<br>
+                          }<br>
+                          &lt;/script&gt;<br>
+                          &lt;a href=&quot;javascript:navigate('/XecureDemo/jsp/enc_server_res_xw.jsp','_self');&quot;&gt;전송&lt;/a&gt;</p>
+<script language=javascript>
+function navigate(url, target)
+{
+	url += "?abc=def&pop=hi";
+	XecureNavigate( url, target );
+}
+</script>
+<a href="javascript:navigate('/XecureDemo/jsp/enc_server_res_xw.jsp','_self');">전송</a>
+
+                      </td>
+                    </tr>
+                    <tr> 
+                      <td width="2%">&nbsp;</td>
+                      <td valign="top" width="2%"></td>
+                      <td>&nbsp; </td>
+                    </tr>
+                    <tr> 
+                      <td height="24" bgcolor="#DEDBCB">&nbsp;</td>
+                      <td height="24" bgcolor="#DEDBCB"><b>14.</b></td>
+                      <td height="24" bgcolor="#DEDBCB"><b>XecureNavigate를 이용한 
+                        클라이언트 상대 경로 Request 암호</b></td>
+                    </tr>
+          
+                      <td height="24" colspan="3">
+                        <p>&lt;script language=javascript&gt;<br>
+                          function navigate(url, target)<br>
+                          {<br>
+                          url += &quot;?abc=def&amp;amp;pop=hi&quot;;<br>
+                          XecureNavigate( url, target);<br>
+                          }<br>
+                          &lt;/script&gt;<br>
+                          &lt;a href=&quot;javascript:navigate('enc_server_res_xw.jsp','_self');&quot;&gt;전송&lt;/a&gt;</p>
+<script language=javascript>
+function navigate(url, target)
+{
+	url += "?abc=def&pop=hi";
+	XecureNavigate( url, target );
+}
+</script>
+<a href="javascript:navigate('enc_server_res_xw.jsp','_self');">전송</a>
+
+                      </td>
+                    </tr>
+                    <tr> 
+                      <td width="2%">&nbsp;</td>
+                      <td valign="top" width="2%"></td>
+                      <td>&nbsp; </td>
+                    </tr>
+                    <tr> 
+                      <td height="24" bgcolor="#DEDBCB">&nbsp;</td>
+                      <td height="24" bgcolor="#DEDBCB"><b>15.</b></td>
+                      <td height="24" bgcolor="#DEDBCB"><b>XecureNavigate_NoEnc를 
+                        이용한 클라이언트 Request</b></td>
+                    </tr>
+          
+          
+		              <td height="24" colspan="3">XecureNavigate_NoEnc 함수를 호출하면 
+                        Request URL 의 QueryString 부분은 암호화 되지 않는다. 
+                        <p>&lt;script language=javascript&gt;<br>
+                          function navigate_noenc(url, target)<br>
+                          {<br>
+                          url += &quot;?abc=def&amp;amp;pop=hi&quot;;<br>
+                          XecureNavigate_NoEnc( url, target);<br>
+                          }<br>
+                          &lt;/script&gt;<br>
+                          &lt;a href=&quot;javascript:navigate_noenc('/XecureDemo/jsp/enc_server_res_xw.jsp','_self');&quot;&gt;전송&lt;/a&gt;</p>
+                        
+<script language=javascript>
+function navigate_noenc(url, target)
+{
+	url += "?abc=def&pop=hi";
+	XecureNavigate_NoEnc( url, target );
+}
+</script>
+<a href="javascript:navigate_noenc('/XecureDemo/jsp/enc_server_res_xw.jsp','_self');">전송</a>
+
+					  </td>
+                    </tr>
+                    <tr> 
+                      <td width="2%">&nbsp;</td>
+                      <td valign="top" width="2%">&nbsp;</td>
+                      <td>
+<p>&nbsp; </p>
+                      </td>
+                    </tr>
+                    <tr> 
+                      <td width="2%">&nbsp;</td>
+                      <td width="2%">&nbsp;</td>
+                      <td>&nbsp;</td>
+                    </tr>
+                    <tr> 
+                      <td width="2%">&nbsp;</td>
+                      <td width="2%">&nbsp;</td>
+                      <td>&nbsp;</td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              <tr> 
+                <td height="40">&nbsp;</td>
+                <td height="40">&nbsp;</td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr> 
+    <td height="24" bgcolor="#345B87"> 
+      <div align="right"><font color="#FFFFFF"><b><font color="#CED2DB"><a href="http://www.softforum.com"><font color="#FFFFFF">www.softforum.com</font></a></font></b></font></div>
+    </td>
+    <td height="24" bgcolor="#345B87" width="3%">&nbsp;</td>
+  </tr>
+</table>
+</body>
+</html>

@@ -1,0 +1,189 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=euc-kr"><style type="text/css">
+<title>XecureWeb Demo</title>
+
+<!--
+.font1 { font-size: 9pt;color:#666666;}
+td {  font-size: 9pt;color:#333333}
+A:link    {font-size:9pt;color:#010824;text-decoration:none; }
+A:active  {font-size:9pt;color:#010824;text-decoration:none; }
+A:visited {font-size:9pt;color:#010824;text-decoration:none; }
+A:hover   {font-size:9pt;color:#FF6600;text-decoration:none; }
+-->
+</style>
+</head>
+
+
+<script Language=javascript src='/XecureObject/xecureweb.js'></script>
+
+<Script Language='JavaScript'>
+
+if (navigator.appName == 'Netscape') {
+
+    var XecureMime = navigator.mimeTypes["application/x-SoftForum-XecSSL40"];
+    //var XecureMime = navigator.mimeTypes["application/x-SoftForum-XPSign"];
+
+	if (XecureMime) {   // Xecure PlugIn 이 이미 설치되어 있는 경우
+		if ( isNewPlugin(XecureMime.enabledPlugin.description) == false) {
+		    if (navigator.userAgent.indexOf("Mozilla/4") == 0) { // Netscape 4.0 up. Using SmartUpdate{
+				downloadNow();
+			}
+			else if (navigator.userAgent.indexOf("Mozilla/5") == 0) {// Nescape 6.0 plugin
+				document.location.href = "/XecureObject/NPXecSSL60_Install.xpi";	
+			}
+        }
+    }
+    else {     // Xecure PlugIn 이 설치되어 있지 않은 경우
+		if (navigator.userAgent.indexOf("Mozilla/4") == 0)  // Netscape 4.0 up. Using SmartUpdate
+			downloadNow();
+		else if (navigator.userAgent.indexOf("Mozilla/5") == 0) // Nescape 6.0 plugin
+			document.location.href = "/XecureObject/NPXecSSL60_Install.xpi";	
+    }
+}
+
+</Script>
+<script language='javascript'>
+PrintObjectTag();
+SetConvertTable();
+
+</script>
+
+<script language='VBScript'>
+
+Dim bannerUrl
+Dim bigBannerUrl
+dim xgate_addr
+
+bannerUrl = "http://phobos.softforum.co.kr:8188/XecureObject/xecure.bmp"
+bigBannerUrl = "http://phobos.softforum.co.kr:8188/XecureObject/xecureweb_big.bmp"
+xgate_addr = "127.0.0.1:8443:8011,8012"
+on error resume next
+document.XecureWeb.PutBannerUrl  xgate_addr, bannerUrl
+document.XecureWeb.PutBigBannerUrl xgate_addr, bigBannerUrl
+on error goto 0
+
+</script>
+
+<body bgcolor="#FFFFFF" text="#000000" leftmargin="0" topmargin="0" marginwidth="0" marginheight="0" onError="javascript:alert('Old Version');">
+<table width="100%" border="0" cellspacing="0" cellpadding="0" height="100%">
+  <tr> 
+    <td colspan="2"> 
+      <table width="680" border="0" cellspacing="0" cellpadding="0" align="center">
+        <tr> 
+          <td valign="top" width="168" height="202"><img src="img/img_main_web01.gif" width="168" height="202"></td>
+          <td width="13"><img src="img/dot_trans.gif" width="13" height="8"></td>
+          <td rowspan="4"><img src="img/dot_gray01.gif" width="1" height="100%"></td>
+          <td colspan="2" valign="top"> 
+            <table width="100%" border="0" cellspacing="0" cellpadding="0">
+              <tr> 
+                <td width="13"><img src="img/dot_trans.gif" width="13" height="8"></td>
+                <td width="485" height="48" valign="top"><img src="img/img_main_web02.gif" width="269" height="35"></td>
+              </tr>
+              <tr> 
+                <td colspan="2"><img src="img/dot_gray01.gif" width="100%" height="1"></td>
+              </tr>
+              <tr> 
+                <td width="13" rowspan="2"><img src="img/dot_trans.gif" width="13" height="8"></td>
+                <td width="485" height="43"><img src="img/img_main_pkitext.gif" width="267" height="18"></td>
+              </tr>
+              <tr> 
+                <td width="485" valign="top"> 
+                  <p>최상의 암호/인증 보안 솔루션 XecureWeb Ver6 를 사용해 주셔서 감사합니다.<br>
+                    본 데모에 처음 접속하신 경우에는 클라이언트 설치 프로그램이 자동으로 다운로드 되어 PC에 설치됩니다. 
+                    잠시만 기다리십시요.<br>
+                    PC에 설치를 하신후 아래의 XecureWeb를 사용하십시요.<br>
+                  </p>
+                  자동 다운로드가 실패할 경우, 아래의 XecureWeb 수동설치 페이지로 이동하여 <br>
+                  설치프로그램을 받은후 직접 설치하시면 됩니다. </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        <tr> 
+          <td width="168"></td>
+          <td width="13"></td>
+          <td width="13"></td>
+          <td width="485"><img src="img/dot_trans.gif" width="13" height="38"></td>
+        </tr>
+        <tr> 
+          <td width="168">&nbsp;</td>
+          <td width="13">&nbsp;</td>
+          <td width="13">&nbsp;</td>
+          <td valign="top"> 
+            <table width="200" border="0" cellpadding="0" cellspacing="0">
+              <tr> 
+                <td height="30"> 
+                  <table width="100%" border="0" cellspacing="1" cellpadding="0" bgcolor="#9DA3A7" height="24">
+                    <tr> 
+                      <td bgcolor="#F5F5F5">&nbsp;&nbsp;<a href="demo.html">XecureWeb 
+                        데모</a></td>
+                      <td bgcolor="#FFFFFF" width="10%">&nbsp;</td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              <tr> 
+                <td height="30"> 
+                  <table width="100%" border="0" cellspacing="1" cellpadding="0" bgcolor="#9DA3A7" height="24">
+                    <tr> 
+                      <td bgcolor="#F5F5F5">&nbsp;&nbsp;<a href="asp/index.html">XecureWeb ASP데모</td>
+                      <td bgcolor="#FFFFFF" width="10%">&nbsp;</td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              <tr> 
+                <td height="30"> 
+                  <table width="100%" border="0" cellspacing="1" cellpadding="0" bgcolor="#9DA3A7" height="24">
+                    <tr> 
+                      <td bgcolor="#F5F5F5">&nbsp;&nbsp;<a href="sign/index.html">XecureSign JSP데모</td>
+                      <td bgcolor="#FFFFFF" width="10%">&nbsp;</td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              <tr>
+			  <tr> 
+                <td height="30"> 
+                  <table width="100%" border="0" cellspacing="1" cellpadding="0" bgcolor="#9DA3A7" height="24">
+                    <tr> 
+                      <td bgcolor="#F5F5F5">&nbsp;&nbsp;<a href="php_sign/index.html">XecureSign PHP데모</td>
+                      <td bgcolor="#FFFFFF" width="10%">&nbsp;</td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              <tr>
+                <td height="30"> 
+                  <table width="100%" border="0" cellspacing="1" cellpadding="0" bgcolor="#9DA3A7" height="24">
+                    <tr> 
+                      <td bgcolor="#F5F5F5">&nbsp;&nbsp;<a href="client_sw_install.html">XecureWeb 
+                        수동설치</a></td>
+                      <td bgcolor="#FFFFFF" width="10%">&nbsp;</td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+            <p>&nbsp;</p>
+          </td>
+        </tr>
+        <tr> 
+          <td width="170">&nbsp;</td>
+          <td width="14">&nbsp;</td>
+          <td width="13">&nbsp;</td>
+          <td width="483">&nbsp;</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr> 
+    <td height="24" bgcolor="#345B87"> 
+      <div align="right"><font color="#FFFFFF"><b><font color="#CED2DB"><a href="http://www.softforum.com"><font color="#FFFFFF">www.softforum.com</font></a></font></b></font></div>
+    </td>
+    <td height="24" bgcolor="#345B87" width="3%">&nbsp;</td>
+  </tr>
+</table>
+</body>
+</html>

@@ -1,0 +1,818 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+<service>
+ 	<method name="smsAgentInsert">
+	<![CDATA[
+	INSERT INTO
+		SMS_TABLE
+	(
+		TR_SEQUENCE, TR_USER_ID,  TR_COMP_CD,  TR_PLACE,   TR_BIZ_ID1,
+		TR_BIZ_ID2,  TR_CALLBACK, TR_DESTADDR, TR_SMSTYPE, TR_SENDSTAT,
+		TR_SENDDATE, TR_MSG,      TR_PRE_TIME, TR_PRE_ID,
+		UMS_TMPL_CD, MPNG_1,      MPNG_2,      MPNG_3      -- TOBE 2017-07-01 추가 템플릿코드 , 매핑1~3
+	)
+	VALUES
+	(
+		SMS_SEQUENCE.NEXTVAL,
+		${TR_USER_ID},
+		'001001',
+		${TR_PLACE},
+		${TR_BIZ_ID1},
+		 
+		${TR_BIZ_ID2},
+		${TR_CALLBACK},
+		${TR_DESTADDR},
+		'0',
+		'0',
+		
+		SYSDATE,
+		${TR_MSG},
+		SYSDATE,
+		${TR_USER_ID},
+		
+		-- TOBE 2017-07-01 추가 템플릿코드 , 매핑1~3
+		${UMS_TMPL_CD}, 
+		$S{MPNG_1},
+		$S{MPNG_2},
+		$S{MPNG_3}
+	)
+	]]>
+	</method>
+
+	<method name="selectSmsMsg">
+		SELECT
+			GETCODETEXT1('M315', ${CODE}, 'KO') AS SMS_MSG
+		FROM
+			DUAL
+	</method>
+	
+	<method name="insertSinfhdInfo">
+		INSERT INTO SINFHD(
+			HOUSE_CODE,     INF_NO,       INF_TYPE,   INF_CODE,   INF_DATE,
+			INF_START_TIME, INF_END_TIME, INF_STATUS, INF_REASON, INF_SEND
+		)
+		VALUES(
+			${HOUSE_CODE},
+			${INF_NO},
+			${INF_TYPE},
+			${INF_CODE},
+			TO_CHAR(SYSDATE, 'YYYYMMDD'),
+			
+			TO_CHAR(SYSDATE, 'HH24MISS'),
+			NULL,
+			NULL,
+			NULL,
+			${INF_SEND}
+		)
+	</method>
+	
+	<method name="updateSinfhdInfo">
+		UPDATE
+			SINFHD
+		SET
+			INF_END_TIME = TO_CHAR(SYSDATE, 'HH24MISS'),
+			INF_STATUS   = ${STATUS},
+			INF_REASON   = ${REASON}
+		WHERE 1=1
+		AND   HOUSE_CODE = ${HOUSE_CODE}
+		AND   INF_NO     = ${INF_NO}
+	</method>
+
+
+	<!-- ICT 사용 : sender 정보 가져오기 -->
+	<method name="getICT_SENDER">
+			 select A1.TEXT1 as SENDER_NUMBER
+			   from SCODE A1
+			  where 1=1
+			    and A1.HOUSE_CODE = ${HOUSE_CODE}
+			    and A1.TYPE       = 'M315'
+			    and A1.CODE       = 'ICT_SENDER'
+	</method>	
+
+	<method name="insertSinfsmsInfo">
+			INSERT INTO SINFSMS	(
+								  HOUSE_CODE
+								, INF_NO
+								, ID
+								, DEPARTMENT
+								, BIZID1
+								, BIZID2
+								, DESTADDR
+								, CALLBACK
+								, MSG
+								)
+			VALUES
+								(
+								  ${HOUSE_CODE}
+								, ${INF_NO}
+								, ${ID}
+								, ${DEPARTMENT}
+								, ${BIZID1}
+								, ${BIZID2}
+								, ${DESTADDR}
+								, ${CALLBACK}
+								, ${MSG}
+								)
+	</method>	
+	
+	<method name="insertSinftlkInfo">
+			INSERT INTO SINFWBT	(
+								  HOUSE_CODE
+								, INF_NO
+								, ID
+								, DEPARTMENT
+								, BIZID1
+								, BIZID2
+								, DESTADDR
+								, CALLBACK
+								, MSG
+								)
+			VALUES
+								(
+								  ${HOUSE_CODE}
+								, ${INF_NO}
+								, ${ID}
+								, ${DEPARTMENT}
+								, ${BIZID1}
+								, ${BIZID2}
+								, ${DESTADDR}
+								, ${CALLBACK}
+								, ${MSG}
+								)
+	</method>
+	
+	<method name="tlkAgentInsert">
+	<![CDATA[
+	INSERT INTO
+		WBT_TABLE
+	(
+		TR_SEQUENCE, TR_USER_ID,  TR_COMP_CD,  TR_PLACE,   TR_BIZ_ID1,
+		TR_BIZ_ID2,  TR_CALLBACK, TR_DESTADDR, TR_SMSTYPE, TR_SENDSTAT,
+		TR_SENDDATE, TR_MSG,      TR_PRE_TIME, TR_PRE_ID,
+		UMS_TMPL_CD, MPNG_1,      MPNG_2,      MPNG_3,      -- TOBE 2017-07-01 추가 템플릿코드 , 매핑1~3
+		UMS_SMS_CNVSD_YN
+	)
+	VALUES
+	(
+		WBT_SEQUENCE.NEXTVAL,
+		${TR_USER_ID},
+		'001001',
+		${TR_PLACE},
+		${TR_BIZ_ID1},
+		 
+		${TR_BIZ_ID2},
+		${TR_CALLBACK},
+		${TR_DESTADDR},
+		'0',
+		'0',
+		
+		SYSDATE,
+		${TR_MSG},
+		SYSDATE,
+		${TR_USER_ID},
+		
+		-- TOBE 2017-07-01 추가 템플릿코드 , 매핑1~3
+		${UMS_TMPL_CD}, 
+		$S{MPNG_1},
+		$S{MPNG_2},
+		$S{MPNG_3},
+		
+		$S{UMS_SMS_CNVSD_YN}		
+	)
+	]]>
+	</method>	
+	
+	<method name="rqApplyE">
+		SELECT DISTINCT
+			'견적요청' AS SOURCING_NAME,
+			replace(ADDR.PHONE_NO2, '-', '') AS DEST_PHONE
+		FROM
+			ICOYRQSE RQSE
+		INNER JOIN ICOYRQHD RQHD ON RQSE.HOUSE_CODE = RQHD.HOUSE_CODE AND RQSE.RFQ_NO      = RQHD.RFQ_NO AND RQSE.RFQ_COUNT = RQHD.RFQ_COUNT
+		INNER JOIN ICOMADDR ADDR ON RQSE.HOUSE_CODE = ADDR.HOUSE_CODE AND RQSE.VENDOR_CODE = ADDR.CODE_NO
+		WHERE
+			RQSE.HOUSE_CODE = ${HOUSE_CODE} 
+		AND
+			RQSE.RFQ_NO     = ${RFQ_NO}
+		AND
+			RQSE.RFQ_COUNT  = ${RFQ_COUNT}
+		AND
+			ADDR.CODE_TYPE  = '3'
+	</method>
+	
+	<!-- ICT 사용 : 공고문 서류접수,적합 통지 -->
+	<method name="ICT_BD2_LIST01">
+			SELECT
+					  BDHD.ANN_STATUS
+					, BDHD.ANN_NO
+					, ADDR.PHONE_NO2
+			FROM				ICOYBDHD2_ICT	BDHD
+					INNER JOIN	ICOYBDAP2_ICT	BDAP	ON  BDHD.HOUSE_CODE  = BDAP.HOUSE_CODE
+														AND BDHD.ANN_NO      = BDAP.ANN_NO
+														AND BDHD.ANN_COUNT   = BDAP.ANN_COUNT
+					INNER JOIN	ICOMADDR_ICT	ADDR	ON  BDAP.HOUSE_CODE  = ADDR.HOUSE_CODE
+														AND BDAP.VENDOR_CODE = ADDR.CODE_NO
+														AND ADDR.CODE_TYPE   = '2'				-- 업체담당자 : 1:COMPANY,2:VENDOR,3:USER,4:공장,5:창고
+			WHERE	1=1
+			AND		BDHD.HOUSE_CODE  = ${HOUSE_CODE}
+			AND		BDHD.ANN_NO      = ${ANN_NO}
+			AND		BDHD.ANN_COUNT   = ${ANN_COUNT}
+			AND     BDAP.VENDOR_CODE = ${VENDOR_CODE}
+	</method>
+	
+	<method name="ICT_BD2_LIST01_bak">
+			SELECT
+					  BDHD.ANN_STATUS
+					, BDHD.ANN_NO
+					, ADDR.PHONE_NO2
+			FROM				ICOYBDHD2_ICT	BDHD
+					INNER JOIN	ICOYBDAP2_ICT	BDAP	ON  BDHD.HOUSE_CODE  = BDAP.HOUSE_CODE
+														AND BDHD.ANN_NO      = BDAP.ANN_NO
+														AND BDHD.ANN_COUNT   = BDAP.ANN_COUNT
+					INNER JOIN	ICOMADDR_ICT	ADDR	ON  BDAP.HOUSE_CODE  = ADDR.HOUSE_CODE
+														AND BDAP.VENDOR_CODE = ADDR.CODE_NO
+														AND ADDR.CODE_TYPE   = '2'				-- 업체담당자 : 1:COMPANY,2:VENDOR,3:USER,4:공장,5:창고
+			WHERE	1=1
+			AND		BDHD.HOUSE_CODE  = ${HOUSE_CODE}
+			AND		BDHD.ANN_NO      = ${ANN_NO}
+			AND		BDHD.ANN_COUNT   = ${ANN_COUNT}
+			AND     BDAP.VENDOR_CODE = ${VENDOR_CODE}
+			
+			UNION ALL
+			
+			SELECT
+					  BDHD.ANN_STATUS
+					, BDHD.ANN_NO
+					, ADDR.PHONE_NO2
+			FROM				ICOYBDHD2_ICT	BDHD
+					INNER JOIN	ICOMADDR_ICT	ADDR	ON  BDHD.HOUSE_CODE  = ADDR.HOUSE_CODE
+														AND BDHD.ADD_USER_ID = ADDR.CODE_NO
+														AND ADDR.CODE_TYPE   = '3'				-- 입찰담당자
+			WHERE	1=1
+			AND		BDHD.HOUSE_CODE = ${HOUSE_CODE}
+			AND		BDHD.ANN_NO     = ${ANN_NO}
+			AND		BDHD.ANN_COUNT  = ${ANN_COUNT}			
+	</method>
+	<!-- ICT 사용 : 공고문 확정, 정정, 취소 -->
+	<method name="ICT_BD_LIST01">
+			SELECT
+					  BDHD.CONT_TYPE1
+					, BDHD.BID_STATUS
+					, BDHD.BID_NO
+					, ADDR.PHONE_NO2
+			FROM				ICOYBDHD_ICT	BDHD
+					INNER JOIN	ICOYBDAP_ICT	BDAP	ON  BDHD.HOUSE_CODE  = BDAP.HOUSE_CODE
+														AND BDHD.BID_NO      = BDAP.BID_NO
+														AND BDHD.BID_COUNT   = BDAP.BID_COUNT
+					INNER JOIN	ICOMADDR_ICT	ADDR	ON  BDAP.HOUSE_CODE  = ADDR.HOUSE_CODE
+														AND BDAP.VENDOR_CODE = ADDR.CODE_NO
+														AND ADDR.CODE_TYPE   = '2'				-- 업체담당자 : 1:COMPANY,2:VENDOR,3:USER,4:공장,5:창고
+			WHERE	1=1
+			AND		BDHD.HOUSE_CODE = ${HOUSE_CODE}
+			AND		BDHD.BID_NO     = ${BID_NO}
+			AND		BDHD.BID_COUNT  = ${BID_COUNT}
+			
+			UNION ALL
+			
+			SELECT
+					  BDHD.CONT_TYPE1
+					, BDHD.BID_STATUS
+					, BDHD.BID_NO
+					, ADDR.PHONE_NO2
+			FROM				ICOYBDHD_ICT	BDHD
+					INNER JOIN	ICOMADDR_ICT	ADDR	ON  BDHD.HOUSE_CODE  = ADDR.HOUSE_CODE
+														AND BDHD.ADD_USER_ID = ADDR.CODE_NO
+														AND ADDR.CODE_TYPE   = '3'				-- 입찰담당자
+			WHERE	1=1
+			AND		BDHD.HOUSE_CODE = ${HOUSE_CODE}
+			AND		BDHD.BID_NO     = ${BID_NO}
+			AND		BDHD.BID_COUNT  = ${BID_COUNT}
+	</method>
+	
+	<!-- ICT 사용 : 적격업체 -->
+	<method name="ICT_SMS_12">
+			SELECT (SELECT MOBILE_NO FROM ICOMVNCP_ICT WHERE HOUSE_CODE = BDAP.HOUSE_CODE AND VENDOR_CODE = BDAP.VENDOR_CODE AND BIZ_RPS_YN = 'Y')AS PHONE_NO2
+					  
+			FROM				ICOYBDHD_ICT	BDHD
+					INNER JOIN	ICOYBDAP_ICT	BDAP	ON  BDHD.HOUSE_CODE  = BDAP.HOUSE_CODE
+														AND BDHD.BID_NO      = BDAP.BID_NO
+														AND BDHD.BID_COUNT   = BDAP.BID_COUNT					
+			WHERE	BDHD.SIGN_STATUS  IN ('C')
+			AND     BDHD.STATUS IN ('C','R')
+			AND     BDAP.STATUS IN ('R')
+			AND     BDAP.BID_CANCEL = 'N'
+			AND     BDAP.FINAL_FLAG = 'Y'
+			AND		BDHD.HOUSE_CODE = ${HOUSE_CODE}
+			AND		BDHD.BID_NO     = ${BID_NO}
+			AND		BDHD.BID_COUNT  = ${BID_COUNT}	
+			
+			UNION ALL
+			
+			SELECT ADDR.PHONE_NO2 AS PHONE_NO2
+			FROM				ICOYBDHD_ICT	BDHD
+					INNER JOIN	ICOMADDR_ICT	ADDR	ON  BDHD.HOUSE_CODE  = ADDR.HOUSE_CODE
+														AND BDHD.ADD_USER_ID = ADDR.CODE_NO
+														AND ADDR.CODE_TYPE   = '3'			
+			WHERE	1=1
+			AND		BDHD.HOUSE_CODE = ${HOUSE_CODE}
+			AND		BDHD.BID_NO     = ${BID_NO}
+			AND		BDHD.BID_COUNT  = ${BID_COUNT}		
+	</method>
+	
+	<method name="ICT_SMS_12_1">
+			SELECT  TO_CHAR(TO_DATE(BID_BEGIN_DATE||BID_BEGIN_TIME, 'YYYYMMDDHH24MISS'),'MM.DD HH24:MI') AS BID_BEGIN_DATE						          
+			 FROM  	ICOYBDHD_ICT BDHD
+			 		LEFT OUTER JOIN	ICOYBDPG_ICT BDPG	ON  BDHD.HOUSE_CODE = BDPG.HOUSE_CODE
+			 										AND BDHD.BID_NO     = BDPG.BID_NO
+			 										AND BDHD.BID_COUNT  = BDPG.BID_COUNT
+			WHERE   BDHD.SIGN_STATUS  IN ('C')
+			  AND   BDHD.BID_STATUS   IN ('AC', 'UC', 'RR')			  
+			  AND   BDHD.STATUS       IN ('C' ,'R')
+			  AND   BDPG.STATUS       IN ('C' ,'R')
+			  AND	BDHD.HOUSE_CODE = ${HOUSE_CODE}
+			  AND	BDHD.BID_NO     = ${BID_NO}
+			  AND	BDHD.BID_COUNT  = ${BID_COUNT}			  							
+	</method>
+	
+	<!-- ICT 사용 : 재입찰 공고 -->
+	<method name="ICT_SMS_06_1">
+			SELECT (CASE WHEN COUNT(BDAP.BID_NO) > 0 THEN 'Y'
+                    ELSE 'N' END) FLAG
+					  
+			FROM				ICOYBDHD_ICT	BDHD
+					INNER JOIN	ICOYBDAP_ICT	BDAP	ON  BDHD.HOUSE_CODE  = BDAP.HOUSE_CODE
+														AND BDHD.BID_NO      = BDAP.BID_NO
+														AND BDHD.BID_COUNT   = BDAP.BID_COUNT					
+			WHERE	1=1
+			AND     BDHD.STATUS IN ('C','R')
+			AND     BDAP.STATUS IN ('C','R')
+			AND     BDAP.BID_CANCEL = 'N'
+			AND     BDAP.FINAL_FLAG = 'Y'
+			AND		BDHD.HOUSE_CODE = ${HOUSE_CODE}
+			AND		BDHD.BID_NO     = ${BID_NO}
+			AND		BDHD.BID_COUNT  = ${BID_COUNT}
+			AND     BDAP.RANK_FST_SME_YN = 'Y'			 								
+	</method>
+		
+	<method name="ICT_SMS_06">
+			SELECT
+					  BDHD.CONT_TYPE1
+					, BDHD.BID_STATUS
+					, BDHD.BID_NO
+					, NVL(BDAP.USER_MOBILE,(SELECT MOBILE_NO FROM ICOMVNCP_ICT WHERE HOUSE_CODE = BDAP.HOUSE_CODE AND VENDOR_CODE = BDAP.VENDOR_CODE AND BIZ_RPS_YN = 'Y'))	PHONE_NO2				
+			FROM				ICOYBDHD_ICT	BDHD
+					INNER JOIN	ICOYBDAP_ICT	BDAP	ON  BDHD.HOUSE_CODE  = BDAP.HOUSE_CODE
+														AND BDHD.BID_NO      = BDAP.BID_NO
+														AND BDHD.BID_COUNT   = BDAP.BID_COUNT					
+			WHERE	1=1
+			AND     BDHD.STATUS IN ('C','R')
+			AND     BDAP.STATUS IN ('C','R')
+			AND     BDAP.BID_CANCEL = 'N'
+			AND     BDAP.FINAL_FLAG = 'Y'
+			AND		BDHD.HOUSE_CODE = ${HOUSE_CODE}
+			AND		BDHD.BID_NO     = ${BID_NO}
+			AND		BDHD.BID_COUNT  = ${BID_COUNT}					
+			AND     BDAP.VENDOR_CODE IN
+			        (   SELECT C.VENDOR_CODE 
+			        	FROM ICOYBDVO_ICT C
+                        WHERE C.HOUSE_CODE = ${HOUSE_CODE}
+					      AND C.BID_NO     = ${BID_NO}
+					      AND C.BID_COUNT  = ${BID_COUNT}		
+                          AND C.VOTE_COUNT = ${VOTE_COUNT}		                       
+                    )  	
+			<if test="${flag}" operator="eq" value="Y">
+			AND     BDAP.RANK_FST_SME_YN = 'Y'				
+			</if>				
+	</method>
+	
+	<method name="ICT_SMS_06_20161125_bak">
+			SELECT
+					  BDHD.CONT_TYPE1
+					, BDHD.BID_STATUS
+					, BDHD.BID_NO
+					, NVL(BDAP.USER_MOBILE,(SELECT MOBILE_NO FROM ICOMVNCP_ICT WHERE HOUSE_CODE = BDAP.HOUSE_CODE AND VENDOR_CODE = BDAP.VENDOR_CODE AND BIZ_RPS_YN = 'Y'))	PHONE_NO2				
+			FROM				ICOYBDHD_ICT	BDHD
+					INNER JOIN	ICOYBDAP_ICT	BDAP	ON  BDHD.HOUSE_CODE  = BDAP.HOUSE_CODE
+														AND BDHD.BID_NO      = BDAP.BID_NO
+														AND BDHD.BID_COUNT   = BDAP.BID_COUNT					
+			WHERE	1=1
+			AND     BDHD.STATUS IN ('C','R')
+			AND     BDAP.STATUS IN ('C','R')
+			AND     BDAP.BID_CANCEL = 'N'
+			AND     BDAP.FINAL_FLAG = 'Y'
+			AND		BDHD.HOUSE_CODE = ${HOUSE_CODE}
+			AND		BDHD.BID_NO     = ${BID_NO}
+			AND		BDHD.BID_COUNT  = ${BID_COUNT}					
+			AND     BDAP.VENDOR_CODE IN
+			        (   SELECT C.VENDOR_CODE 
+			        	FROM ICOYBDVO_ICT C,
+				       		 (
+					       		SELECT A.HOUSE_CODE,A.BID_NO,A.BID_COUNT,MAX(A.VOTE_COUNT) AS VOTE_COUNT
+		                          FROM ICOYBDVO_ICT A, ICOYBDHD_ICT B    
+		                         WHERE A.HOUSE_CODE = B.HOUSE_CODE
+		                           AND A.BID_NO     = B.BID_NO
+		                           AND A.BID_COUNT  = B.BID_COUNT
+		                           AND B.STATUS IN ('C','R')
+		                           AND A.HOUSE_CODE = ${HOUSE_CODE}
+					               AND A.BID_NO     = ${BID_NO}
+					               AND A.BID_COUNT  = ${BID_COUNT}		
+		                        GROUP BY A.HOUSE_CODE,A.BID_NO,A.BID_COUNT
+	                         ) D
+                        WHERE C.HOUSE_CODE = D.HOUSE_CODE
+                          AND C.BID_NO     = D.BID_NO
+                          AND C.BID_COUNT  = D.BID_COUNT
+                          AND C.VOTE_COUNT = (D.VOTE_COUNT - 1)
+                          AND D.VOTE_COUNT > 1                                 
+                    )  			
+			<if test="${flag}" operator="eq" value="Y">
+			AND     BDAP.RANK_FST_SME_YN = 'Y'				
+			</if>				
+	</method>
+	
+	<method name="ICT_SMS_07">
+			SELECT
+					  BDHD.CONT_TYPE1
+					, BDHD.BID_STATUS
+					, BDHD.BID_NO
+					, NVL(BDAP.USER_MOBILE,(SELECT MOBILE_NO FROM ICOMVNCP_ICT WHERE HOUSE_CODE = BDAP.HOUSE_CODE AND VENDOR_CODE = BDAP.VENDOR_CODE AND BIZ_RPS_YN = 'Y'))	PHONE_NO2				
+			FROM				ICOYBDHD_ICT	BDHD
+					INNER JOIN	ICOYBDAP_ICT	BDAP	ON  BDHD.HOUSE_CODE  = BDAP.HOUSE_CODE
+														AND BDHD.BID_NO      = BDAP.BID_NO
+														AND BDHD.BID_COUNT   = BDAP.BID_COUNT					
+			WHERE	1=1
+			AND     BDHD.STATUS IN ('C','R')
+			AND     BDAP.STATUS IN ('C','R')
+			AND     BDAP.BID_CANCEL = 'N'
+			AND     BDAP.FINAL_FLAG = 'Y'
+			AND		BDHD.HOUSE_CODE = ${HOUSE_CODE}
+			AND		BDHD.BID_NO     = ${BID_NO}
+			AND		BDHD.BID_COUNT  = ${BID_COUNT}						
+	</method>
+	
+	<!-- ICT 사용 : 입찰접수공고 -->
+	<method name="WBWMGSGF0120912">
+			SELECT
+					  BDHD.ANN_NO     AS ANN_NO
+					, ADDR.PHONE_NO2  AS PHONE_NO2  
+			FROM				ICOYBDHD2_ICT	BDHD
+					INNER JOIN	ICOYBDMFCO2_ICT	BDMFCO2	ON  BDHD.HOUSE_CODE  = BDMFCO2.HOUSE_CODE
+														AND BDHD.ANN_NO      = BDMFCO2.ANN_NO
+														AND BDHD.ANN_COUNT   = BDMFCO2.ANN_COUNT
+					INNER JOIN	ICOMADDR_ICT	ADDR	ON  BDMFCO2.HOUSE_CODE  = ADDR.HOUSE_CODE
+														AND BDMFCO2.VENDOR_CODE = ADDR.CODE_NO
+														AND ADDR.CODE_TYPE   = '2'				
+			WHERE	1=1
+			AND		BDHD.HOUSE_CODE  = ${HOUSE_CODE}
+			AND		BDHD.ANN_NO      = ${ANN_NO}
+			AND		BDHD.ANN_COUNT   = ${ANN_COUNT}
+			UNION
+			SELECT    BDHD.ANN_NO    AS ANN_NO
+					, (SELECT MOBILE_NO FROM ICOMVNCP_ICT WHERE HOUSE_CODE = BDMFCO2.HOUSE_CODE AND VENDOR_CODE = BDMFCO2.VENDOR_CODE AND BIZ_RPS_YN = 'Y')AS PHONE_NO2
+			FROM				ICOYBDHD2_ICT	BDHD
+					INNER JOIN	ICOYBDMFCO2_ICT	BDMFCO2	ON  BDHD.HOUSE_CODE  = BDMFCO2.HOUSE_CODE
+														AND BDHD.ANN_NO      = BDMFCO2.ANN_NO
+														AND BDHD.ANN_COUNT   = BDMFCO2.ANN_COUNT					
+			WHERE	1=1
+			AND		BDHD.HOUSE_CODE  = ${HOUSE_CODE}
+			AND		BDHD.ANN_NO      = ${ANN_NO}
+			AND		BDHD.ANN_COUNT   = ${ANN_COUNT}
+	</method>
+	
+	<method name="selectBd1List">
+		SELECT
+			BDHD.CONT_TYPE1,
+			BDHD.BID_STATUS,
+			BDHD.BID_NO,
+			ADDR.PHONE_NO2
+		FROM
+			ICOYBDHD BDHD
+		INNER JOIN ICOYBDAP BDAP ON BDHD.HOUSE_CODE = BDAP.HOUSE_CODE AND BDHD.BID_NO      = BDAP.BID_NO  AND BDHD.BID_COUNT = BDAP.BID_COUNT
+		INNER JOIN ICOMADDR ADDR ON BDAP.HOUSE_CODE = ADDR.HOUSE_CODE AND BDAP.VENDOR_CODE = ADDR.CODE_NO
+		WHERE
+			BDHD.HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			BDHD.BID_NO     = ${BID_NO}
+		AND
+			BDHD.BID_COUNT  = ${BID_COUNT}
+		AND
+			ADDR.CODE_TYPE  = '2'
+		
+		UNION ALL
+		
+		SELECT
+			BDHD.CONT_TYPE1,
+			BDHD.BID_STATUS,
+			BDHD.BID_NO,
+			ADDR.PHONE_NO2
+		FROM
+			ICOYBDHD BDHD
+		INNER JOIN ICOMADDR ADDR ON BDHD.HOUSE_CODE = ADDR.HOUSE_CODE AND BDHD.ADD_USER_ID = ADDR.CODE_NO
+		WHERE
+			BDHD.HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			BDHD.BID_NO     = ${BID_NO}
+		AND
+			BDHD.BID_COUNT  = ${BID_COUNT}
+		AND
+			ADDR.CODE_TYPE  = '3'
+	</method>
+	
+	
+	<method name="selectBd1List_ICT">
+		SELECT
+			BDHD.CONT_TYPE1,
+			BDHD.BID_STATUS,
+			BDHD.BID_NO,
+			ADDR.PHONE_NO2
+		FROM
+			ICOYBDHD_ICT BDHD
+		INNER JOIN ICOYBDAP_ICT BDAP ON BDHD.HOUSE_CODE = BDAP.HOUSE_CODE AND BDHD.BID_NO      = BDAP.BID_NO  AND BDHD.BID_COUNT = BDAP.BID_COUNT
+		INNER JOIN ICOMADDR_ICT ADDR ON BDAP.HOUSE_CODE = ADDR.HOUSE_CODE AND BDAP.VENDOR_CODE = ADDR.CODE_NO
+		WHERE
+			BDHD.HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			BDHD.BID_NO     = ${BID_NO}
+		AND
+			BDHD.BID_COUNT  = ${BID_COUNT}
+		AND
+			ADDR.CODE_TYPE  = '2'
+		
+		UNION ALL
+		
+		SELECT
+			BDHD.CONT_TYPE1,
+			BDHD.BID_STATUS,
+			BDHD.BID_NO,
+			ADDR.PHONE_NO2
+		FROM
+			ICOYBDHD_ICT BDHD
+		INNER JOIN ICOMADDR_ICT ADDR ON BDHD.HOUSE_CODE = ADDR.HOUSE_CODE AND BDHD.ADD_USER_ID = ADDR.CODE_NO
+		WHERE
+			BDHD.HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			BDHD.BID_NO     = ${BID_NO}
+		AND
+			BDHD.BID_COUNT  = ${BID_COUNT}
+		AND
+			ADDR.CODE_TYPE  = '3'
+	</method>
+	<method name="selectBd4List">
+		SELECT
+			ADDR.PHONE_NO2
+		FROM
+			ICOMADDR ADDR
+		WHERE
+			ADDR.CODE_NO = ${USER_ID}
+		AND
+			ADDR.CODE_TYPE  = '3'
+	</method>
+	
+	<method name="selectBd4List_ICT">
+		SELECT
+			ADDR.PHONE_NO2
+		FROM
+			ICOMADDR_ICT ADDR
+		WHERE
+			ADDR.CODE_NO = ${USER_ID}
+		AND
+			ADDR.CODE_TYPE  = '3'
+	</method>
+	
+	<method name="selectBd5List">
+		SELECT
+			BDAP.USER_MOBILE
+		FROM
+			ICOYBDVO BDVO
+		INNER JOIN ICOYBDAP BDAP ON BDVO.HOUSE_CODE = BDAP.HOUSE_CODE AND BDVO.BID_NO = BDAP.BID_NO AND	BDVO.BID_COUNT = BDAP.BID_COUNT AND BDVO.VENDOR_CODE = BDAP.VENDOR_CODE
+		WHERE
+			BDVO.HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			BDVO.BID_NO     = ${BID_NO}
+		AND
+			BDVO.BID_COUNT  = ${BID_COUNT}
+		AND
+			BDVO.VOTE_COUNT = ${VOTE_COUNT}
+		AND
+			BDVO.BID_STATUS = 'SB'
+	
+		UNION ALL
+		
+		SELECT
+			ADDR.PHONE_NO2
+		FROM
+			ICOYBDHD BDHD
+		INNER JOIN ICOMADDR ADDR ON BDHD.HOUSE_CODE = ADDR.HOUSE_CODE AND BDHD.ADD_USER_ID = ADDR.CODE_NO
+		WHERE
+			BDHD.HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			BDHD.BID_NO     = ${BID_NO}
+		AND
+			BDHD.BID_COUNT  = ${BID_COUNT}
+		AND
+			ADDR.CODE_TYPE  = '3'
+	</method>
+	
+	<method name="selectBd6List">
+		SELECT
+			BDHD.CONT_TYPE1,
+			BDHD.BID_STATUS,
+			BDAP.USER_MOBILE AS PHONE_NO2
+		FROM
+			ICOYBDHD BDHD
+		INNER JOIN ICOYBDAP BDAP ON BDHD.HOUSE_CODE = BDAP.HOUSE_CODE AND BDHD.BID_NO = BDAP.BID_NO  AND BDHD.BID_COUNT = BDAP.BID_COUNT
+		WHERE
+			BDHD.HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			BDHD.BID_NO     = ${BID_NO}
+		AND
+			BDHD.BID_COUNT  = ${BID_COUNT}
+		
+		UNION ALL
+		
+		SELECT
+			BDHD.CONT_TYPE1,
+			BDHD.BID_STATUS,
+			ADDR.PHONE_NO2
+		FROM
+			ICOYBDHD BDHD
+		INNER JOIN ICOMADDR ADDR ON BDHD.HOUSE_CODE = ADDR.HOUSE_CODE AND BDHD.ADD_USER_ID = ADDR.CODE_NO
+		WHERE
+			BDHD.HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			BDHD.BID_NO     = ${BID_NO}
+		AND
+			BDHD.BID_COUNT  = ${BID_COUNT}
+		AND
+			ADDR.CODE_TYPE  = '3'
+	</method>
+	
+	<method name="selectRg1List">
+		SELECT
+			VNGL.VENDOR_NAME_LOC,
+			ADDR.PHONE_NO2
+		FROM
+			ICOMVNGL VNGL
+		INNER JOIN ICOMADDR ADDR ON VNGL.HOUSE_CODE = ADDR.HOUSE_CODE AND VNGL.VENDOR_CODE = ADDR.CODE_NO
+		WHERE
+			VNGL.HOUSE_CODE  = ${HOUSE_CODE}
+		AND
+			VNGL.VENDOR_CODE = ${VENDOR_CODE}
+		AND
+			ADDR.CODE_TYPE   = '2'
+	</method>
+	
+	<method name="selectRg1List_ICT">
+		SELECT
+			VNGL.VENDOR_NAME_LOC,
+			ADDR.PHONE_NO2,
+			'1' Z_ORDER
+		FROM
+			ICOMVNGL_ICT VNGL
+		INNER JOIN ICOMADDR_ICT ADDR ON VNGL.HOUSE_CODE = ADDR.HOUSE_CODE AND VNGL.VENDOR_CODE = ADDR.CODE_NO
+		WHERE
+			VNGL.HOUSE_CODE  = ${HOUSE_CODE}
+		AND
+			VNGL.VENDOR_CODE = ${VENDOR_CODE}
+		AND
+			ADDR.CODE_TYPE   = '2'
+		UNION ALL
+		SELECT 
+	        '' VENDOR_NAME_LOC, 
+		    TEXT5 PHONE_NO2,
+		    '2' Z_ORDER						
+	    FROM SCODE
+		WHERE USE_FLAG = 'Y'
+		AND TYPE = 'B001_ICT'
+		AND CODE = '0001'  
+		ORDER BY Z_ORDER	     
+	</method>
+	
+	<method name="selectRq2List">
+		SELECT
+			DISTINCT
+			RQHD.RFQ_TYPE,
+			RQHD.SUBJECT,
+			RQHD.RFQ_NO,
+			ADDR.PHONE_NO2
+		FROM
+			ICOYRQHD        RQHD
+		INNER JOIN ICOYRQSE RQSE ON RQHD.HOUSE_CODE = RQSE.HOUSE_CODE AND RQHD.RFQ_NO      = RQSE.RFQ_NO      AND RQHD.RFQ_COUNT = RQSE.RFQ_COUNT
+		INNER JOIN ICOMVNGL VNGL ON RQSE.HOUSE_CODE = VNGL.HOUSE_CODE AND RQSE.VENDOR_CODE = VNGL.VENDOR_CODE
+		INNER JOIN ICOMADDR ADDR ON VNGL.HOUSE_CODE = ADDR.HOUSE_CODE AND VNGL.VENDOR_CODE = ADDR.CODE_NO
+		WHERE
+			RQSE.HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			RQHD.RFQ_NO     = ${RFQ_NO}
+		AND
+			RQHD.RFQ_COUNT  = ${RFQ_COUNT}
+		AND
+			ADDR.CODE_TYPE  = '2'
+	</method>
+	
+	<method name="selectIv2List">
+		SELECT
+			IVHD.SUBJECT,
+			ADDR.PHONE_NO2
+		FROM
+			ICOYIVHD IVHD
+		INNER JOIN ICOMADDR ADDR ON IVHD.HOUSE_CODE = ADDR.HOUSE_CODE AND IVHD.VENDOR_CODE = ADDR.CODE_NO
+		WHERE
+			IVHD.HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			IVHD.INV_NO     = ${INV_NO}
+		AND
+			ADDR.CODE_TYPE  = '2'
+	</method>
+
+	<!-- ICT 사용 -->
+	<method name="selectRg1List_ict">
+		SELECT VNGL.VENDOR_NAME_LOC
+		     , ADDR.PHONE_NO2
+		  FROM            ICOMVNGL_ICT VNGL
+		       INNER JOIN ICOMADDR_ICT ADDR ON VNGL.HOUSE_CODE  = ADDR.HOUSE_CODE
+		                                   AND VNGL.VENDOR_CODE = ADDR.CODE_NO
+		 WHERE 1=1
+		   AND VNGL.HOUSE_CODE  = ${HOUSE_CODE}
+		   AND VNGL.VENDOR_CODE = ${KEY01}
+		   AND ADDR.CODE_TYPE   = '2'
+	</method>
+
+	<method name="selectRptList">
+		SELECT 
+			B.PHONE_NO2 PHONE_NO2
+		FROM 
+			ICOMLUSR A, ICOMADDR B  
+		WHERE 
+			A.HOUSE_CODE = B.HOUSE_CODE 
+		AND 
+			A.USER_ID = B.CODE_NO 
+		AND 
+			A.HOUSE_CODE = ${HOUSE_CODE}
+		<![CDATA[
+		AND 
+			A.MENU_PROFILE_CODE = 'MUP150200001' 
+		AND 
+			A.DEL_FLAG = 'N' 
+		AND 
+			A.STATUS <> 'D' 
+		AND 
+			A.SIGN_STATUS = 'A'
+		AND 
+			A.USER_TYPE = 'WOORI'
+		]]>	
+	</method>
+	
+	<!-- ICT 견적요청 쿼리 보정 해야함 -->
+	<method name="selectRptList_ICT">
+		<![CDATA[
+		    SELECT
+		            RQOP.VENDOR_CODE VENDOR_CODE
+			       ,VNCP.MOBILE_NO   PHONE_NO2
+			FROM				ICOYRQOP_ICT	RQOP
+					INNER JOIN	ICOMVNCP_ICT	VNCP	ON  ${HOUSE_CODE}  = VNCP.HOUSE_CODE
+														AND RQOP.VENDOR_CODE = VNCP.VENDOR_CODE
+			WHERE	1=1
+			AND     VNCP.BIZ_RPS_YN = 'Y'
+			AND     RQOP.STATUS     IN ('C','R')
+			AND		RQOP.RFQ_NO     = ${RFQ_NO}
+			AND		RQOP.RFQ_COUNT  = ${RFQ_COUNT}
+			AND		RQOP.RFQ_SEQ    = $S{RFQ_SEQ}
+		]]>	
+	</method>
+	
+	<method name="selectRptList2_ICT">
+		<![CDATA[
+		    SELECT
+					  ADDR.PHONE_NO2
+			FROM				ICOYRQHD_ICT	RQHD
+					INNER JOIN	ICOMADDR_ICT	ADDR	ON  ${HOUSE_CODE}  = ADDR.HOUSE_CODE
+														AND RQHD.RFQ_ID = ADDR.CODE_NO
+														AND ADDR.CODE_TYPE   = '3'				-- 입찰담당자
+			WHERE	RQHD.STATUS     IN ('C','R')			
+			AND		RQHD.RFQ_NO     = ${RFQ_NO}
+			AND		RQHD.RFQ_COUNT  = ${RFQ_COUNT}			
+		]]>	
+	</method>
+	
+	
+	<!-- ICT 사용 : 입찰담당자 정보 -->
+	<method name="getInfo">
+		<![CDATA[
+				SELECT
+						  A1.CODE
+						, A1.TEXT1
+						, A1.TEXT2
+						, A1.TEXT3
+						, A1.TEXT4
+						, A1.TEXT5
+						, A1.TEXT6
+				  FROM SCODE A1
+				 WHERE 1 = 1
+				   AND A1.USE_FLAG = 'Y'
+				   AND A1.TYPE     = ${TYPE}
+				ORDER BY TO_NUMBER(A1.SORT_SEQ)
+				       , A1.CODE
+		]]>
+	</method>	
+
+
+</service>

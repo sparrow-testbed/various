@@ -1,0 +1,58 @@
+(function() { 
+    return {
+	firstdesc: "Enter the remaining information for the certificate to import.",
+	blinkpasswdfail: "The password is missing.",
+	blinkpfxfilefail: "Enter the filename to import.",
+	wrongpfxfilefail: "Please select the correct file. (*.pfx or *.p12)",
+	blinkx509type: "Select the type of certificate to import.",
+	end: "If you click [Complete] button, the import of certificate will be completed.",
+	errornotselect: "This is not the selected item.",
+	fail: "Fail to import certificate.",
+	findPFX: "Search...",
+	keyfile: "Private key file (*.key)",
+	passwdfail: "The password is not correct.",
+	PFXPassLabel: "Enter the password for importing certificate.",
+	pkcs11cancel: "The input for pin number is canceled.",
+	pkcs11incorrect: "Incorrect pin number.",
+	pkcs12: "Private Information Exchange (*.pfx, *.p12)",
+	seldir: "Default Name",
+	selfile: "...",
+	selfiletitle: "Select File",
+	selPFX: "Private Information Exchange (.PFX, .P12)",
+	selPFXExam: "ex) $HOME/MyCert.pfx",
+	selPFXLabel: "File.",
+	selX509: "X.509(.DER, .CER)",
+	selX509Label: "Certificate Type.",
+	title: "Import Certificate",
+	x509bin: "X.509 (*.der, *.cer)",
+	X509FileSel: "Select the certificate and private key file.",
+	X509KM: "Encryption",
+	cert: "Certificate : ",
+	key: "Private Key : ",
+	X509kmcert: "Encryption Certificate",
+	x509kmcertfail: "Enter the filename to import.",
+	X509kmkey: "Encryption Private Key",
+	x509kmkeyfail: "Enter the filename to import.",
+	X509Sign: "Signature",
+	X509signcert: "Signature Certificate",
+	x509signcertfail: "Enter the filename to import.",
+	X509signkey: "Signature Private Key",
+	x509signkeyfail: "Enter the filename to import.",
+	X509TreePath: "Location",
+	X509TreeSec: "Type",
+
+	input_mouse: "input mouse",
+
+	button_cancel: "Cancel",
+	button_prev: "< Prev",
+	button_next: "Next >",
+	button_complete: "Complete",
+
+	/* Accessibility */
+	ready: "Ready to import vertificate",
+	close: "close",
+	xvvcursor_guide: "Import certificate layer is open. Sense reader users seamless use, please turn off the virtual cursor. Virtual cursor position, press the Enter key when the current is turned off.",
+
+	blank: ""
+    }
+})();

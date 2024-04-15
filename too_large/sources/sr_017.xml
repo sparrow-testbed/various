@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+<service>
+	  <method name ="getTempList">
+    <![CDATA[
+		SELECT 	TH.E_TEMPLATE_REFITEM,										
+				TH.TEMPLATE_NAME,													
+				TH.CHANGE_DATE AS systime_updated,												
+				LUSR.USER_NAME_LOC,											
+				GETICOMCODE1(TH.HOUSE_CODE,'M924',TH.TEMPLATE_TYPE)	template_type											
+			FROM ICOMVETH TH, ICOMLUSR LUSR										
+		WHERE TH.ADD_USER_ID = LUSR.USER_ID									
+			AND LUSR.HOUSE_CODE=${session.HOUSE_CODE}							
+			AND TH.USE_FLAG = 'Y'		
+			
+			AND TH.TEMPLATE_NAME  LIKE '%' || $S{item_name}  || '%'
+
+  	   		AND LUSR.USER_NAME_LOC  LIKE '%' || $S{operator}  || '%'	
+	 ]]>
+	 	
+	 	order by e_template_refitem asc
+	 
+	 
+    </method>
+    
+    
+    
+    <method name = "setTempDelete">
+   	<![CDATA[
+		UPDATE ICOMVETH SET USE_FLAG = 'N'					
+			 WHERE E_TEMPLATE_REFITEM IN ( ${e_template_refitem} ) 					
+   	]]>
+    </method>
+   
+
+</service>

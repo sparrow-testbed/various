@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<service>
+	<method name="et_getMenuList">
+        select /*+ rule */ 
+            muid.module_type module_type, 
+            muid.screen_id screen_id, 
+            muid.screen_name screen_name, 
+            muid.menu_link menu_link, 
+            decode(muid.use_flag,'Y','1','0') use_flag , 
+            decode(muid.autho_apply_flag,'Y','1','0') autho_apply_flag , 
+            getDateFormat(muid.add_date) add_date, 
+            getUserName(muid.add_user_id, '000', 'KO') add_user_name, 
+            muid.module_type module_type_code 
+          from smuid muid, scode code  
+         where NVL(muid.del_flag, 'N') = 'N' 
+           and code.type='M998'  
+           and code.code=muid.module_type 
+           and code.language    = $S{language}
+           and muid.module_type = $S{module_type}  
+           and (upper(muid.screen_name) like '%' || $S{screen_name} || '%' 
+            or upper(muid.screen_id) like '%' || $S{screen_name} || '%')
+           and  upper(muid.menu_link) like '%' || $S{menu_link} || '%'
+	</method>
+</service>

@@ -1,0 +1,877 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<service>
+
+	<method name="et_req_docnumber">
+    SELECT	NVL(MAX(REQ_ITEM_NO)+1, TO_CHAR(SYSDATE, 'YYMMDD') || '001')
+	FROM 	ICOMREHD
+	WHERE 	HOUSE_CODE = '#house_code#'
+  	  AND 	REQ_ITEM_NO LIKE TO_CHAR(SYSDATE, 'YYMMDD') || '%'
+	</method>
+
+
+
+	<method name="et_req_setInsert">
+	INSERT INTO ICOMREHD(
+		HOUSE_CODE,      
+		REQ_ITEM_NO,     
+		REQ_DATE,
+		<if test="${MATERIAL_TYPE}" operator="ne" value="null">        
+		MATERIAL_TYPE,
+		</if>
+		<if test="${MATERIAL_CTRL_TYPE}" operator="ne" value="null">
+		MATERIAL_CTRL_TYPE,
+		</if>
+		
+		<if test="${MATERIAL_CLASS1}" operator="ne" value="null">
+		MATERIAL_CLASS1,
+		</if>
+		<if test="${MATERIAL_CLASS2}" operator="ne" value="null"> 
+		MATERIAL_CLASS2, 
+		</if>
+		<if test="${DESCRIPTION_LOC}" operator="ne" value="null">
+		DESCRIPTION_LOC, 
+		</if>
+		<if test="${SPECIFICATION}" operator="ne" value="null">
+		SPECIFICATION,        
+		</if>
+		<if test="${ITEM_ABBREVIATION}" operator="ne" value="null">
+		ITEM_ABBREVIATION,
+		</if>
+		
+		<if test="${BASIC_UNIT}" operator="ne" value="null">
+		BASIC_UNIT,
+		</if>
+		<if test="${APP_TAX_CODE}" operator="ne" value="null">      
+		APP_TAX_CODE,    
+		</if>
+		<if test="${ITEM_BLOCK_FLAG}" operator="ne" value="null">
+		ITEM_BLOCK_FLAG, 
+		</if>
+		<if test="${MAKER_NAME}" operator="ne" value="null">
+		MAKER_NAME,           
+		</if>
+		<if test="${MAKER_CODE}" operator="ne" value="null">
+		MAKER_CODE,
+		</if>
+		
+		<if test="${Z_ITEM_DESC}" operator="ne" value="null">
+		Z_ITEM_DESC,     
+		</if>
+		<if test="${REMARK}" operator="ne" value="null">
+		REMARK,          
+		</if>
+		<if test="${MAKER_FLAG}" operator="ne" value="null">
+		MAKER_FLAG,      
+		</if>
+		<if test="${MODEL_FLAG}" operator="ne" value="null">
+		MODEL_FLAG,           
+		</if>
+		<if test="${MODEL_NO}" operator="ne" value="null">
+		MODEL_NO,
+		</if>
+		
+		<if test="${ATTACH_NO}" operator="ne" value="null">
+		ATTACH_NO,       
+		</if>
+		<if test="${REQ_USER_ID}" operator="ne" value="null">
+		REQ_USER_ID,     
+		</if>
+		REQ_TYPE,        
+		CONFIRM_STATUS,       
+		DATA_OCCUR_TYPE,
+		
+		STATUS,          
+		ADD_DATE,        
+		ADD_TIME,        
+		<if test="${ADD_USER_ID}" operator="ne" value="null">
+		ADD_USER_ID,          
+		</if>
+		<if test="${ADD_USER_NAME_LOC}" operator="ne" value="null">
+		ADD_USER_NAME_LOC,
+		</if>
+		
+		CHANGE_DATE,     
+		CHANGE_TIME,     
+		<if test="${CHANGE_USER_ID}" operator="ne" value="null">
+		CHANGE_USER_ID,  
+		</if>
+		<if test="${CHANGE_USER_NAME_LOC}" operator="ne" value="null">
+		CHANGE_USER_NAME_LOC, 
+		</if>
+		<if test="MAKE_AMT_CODE" operator="ne" value="null">
+		MAKE_AMT_CODE, 
+		</if>
+		SIGN_STATUS
+	)
+	VALUES(
+		${house_code},
+		${REQ_ITEM_NO},
+		TO_CHAR(SYSDATE, 'YYYYMMDD'),
+		<if test="${MATERIAL_TYPE}" operator="ne" value="null">
+		${MATERIAL_TYPE},
+		</if>
+		<if test="${MATERIAL_CTRL_TYPE}" operator="ne" value="null">
+		${MATERIAL_CTRL_TYPE},
+		</if>
+		
+		<if test="${MATERIAL_CLASS1}" operator="ne" value="null">
+		${MATERIAL_CLASS1},
+		</if>
+		<if test="${MATERIAL_CLASS2}" operator="ne" value="null">
+		${MATERIAL_CLASS2},
+		</if>
+		<if test="${DESCRIPTION_LOC}" operator="ne" value="null">
+		${DESCRIPTION_LOC},
+		</if>
+		<if test="${SPECIFICATION}" operator="ne" value="null">
+		${SPECIFICATION},
+		</if>
+		<if test="${ITEM_ABBREVIATION}" operator="ne" value="null">
+		${ITEM_ABBREVIATION},
+		</if>
+		
+		<if test="${BASIC_UNIT}" operator="ne" value="null">
+		${BASIC_UNIT},
+		</if>
+		<if test="${APP_TAX_CODE}" operator="ne" value="null">
+		${APP_TAX_CODE},
+		</if>
+		<if test="${ITEM_BLOCK_FLAG}" operator="ne" value="null">
+		${ITEM_BLOCK_FLAG},
+		</if>
+		<if test="${MAKER_NAME}" operator="ne" value="null">
+		${MAKER_NAME},
+		</if>
+		<if test="${MAKER_CODE}" operator="ne" value="null">
+		${MAKER_CODE},
+		</if>
+		
+		<if test="${Z_ITEM_DESC}" operator="ne" value="null">
+		${Z_ITEM_DESC},
+		</if>
+		<if test="${REMARK}" operator="ne" value="null">
+		${REMARK},
+		</if>
+		<if test="${MAKER_FLAG}" operator="ne" value="null">
+		${MAKER_FLAG},
+		</if>
+		<if test="${MODEL_FLAG}" operator="ne" value="null">
+		${MODEL_FLAG},
+		</if>
+		<if test="${MODEL_NO}" operator="ne" value="null">
+		${MODEL_NO},
+		</if>
+		
+		<if test="${ATTACH_NO}" operator="ne" value="null">
+		${ATTACH_NO},
+		</if>
+		<if test="${REQ_USER_ID}" operator="ne" value="null">
+		${REQ_USER_ID},
+		</if>
+		'C',
+		'P',
+		'L',
+		
+		'C',
+		TO_CHAR(SYSDATE, 'YYYYMMDD'),
+		TO_CHAR(SYSDATE, 'HH24MISS'),
+		<if test="${ADD_USER_ID}" operator="ne" value="null">
+		${ADD_USER_ID},
+		</if>
+		<if test="${ADD_USER_NAME_LOC}" operator="ne" value="null">
+		${ADD_USER_NAME_LOC},
+		</if>
+		
+		TO_CHAR(SYSDATE, 'YYYYMMDD'),
+		TO_CHAR(SYSDATE, 'HH24MISS'),
+		<if test="${CHANGE_USER_ID}" operator="ne" value="null">
+		${CHANGE_USER_ID},
+		</if>
+		<if test="${CHANGE_USER_NAME_LOC}" operator="ne" value="null">
+		${CHANGE_USER_NAME_LOC},
+		</if>
+		<if test="${MAKE_AMT_CODE}" operator="ne" value="null">
+		${MAKE_AMT_CODE},
+		</if>
+		'E'
+	)
+	</method>
+
+	<method name="et_newmtrl_bd_lis2_getQuery">
+		SELECT
+			CONVERT_DATE(RHD.REQ_DATE) AS REQ_DATE,
+			RHD.ITEM_NO,
+			RHD.SPECIFICATION,
+			RHD.BASIC_UNIT,
+			RHD.DESCRIPTION_LOC,
+			GETICOMCODE2(${HOUSE_CODE},'M183', RHD.REQ_TYPE) REQ_TYPE,
+			(
+				SELECT
+					USER_NAME_LOC
+				FROM
+					ICOMLUSR
+				WHERE
+					USER_ID = RHD.REQ_USER_ID
+				AND
+					HOUSE_CODE = RHD.HOUSE_CODE
+			) REQ_NAME_LOC,
+            GETICOMCODE2(${HOUSE_CODE},'M184',RHD.DATA_TYPE) DATA_TYPE,
+            CONVERT_DATE(RHD.CONFIRM_DATE) AS CONFIRM_DATE,
+            RHD.DATA_TYPE AS H_DATA_TYPE,
+            (
+            	SELECT
+            		USER_NAME_LOC
+            	FROM
+            		ICOMLUSR
+            	WHERE
+            		USER_ID = RHD.CONFIRM_USER_ID
+            	AND
+            		HOUSE_CODE = RHD.HOUSE_CODE
+            ) CONFIRM_NAME_LOC,
+            GETICOMCODE2(${HOUSE_CODE}, 'M185', RHD.CONFIRM_STATUS) CONFIRM_STATUS,
+            RHD.CONFIRM_STATUS AS CONFIRM_STATUS_FLAG,
+            RHD.REQ_ITEM_NO,
+            REMARK,
+            GETCOMPANYNAME(VDR.HOUSE_CODE, VDR.VENDOR_CODE, 'S', 'KR') VENDOR_NAME ,
+            RHD.REJECT_REMARK,
+            RHD.REJECT_REMARK AS REJECT_REMARK_TEXT,
+            RHD.MAKER_NAME
+		FROM
+			ICOMREHD RHD  
+		LEFT OUTER JOIN (
+			SELECT
+				USR.USER_ID,
+				USR.HOUSE_CODE,
+				NGL.VENDOR_CODE,
+				GETCOMPANYNAME(NGL.HOUSE_CODE, NGL.VENDOR_CODE, 'S', 'KR') AS NAME_LOC
+			FROM
+				ICOMLUSR USR,
+				ICOMVNGL NGL
+			WHERE
+				USR.HOUSE_CODE   = ${HOUSE_CODE}
+			AND
+				USR.HOUSE_CODE   = NGL.HOUSE_CODE
+			AND
+				USR.COMPANY_CODE = NGL.VENDOR_CODE
+		) VDR
+		ON
+			RHD.HOUSE_CODE  = VDR.HOUSE_CODE
+		AND
+			RHD.REQ_USER_ID = VDR.USER_ID
+		WHERE
+			RHD.HOUSE_CODE = ${HOUSE_CODE}
+		AND 
+		<![CDATA[
+			RHD.STATUS <> 'D'
+		]]>
+        <![CDATA[
+        AND	RHD.REQ_DATE >= $S{REQ_DATE_FROM}
+        ]]>
+        <![CDATA[
+        AND	RHD.REQ_DATE <= $S{REQ_DATE_TO}
+        ]]>
+        AND RHD.REQ_USER_ID = $S{REQ_USER_ID}
+        AND UPPER(RHD.DESCRIPTION_LOC) LIKE '%' || UPPER($S{DESCRIPTION_LOC}) || '%'
+        AND RHD.CONFIRM_STATUS =  $S{CONFIRM_STATUS}
+		ORDER BY
+			RHD.REQ_ITEM_NO DESC
+	</method>
+
+	<method name="et_getPjtCodeList">
+	<![CDATA[
+	  SELECT PJT_SEQ AS PRE_PJT_CODE 
+	    FROM ICOYPJTH
+		WHERE HOUSE_CODE ='#HOUSE_CODE#'
+         AND PJT_SEQ    ='#pjt_code#'
+	]]>
+	</method>
+	
+	<method name="et_req_ins_getVnglList">
+	<![CDATA[
+	 SELECT CREDIT_RATING
+	       ,CREDIT_ATTACH_NO ATTACH_NO
+		   ,(SELECT COUNT(*) FROM ICOMATCH WHERE DOC_NO = CREDIT_ATTACH_NO) AS ATTACH_CNT
+	 FROM ICOMVNGL
+	WHERE HOUSE_CODE  = '#HOUSE_CODE#'
+	 AND  VENDOR_CODE = '#vendor_code#'
+	]]>
+	</method>
+
+	<method name="et_req_ins_getReqList">
+	<![CDATA[
+	 SELECT getIcomcode2('#HOUSE_CODE#','M122',MATERIAL_CLASS2) AS MATERIAL_CLASS2_NAME
+	       ,ITEM_NO ,ITEM_GROUP
+	       ,MATERIAL_TYPE ,MATERIAL_CTRL_TYPE, MATERIAL_CLASS1, MATERIAL_CLASS2
+	       ,getIcomcode2('#HOUSE_CODE#','M042',MATERIAL_CLASS1) AS MATERIAL_CLASS1_NAME
+	       ,getIcomcode2('#HOUSE_CODE#','M041',MATERIAL_CTRL_TYPE) AS MATERIAL_CTRL_TYPE_NAME
+	       ,DESCRIPTION_LOC, BASIC_UNIT
+	       ,CASE WHEN (REMARK = 'EPS003') THEN 'I/F 물류'
+			     WHEN (REMARK = 'EPS004') THEN 'I/F 재산'
+			     WHEN (REMARK = 'EPS005') THEN 'I/F e홍보물'
+			     WHEN (REMARK = 'EPS006') THEN 'I/F IT'
+			     ELSE REMARK
+			 END REMARK
+	       ,MAKER_NAME
+	       ,'' AS PRODUCT_NAME
+	       ,ORIGIN_COUNTRY,MODEL_NO, '' AS RELEASE_FLAG , '' AS INTEGRATED_BUY_FLAG
+	       ,'' AS COMPANY_CODE_NAME
+	       ,'' AS TAX_CODE
+	       ,getIcomcode2('#HOUSE_CODE#','M025',SHIPPER_TYPE) AS SHIPPER_TYPE_LOC
+	       ,IMAGE_FILE_PATH ,DRAWING_NO1
+	   	   ,GETINFOPRICE2('#HOUSE_CODE#', '#COMPANY_CODE#', '#PR_LOCATION#', ITEM_NO) AS INFO_PRICE
+	       ,getAttachFileName(IMAGE_FILE_PATH,'IMAGE','00000001') AS IMAGE_FILE_NAME
+	       ,OLD_ITEM_NO , Z_ITEM_DESC, ITEM_ABBREVIATION, SPECIFICATION, ITEM_NO
+	       ,'' AS ITEM_NAME
+	       ,'' AS CATALOG_USER_ID
+	       ,'' AS SOURCING_USER_ID
+	       ,(SELECT USER_NAME_LOC FROM ICOMLUSR WHERE USER_ID = REQ_USER_ID AND HOUSE_CODE = '#HOUSE_CODE#') AS REQ_USER_ID
+	       ,REQ_DATE ,CONFIRM_DATE ,  MATERIAL_CLASS2 , DATA_TYPE AS DATA
+	       ,getIcomcode2('#HOUSE_CODE#','M183',REQ_TYPE) AS REQ_TYPE
+	       ,getIcomcode2('#HOUSE_CODE#','M185',CONFIRM_STATUS) AS CONFIRM_STATUS
+	       ,getIcomcode2('#HOUSE_CODE#','M184',DATA_TYPE) AS DATA_TYPE
+	       ,(SELECT USER_NAME_LOC FROM ICOMLUSR WHERE USER_ID = CONFIRM_USER_ID AND HOUSE_CODE = '#HOUSE_CODE#') AS CONFIRM_USER_NAME
+	       ,getIcomcode2('#HOUSE_CODE#','M037',ITEM_GROUP) AS Z_ITEM_GROUP
+	       ,getIcomcode2('#HOUSE_CODE#','M602',Z_PURCHASE_TYPE) AS Z_PURCHASE_TYPE
+	       ,Z_PURCHASE_TYPE AS Z_PURCHASE_TYPE_CODE
+	       ,MAKER_NAME
+	       ,PROXY_ITEM_NO
+	       ,APP_TAX_CODE
+	       ,DELIVERY_LT
+	       ,getIcomcode2('#HOUSE_CODE#','M604',MARKET_TYPE) AS MARKET_TYPE
+	       ,MARKET_TYPE AS Z_MARKET_TYPE_CODE
+		   ,MAKER_CODE, GETICOMCODE2('#HOUSE_CODE#','M199',MAKER_CODE) AS Z_MAKER_NAME
+		   ,'' AS ATTACH_INDEX
+		   ,ITEM_BLOCK_FLAG
+		   ,MAKER_ITEM_NO
+		   ,DO_FLAG
+		   ,QI_FLAG
+		   ,Z_WORK_STAGE_FLAG
+		   ,Z_DELIVERY_CONFIRM_FLAG
+	       ,MAKER_FLAG
+	       ,MODEL_FLAG
+	       ,MODEL_NO
+	       ,ATTACH_NO
+	       --,(SELECT COUNT(*) FROM ICOMATCH WHERE DOC_NO = ATTACH_NO) AS ATTACH_CNT
+	       ,GETFILEATTCOUNT(ATTACH_NO) AS ATTACH_CNT
+	       ,MAKE_AMT_CODE
+	       ,getIcomcode2('#HOUSE_CODE#','M799',MAKE_AMT_CODE) AS MAKE_AMT_NAME
+	 FROM ICOMREHD
+	WHERE HOUSE_CODE = '#HOUSE_CODE#'
+	 <OPT=F,S>  AND REQ_ITEM_NO = ?  </OPT>
+	]]>
+	</method>
+	
+
+	<method name="et_real_upd1_setInsert3">
+	<![CDATA[
+		UPDATE
+			ICOMREHD
+		SET
+			 DESCRIPTION_LOC   = ${DESCRIPTION_LOC}
+			,BASIC_UNIT        = $S{BASIC_UNIT}
+			,Z_ITEM_DESC       = $S{Z_ITEM_DESC}
+			,ITEM_ABBREVIATION = $S{ITEM_ABBREVIATION}
+			,IMAGE_FILE_PATH   = $S{IMAGE_FILE_PATH}
+			,ITEM_GROUP        = $S{ITEM_GROUP}
+			,Z_PURCHASE_TYPE   = $S{Z_PURCHASE_TYPE}
+			,SPECIFICATION     = $S{SPECIFICATION}
+			,MAKER_CODE        = $S{MAKER_CODE}
+			,MAKER_NAME        = $S{MAKER_NAME}
+			,REMARK            = $S{REMARK}
+			,APP_TAX_CODE      = $S{APP_TAX_CODE}
+			,DELIVERY_LT       = $S{DELIVERY_LT}
+			,MARKET_TYPE       = $S{MARKET_TYPE}
+			,ITEM_BLOCK_FLAG   = $S{ITEM_BLOCK_FLAG}
+			,MAKER_FLAG        = $S{MAKER_FLAG}
+			,MODEL_FLAG        = $S{MODEL_FLAG}
+			,MODEL_NO          = $S{MODEL_NO}
+			,ATTACH_NO         = $S{ATTACH_NO}
+			,MAKE_AMT_CODE     = $S{MAKE_AMT_CODE}
+			,STATUS            = 'R'
+			,CHANGE_DATE       = TO_CHAR(SYSDATE, 'YYYYMMDD')
+			,CHANGE_TIME       = TO_CHAR(SYSDATE, 'HH24MISS')
+			,CHANGE_USER_ID    = ${USER_ID}
+		WHERE
+			HOUSE_CODE  = ${HOUSE_CODE}
+		AND
+			REQ_ITEM_NO = ${REQ_ITEM_NO}
+		AND
+			STATUS 	    <> 'D'
+	]]>
+	</method>
+	
+	<method name="et_real_setUpdate_vngl">
+	<![CDATA[
+	UPDATE ICOMVNGL
+	   SET    CREDIT_RATING 	=  ${credit_rating}
+			, CREDIT_ATTACH_NO  =  $S{credit_attach_no}
+			, CREDIT_IF_FLAG    = '0'
+			, CHANGE_DATE       = $S{SYS_DATE}
+			, CHANGE_TIME       = $S{SYS_TIME}
+			, CHANGE_USER_ID    = $S{USER_ID}
+	WHERE HOUSE_CODE  = ${session.HOUSE_CODE}
+	  AND VENDOR_CODE = ${vendor_code}
+	  AND STATUS 	  <> 'D'
+	]]>
+	</method>
+
+	<method name="et_req_setDelete">
+	<![CDATA[
+		UPDATE
+			ICOMREHD
+		SET
+			STATUS         = ${STATUS},
+			CHANGE_USER_ID = ${CHANGE_USER_ID},
+			CHANGE_DATE    = TO_CHAR(SYSDATE, 'YYYYMMDD'),
+			CHANGE_TIME    = TO_CHAR(SYSDATE, 'HH24MISS')
+		WHERE
+			HOUSE_CODE     = ${HOUSE_CODE}
+		AND
+			REQ_ITEM_NO    = ${REQ_ITEM_NO}
+		AND
+			STATUS <> 'D'
+	]]>
+	</method>
+
+
+
+	<method name="et_real_getReqList1">
+		<![CDATA[
+        	SELECT
+        		MTGL.ITEM_NO
+        		,MTGL.ITEM_BLOCK_FLAG
+        		,MTGL.MAKER_ITEM_NO
+        		,MTGL.Z_DELIVERY_CONFIRM_FLAG
+        		,MTGL.Z_WORK_STAGE_FLAG
+        		,MTGL.DRAWING_NO1
+        		,MTGL.OLD_ITEM_NO
+        		,MTGL.PROXY_ITEM_NO
+        		,MTGL.MAKER_ITEM_NO
+        		,MTGL.DO_FLAG
+        		,REHD.QI_FLAG
+        		,MTGL.SPECIFICATION
+        		,MTGL.MATERIAL_CLASS1
+        		,MTGL.MATERIAL_CLASS2
+        		,getIcomcode2(${session.HOUSE_CODE},'M041',MTGL.MATERIAL_CTRL_TYPE) AS MATERIAL_CTRL_TYPE_NAME
+	           	,getIcomcode2(${session.HOUSE_CODE},'M042',MTGL.MATERIAL_CLASS1) AS MATERIAL_CLASS1_NAME
+	           	,getIcomcode2(${session.HOUSE_CODE},'M122',MTGL.MATERIAL_CLASS2) AS MATERIAL_CLASS2_NAME
+	           	,getIcomcode2(${session.HOUSE_CODE},'M040',MTGL.MATERIAL_TYPE) AS MATERIAL_TYPE_NAME
+        		,MTGL.MATERIAL_TYPE
+        		,MTGL.MATERIAL_CTRL_TYPE
+        		,MTGL.DESCRIPTION_LOC
+        		,MTGL.BASIC_UNIT
+        		,MTGL.MAKER_CODE
+        		,NVL (MTGL.MAKER_NAME, getIcomcode2(${session.HOUSE_CODE},'M199',MTGL.MAKER_CODE)) AS MAKER_NAME
+        		,MTGL.IMAGE_FILE_PATH
+        		,MTGL.BASIC_CONV_RATE
+        		,MTGL.BOM_ITEM_UNIT
+        		,MTGL.BOM_CONV_RATE
+        		,MTGL.DELIVERY_LT
+        		,getAttachFileName(MTGL.IMAGE_FILE_PATH,'IMAGE','00000001') AS IMAGE_FILE_NAME
+        		,MTGL.Z_ITEM_DESC
+        		,MTGL.ITEM_ABBREVIATION
+            	,MTGL.ITEM_GROUP
+	           	,MTGL.Z_PURCHASE_TYPE
+	           	,GETINFOPRICE2(${session.HOUSE_CODE}
+	           	, ${session.COMPANY_CODE}
+	           	, ${pr_location}, MTGL.ITEM_NO) AS INFO_PRICE
+	           	,getIcomcode2(${session.HOUSE_CODE},'M037',MTGL.ITEM_GROUP) AS ITEM_GROUP_LOC
+	           	,MTGL.ITEM_GROUP AS ITEM_GROUP_CODE
+	           	,getIcomcode2(${session.HOUSE_CODE},'M602',MTGL.Z_PURCHASE_TYPE) AS PURCHASE_TYPE_LOC
+	           	,MTGL.Z_PURCHASE_TYPE AS Z_PURCHASE_TYPE_CODE
+	           	,MTGL.BASIC_CONV_RATE
+	           	,getIcomcode2(${session.HOUSE_CODE},'M082',MTGL.APP_TAX_CODE) AS APP_TAX_CODE
+	           	,MTGL.APP_TAX_CODE AS Z_APP_TAX_CODE_CODE
+	           	,getIcomcode2(${session.HOUSE_CODE},'M604',MTGL.MARKET_TYPE) AS MARKET_TYPE
+	           	,MTGL.MARKET_TYPE AS MARKET_TYPE_CODE
+	           	,REHD.REQ_ITEM_NO
+	           	,REHD.REMARK
+            	,MTGL.MAKER_FLAG
+            	,MTGL.MODEL_FLAG
+            	,MTGL.MODEL_NO
+        		,getIcomcode2(${session.HOUSE_CODE},'M343',MTGL.ITEM_GROUP) AS ITEM_GROUP_NAME
+        		,getIcomcode2(${session.HOUSE_CODE},'M344',MTGL.TAXKM) AS TAXKM_NAME
+        		,getIcomcode2(${session.HOUSE_CODE},'M346',MTGL.KTGRM) AS KTGRM_NAME
+        		,getIcomcode2(${session.HOUSE_CODE},'M345',MTGL.BKLAS) AS BKLAS_NAME
+        		,getIcomcode2(${session.HOUSE_CODE},'M342',MTGL.MTART) AS MTART_NAME
+        		,getIcomcode2(${session.HOUSE_CODE},'M348',MTGL.MATKL) AS MATKL_NAME
+        		,MTGL.ITEM_GROUP   AS N_ITEM_GROUP
+        		,MTGL.TAXKM   AS N_TAXKM
+        		,MTGL.KTGRM   AS N_KTGRM
+        		,MTGL.BKLAS   AS N_BKLAS
+        		,MTGL.MTART   AS N_MTART
+        		,MTGL.MATKL   AS N_MATKL
+        		,MTGL.ATTACH_NO
+        		,GETFILEATTCOUNT(MTGL.ATTACH_NO) AS ATTACH_COUNT
+        		,MTGL.MAKE_AMT_CODE
+        		,getIcomcode2(${session.HOUSE_CODE},'M799',MTGL.MAKE_AMT_CODE) AS MAKE_AMT_NAME
+        		,MTGL.USEDFLAG
+        	FROM
+        		ICOMMTGL MTGL LEFT OUTER JOIN
+        		ICOMREHD REHD
+        	ON
+        		MTGL.HOUSE_CODE = REHD.HOUSE_CODE
+        		AND MTGL.ITEM_NO    = REHD.ITEM_NO
+           WHERE MTGL.HOUSE_CODE = ${session.HOUSE_CODE}
+        		AND MTGL.ITEM_NO = ${item_no}
+		]]>
+	</method>
+
+	<method name="et_item_seq">
+    	SELECT
+    		${MATERIAL_TYPE} || DECODE (
+				MAX(SUBSTR(ITEM_NO,3)) + 1,
+				null,
+				'000001',
+				LPAD(
+					MAX(SUBSTR(ITEM_NO, 3)) + 1,
+					6,
+					'0'
+				)
+			)   AS ITEM_NO
+		FROM
+			ICOMMTGL
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			ITEM_NO LIKE ${MATERIAL_TYPE} || '%'
+	</method>
+
+
+	<method name="et_item_seq_01">
+    SELECT COUNT(*)
+      FROM ICOMMTGL
+     WHERE HOUSE_CODE      = '#HOUSE_CODE#'
+       AND MATERIAL_CLASS1 = '#MATERIAL_CLASS1#'
+	</method>
+
+
+
+	<method name="et_item_seq_02">
+	SELECT LPAD(MAX(TO_NUMBER(replace(item_no,MATERIAL_CLASS1, '')))+1,7,0)
+	  FROM ICOMMTGL
+	 WHERE HOUSE_CODE      = '#HOUSE_CODE#'
+	 --AND MATERIAL_CLASS1 =  '#MATERIAL_CLASS1#'
+	</method>
+
+
+
+
+	<method name="et_real_setInsert_01">
+		UPDATE
+			ICOMREHD
+		SET
+			ITEM_NO            = ${ITEM_NO},
+			DESCRIPTION_LOC    = ${DESCRIPTION_LOC},
+			MATERIAL_TYPE      = ${MATERIAL_TYPE},
+			MATERIAL_CTRL_TYPE = ${MATERIAL_CTRL_TYPE},
+			MATERIAL_CLASS1    = ${MATERIAL_CLASS1},
+			MATERIAL_CLASS2    = ${MATERIAL_CLASS2},
+			BASIC_UNIT         = ${BASIC_UNIT},
+			SPECIFICATION      = ${SPECIFICATION},
+			Z_ITEM_DESC        = ${Z_ITEM_DESC},
+			ITEM_ABBREVIATION  = ${ITEM_ABBREVIATION},
+			ITEM_GROUP         = ${ITEM_GROUP},
+			Z_PURCHASE_TYPE    = ${Z_PURCHASE_TYPE},
+			REMARK             = ${REMARK},
+			MAKER_CODE         = ${MAKER_CODE},
+			MAKER_NAME         = ${MAKER_NAME},
+			APP_TAX_CODE       = ${APP_TAX_CODE},
+			DELIVERY_LT        = ${DELIVERY_LT},
+			MARKET_TYPE        = ${MARKET_TYPE},
+			MODEL_NO           = ${MODEL_NO},
+			MTART              = ${MTART},
+			MATKL              = ${MATKL},
+			TAXKM              = ${TAXKM},
+			BKLAS              = ${BKLAS},
+			KTGRM              = ${KTGRM},
+			ATTACH_NO          = ${ATTACH_NO},
+			CONFIRM_STATUS     = 'E',
+			STATUS             = 'R',
+			MAKE_AMT_CODE      = ${MAKE_AMT_CODE},
+			CONFIRM_USER_ID    = ${CONFIRM_USER_ID},
+			CONFIRM_DATE       = TO_CHAR(SYSDATE, 'yyyymmdd'),
+			CHANGE_DATE        = TO_CHAR(SYSDATE, 'yyyymmdd'),
+			CHANGE_TIME        = TO_CHAR(SYSDATE, 'hh24miss'),
+			CHANGE_USER_ID     = ${CONFIRM_USER_ID},
+			USEDFLAG           = 'Y'
+		WHERE
+			HOUSE_CODE 	= ${HOUSE_CODE}
+		AND
+			REQ_ITEM_NO = ${REQ_ITEM_NO}
+		AND
+			STATUS      != 'D'
+	</method>
+
+
+
+	<method name="et_real_setInsert_02">
+	<![CDATA[
+	    INSERT INTO ICOMMTGL(
+	    	HOUSE_CODE,         ITEM_NO,         MATERIAL_TYPE,  MATERIAL_CTRL_TYPE, MATERIAL_CLASS1,
+	    	MATERIAL_CLASS2,    MAKER_CODE,      MAKER_NAME,     DESCRIPTION_LOC,    DESCRIPTION_ENG,
+	    	SPECIFICATION,      BASIC_UNIT,      ORIGIN_COUNTRY, MODEL_NO,           IMAGE_FILE_PATH,
+			APP_TAX_CODE,       DELIVERY_LT,     MARKET_TYPE,    Z_ITEM_DESC,        ITEM_ABBREVIATION,
+			ITEM_GROUP,         Z_PURCHASE_TYPE, STATUS,         ADD_DATE,           ADD_TIME,
+			ADD_USER_ID,        CHANGE_DATE,     CHANGE_TIME,    CHANGE_USER_ID,     OLD_ITEM_NO,
+			ITEM_BLOCK_FLAG,    MTART,           MATKL,          TAXKM,              BKLAS,
+			KTGRM,              ATTACH_NO,       MAKE_AMT_CODE,  THUMNAIL_FILE_PATH, EFFECTIVE_START_DATE,
+			EFFECTIVE_END_DATE,	PUB_NO,          MAX_REQ_CNT,    MIN_REQ_CNT,        MINAMNT,
+			MLOBHOCD,           USEDFLAG
+		)
+	    SELECT
+	    	HOUSE_CODE,         ITEM_NO,                      MATERIAL_TYPE,                MATERIAL_CTRL_TYPE,           MATERIAL_CLASS1,
+			MATERIAL_CLASS2,    MAKER_CODE,                   MAKER_NAME,                   DESCRIPTION_LOC,              DESCRIPTION_ENG,
+			SPECIFICATION,      BASIC_UNIT,                   ORIGIN_COUNTRY,               MODEL_NO,                     IMAGE_FILE_PATH,
+			APP_TAX_CODE,       DELIVERY_LT,                  MARKET_TYPE,                  Z_ITEM_DESC,                  ITEM_ABBREVIATION,
+			ITEM_GROUP,         Z_PURCHASE_TYPE,              'C',                          TO_CHAR(SYSDATE, 'yyyymmdd'), TO_CHAR(SYSDATE, 'hh24miss'),
+			ADD_USER_ID,        TO_CHAR(SYSDATE, 'yyyymmdd'), TO_CHAR(SYSDATE, 'hh24miss'), ${USER_ID},                   REQ_ITEM_NO,
+			'N',                MTART,                        MATKL,                        TAXKM,                        BKLAS,
+			KTGRM,              ATTACH_NO,                    MAKE_AMT_CODE,                THUMNAIL_FILE_PATH,           EFFECTIVE_START_DATE,
+			EFFECTIVE_END_DATE,	PUB_NO,                       MAXREQAMNT,                   MINREQAMNT,                   MINAMNT,
+			MLOBHOCD,           USEDFLAG
+		FROM
+			ICOMREHD
+		WHERE
+			HOUSE_CODE     = ${HOUSE_CODE}
+		AND
+			REQ_ITEM_NO    = ${REQ_ITEM_NO}
+		AND
+			CONFIRM_STATUS = 'E'
+		AND
+			STATUS <> 'D'
+    ]]>
+	</method>
+
+
+
+	<method name="et_catalog_list_getQuery_cnt">
+	<![CDATA[
+	SELECT count(*)
+	  FROM ICOMMTGL
+	 WHERE HOUSE_CODE = '#HOUSE_CODE#'
+	<OPT=S,S> AND UPPER(ITEM_NO) LIKE UPPER('%' || ? || '%')             </OPT>
+	<OPT=S,S> AND (UPPER(DESCRIPTION_LOC) LIKE '%' || UPPER(?) || '%' or UPPER(ITEM_ABBREVIATION) LIKE UPPER('%' || '#ARGS_1#' || '%'))  	</OPT>
+	<OPT=S,S> AND MATERIAL_TYPE = ?                                </OPT>
+	<OPT=S,S> AND MATERIAL_CTRL_TYPE = ?                           </OPT>
+	<OPT=S,S> AND MATERIAL_CLASS1 = ?                              </OPT>
+	<OPT=S,S> AND MATERIAL_CLASS2 = ?                              </OPT>
+	<OPT=S,S> AND UPPER(MAKER_CODE) = ?                            </OPT>
+	<OPT=S,S> AND UPPER(MODEL_NO) LIKE UPPER('%' || ? || '%')            </OPT>
+	<OPT=S,S> AND SPECIFICATION LIKE UPPER('%' || ? || '%')              </OPT>
+	<OPT=S,S> AND ADD_DATE >= ?         </OPT>
+    <OPT=S,S> AND ADD_DATE <= ?         </OPT>
+	<OPT=S,S> AND NVL(ITEM_BLOCK_FLAG,'N') =  ?                 </OPT>
+    ]]>
+	</method>
+
+
+	<method name="et_getItemList">
+	<![CDATA[
+	SELECT
+		ITEM_NO,              DESCRIPTION_LOC,         MATERIAL_TYPE,       MATERIAL_CTRL_TYPE, MATERIAL_CLASS1,
+		MATERIAL_CLASS2,      STATUS,                  DELIVERY_LT,         QI_FLAG,            DO_FLAG,
+		Z_WORK_STAGE_FLAG,    Z_DELIVERY_CONFIRM_FLAG, SPECIFICATION,       IMAGE_FILE_PATH,    ITEM_GROUP,
+		APP_TAX_CODE,         MAKER_NAME,              MODEL_NO,            MAX_REQ_CNT,        MIN_REQ_CNT,
+		EFFECTIVE_START_DATE, EFFECTIVE_END_DATE,      PUB_NO,              MINAMNT,            MLOBHOCD,
+		USEDFLAG,             SALES_UNIT,              INTEGRATED_BUY_FLAG, ITEM_BLOCK_FLAG,    LG_ATT_NAME,
+		MD_ATT_NAME,          SM_ATT_NAME,             ATTRIBUTE_NAME,      Z_PURCHASE_TYPE,    Z_COLOR,
+		XNUM
+	FROM
+		(
+			SELECT
+				ITEM_NO,              DESCRIPTION_LOC,         MATERIAL_TYPE,       MATERIAL_CTRL_TYPE, MATERIAL_CLASS1,
+				MATERIAL_CLASS2,      STATUS,                  DELIVERY_LT,         QI_FLAG,            DO_FLAG,
+				Z_WORK_STAGE_FLAG,    Z_DELIVERY_CONFIRM_FLAG, SPECIFICATION,       IMAGE_FILE_PATH,    ITEM_GROUP,
+				APP_TAX_CODE,         MAKER_NAME,              MODEL_NO,            MAX_REQ_CNT,        MIN_REQ_CNT,
+				EFFECTIVE_START_DATE, EFFECTIVE_END_DATE,      PUB_NO,              MINAMNT,            MLOBHOCD,
+				USEDFLAG,             SALES_UNIT,              INTEGRATED_BUY_FLAG, ITEM_BLOCK_FLAG,    LG_ATT_NAME,
+				MD_ATT_NAME,          SM_ATT_NAME,             ATTRIBUTE_NAME,      Z_PURCHASE_TYPE,    Z_COLOR,
+				ROW_NUMBER() OVER(ORDER BY x.item_no ASC) AS XNUM
+			FROM
+				(
+					SELECT
+						ITEM_NO,           DESCRIPTION_LOC,         MATERIAL_TYPE, MATERIAL_CTRL_TYPE, MATERIAL_CLASS1,
+						MATERIAL_CLASS2,   STATUS,                  DELIVERY_LT,   QI_FLAG,            DO_FLAG,
+						Z_WORK_STAGE_FLAG, Z_DELIVERY_CONFIRM_FLAG, SPECIFICATION, IMAGE_FILE_PATH,    ITEM_GROUP,
+						APP_TAX_CODE,      MAKER_NAME,              MODEL_NO,      MAX_REQ_CNT,        MIN_REQ_CNT,
+						PUB_NO,            MINAMNT,                 USEDFLAG,
+						BASIC_UNIT                                                        AS SALES_UNIT, 
+						''                                                                AS INTEGRATED_BUY_FLAG,
+						NVL(ITEM_BLOCK_FLAG, 'N')                                         AS ITEM_BLOCK_FLAG,
+						CONVERT_DATE(EFFECTIVE_START_DATE)                                AS EFFECTIVE_START_DATE,
+						CONVERT_DATE(EFFECTIVE_END_DATE)                                  AS EFFECTIVE_END_DATE,
+						CONVERT_DATE(MLOBHOCD)                                            AS MLOBHOCD,
+						getIcomcode2(${session.HOUSE_CODE},'M040',MATERIAL_TYPE)          AS LG_ATT_NAME,
+						getIcomcode2(${session.HOUSE_CODE},'M041',MATERIAL_CTRL_TYPE)     AS MD_ATT_NAME,
+						getIcomcode2(${session.HOUSE_CODE},'M042',MATERIAL_CLASS1)        AS SM_ATT_NAME,
+						getIcomcode2(${session.HOUSE_CODE},'M122',MATERIAL_CLASS2)        AS ATTRIBUTE_NAME,
+						getIcomcode2(${session.HOUSE_CODE},'M602',Z_PURCHASE_TYPE)        AS Z_PURCHASE_TYPE,
+						getIcomcode(${session.HOUSE_CODE},'M602',Z_PURCHASE_TYPE,'TEXT3') AS Z_COLOR
+					FROM
+						ICOMMTGL
+					WHERE
+						HOUSE_CODE = ${session.HOUSE_CODE}
+					AND UPPER(ITEM_NO) LIKE UPPER('%' || $S{item_no} || '%') 
+					AND UPPER(DESCRIPTION_LOC) LIKE '%' || UPPER($S{description_loc}) || '%' 
+					AND MATERIAL_TYPE = $S{material_type}                             
+					AND MATERIAL_CTRL_TYPE = $S{material_ctrl_type}                        
+					AND MATERIAL_CLASS1 = $S{material_class1}                           
+					AND MATERIAL_CLASS2 = $S{material_class2}                           
+					AND UPPER(MAKER_CODE) = $S{maker_code}                         
+					AND UPPER(MODEL_NO) LIKE UPPER('%' || $S{model_no} || '%')   
+					AND SPECIFICATION LIKE UPPER('%' || $S{specification} || '%')     
+					AND ADD_DATE >= $S{add_date_start}
+					AND ADD_DATE <= $S{add_date_end}
+					AND NVL(ITEM_BLOCK_FLAG,'N') =  $S{item_block_flag}                 
+				) AS X
+		) AS Y
+    ]]>
+	</method>
+
+
+
+	<method name="et_catalog_list_getQuery_data">
+	<![CDATA[
+	SELECT *
+	  FROM (
+			SELECT X.*, ROW_NUMBER() OVER(ORDER BY x.item_no ASC) AS XNUM
+			FROM(
+					SELECT ITEM_NO, DESCRIPTION_LOC
+						 , MATERIAL_TYPE
+						 , MATERIAL_CTRL_TYPE
+						 , MATERIAL_CLASS1
+						 , MATERIAL_CLASS2
+					     , getIcomcode2('#HOUSE_CODE#','M040',MATERIAL_TYPE) AS LG_ATT_NAME
+					     , getIcomcode2('#HOUSE_CODE#','M041',MATERIAL_CTRL_TYPE) AS MD_ATT_NAME
+					     , getIcomcode2('#HOUSE_CODE#','M042',MATERIAL_CLASS1) AS SM_ATT_NAME
+					     , getIcomcode2('#HOUSE_CODE#','M122',MATERIAL_CLASS2) AS ATTRIBUTE_NAME
+					     , STATUS
+					     , getIcomcode2('#HOUSE_CODE#','M602',Z_PURCHASE_TYPE) AS Z_PURCHASE_TYPE
+					     , DELIVERY_LT
+					     , QI_FLAG
+					     , DO_FLAG
+					     , Z_WORK_STAGE_FLAG
+					     , Z_DELIVERY_CONFIRM_FLAG
+					     , getIcomcode('#HOUSE_CODE#','M602',Z_PURCHASE_TYPE,'TEXT3')AS Z_COLOR
+					     , '' AS INTEGRATED_BUY_FLAG
+						 , SPECIFICATION
+						 , BASIC_UNIT AS SALES_UNIT, IMAGE_FILE_PATH
+					     , ITEM_GROUP
+					 	 , APP_TAX_CODE
+					 	 , MAKER_NAME
+					 	 , MODEL_NO
+						 , NVL(ITEM_BLOCK_FLAG,'N')   AS ITEM_BLOCK_FLAG
+					  FROM ICOMMTGL
+					 WHERE HOUSE_CODE = '#HOUSE_CODE#'
+					<OPT=S,S> AND UPPER(ITEM_NO) LIKE UPPER('%' || ? || '%')              </OPT>
+					<OPT=S,S> AND (UPPER(DESCRIPTION_LOC) LIKE '%' || UPPER(?) || '%' or UPPER(ITEM_ABBREVIATION) LIKE UPPER('%' || '#ARGS_1#' || '%'))   </OPT>
+					<OPT=S,S> AND MATERIAL_TYPE = ?                                 </OPT>
+					<OPT=S,S> AND MATERIAL_CTRL_TYPE = ?                            </OPT>
+					<OPT=S,S> AND MATERIAL_CLASS1 = ?                               </OPT>
+					<OPT=S,S> AND MATERIAL_CLASS2 = ?                               </OPT>
+					<OPT=S,S> AND UPPER(MAKER_CODE) = ?                             </OPT>
+					<OPT=S,S> AND UPPER(MODEL_NO) LIKE UPPER('%' || ? || '%')             </OPT>
+					<OPT=S,S> AND SPECIFICATION LIKE UPPER('%' || ? || '%')               </OPT>
+					<OPT=S,S> AND ADD_DATE >= ?         </OPT>
+                    <OPT=S,S> AND ADD_DATE <= ?         </OPT>
+					<OPT=S,S> AND NVL(ITEM_BLOCK_FLAG,'N') =  ?                  </OPT>
+					) X
+			) Y
+	WHERE Y.XNUM BETWEEN #START_ROW# AND 20000
+    ]]>
+	</method>
+
+
+
+	<method name="et_confirm_getUpdate">
+	<![CDATA[
+	UPDATE ICOMREHD SET
+	       DESCRIPTION_LOC    = ?
+	       ,MAKER_NAME        = ?
+	       ,MAKER_CODE        = ?
+	       ,MODEL_NO          = ?
+	       ,MATERIAL_TYPE     = ?
+	       ,MATERIAL_CTRL_TYPE= ?
+	       ,MATERIAL_CLASS1   = ?
+		   ,MATERIAL_CLASS2   = ?
+		   ,BASIC_UNIT        = ?
+		   ,SPECIFICATION     = ?
+	       ,APP_TAX_CODE      = ?
+	       ,Z_ITEM_DESC       = ?
+	       ,USEDFLAG		  = ?
+	       ,MAKER_FLAG        = ?
+	       ,MODEL_FLAG        = ?
+	       ,ITEM_ABBREVIATION        = ?
+	       ,MTART       			 = ?
+	       ,MATKL        			 = ?
+	       ,ITEM_GROUP        		 = ?
+	       ,TAXKM        			 = ?
+	       ,KTGRM        			 = ?
+	       ,MAKE_AMT_CODE            = ?
+		   ,REMARK            = '#REMARK#'
+	       ,CHANGE_DATE     = '#ADD_DATE#'
+	       ,CHANGE_TIME     = '#ADD_TIME#'
+	       ,CHANGE_USER_ID  = '#USER_ID#'
+	       ,CHANGE_USER_NAME_LOC = '#NAME_LOC#'
+	 WHERE HOUSE_CODE  = '#HOUSE_CODE#'
+	   AND REQ_ITEM_NO = '#REQ_ITEM_NO#'
+	   AND STATUS <> 'D'
+    ]]>
+	</method>
+
+	<method name="et_confirm_getUpdate1">
+	<![CDATA[
+	UPDATE ICOMMTGL  SET
+	       DESCRIPTION_LOC    = ?
+	       ,MAKER_NAME        = ?
+	       ,MAKER_CODE        = ?
+	       ,MODEL_NO          = ?
+	       ,MATERIAL_TYPE     = ?
+	       ,MATERIAL_CTRL_TYPE= ?
+	       ,MATERIAL_CLASS1   = ?
+		   ,MATERIAL_CLASS2   = ?
+		   ,BASIC_UNIT        = ?
+		   ,SPECIFICATION     = ?
+	       ,APP_TAX_CODE      = ?
+	       ,Z_ITEM_DESC       = ?
+	       ,USEDFLAG		  = ?
+	       ,MAKER_FLAG        = ?
+	       ,MODEL_FLAG        = ?
+	       ,ITEM_ABBREVIATION        = ?
+	       ,MTART       			 = ?
+	       ,MATKL        			 = ?
+	       ,ITEM_GROUP        		 = ?
+	       ,TAXKM        			 = ?
+	       ,KTGRM        			 = ?
+	       ,MAKE_AMT_CODE = ?
+	       ,CHANGE_DATE     = '#ADD_DATE#'
+	       ,CHANGE_TIME     = '#ADD_TIME#'
+	       ,CHANGE_USER_ID  = '#USER_ID#'
+	 WHERE HOUSE_CODE =  '#HOUSE_CODE#'
+	   AND ITEM_NO    =  '#ITEM_NO#'
+	   AND STATUS    <>  'D'
+    ]]>
+	</method>
+
+	<method name="et_isCheckedSameItemName">
+	<![CDATA[
+	SELECT  ITEM_NO, DESCRIPTION_LOC
+	FROM 	ICOMMTGL
+	WHERE	HOUSE_CODE = '#HOUSE_CODE#'
+	  AND	UPPER(REPLACE(DESCRIPTION_LOC, ' ', ''))  LIKE '%' || '#ITEM_NAME#' ||'%'
+	  AND STATUS IN ('C','R')
+    ]]>
+	</method>
+
+	<method name="selectIcomrehdInfo">
+		SELECT
+			ITEM_NO
+		FROM
+			ICOMREHD
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			REQ_ITEM_NO = ${REQ_ITEM_NO}
+	</method>
+</service>

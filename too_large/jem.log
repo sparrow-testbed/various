@@ -1,0 +1,373 @@
+[2023-01-11 15:34:23] [INFO ] JEM Version         + JEM Version : 2.2.4
+[2023-01-11 15:34:23] [INFO ] JEM COMMAND         + ==== JEM Execute commnad option ====
+[2023-01-11 15:34:23] [INFO ] JEM COMMAND         + Command Option : -build_path D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow -sparrow_installed_path D:\sparrow\sparrow5\ -prj_name eps -scan_id 3005 -xss_opt 16m -xmx_opt 10240m -xml_threshold 100 -encoding UTF-8 -debug_level info -sparrow5 -incremental 
+[2023-01-11 15:34:23] [INFO ] EngineOrder         + D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\option_files\engine_order
+[2023-01-11 15:34:23] [INFO ] EngineList          + ==== Engine setting ====
+[2023-01-11 15:34:23] [INFO ] EngineList          + ABAPCHK   : false
+[2023-01-11 15:34:23] [INFO ] EngineList          + COMCHK    : true
+[2023-01-11 15:34:23] [INFO ] EngineList          + CONFIGCHK : true
+[2023-01-11 15:34:23] [INFO ] EngineList          + CSCHK     : false
+[2023-01-11 15:34:23] [INFO ] EngineList          + CSREX     : false
+[2023-01-11 15:34:23] [INFO ] EngineList          + HTML      : true
+[2023-01-11 15:34:23] [INFO ] EngineList          + JF_SEM    : true
+[2023-01-11 15:34:23] [INFO ] EngineList          + JF_SYN    : true
+[2023-01-11 15:34:23] [INFO ] EngineList          + JSCHK     : true
+[2023-01-11 15:34:23] [INFO ] EngineList          + KOTLINCHK : false
+[2023-01-11 15:34:23] [INFO ] EngineList          + OBJCHK    : false
+[2023-01-11 15:34:23] [INFO ] EngineList          + PHPCHK    : true
+[2023-01-11 15:34:23] [INFO ] EngineList          + PMD       : true
+[2023-01-11 15:34:23] [INFO ] EngineList          + PYTHONCHK : false
+[2023-01-11 15:34:23] [INFO ] EngineList          + SQLCHK    : false
+[2023-01-11 15:34:23] [INFO ] EngineList          + STRCHK    : true
+[2023-01-11 15:34:23] [INFO ] EngineList          + SWIFTCHK  : false
+[2023-01-11 15:34:23] [INFO ] EngineList          + VBNETCHK  : false
+[2023-01-11 15:34:23] [INFO ] EngineList          + VBSCHK    : false
+[2023-01-11 15:34:23] [INFO ] RunEngine           + Start JSP Converting..
+[2023-01-11 15:34:24] [INFO ]                     + Engine name: JSPCONV
+[2023-01-11 15:34:24] [INFO ]                     + One line command : D:\sparrow\sparrow5\jre\jre\bin\java -Dsparrow.scan.id=3005N -Dsparrow.scan.uuid=f5b975fc-c847-40c6-8618-d9a8f153fa19 -Xss16m -Xmx10240m -Dfile.encoding=UTF-8 -jar D:\sparrow\sparrow5\whistle\engine\lib\jspconv-runnable-2.2.6.jar -target_list D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\map_files\jsp_map -converted_directory D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\resource_files\converted_src -result_directory D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\resource_files\jsp\info -result_file jspconv.dat -log_directory D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\log_files -resource_list D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\map_files\jsp_resource_map
+[2023-01-11 15:34:24] [INFO ] Command             + Executing non-blocking job for : [JSPCONV]
+[2023-01-11 15:34:24] [INFO ] Command             + The job has finished : [JSPCONV]
+[2023-01-11 15:39:24] [INFO ] Command             + The job is in progress : [JSPCONV]
+[2023-01-11 15:44:25] [INFO ] Command             + The job is in progress : [JSPCONV]
+[2023-01-11 15:47:28] [INFO ] ResultHandler       + successfully.
+[2023-01-11 15:47:28] [INFO ] TimeManager         + TIME for JSP Convert
+[2023-01-11 15:47:28] [INFO ] TimeManager         |  + VERSION      : 2.2.6
+[2023-01-11 15:47:28] [INFO ] TimeManager         |  + START TIME   : 2023-01-11 15:34:23
+[2023-01-11 15:47:28] [INFO ] TimeManager         |  + END TIME     : 2023-01-11 15:47:28
+[2023-01-11 15:47:28] [INFO ] TimeManager         |  + ELAPSED TIME : 784487ms (0h 13m 4s)
+[2023-01-11 15:47:28] [INFO ] TimeManager         |  + EXIT VALUE   : [0]
+[2023-01-11 15:47:28] [INFO ] RunEngine           + End JSP Converting..
+[2023-01-11 15:47:30] [INFO ]                     + Engine name: SRCINFO
+[2023-01-11 15:47:30] [INFO ]                     + One line command : D:\sparrow\sparrow5\jre\jre\bin\java -Dsparrow.scan.id=3005N -Dsparrow.scan.uuid=f5b975fc-c847-40c6-8618-d9a8f153fa19 -Xss16m -Xmx10240m -jar D:\sparrow\sparrow5\whistle\engine\lib\sourceinfo-extractor-1.0.5.jar -target_list D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\map_files\src_info -result_directory D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\resource_files\sourceinfo -result_file sourceinfo.dat -log_directory D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\log_files -log_file src_info.log
+[2023-01-11 15:47:30] [INFO ] Command             + Executing non-blocking job for : [SRCINFO]
+[2023-01-11 15:47:30] [INFO ] Command             + The job has finished : [SRCINFO]
+[2023-01-11 15:48:18] [INFO ] ResultHandler       + successfully.
+[2023-01-11 15:48:18] [INFO ]                     + Engine name: web_info
+[2023-01-11 15:48:18] [INFO ]                     + One line command : D:\sparrow\sparrow5\jre\jre\bin\java -Dsparrow.scan.id=3005N -Dsparrow.scan.uuid=f5b975fc-c847-40c6-8618-d9a8f153fa19 -Xss16m -Xmx10240m -jar D:\sparrow\sparrow5\whistle\engine\lib\webinfo-extractor-1.4.2.jar -build_path D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow -resource_path D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\resource_files -debug_level info
+[2023-01-11 15:48:18] [INFO ] Command             + Executing non-blocking job for : [web_info]
+[2023-01-11 15:48:18] [INFO ] Command             + The job has finished : [web_info]
+[2023-01-11 15:48:21] [INFO ] ResultHandler       + successfully.
+[2023-01-11 15:48:21] [INFO ] Runengine           + comchk,configchk,htmlchk,jf_sem,jf_syn,jschk,phpchk,pmd,strchk,
+[2023-01-11 15:48:21] [INFO ] RunEngine           + Engine Analyze MULTI-THREAD
+[2023-01-11 15:48:21] [INFO ] START ENGINE THREAD |  + COMCHK
+[2023-01-11 15:48:21] [INFO ] START ENGINE THREAD |  + CONFIGCHK
+[2023-01-11 15:48:21] [INFO ] START ENGINE THREAD |  + HTML_CHECKER
+[2023-01-11 15:48:21] [INFO ] START ENGINE THREAD |  + JF_SEM
+[2023-01-11 15:48:21] [INFO ] START ENGINE THREAD |  + JF_SYN
+[2023-01-11 15:48:21] [INFO ] START ENGINE THREAD |  + JSCHK
+[2023-01-11 15:48:21] [INFO ] START ENGINE THREAD |  + PHPCHK
+[2023-01-11 15:48:21] [INFO ] START ENGINE THREAD |  + PMD
+[2023-01-11 15:48:21] [INFO ] START ENGINE THREAD |  + STRCHK
+[2023-01-11 15:48:21] [INFO ]                     |  + Engine name: PMD
+[2023-01-11 15:48:21] [INFO ]                     |  + One line command : D:\sparrow\sparrow5\jre\jre\bin\java -Dsparrow.scan.id=3005N -Dsparrow.scan.uuid=f5b975fc-c847-40c6-8618-d9a8f153fa19 -Xss16m -Xmx10240m -Dfile.encoding=UTF-8 -jar D:\sparrow\sparrow5\whistle\engine\lib\sparrow-pmd-6.3.1.jar -prj_name pmd_java -src_mapping_list D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\map_files\pmd_java -encoding UTF-8 -xml_dir D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\xml_files -log_dir D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\log_files\pmd_java.log -rule_file D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\option_files\pmd_java_ruleset.xml
+[2023-01-11 15:48:21] [INFO ] Command             |  + Executing non-blocking job for : [PMD]
+[2023-01-11 15:48:21] [INFO ] Command             |  + The job has finished : [PMD]
+[2023-01-11 15:48:21] [INFO ]                     |  + Engine name: PHPCHK
+[2023-01-11 15:48:21] [INFO ]                     |  + One line command : D:\sparrow\sparrow5\jre\jre\bin\java -Dsparrow.scan.id=3005N -Dsparrow.scan.uuid=f5b975fc-c847-40c6-8618-d9a8f153fa19 -Xss16m -Xmx10240m -Dfile.encoding=UTF-8 -jar D:\sparrow\sparrow5\whistle\engine\lib\phpchk-2.4.7.jar -project_name phpchk -checker_list D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\option_files\checkers_phpchk -target_list D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\map_files\phpchk -xml_directory D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\xml_files -option_directory D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\option_files\checker_option\phpchk -xml_threshold 100 -source_encoding UTF-8 -log_file phpchk.log -log_directory D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\log_files -workspace D:\sparrow\sparrow5\data\temp\etc\phpchk_temp_1673419701671
+[2023-01-11 15:48:21] [INFO ] Command             |  + Executing non-blocking job for : [PHPCHK]
+[2023-01-11 15:48:21] [INFO ] Command             |  + The job has finished : [PHPCHK]
+[2023-01-11 15:48:21] [INFO ]                     |  + Engine name: comchk
+[2023-01-11 15:48:21] [INFO ]                     |  + One line command : D:\sparrow\sparrow5\jre\jre\bin\java -Dsparrow.scan.id=3005N -Dsparrow.scan.uuid=f5b975fc-c847-40c6-8618-d9a8f153fa19 -Xss16m -Xmx10240m -Dfile.encoding=UTF-8 -jar D:\sparrow\sparrow5\whistle\engine\lib\comchk-3.3.3.jar -prj_name comchk -checker_list_file D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\option_files\checkers_comchk_j -xml_dir D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\xml_files -xml_threshold 100 -lang java -source_encoding UTF-8 -xml_encoding UTF-8 -ignore_whites both -xml_header j -log_dir D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\log_files -log_file comchk.log -opt_dir D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\option_files\checker_option\comchk_j -target_list_file D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\map_files\comchk
+[2023-01-11 15:48:21] [INFO ] Command             |  + Executing non-blocking job for : [comchk]
+[2023-01-11 15:48:21] [INFO ] Command             |  + The job has finished : [comchk]
+[2023-01-11 15:48:21] [INFO ]                     |  + Engine name: JF_SEM
+[2023-01-11 15:48:21] [INFO ]                     |  + One line command : D:\sparrow\sparrow5\jre\jre\bin\java -Dsparrow.scan.id=3005N -Dsparrow.scan.uuid=f5b975fc-c847-40c6-8618-d9a8f153fa19 -Xss16m -Xmx10240m -Dfile.encoding=UTF-8 -cp D:\sparrow\sparrow5\whistle\engine\lib\jspconv-tools-2.2.6.jar;D:\sparrow\sparrow5\whistle\engine\lib\sourceinfo-common-1.0.5.jar;D:\sparrow\sparrow5\whistle\engine\lib\weblink-2.1.5.jar;D:\sparrow\sparrow5\whistle\engine\lib\webinfo-extractor-1.4.2.jar;D:\sparrow\sparrow5\whistle\engine\lib\jf_sem-6.4.8.jar com.fasoo.javafinch.core.SemanticEngine -repo_dir D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\resource_files\repo_dir\jf_sem_repo -taint_rule_propagate_all -taint_rule_class_only -show_followers -analyze_spring -xss_filter encoding;xss -prj_name java -rule_file D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\option_files\checkers_jf_sem -taint_rule D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\option_files\checker_option\jf_sem\taint.rule -output_dir D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\xml_files -scaffold_file D:\sparrow\sparrow5\\whistle\engine\conf\jf_sem\3rd_party_api.scaffold -src -target_list D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\map_files\jf_sem -jsp_list D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\resource_files\jsp\info\jspconv.dat -global -weblink_properties D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\resource_files\weblink.properties -framework_repository D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\resource_files\framework_src -webinfo_repository D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\resource_files\webinfo\info -intermediate_dir D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\intermediate_dir -log_file D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\log_files\jf_sem.log -inc_output D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\incremental\jf_sem\inc_output.dat
+[2023-01-11 15:48:21] [INFO ] Command             |  + Executing non-blocking job for : [JF_SEM]
+[2023-01-11 15:48:21] [INFO ] Command             |  + The job has finished : [JF_SEM]
+[2023-01-11 15:48:21] [INFO ]                     |  + Engine name: CONFIGCHK
+[2023-01-11 15:48:21] [INFO ]                     |  + One line command : D:\sparrow\sparrow5\jre\jre\bin\java -Dsparrow.scan.id=3005N -Dsparrow.scan.uuid=f5b975fc-c847-40c6-8618-d9a8f153fa19 -Xss16m -Xmx10240m -Dfile.encoding=UTF-8 -jar D:\sparrow\sparrow5\whistle\engine\lib\configchk-1.2.8.jar -project_name configchk -checker_list D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\option_files\checkers_configchk -target_list D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\map_files\configchk -xml_directory D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\xml_files -option_directory D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\option_files\checker_option\configchk -xml_threshold 100 -source_encoding UTF-8 -log_file configchk.log -log_directory D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\log_files -workspace D:\sparrow\sparrow5\data\temp\etc\configchk_temp_1673419701706
+[2023-01-11 15:48:21] [INFO ] Command             |  + Executing non-blocking job for : [CONFIGCHK]
+[2023-01-11 15:48:21] [INFO ] Command             |  + The job has finished : [CONFIGCHK]
+[2023-01-11 15:48:21] [INFO ]                     |  + Engine name: HTML_CHECKER
+[2023-01-11 15:48:21] [INFO ]                     |  + One line command : D:\sparrow\sparrow5\jre\jre\bin\java -Dsparrow.scan.id=3005N -Dsparrow.scan.uuid=f5b975fc-c847-40c6-8618-d9a8f153fa19 -Xss16m -Xmx10240m -Dfile.encoding=UTF-8 -jar D:\sparrow\sparrow5\whistle\engine\lib\HTMLChecker-1.1.2.jar -project_name htmlchk -checker_list D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\option_files\checkers_html -target_list D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\map_files\htmlchk -xml_directory D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\xml_files -xml_threshold 100
+[2023-01-11 15:48:21] [INFO ] Command             |  + Executing non-blocking job for : [HTML_CHECKER]
+[2023-01-11 15:48:21] [INFO ] Command             |  + The job has finished : [HTML_CHECKER]
+[2023-01-11 15:48:21] [INFO ]                     |  + Engine name: JF_SYN
+[2023-01-11 15:48:21] [INFO ]                     |  + One line command : D:\sparrow\sparrow5\jre\jre\bin\java -Dsparrow.scan.id=3005N -Dsparrow.scan.uuid=f5b975fc-c847-40c6-8618-d9a8f153fa19 -Xss16m -Xmx10240m -Dfile.encoding=UTF-8 -jar D:\sparrow\sparrow5\whistle\engine\lib\jf_syn-2.8.2.jar -prj_name java -rule_file D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\option_files\checkers_jf_syn -xml_threshold 100 -target_list_file D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\map_files\jf_syn -xml_header 1 -checker_config_dir D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\option_files\checker_option\jf_syn -log_file D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\log_files\jf_syn1.log -output_dir D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\xml_files -debug_level 5 -workspace_dir D:\sparrow\sparrow5\data\temp\etc\jf_syn_temp_11673419701844 -type java -hsrc_dir D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\java -inc_faster -inc_output D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\incremental\jf_syn\inc_output.dat
+[2023-01-11 15:48:21] [INFO ] Command             |  + Executing non-blocking job for : [JF_SYN]
+[2023-01-11 15:48:21] [INFO ] Command             |  + The job has finished : [JF_SYN]
+[2023-01-11 15:48:21] [INFO ]                     |  + Engine name: JSCHK
+[2023-01-11 15:48:21] [INFO ]                     |  + One line command : D:\sparrow\sparrow5\jre\jre\bin\java -Dsparrow.scan.id=3005N -Dsparrow.scan.uuid=f5b975fc-c847-40c6-8618-d9a8f153fa19 -Xss16m -Xmx10240m -Dfile.encoding=UTF-8 -jar D:\sparrow\sparrow5\whistle\engine\lib\jschk-2.5.6.jar -project_name jschk -checker_list D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\option_files\checkers_jschk -target_list D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\map_files\jschk -xml_directory D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\xml_files -option_directory D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\option_files\checker_option\jschk -xml_threshold 100 -source_encoding UTF-8 -log_file jschk.log -log_directory D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\log_files -workspace D:\sparrow\sparrow5\data\temp\etc\jschk_temp_1673419701905 -intermediate_dir ${intermediateDir} -maximum_line_length -1 -inc_output D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\incremental\jschk\inc_output.dat
+[2023-01-11 15:48:21] [INFO ] Command             |  + Executing non-blocking job for : [JSCHK]
+[2023-01-11 15:48:21] [INFO ] Command             |  + The job has finished : [JSCHK]
+[2023-01-11 15:48:22] [INFO ]                     |  + Engine name: STRCHK
+[2023-01-11 15:48:22] [INFO ]                     |  + One line command : D:\sparrow\sparrow5\jre\jre\bin\java -Dsparrow.scan.id=3005N -Dsparrow.scan.uuid=f5b975fc-c847-40c6-8618-d9a8f153fa19 -Xss16m -Xmx10240m -Dfile.encoding=UTF-8 -jar D:\sparrow\sparrow5\whistle\engine\lib\strchk-1.3.2.jar -project_name strchk -target_list D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\map_files\strchk -option_directory D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\option_files\checker_option\strchk -log_directory D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\log_files -log_file strchk.log -source_encoding UTF-8 -xml_threshold 100 -checker_list D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\option_files\checkers_strchk -xml_directory D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\xml_files -log_level info -length_limit 1024 -checker_list_encoding UTF-8 -auto_encoding_threshold 80 -inc_output D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\incremental\strchk\inc_output.dat
+[2023-01-11 15:48:22] [INFO ] Command             |  + Executing non-blocking job for : [STRCHK]
+[2023-01-11 15:48:22] [INFO ] Command             |  + The job has finished : [STRCHK]
+[2023-01-11 15:48:22] [ERROR] pmd                 |  + 경고: This analysis could be faster, please consider using Incremental Analysis: https://pmd.github.io/pmd-6.1.0/pmd_userdocs_getting_started.html#incremental-analysis
+[2023-01-11 15:48:24] [INFO ] ResultHandler       |  + successfully.
+[2023-01-11 15:48:24] [INFO ] END ENGINE THREAD   |  + CONFIGCHK
+[2023-01-11 15:48:24] [INFO ] TimeManager         |  + TIME for CONFIGCHK
+[2023-01-11 15:48:24] [INFO ] TimeManager         |  |  + START TIME   : 2023-01-11 15:48:21
+[2023-01-11 15:48:24] [INFO ] TimeManager         |  |  + END TIME     : 2023-01-11 15:48:24
+[2023-01-11 15:48:24] [INFO ] TimeManager         |  |  + ELAPSED TIME : 3124ms (0h 0m 3s)
+[2023-01-11 15:48:24] [INFO ] TimeManager         |  |  + EXIT VALUE   : [0]
+[2023-01-11 15:48:26] [INFO ] ResultHandler       + successfully.
+[2023-01-11 15:48:27] [INFO ] END ENGINE THREAD   + PHPCHK
+[2023-01-11 15:48:27] [INFO ] TimeManager         + TIME for PHPCHK
+[2023-01-11 15:48:27] [INFO ] TimeManager         |  + VERSION      : Unknown
+[2023-01-11 15:48:27] [INFO ] TimeManager         |  + START TIME   : 2023-01-11 15:48:21
+[2023-01-11 15:48:27] [INFO ] TimeManager         |  + END TIME     : 2023-01-11 15:48:27
+[2023-01-11 15:48:27] [INFO ] TimeManager         |  + ELAPSED TIME : 5594ms (0h 0m 5s)
+[2023-01-11 15:48:27] [INFO ] TimeManager         |  + EXIT VALUE   : [0]
+[2023-01-11 15:48:28] [INFO ] ResultHandler       + successfully.
+[2023-01-11 15:48:28] [INFO ] END ENGINE THREAD   + HTML_CHECKER
+[2023-01-11 15:48:28] [INFO ] TimeManager         + TIME for HTML_CHECKER
+[2023-01-11 15:48:28] [INFO ] TimeManager         |  + VERSION      : 1.1.2
+[2023-01-11 15:48:28] [INFO ] TimeManager         |  + START TIME   : 2023-01-11 15:48:21
+[2023-01-11 15:48:28] [INFO ] TimeManager         |  + END TIME     : 2023-01-11 15:48:28
+[2023-01-11 15:48:28] [INFO ] TimeManager         |  + ELAPSED TIME : 7263ms (0h 0m 7s)
+[2023-01-11 15:48:28] [INFO ] TimeManager         |  + EXIT VALUE   : [0]
+[2023-01-11 15:48:37] [INFO ] ResultHandler       + successfully.
+[2023-01-11 15:48:38] [INFO ] END ENGINE THREAD   + COMCHK
+[2023-01-11 15:48:38] [INFO ] TimeManager         + TIME for COMCHK
+[2023-01-11 15:48:38] [INFO ] TimeManager         |  + START TIME   : 2023-01-11 15:48:21
+[2023-01-11 15:48:38] [INFO ] TimeManager         |  + END TIME     : 2023-01-11 15:48:38
+[2023-01-11 15:48:38] [INFO ] TimeManager         |  + ELAPSED TIME : 16624ms (0h 0m 16s)
+[2023-01-11 15:48:38] [INFO ] TimeManager         |  + EXIT VALUE   : [0]
+[2023-01-11 15:48:42] [INFO ] ResultHandler       + successfully.
+[2023-01-11 15:48:42] [INFO ] END ENGINE THREAD   + PMD
+[2023-01-11 15:48:42] [INFO ] TimeManager         + TIME for PMD
+[2023-01-11 15:48:42] [INFO ] TimeManager         |  + VERSION      : 6.3.1
+[2023-01-11 15:48:42] [INFO ] TimeManager         |  + START TIME   : 2023-01-11 15:48:21
+[2023-01-11 15:48:42] [INFO ] TimeManager         |  + END TIME     : 2023-01-11 15:48:42
+[2023-01-11 15:48:42] [INFO ] TimeManager         |  + ELAPSED TIME : 21086ms (0h 0m 21s)
+[2023-01-11 15:48:42] [INFO ] TimeManager         |  + EXIT VALUE   : [0]
+[2023-01-11 15:48:58] [INFO ] ResultHandler       + successfully.
+[2023-01-11 15:48:58] [INFO ] END ENGINE THREAD   + STRCHK
+[2023-01-11 15:48:58] [INFO ] TimeManager         + TIME for STRCHK
+[2023-01-11 15:48:58] [INFO ] TimeManager         |  + START TIME   : 2023-01-11 15:48:21
+[2023-01-11 15:48:58] [INFO ] TimeManager         |  + END TIME     : 2023-01-11 15:48:58
+[2023-01-11 15:48:58] [INFO ] TimeManager         |  + ELAPSED TIME : 36989ms (0h 0m 36s)
+[2023-01-11 15:48:58] [INFO ] TimeManager         |  + EXIT VALUE   : [0]
+[2023-01-11 15:51:13] [INFO ] ResultHandler       + successfully.
+[2023-01-11 15:51:14] [INFO ]                     + Engine name: JF_SYN
+[2023-01-11 15:51:14] [INFO ]                     + One line command : D:\sparrow\sparrow5\jre\jre\bin\java -Dsparrow.scan.id=3005N -Dsparrow.scan.uuid=f5b975fc-c847-40c6-8618-d9a8f153fa19 -Xss16m -Xmx10240m -Dfile.encoding=UTF-8 -cp D:\sparrow\sparrow5\whistle\engine\lib\jspconv-tools-2.2.6.jar;D:\sparrow\sparrow5\whistle\engine\lib\jf_syn-2.8.2.jar com.fasoo.javafinch.syn.analyzer.Finch -prj_name jsp -rule_file D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\option_files\checkers_jf_syn -xml_threshold 100 -target_list_file D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\map_files\jsp_map -xml_header 2 -checker_config_dir D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\option_files\checker_option\jf_syn -log_file D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\log_files\jf_syn2.log -output_dir D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\xml_files -debug_level 5 -workspace_dir D:\sparrow\sparrow5\data\temp\etc\jf_syn_temp_21673419874323 -type jsp -conv_list_file D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\resource_files\jsp\info\jspconv.dat -hsrc_dir D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\resource_files\converted_src -inc_faster -inc_output D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\incremental\jf_syn\inc_output.dat
+[2023-01-11 15:51:14] [INFO ] Command             + Executing non-blocking job for : [JF_SYN]
+[2023-01-11 15:51:14] [INFO ] Command             + The job has finished : [JF_SYN]
+[2023-01-11 15:53:22] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 15:53:22] [INFO ] Command             |  + The job is in progress : [JSCHK]
+[2023-01-11 15:56:14] [INFO ] Command             |  + The job is in progress : [JF_SYN]
+[2023-01-11 15:58:22] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 15:58:22] [INFO ] Command             |  + The job is in progress : [JSCHK]
+[2023-01-11 15:59:43] [INFO ] ResultHandler       |  + successfully.
+[2023-01-11 15:59:43] [INFO ] END ENGINE THREAD   |  + JSCHK
+[2023-01-11 15:59:43] [INFO ] TimeManager         |  + TIME for JSCHK
+[2023-01-11 15:59:43] [INFO ] TimeManager         |  |  + START TIME   : 2023-01-11 15:48:21
+[2023-01-11 15:59:43] [INFO ] TimeManager         |  |  + END TIME     : 2023-01-11 15:59:43
+[2023-01-11 15:59:43] [INFO ] TimeManager         |  |  + ELAPSED TIME : 681953ms (0h 11m 21s)
+[2023-01-11 15:59:43] [INFO ] TimeManager         |  |  + EXIT VALUE   : [0]
+[2023-01-11 16:01:15] [INFO ] Command             |  + The job is in progress : [JF_SYN]
+[2023-01-11 16:03:23] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 16:06:15] [INFO ] Command             |  + The job is in progress : [JF_SYN]
+[2023-01-11 16:08:23] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 16:11:16] [INFO ] Command             |  + The job is in progress : [JF_SYN]
+[2023-01-11 16:13:24] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 16:16:16] [INFO ] Command             |  + The job is in progress : [JF_SYN]
+[2023-01-11 16:17:59] [INFO ] ResultHandler       |  + successfully.
+[2023-01-11 16:18:00] [INFO ] END ENGINE THREAD   |  + JF_SYN
+[2023-01-11 16:18:00] [INFO ] TimeManager         |  + TIME for JF_SYN
+[2023-01-11 16:18:00] [INFO ] TimeManager         |  |  + START TIME   : 2023-01-11 15:48:21
+[2023-01-11 16:18:00] [INFO ] TimeManager         |  |  + END TIME     : 2023-01-11 16:18:00
+[2023-01-11 16:18:00] [INFO ] TimeManager         |  |  + ELAPSED TIME : 1778678ms (0h 29m 38s)
+[2023-01-11 16:18:00] [INFO ] TimeManager         |  |  + EXIT VALUE   : [0, 0]
+[2023-01-11 16:18:24] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 16:23:24] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 16:28:25] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 16:33:25] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 16:38:26] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 16:43:26] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 16:48:27] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 16:53:27] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 16:58:28] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 17:03:28] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 17:08:29] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 17:13:29] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 17:18:30] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 17:23:30] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 17:28:31] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 17:33:31] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 17:38:31] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 17:43:32] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 17:48:32] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 17:53:33] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 17:58:33] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 18:03:34] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 18:08:35] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 18:13:35] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 18:18:36] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 18:23:36] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 18:28:37] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 18:33:37] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 18:38:38] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 18:43:38] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 18:48:39] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 18:53:39] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 18:58:40] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 19:03:40] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 19:08:41] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 19:13:41] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 19:18:41] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 19:23:42] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 19:28:42] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 19:33:43] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 19:38:43] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 19:43:44] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 19:48:44] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 19:53:45] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 19:58:45] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 20:03:46] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 20:08:46] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 20:13:47] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 20:18:47] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 20:23:47] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 20:28:48] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 20:33:48] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 20:38:49] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 20:43:49] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 20:48:50] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 20:53:50] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 20:58:51] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 21:03:51] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 21:08:52] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 21:13:52] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 21:18:53] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 21:23:53] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 21:28:54] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 21:33:54] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 21:38:54] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 21:43:55] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 21:48:55] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 21:53:56] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 21:58:56] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 22:03:57] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 22:08:57] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 22:13:58] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 22:18:58] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 22:23:59] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 22:28:59] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 22:34:00] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 22:39:00] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 22:44:01] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 22:49:01] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 22:54:01] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 22:59:02] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 23:04:02] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 23:09:03] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 23:14:03] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 23:19:04] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 23:24:04] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 23:29:05] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 23:34:05] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 23:39:06] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 23:44:06] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 23:49:07] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 23:54:07] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-11 23:59:07] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 00:04:08] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 00:09:08] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 00:14:09] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 00:19:09] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 00:24:10] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 00:29:10] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 00:34:11] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 00:39:11] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 00:44:12] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 00:49:12] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 00:54:13] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 00:59:13] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 01:04:14] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 01:09:14] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 01:14:14] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 01:19:15] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 01:24:15] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 01:29:16] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 01:34:16] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 01:39:17] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 01:44:17] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 01:49:18] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 01:54:18] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 01:59:19] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 02:04:19] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 02:09:20] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 02:14:20] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 02:19:20] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 02:24:21] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 02:29:21] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 02:34:22] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 02:39:22] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 02:44:23] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 02:49:23] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 02:54:24] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 02:59:24] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 03:04:25] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 03:09:25] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 03:14:26] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 03:19:26] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 03:24:27] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 03:29:27] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 03:34:27] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 03:39:28] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 03:44:28] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 03:49:29] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 03:54:29] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 03:59:30] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 04:04:30] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 04:09:31] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 04:14:31] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 04:19:32] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 04:24:32] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 04:29:33] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 04:34:34] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 04:39:34] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 04:44:35] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 04:49:35] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 04:54:35] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 04:59:36] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 05:04:36] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 05:09:37] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 05:14:37] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 05:19:38] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 05:24:38] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 05:29:39] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 05:34:39] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 05:39:40] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 05:44:40] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 05:49:41] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 05:54:41] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 05:59:41] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 06:04:42] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 06:09:42] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 06:14:43] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 06:19:43] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 06:24:44] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 06:29:44] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 06:34:45] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 06:39:45] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 06:44:46] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 06:49:46] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 06:54:47] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 06:59:47] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 07:04:48] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 07:09:48] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 07:14:48] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 07:19:49] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 07:24:49] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 07:29:50] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 07:34:50] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 07:39:51] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 07:44:51] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 07:49:52] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 07:54:52] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 07:59:53] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 08:04:53] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 08:09:54] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 08:14:54] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 08:19:54] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 08:24:55] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 08:29:55] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 08:34:56] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 08:39:56] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 08:44:57] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 08:49:57] [INFO ] Command             |  + The job is in progress : [JF_SEM]
+[2023-01-12 08:54:58] [INFO ] Command             |  + The job is in progress : [JF_SEM]

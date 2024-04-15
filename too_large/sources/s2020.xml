@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<service>	
+	<method name="insertStartEVABD">
+		INSERT INTO EVABD(
+			NO       
+			,STATUS
+			,EXE_GB
+			,TRN_GB      
+			,EVABD_NO       
+			,EVABD_NM       
+			,EVABD_USER_ID 
+			,EVABD_DEPT_CD 
+			,EVABD_USER_ID2 
+			,STA_DATE    
+			,STA_TIME
+			,EVABD        
+		)
+		VALUES(
+			${NO}
+			,'P'
+			,${EXE_GB}
+			,'ONL'
+			,${EVABD_NO}
+			,${EVABD_NM}
+			,${EVABD_USER_ID}
+			,${EVABD_DEPT_CD}
+			,${EVABD_USER_ID2}
+			,TO_CHAR(SYSDATE, 'YYYYMMDD')
+			,TO_CHAR(SYSDATE, 'HH24MISS')
+			,${EVABD}			
+		)
+	</method>
+	
+	<method name="updateEndEVABD">
+		UPDATE
+			EVABD
+		SET 
+		     STATUS         = 'E'
+		    ,END_DATE       = TO_CHAR(SYSDATE, 'YYYYMMDD')
+		    ,END_TIME       = TO_CHAR(SYSDATE, 'HH24MISS')
+			,REST_TXT       = ${REST_TXT}
+		WHERE
+			NO      = ${NO}
+	</method>
+	
+	<method name="updateErrEVABD">
+		UPDATE
+			EVABD
+		SET 
+		     STATUS         = 'R'
+		    ,ERR_DATE       = TO_CHAR(SYSDATE, 'YYYYMMDD')
+		    ,ERR_TIME       = TO_CHAR(SYSDATE, 'HH24MISS')
+			,REST_TXT       = ${REST_TXT}
+		WHERE
+			NO      = ${NO}
+	</method>	
+</service>

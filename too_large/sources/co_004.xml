@@ -1,0 +1,1665 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+<service>
+	<method name="svcSetLogin">
+		<![CDATA[
+			SELECT NVL(PW_RESET_FLAG,'Y')  AS PW_RESET_FLAG
+			     , NVL(PASS_CHECK_CNT,'0') AS PASS_CHECK_CNT
+			  FROM ICOMLUSR
+			 WHERE NVL(DEL_FLAG,'N') = 'N'
+			   AND upper(USER_ID) = upper(${user_id})
+			   AND HOUSE_CODE = ${house_code}
+		]]>
+	</method>
+	
+	<method name="svcSetLogin_vendor">
+		<![CDATA[
+			SELECT NVL(PW_RESET_FLAG,'Y')  AS PW_RESET_FLAG
+			     , NVL(PASS_CHECK_CNT,'0') AS PASS_CHECK_CNT
+			  FROM ICOMLUSR A,ICOMVNGL B
+			 WHERE A.HOUSE_CODE = B.HOUSE_CODE
+			   AND A.COMPANY_CODE = B.IRS_NO
+			   AND B.PURCHASE_BLOCK_FLAG IN ('N','R','K','B')
+			   AND NVL(A.DEL_FLAG,'N') = 'N'
+			   AND upper(A.USER_ID) = upper(${user_id})
+			   AND A.HOUSE_CODE = ${house_code}
+			UNION
+			SELECT NVL(PW_RESET_FLAG,'Y')  AS PW_RESET_FLAG
+			     , NVL(PASS_CHECK_CNT,'0') AS PASS_CHECK_CNT
+			  FROM ICOMLUSR A,ICOMVNGL B
+			 WHERE A.HOUSE_CODE = B.HOUSE_CODE
+			   AND A.COMPANY_CODE = B.VENDOR_CODE
+			   AND B.PURCHASE_BLOCK_FLAG IN ('N','R','K','B')
+			   AND NVL(A.DEL_FLAG,'N') = 'N'
+			   AND upper(A.USER_ID) = upper(${user_id})
+			   AND A.HOUSE_CODE = ${house_code}
+		]]>
+	</method>
+
+	<!-- ICT 사용 : 총무부 사용자 or ICT 사용자 체크, 두개의 테이블에서 같은 ID는 존재하지 않음.-->
+	<method name="setLogin_User_Check_ICT">
+		<![CDATA[
+			select
+					  B1.USER_ID
+					, B1.FROM_SITE
+			  from
+					(
+						select A1.USER_ID	as USER_ID
+						      , 'GAD'		as FROM_SITE	-- general affairs departments
+						  from ICOMLUSR A1
+						 where 1=1
+						   and upper(A1.USER_ID)    = upper(${user_id})
+						   and A1.HOUSE_CODE        = ${house_code}
+						   and A1.COMPANY_CODE     <> 'WOORI'
+						   and NVL(A1.DEL_FLAG,'N') = 'N'
+					union all
+						select A1.USER_ID	as USER_ID
+						      , 'ICT'		as FROM_SITE
+						  from ICOMLUSR_ICT A1
+						 where 1=1
+						   and upper(A1.USER_ID)    = upper(${user_id})
+						   and A1.HOUSE_CODE        = ${house_code}
+						   and A1.COMPANY_CODE     <> 'WOORI'
+						   and NVL(A1.DEL_FLAG,'N') = 'N'
+					) B1
+			 where 1=1
+		]]>	 
+	</method>
+
+
+	<!-- ICT 사용 -->
+	<method name="svcSetLogin_ICT">
+		<![CDATA[
+			SELECT NVL(PW_RESET_FLAG,'Y')  AS PW_RESET_FLAG
+			     , NVL(PASS_CHECK_CNT,'0') AS PASS_CHECK_CNT
+			  FROM ICOMLUSR_ICT
+			 WHERE NVL(DEL_FLAG,'N') = 'N'
+			   AND upper(USER_ID)    = upper(${user_id})
+			   AND HOUSE_CODE        = ${house_code}
+		]]>
+	</method>
+
+	<method name="svcSetXecureLogin_bakup20180312">
+		<![CDATA[
+			SELECT USER_ID
+			     , NVL(PW_RESET_FLAG,'Y')  AS PW_RESET_FLAG
+			     , NVL(PASS_CHECK_CNT,'0') AS PASS_CHECK_CNT
+			  FROM ICOMLUSR
+			 WHERE NVL(DEL_FLAG,'N') = 'N'
+			   AND VERIFIER_KEY = ${verifierKey}
+			   AND HOUSE_CODE = ${house_code}
+		]]>
+	</method>
+	
+	<method name="svcSetXecureLogin">
+		<![CDATA[
+			SELECT A.USER_ID
+			     , NVL(A.PW_RESET_FLAG,'Y')  AS PW_RESET_FLAG
+			     , NVL(A.PASS_CHECK_CNT,'0') AS PASS_CHECK_CNT
+			  FROM ICOMLUSR A
+			 WHERE NVL(A.DEL_FLAG,'N') = 'N'
+			   AND A.VERIFIER_KEY = ${verifierKey}
+			   AND A.HOUSE_CODE = ${house_code}
+			   AND  EXISTS (   SELECT
+							      C.USER_ID
+							    FROM
+							    (
+					            SELECT A1.USER_ID
+								  FROM ICOMLUSR A1,ICOMVNGL B1
+								 WHERE A1.HOUSE_CODE = B1.HOUSE_CODE
+								   AND A1.COMPANY_CODE = B1.IRS_NO
+								   AND B1.PURCHASE_BLOCK_FLAG IN ('N','R','K','B')
+								   AND NVL(A1.DEL_FLAG,'N') = 'N'
+								   AND A1.VERIFIER_KEY = ${verifierKey}
+								   AND A1.HOUSE_CODE = ${house_code}
+								UNION
+								SELECT A1.USER_ID
+								  FROM ICOMLUSR A1,ICOMVNGL B1
+								 WHERE A1.HOUSE_CODE = B1.HOUSE_CODE
+								   AND A1.COMPANY_CODE = B1.VENDOR_CODE
+								   AND B1.PURCHASE_BLOCK_FLAG IN ('N','R','K','B')
+								   AND NVL(A1.DEL_FLAG,'N') = 'N'
+								   AND A1.VERIFIER_KEY = ${verifierKey}
+								   AND A1.HOUSE_CODE = ${house_code}
+								)C
+								WHERE A.USER_ID = C.USER_ID )
+		]]>
+	</method>
+
+	<method name="svcSetLogin_SELECT_userType">
+		<![CDATA[
+			SELECT COMPANY_CODE
+			     , PASSWORD
+			     , PASSWORD_OLD
+			     , USER_TYPE
+			     , LAST_LOGIN_DATE
+			     , PW_RESET_DATE
+	          FROM ICOMLUSR
+	         WHERE NVL(DEL_FLAG,'N') = 'N'
+	           AND NVL(SIGN_STATUS,'R') = 'A'
+			   AND upper(USER_ID) = upper(${user_id})
+			   AND HOUSE_CODE = ${house_code}
+		]]>
+	</method>
+
+	<!-- ICT 사용 -->
+	<method name="svcSetLogin_SELECT_userType_ICT">
+		<![CDATA[
+			SELECT COMPANY_CODE
+			     , PASSWORD
+			     , PASSWORD_OLD
+			     , USER_TYPE
+			     , LAST_LOGIN_DATE
+			     , PW_RESET_DATE
+	          FROM ICOMLUSR_ICT
+	         WHERE NVL(DEL_FLAG,'N')    = 'N'
+	           AND NVL(SIGN_STATUS,'R') = 'A'
+			   AND upper(USER_ID)       = upper(${user_id})
+			   AND HOUSE_CODE           = ${house_code}
+		]]>
+	</method>
+
+	<method name="svcSetLogin_UPDATE_language">
+		<![CDATA[
+			update ICOMLUSR
+		       set language = 'KO'
+		     where user_id = upper(${user_id})
+			   AND HOUSE_CODE = ${house_code}
+		]]>
+	</method>
+
+	<method name="svcSetLogin_Login">
+			select 
+				(
+					SELECT
+						MAX(
+							CASE
+								WHEN
+									NVL(X.DEL_FLAG, 'N') = 'Y' 
+								THEN
+									DEL_FLAG                                        
+	 	                 		ELSE
+	 	                 			NVL(PURCHASE_BLOCK_FLAG, 'N')
+	 	                 	END
+						)     	  
+					FROM
+						ICOMVNGL X                                                       
+					WHERE
+						X.VENDOR_CODE = USMT.COMPANY_CODE
+					   AND
+						X.HOUSE_CODE = USMT.HOUSE_CODE
+				) AS PURCHASE_BLOCK_FLAG,
+				(
+					SELECT
+						irs_no   	  
+					FROM
+						ICOMVNGL X                                                       
+					WHERE
+						X.VENDOR_CODE = USMT.COMPANY_CODE
+					   AND
+						X.HOUSE_CODE = USMT.HOUSE_CODE
+				) AS IRS_NO,     	  
+				usmt.company_code as company_code, 
+				usmt.dept as department, 
+				usmt.user_name_loc as name_loc, 
+				usmt.user_name_eng as name_eng, 
+				dept.plant_code as plant_code, 
+				NVL(usmt.language, 'KO') as language, 
+				NVL(usmt.country, 'KO') as country, 
+				usmt.employee_no as employee_no, 
+				GETADDRATTR2(USMT.USER_ID,'3','PHONE_NO1') as tel, 
+				usmt.user_id as id, 
+				usmt.position as position, 
+				usmt.city_code as city, 
+				GETADDRATTR2(USMT.USER_ID,'2','EMAIL') as company_email, 
+				GETADDRATTR2(USMT.USER_ID,'3','EMAIL') as email, 
+				GETADDRATTR2(USMT.USER_ID,'3','PHONE_NO2') as MOBILE_NO, 
+				(
+					select
+						baln.ctrl_code 
+					from
+						icombacp  baln 
+					where
+						baln.company_code = usmt.company_code 
+					and
+						baln.ctrl_person_id = usmt.user_id 
+					and
+						baln.house_code = usmt.house_code 
+					and
+						NVL(baln.del_flag, 'N') = 'N' 
+					and
+						rownum <![CDATA[<=]]> 1
+				) as ctrl_code, 
+				usmt.user_type, 
+				case
+					when
+						usmt.work_type = 'Z'
+					then
+						'true'
+					else
+						'false'
+				end AS is_admin_user, 
+				usmt.menu_profile_code, 
+				usmt.last_login_date, 
+				usmt.last_login_time, 
+				usmt.last_login_ip, 
+				usmt.sign_status, 
+				usmt.house_code, 
+				getOwnCtrlCode(usmt.company_code, 'P', usmt.user_id) own_ctrl_code_list, 
+				getOwnCtrlCode(usmt.company_code, 'G', usmt.user_id) self_ctrl_code, 
+				NVL(usmt.pw_reset_flag, 'N') as pw_reset_flag,
+			    (      
+		               select COMPANY_NAME_LOC COMPANY_NAME
+					    from ICOMCMGL X
+					   where X.COMPANY_CODE = USMT.COMPANY_CODE
+					     and X.HOUSE_CODE   = USMT.HOUSE_CODE
+					  union
+					  select VENDOR_NAME_LOC COMPANY_NAME
+					    from ICOMVNGL X
+					   where X.VENDOR_CODE  = USMT.COMPANY_CODE
+					     and X.HOUSE_CODE   = USMT.HOUSE_CODE				 
+			    ) as company_name,
+				usmt.WORK_TYPE,
+				usmt.pr_location as LOCATION_CODE,
+				dept.dept_name_eng as DEPARTMENT_NAME_eng, --부서명(영문)
+				DECODE(
+					usmt.USER_TYPE,
+					'WOORI',
+					dept.dept_name_loc,
+					(
+						SELECT
+							VENDOR_NAME_LOC
+						FROM
+							ICOMVNGL
+						WHERE
+							HOUSE_CODE = usmt.HOUSE_CODE
+						AND
+							VENDOR_CODE = usmt.COMPANY_CODE
+					)
+				) AS DEPARTMENT_NAME_LOC, --부서명(한글)
+				DECODE(
+				    usmt.USER_TYPE,
+				    'WOORI',
+				    dept.dept,
+				    (
+				     SELECT
+				      VENDOR_CODE
+				     FROM
+				      ICOMVNGL
+				     WHERE
+				      HOUSE_CODE = usmt.HOUSE_CODE
+				     AND
+				      VENDOR_CODE = usmt.COMPANY_CODE
+				    )
+				) AS DEPARTMENT_CODE, --부서코드
+				DECODE(usmt.COMPANY_CODE,'WOORI','A','B') AS VIEW_USER_TYPE --공지사항/자료실/FAQ의 사용자구분
+				,''											as FROM_SITE	-- ICT사용자 구분
+				,(SELECT COUNT(*) BD_ADMIN FROM SCODE
+					WHERE USE_FLAG = 'Y'
+					AND TYPE = 'B001'
+					AND HOUSE_CODE = usmt.HOUSE_CODE
+					AND TEXT1 = usmt.user_id) as BD_ADMIN
+				,NULL   as GB_GJ
+				,ogil.JUMJUMGB
+				,ogil.MOJMOJCD								
+			from
+				ICOMLUSR usmt
+			left outer join icomogdp dept on usmt.company_code = dept.company_code and usmt.house_code = dept.house_code and usmt.dept = dept.dept and NVL(dept.del_flag, 'N') = 'N' 
+	 		left outer join icomogil ogil on usmt.company_code = ogil.company_code and usmt.house_code = ogil.house_code and usmt.dept = ogil.dept 
+	 		where
+	 			NVL(usmt.del_flag, 'N') = 'N' 
+			and
+				upper(usmt.user_id) =upper(${user_id})
+			and
+				usmt.house_code = ${house_code}
+	</method>
+
+
+	<!-- ICT 사용 -->
+	<method name="svcSetLogin_Login_ICT">
+			select
+					 (select max(case when NVL(X.DEL_FLAG, 'N') = 'Y' then DEL_FLAG
+									  else NVL(PURCHASE_BLOCK_FLAG, 'N')
+								 end)
+					   from ICOMVNGL_ICT X
+					  where X.VENDOR_CODE = USMT.COMPANY_CODE
+					    and X.HOUSE_CODE  = USMT.HOUSE_CODE
+					 )																		as PURCHASE_BLOCK_FLAG
+					,(select IRS_NO
+					    from ICOMVNGL_ICT X
+					   where X.VENDOR_CODE = USMT.COMPANY_CODE
+					     and X.HOUSE_CODE  = USMT.HOUSE_CODE)								as IRS_NO
+					,USMT.COMPANY_CODE														as COMPANY_CODE
+					,USMT.DEPT																as DEPARTMENT
+					,USMT.USER_NAME_LOC														as NAME_LOC
+					,USMT.USER_NAME_ENG														as NAME_ENG
+					,DEPT.PLANT_CODE														as PLANT_CODE
+					,NVL(USMT.LANGUAGE, 'KO')												as LANGUAGE
+					,NVL(USMT.COUNTRY,  'KO')												as COUNTRY
+					,USMT.EMPLOYEE_NO														as EMPLOYEE_NO
+					,GETADDRATTR2_ICT(USMT.USER_ID,'3','PHONE_NO1')								as TEL
+					,USMT.USER_ID															as ID
+					,USMT.POSITION															as POSITION
+					,USMT.CITY_CODE															as CITY
+					,GETADDRATTR2_ICT(USMT.USER_ID,'2','EMAIL')								as COMPANY_EMAIL
+					,GETADDRATTR2_ICT(USMT.USER_ID,'3','EMAIL')								as EMAIL
+					,GETADDRATTR2_ICT(USMT.USER_ID,'3','PHONE_NO2')							as MOBILE_NO
+					,(select BALN.CTRL_CODE
+					    from ICOMBACP  BALN
+					   where BALN.COMPANY_CODE       = USMT.COMPANY_CODE
+					     and BALN.CTRL_PERSON_ID     = USMT.USER_ID
+					     and BALN.HOUSE_CODE         = USMT.HOUSE_CODE
+					     and NVL(BALN.DEL_FLAG, 'N') = 'N'
+					     and ROWNUM <![CDATA[ <= ]]> 1
+					 )																		as CTRL_CODE
+					,USMT.USER_TYPE															as USER_TYPE
+					,case when USMT.WORK_TYPE = 'Z' then 'true'
+						  else 'false'
+					 end																	as IS_ADMIN_USER
+					,USMT.MENU_PROFILE_CODE													as MENU_PROFILE_CODE
+					,USMT.LAST_LOGIN_DATE													as LAST_LOGIN_DATE
+					,USMT.LAST_LOGIN_TIME													as LAST_LOGIN_TIME
+					,USMT.LAST_LOGIN_IP														as LAST_LOGIN_IP
+					,USMT.SIGN_STATUS														as SIGN_STATUS
+					,USMT.HOUSE_CODE														as HOUSE_CODE
+					,getOwnCtrlCode(USMT.COMPANY_CODE, 'P', USMT.USER_ID)					as OWN_CTRL_CODE_LIST
+					,getOwnCtrlCode(USMT.COMPANY_CODE, 'G', USMT.USER_ID)					as SELF_CTRL_CODE
+					,NVL(USMT.PW_RESET_FLAG, 'N')											as PW_RESET_FLAG
+					,( 
+		                select COMPANY_NAME_LOC COMPANY_NAME
+					      from ICOMCMGL X
+					     where X.COMPANY_CODE = USMT.COMPANY_CODE
+					       and X.HOUSE_CODE   = USMT.HOUSE_CODE
+					    union
+					    select VENDOR_NAME_LOC COMPANY_NAME
+					      from ICOMVNGL_ICT X
+					     where X.VENDOR_CODE  = USMT.COMPANY_CODE
+					       and X.HOUSE_CODE   = USMT.HOUSE_CODE				  
+					)                                                                       as COMPANY_NAME
+					,USMT.WORK_TYPE															as WORK_TYPE
+					,USMT.PR_LOCATION														as LOCATION_CODE
+					,DEPT.DEPT_NAME_ENG														as DEPARTMENT_NAME_ENG	--부서명(영문)
+					,decode(USMT.USER_TYPE, 'WOORI', DEPT.DEPT_NAME_LOC, (select X.VENDOR_NAME_LOC
+																			from ICOMVNGL_ICT X
+																		   where X.HOUSE_CODE = USMT.HOUSE_CODE
+																		     and X.VENDOR_CODE = USMT.COMPANY_CODE)
+					       )																as DEPARTMENT_NAME_LOC	--부서명(한글)
+					,decode(USMT.USER_TYPE, 'WOORI', DEPT.DEPT         , (select X.VENDOR_CODE
+																		    from ICOMVNGL_ICT X
+																		   where X.HOUSE_CODE  = USMT.HOUSE_CODE
+																		     and X.VENDOR_CODE = USMT.COMPANY_CODE)
+					       )																as DEPARTMENT_CODE		--부서코드
+					,decode(USMT.COMPANY_CODE,'WOORI','A','B')								as VIEW_USER_TYPE		--공지사항/자료실/FAQ의 사용자구분
+					,'ICT'																	as FROM_SITE			-- ICT사용자 구분
+					,(SELECT COUNT(*) BD_ADMIN FROM SCODE
+					    WHERE USE_FLAG = 'Y'
+					        AND TYPE = 'B001_ICT'
+					        AND HOUSE_CODE = USMT.HOUSE_CODE
+					        AND TEXT1 = USMT.USER_ID) as BD_ADMIN
+					,(select NVL(GB_GJ,'G')
+					    from ICOMVNGL_ICT X
+					   where X.VENDOR_CODE = USMT.COMPANY_CODE
+					     and X.HOUSE_CODE  = USMT.HOUSE_CODE)								as GB_GJ
+					,OGIL.JUMJUMGB
+				    ,OGIL.MOJMOJCD		
+			  from					ICOMLUSR_ICT	USMT
+					left outer join ICOMOGDP		DEPT	on  USMT.COMPANY_CODE       = DEPT.COMPANY_CODE
+															and USMT.HOUSE_CODE         = DEPT.HOUSE_CODE
+															and USMT.DEPT               = DEPT.DEPT
+															and NVL(DEPT.DEL_FLAG, 'N') = 'N' 
+			        left outer join ICOMOGIL		OGIL	on  USMT.COMPANY_CODE       = OGIL.COMPANY_CODE
+															and USMT.HOUSE_CODE         = OGIL.HOUSE_CODE
+															and USMT.DEPT               = OGIL.DEPT
+			 where 1=1
+			   and NVL(USMT.DEL_FLAG, 'N') = 'N' 
+			   and upper(USMT.USER_ID)     = upper(${user_id})
+			   and USMT.HOUSE_CODE         = ${house_code}
+	</method>
+
+	
+	<method name="svcSetLocal_Login">
+			select
+					 (select max(case when NVL(X.DEL_FLAG, 'N') = 'Y' then DEL_FLAG
+									  else NVL(PURCHASE_BLOCK_FLAG, 'N')
+								 end)
+					   from ICOMVNGL_ICT X
+					  where X.VENDOR_CODE = USMT.COMPANY_CODE
+					    and X.HOUSE_CODE  = USMT.HOUSE_CODE
+					 )																		as PURCHASE_BLOCK_FLAG
+					,(select IRS_NO
+					    from ICOMVNGL_ICT X
+					   where X.VENDOR_CODE = USMT.COMPANY_CODE
+					     and X.HOUSE_CODE  = USMT.HOUSE_CODE)								as IRS_NO
+					,USMT.COMPANY_CODE														as COMPANY_CODE
+					,USMT.DEPT																as DEPARTMENT
+					,USMT.USER_NAME_LOC														as NAME_LOC
+					,USMT.USER_NAME_ENG														as NAME_ENG
+					,DEPT.PLANT_CODE														as PLANT_CODE
+					,NVL(USMT.LANGUAGE, 'KO')												as LANGUAGE
+					,NVL(USMT.COUNTRY,  'KO')												as COUNTRY
+					,USMT.EMPLOYEE_NO														as EMPLOYEE_NO
+					,GETADDRATTR2_ICT(USMT.USER_ID,'3','PHONE_NO1')								as TEL
+					,USMT.USER_ID															as ID
+					,USMT.POSITION															as POSITION
+					,USMT.CITY_CODE															as CITY
+					,GETADDRATTR2_ICT(USMT.USER_ID,'2','EMAIL')								as COMPANY_EMAIL
+					,GETADDRATTR2_ICT(USMT.USER_ID,'3','EMAIL')								as EMAIL
+					,GETADDRATTR2_ICT(USMT.USER_ID,'3','PHONE_NO2')							as MOBILE_NO
+					,(select BALN.CTRL_CODE
+					    from ICOMBACP  BALN
+					   where BALN.COMPANY_CODE       = USMT.COMPANY_CODE
+					     and BALN.CTRL_PERSON_ID     = USMT.USER_ID
+					     and BALN.HOUSE_CODE         = USMT.HOUSE_CODE
+					     and NVL(BALN.DEL_FLAG, 'N') = 'N'
+					     and ROWNUM <![CDATA[ <= ]]> 1
+					 )																		as CTRL_CODE
+					,USMT.USER_TYPE															as USER_TYPE
+					,case when USMT.WORK_TYPE = 'Z' then 'true'
+						  else 'false'
+					 end																	as IS_ADMIN_USER
+					,USMT.MENU_PROFILE_CODE													as MENU_PROFILE_CODE
+					,USMT.LAST_LOGIN_DATE													as LAST_LOGIN_DATE
+					,USMT.LAST_LOGIN_TIME													as LAST_LOGIN_TIME
+					,USMT.LAST_LOGIN_IP														as LAST_LOGIN_IP
+					,USMT.SIGN_STATUS														as SIGN_STATUS
+					,USMT.HOUSE_CODE														as HOUSE_CODE
+					,getOwnCtrlCode(USMT.COMPANY_CODE, 'P', USMT.USER_ID)					as OWN_CTRL_CODE_LIST
+					,getOwnCtrlCode(USMT.COMPANY_CODE, 'G', USMT.USER_ID)					as SELF_CTRL_CODE
+					,NVL(USMT.PW_RESET_FLAG, 'N')											as PW_RESET_FLAG
+					,(   
+		                select COMPANY_NAME_LOC COMPANY_NAME
+						  from ICOMCMGL X
+						 where X.COMPANY_CODE = USMT.COMPANY_CODE
+						   and X.HOUSE_CODE   = USMT.HOUSE_CODE
+						union
+						select VENDOR_NAME_LOC COMPANY_NAME
+						  from ICOMVNGL_ICT X
+						 where X.VENDOR_CODE  = USMT.COMPANY_CODE
+						   and X.HOUSE_CODE   = USMT.HOUSE_CODE 
+			         )                                                                      as COMPANY_NAME
+					,USMT.WORK_TYPE															as WORK_TYPE
+					,USMT.PR_LOCATION														as LOCATION_CODE
+					,DEPT.DEPT_NAME_ENG														as DEPARTMENT_NAME_ENG	--부서명(영문)
+					,decode(USMT.USER_TYPE, 'WOORI', DEPT.DEPT_NAME_LOC, (select X.VENDOR_NAME_LOC
+																			from ICOMVNGL_ICT X
+																		   where X.HOUSE_CODE = USMT.HOUSE_CODE
+																		     and X.VENDOR_CODE = USMT.COMPANY_CODE)
+					       )																as DEPARTMENT_NAME_LOC	--부서명(한글)
+					,decode(USMT.USER_TYPE, 'WOORI', DEPT.DEPT         , (select X.VENDOR_CODE
+																		    from ICOMVNGL_ICT X
+																		   where X.HOUSE_CODE  = USMT.HOUSE_CODE
+																		     and X.VENDOR_CODE = USMT.COMPANY_CODE)
+					       )																as DEPARTMENT_CODE		--부서코드
+					,decode(USMT.COMPANY_CODE,'WOORI','A','B')								as VIEW_USER_TYPE		--공지사항/자료실/FAQ의 사용자구분
+					,'ICT'																	as FROM_SITE			-- ICT사용자 구분
+					,(SELECT COUNT(*) BD_ADMIN FROM SCODE
+					    WHERE USE_FLAG = 'Y'
+					        AND TYPE = 'B001_ICT'
+					        AND HOUSE_CODE = USMT.HOUSE_CODE
+					        AND TEXT1 = USMT.USER_ID) as BD_ADMIN
+					,(select NVL(GB_GJ,'G')
+					    from ICOMVNGL_ICT X
+					   where X.VENDOR_CODE = USMT.COMPANY_CODE
+					     and X.HOUSE_CODE  = USMT.HOUSE_CODE)								as GB_GJ
+					,OGIL.JUMJUMGB
+				    ,OGIL.MOJMOJCD
+			  from					ICOMLUSR_ICT	USMT
+					left outer join ICOMOGDP		DEPT	on  USMT.COMPANY_CODE       = DEPT.COMPANY_CODE
+															and USMT.HOUSE_CODE         = DEPT.HOUSE_CODE
+															and USMT.DEPT               = DEPT.DEPT
+															and NVL(DEPT.DEL_FLAG, 'N') = 'N' 
+				    left outer join ICOMOGIL		OGIL	on  USMT.COMPANY_CODE       = OGIL.COMPANY_CODE
+															and USMT.HOUSE_CODE         = OGIL.HOUSE_CODE
+															and USMT.DEPT               = OGIL.DEPT
+			 where 1=1
+			   and NVL(USMT.DEL_FLAG, 'N') = 'N' 
+			   and upper(USMT.USER_ID)     = upper(${user_id})
+			   and 'ICT'                   = ${fromsite}
+			   and USMT.HOUSE_CODE         = ${house_code}
+
+			union all
+
+			select
+					 (select max(case when NVL(X.DEL_FLAG, 'N') = 'Y' then DEL_FLAG
+									  else NVL(PURCHASE_BLOCK_FLAG, 'N')
+								 end)
+					   from ICOMVNGL X
+					  where X.VENDOR_CODE = USMT.COMPANY_CODE
+					    and X.HOUSE_CODE  = USMT.HOUSE_CODE
+					 )																		as PURCHASE_BLOCK_FLAG
+					,(select IRS_NO
+					    from ICOMVNGL X
+					   where X.VENDOR_CODE = USMT.COMPANY_CODE
+					     and X.HOUSE_CODE  = USMT.HOUSE_CODE)								as IRS_NO
+					,USMT.COMPANY_CODE														as COMPANY_CODE
+					,USMT.DEPT																as DEPARTMENT
+					,USMT.USER_NAME_LOC														as NAME_LOC
+					,USMT.USER_NAME_ENG														as NAME_ENG
+					,DEPT.PLANT_CODE														as PLANT_CODE
+					,NVL(USMT.LANGUAGE, 'KO')												as LANGUAGE
+					,NVL(USMT.COUNTRY,  'KO')												as COUNTRY
+					,USMT.EMPLOYEE_NO														as EMPLOYEE_NO
+					,GETADDRATTR2_ICT(USMT.USER_ID,'3','PHONE_NO1')								as TEL
+					,USMT.USER_ID															as ID
+					,USMT.POSITION															as POSITION
+					,USMT.CITY_CODE															as CITY
+					,GETADDRATTR2_ICT(USMT.USER_ID,'2','EMAIL')								as COMPANY_EMAIL
+					,GETADDRATTR2_ICT(USMT.USER_ID,'3','EMAIL')								as EMAIL
+					,GETADDRATTR2_ICT(USMT.USER_ID,'3','PHONE_NO2')							as MOBILE_NO
+					,(select BALN.CTRL_CODE
+					    from ICOMBACP  BALN
+					   where BALN.COMPANY_CODE       = USMT.COMPANY_CODE
+					     and BALN.CTRL_PERSON_ID     = USMT.USER_ID
+					     and BALN.HOUSE_CODE         = USMT.HOUSE_CODE
+					     and NVL(BALN.DEL_FLAG, 'N') = 'N'
+					     and ROWNUM <![CDATA[ <= ]]> 1
+					 )																		as CTRL_CODE
+					,USMT.USER_TYPE															as USER_TYPE
+					,case when USMT.WORK_TYPE = 'Z' then 'true'
+						  else 'false'
+					 end																	as IS_ADMIN_USER
+					,USMT.MENU_PROFILE_CODE													as MENU_PROFILE_CODE
+					,USMT.LAST_LOGIN_DATE													as LAST_LOGIN_DATE
+					,USMT.LAST_LOGIN_TIME													as LAST_LOGIN_TIME
+					,USMT.LAST_LOGIN_IP														as LAST_LOGIN_IP
+					,USMT.SIGN_STATUS														as SIGN_STATUS
+					,USMT.HOUSE_CODE														as HOUSE_CODE
+					,getOwnCtrlCode(USMT.COMPANY_CODE, 'P', USMT.USER_ID)					as OWN_CTRL_CODE_LIST
+					,getOwnCtrlCode(USMT.COMPANY_CODE, 'G', USMT.USER_ID)					as SELF_CTRL_CODE
+					,NVL(USMT.PW_RESET_FLAG, 'N')											as PW_RESET_FLAG
+					,( 
+		                select COMPANY_NAME_LOC COMPANY_NAME
+						  from ICOMCMGL X
+						 where X.COMPANY_CODE = USMT.COMPANY_CODE
+						   and X.HOUSE_CODE   = USMT.HOUSE_CODE
+						union
+						select VENDOR_NAME_LOC COMPANY_NAME
+						  from ICOMVNGL X
+						 where X.VENDOR_CODE  = USMT.COMPANY_CODE
+					       and X.HOUSE_CODE   = USMT.HOUSE_CODE				      
+			         )                                                                      as COMPANY_NAME
+					,USMT.WORK_TYPE															as WORK_TYPE
+					,USMT.PR_LOCATION														as LOCATION_CODE
+					,DEPT.DEPT_NAME_ENG														as DEPARTMENT_NAME_ENG	--부서명(영문)
+					,decode(USMT.USER_TYPE, 'WOORI', DEPT.DEPT_NAME_LOC, (select X.VENDOR_NAME_LOC
+																			from ICOMVNGL X
+																		   where X.HOUSE_CODE = USMT.HOUSE_CODE
+																		     and X.VENDOR_CODE = USMT.COMPANY_CODE)
+					       )																as DEPARTMENT_NAME_LOC	--부서명(한글)
+					,decode(USMT.USER_TYPE, 'WOORI', DEPT.DEPT         , (select X.VENDOR_CODE
+																		    from ICOMVNGL X
+																		   where X.HOUSE_CODE  = USMT.HOUSE_CODE
+																		     and X.VENDOR_CODE = USMT.COMPANY_CODE)
+					       )																as DEPARTMENT_CODE		--부서코드
+					,decode(USMT.COMPANY_CODE,'WOORI','A','B')								as VIEW_USER_TYPE		--공지사항/자료실/FAQ의 사용자구분
+					,'GAD'																	as FROM_SITE			-- ICT사용자 구분
+					,(SELECT COUNT(*) BD_ADMIN FROM SCODE
+						WHERE USE_FLAG = 'Y'
+						AND TYPE = 'B001'
+						AND HOUSE_CODE = usmt.HOUSE_CODE
+						AND TEXT1 = usmt.user_id) as BD_ADMIN
+					,NULL as GB_GJ
+					,OGIL.JUMJUMGB
+				    ,OGIL.MOJMOJCD
+			  from					ICOMLUSR		USMT
+					left outer join ICOMOGDP		DEPT	on  USMT.COMPANY_CODE       = DEPT.COMPANY_CODE
+															and USMT.HOUSE_CODE         = DEPT.HOUSE_CODE
+															and USMT.DEPT               = DEPT.DEPT
+															and NVL(DEPT.DEL_FLAG, 'N') = 'N'
+					left outer join ICOMOGIL		OGIL	on  USMT.COMPANY_CODE       = OGIL.COMPANY_CODE
+															and USMT.HOUSE_CODE         = OGIL.HOUSE_CODE
+															and USMT.DEPT               = OGIL.DEPT
+			 where 1=1
+			   and NVL(USMT.DEL_FLAG, 'N') = 'N' 
+			   and upper(USMT.USER_ID)     = upper(${user_id})
+			   and 'GAD'                   = ${fromsite}
+			   and USMT.HOUSE_CODE         = ${house_code}
+	</method>
+
+	<method name="svcSetLogin_setPwdNew">
+			select   (select max(case when NVL(X.DEL_FLAG, 'N') = 'Y' then DEL_FLAG                                        
+									  else NVL(PURCHASE_BLOCK_FLAG, 'N')
+								  end)
+					    from ICOMVNGL X
+					   where X.VENDOR_CODE = USMT.COMPANY_CODE
+					     and X.HOUSE_CODE  = USMT.HOUSE_CODE
+					 )																	as PURCHASE_BLOCK_FLAG
+					,(select IRS_NO
+					    from ICOMVNGL X
+					   where X.VENDOR_CODE = USMT.COMPANY_CODE
+					   and X.HOUSE_CODE    = USMT.HOUSE_CODE
+					 )																	as IRS_NO
+					,USMT.COMPANY_CODE													as COMPANY_CODE
+					,USMT.DEPT															as DEPARTMENT
+					,USMT.USER_NAME_LOC													as NAME_LOC
+					,USMT.USER_NAME_ENG													as NAME_ENG
+					,DEPT.PLANT_CODE													as PLANT_CODE
+					,NVL(USMT.LANGUAGE, 'KO')											as LANGUAGE
+					,NVL(USMT.COUNTRY, 'KO')											as COUNTRY
+					,USMT.EMPLOYEE_NO													as EMPLOYEE_NO
+					,GETADDRATTR2(USMT.USER_ID,'3','PHONE_NO1')							as TEL
+					,USMT.USER_ID														as ID
+					,USMT.POSITION														as POSITION
+					,USMT.CITY_CODE														as CITY
+					,GETADDRATTR2(USMT.USER_ID,'2','EMAIL')								as COMPANY_EMAIL
+					,GETADDRATTR2(USMT.USER_ID,'3','EMAIL')								as EMAIL
+					,GETADDRATTR2(USMT.USER_ID,'3','PHONE_NO2')							as MOBILE_NO
+					,(select BALN.CTRL_CODE
+					    from ICOMBACP  BALN
+					   where BALN.COMPANY_CODE       = USMT.COMPANY_CODE
+					     and BALN.CTRL_PERSON_ID     = USMT.USER_ID
+					     and BALN.HOUSE_CODE         = USMT.HOUSE_CODE
+					     and NVL(BALN.DEL_FLAG, 'N') = 'N'
+					     and ROWNUM <![CDATA[<=]]> 1
+					 )																	as CTRL_CODE
+					,USMT.USER_TYPE
+					,case when USMT.WORK_TYPE = 'Z' then 'true'
+					      else 'false'
+					 end																as IS_ADMIN_USER
+					,USMT.MENU_PROFILE_CODE												as MENU_PROFILE_CODE
+					,USMT.LAST_LOGIN_DATE												as LAST_LOGIN_DATE
+					,USMT.LAST_LOGIN_TIME												as LAST_LOGIN_TIME
+					,USMT.LAST_LOGIN_IP													as LAST_LOGIN_IP
+					,USMT.SIGN_STATUS													as SIGN_STATUS
+					,USMT.HOUSE_CODE													as HOUSE_CODE
+					,GETOWNCTRLCODE(USMT.COMPANY_CODE, 'P', USMT.USER_ID)				as OWN_CTRL_CODE_LIST
+					,GETOWNCTRLCODE(USMT.COMPANY_CODE, 'G', USMT.USER_ID)				as SELF_CTRL_CODE
+					,NVL(USMT.PW_RESET_FLAG, 'N')										as PW_RESET_FLAG
+					,( 
+		                select COMPANY_NAME_LOC COMPANY_NAME
+						  from ICOMCMGL X
+						 where X.COMPANY_CODE = USMT.COMPANY_CODE
+						   and X.HOUSE_CODE   = USMT.HOUSE_CODE
+						union
+						select VENDOR_NAME_LOC COMPANY_NAME
+						  from ICOMVNGL X
+						 where X.VENDOR_CODE  = USMT.COMPANY_CODE
+					       and X.HOUSE_CODE   = USMT.HOUSE_CODE				      
+			         )                                                                  as COMPANY_NAME
+					,USMT.WORK_TYPE														as WORK_TYPE
+					,USMT.PR_LOCATION													as LOCATION_CODE
+					,DEPT.DEPT_NAME_ENG													as DEPARTMENT_NAME_ENG
+					,DEPT.DEPT_NAME_LOC													as DEPARTMENT_NAME_LOC
+			  from					ICOMLUSR	USMT
+			  		LEFT OUTER JOIN	ICOMOGDP	DEPT	ON  USMT.COMPANY_CODE       = DEPT.COMPANY_CODE
+			  											AND USMT.HOUSE_CODE         = DEPT.HOUSE_CODE
+			  											AND USMT.DEPT               = DEPT.DEPT
+			  											AND NVL(DEPT.DEL_FLAG, 'N') = 'N' 
+			 where NVL(USMT.DEL_FLAG, 'N') = 'N' 
+			   and USMT.USER_ID            = ${user_id}
+			   and USMT.PASSWORD           = ${pwdSha}
+			   and USMT.HOUSE_CODE         = ${house_code}
+	</method>
+
+	<!-- ICT 사용 -->
+	<method name="svcSetLogin_setPwdNew_ICT">
+			select   (select max(case when NVL(X.DEL_FLAG, 'N') = 'Y' then DEL_FLAG                                        
+									  else NVL(PURCHASE_BLOCK_FLAG, 'N')
+								  end)
+					    from ICOMVNGL_ICT X
+					   where X.VENDOR_CODE = USMT.COMPANY_CODE
+					     and X.HOUSE_CODE  = USMT.HOUSE_CODE
+					 )																	as PURCHASE_BLOCK_FLAG
+					,(select IRS_NO
+					    from ICOMVNGL_ICT X
+					   where X.VENDOR_CODE = USMT.COMPANY_CODE
+					   and X.HOUSE_CODE    = USMT.HOUSE_CODE
+					 )																	as IRS_NO
+					,USMT.COMPANY_CODE													as COMPANY_CODE
+					,USMT.DEPT															as DEPARTMENT
+					,USMT.USER_NAME_LOC													as NAME_LOC
+					,USMT.USER_NAME_ENG													as NAME_ENG
+					,DEPT.PLANT_CODE													as PLANT_CODE
+					,NVL(USMT.LANGUAGE, 'KO')											as LANGUAGE
+					,NVL(USMT.COUNTRY, 'KO')											as COUNTRY
+					,USMT.EMPLOYEE_NO													as EMPLOYEE_NO
+					,GETADDRATTR2_ICT(USMT.USER_ID,'3','PHONE_NO1')						as TEL
+					,USMT.USER_ID														as ID
+					,USMT.POSITION														as POSITION
+					,USMT.CITY_CODE														as CITY
+					,GETADDRATTR2_ICT(USMT.USER_ID,'2','EMAIL')							as COMPANY_EMAIL
+					,GETADDRATTR2_ICT(USMT.USER_ID,'3','EMAIL')							as EMAIL
+					,GETADDRATTR2_ICT(USMT.USER_ID,'3','PHONE_NO2')						as MOBILE_NO
+					,(select BALN.CTRL_CODE
+					    from ICOMBACP  BALN
+					   where BALN.COMPANY_CODE       = USMT.COMPANY_CODE
+					     and BALN.CTRL_PERSON_ID     = USMT.USER_ID
+					     and BALN.HOUSE_CODE         = USMT.HOUSE_CODE
+					     and NVL(BALN.DEL_FLAG, 'N') = 'N'
+					     and ROWNUM <![CDATA[<=]]> 1
+					 )																	as CTRL_CODE
+					,USMT.USER_TYPE
+					,case when USMT.WORK_TYPE = 'Z' then 'true'
+					      else 'false'
+					 end																as IS_ADMIN_USER
+					,USMT.MENU_PROFILE_CODE												as MENU_PROFILE_CODE
+					,USMT.LAST_LOGIN_DATE												as LAST_LOGIN_DATE
+					,USMT.LAST_LOGIN_TIME												as LAST_LOGIN_TIME
+					,USMT.LAST_LOGIN_IP													as LAST_LOGIN_IP
+					,USMT.SIGN_STATUS													as SIGN_STATUS
+					,USMT.HOUSE_CODE													as HOUSE_CODE
+					,GETOWNCTRLCODE(USMT.COMPANY_CODE, 'P', USMT.USER_ID)				as OWN_CTRL_CODE_LIST
+					,GETOWNCTRLCODE(USMT.COMPANY_CODE, 'G', USMT.USER_ID)				as SELF_CTRL_CODE
+					,NVL(USMT.PW_RESET_FLAG, 'N')										as PW_RESET_FLAG
+					,( 
+		                select COMPANY_NAME_LOC COMPANY_NAME
+						  from ICOMCMGL X
+						 where X.COMPANY_CODE = USMT.COMPANY_CODE
+						   and X.HOUSE_CODE   = USMT.HOUSE_CODE
+						union
+						select VENDOR_NAME_LOC COMPANY_NAME
+						  from ICOMVNGL_ICT X
+						 where X.VENDOR_CODE  = USMT.COMPANY_CODE
+					       and X.HOUSE_CODE   = USMT.HOUSE_CODE				      
+			         )                                                                  as COMPANY_NAME
+					,USMT.WORK_TYPE														as WORK_TYPE
+					,USMT.PR_LOCATION													as LOCATION_CODE
+					,DEPT.DEPT_NAME_ENG													as DEPARTMENT_NAME_ENG
+					,DEPT.DEPT_NAME_LOC													as DEPARTMENT_NAME_LOC
+					,'ICT'																	as FROM_SITE			-- ICT사용자 구분
+			  from					ICOMLUSR_ICT	USMT
+			  		-- 부서마스터
+			  		LEFT OUTER JOIN	ICOMOGDP		DEPT	ON  USMT.COMPANY_CODE       = DEPT.COMPANY_CODE
+			  												AND USMT.HOUSE_CODE         = DEPT.HOUSE_CODE
+			  												AND USMT.DEPT               = DEPT.DEPT
+			  												AND NVL(DEPT.DEL_FLAG, 'N') = 'N' 
+			 where NVL(USMT.DEL_FLAG, 'N') = 'N' 
+			   and USMT.USER_ID            = ${user_id}
+			   and USMT.PASSWORD           = ${pwdSha}
+			   and USMT.HOUSE_CODE         = ${house_code}
+	</method>
+
+
+	<method name="svcSetLogin_Update_Pass_Cnt">
+		<![CDATA[
+				UPDATE ICOMLUSR
+			    SET    
+			    	   PASS_CHECK_CNT = NVL(${PASS_CHECK_CNT},0)
+			         , LAST_LOGIN_IP = $S{userIp}
+			    WHERE  USER_ID        = upper(${user_id})
+				  AND  HOUSE_CODE     = ${house_code}
+		]]>
+	</method>
+
+	<!-- ICT 사용 -->
+	<method name="svcSetLogin_Update_Pass_Cnt_ICT">
+		<![CDATA[
+			UPDATE  ICOMLUSR_ICT
+			   SET  PASS_CHECK_CNT = NVL(${PASS_CHECK_CNT},0)
+			      , LAST_LOGIN_IP  = $S{userIp}
+			 WHERE  USER_ID        = upper(${user_id})
+			   AND  HOUSE_CODE     = ${house_code}
+		]]>
+	</method>
+
+
+	<method name="svcSetLogin_Update_Reset">
+		<![CDATA[
+			UPDATE ICOMLUSR
+		    SET    
+		    	   PASS_CHECK_CNT = NVL(${PASS_CHECK_CNT},0)
+		    	 , PASSWORD       = $S{pwdSha}
+		         , LAST_LOGIN_DATE = $S{current_day}
+		         , LAST_LOGIN_TIME = $S{current_time}
+		         , LAST_LOGIN_IP = $S{userIp}
+		    WHERE  USER_ID        = upper(${user_id})
+			  AND  HOUSE_CODE     = ${house_code}
+		]]>
+	</method>
+
+	<!-- ICT 사용 -->
+	<method name="svcSetLogin_Update_Reset_ICT">
+		<![CDATA[
+			UPDATE ICOMLUSR_ICT
+			   SET  PASS_CHECK_CNT  = NVL(${PASS_CHECK_CNT},0)
+			      , PASSWORD        = $S{pwdSha}
+			      , LAST_LOGIN_DATE = $S{current_day}
+			      , LAST_LOGIN_TIME = $S{current_time}
+			      , LAST_LOGIN_IP   = $S{userIp}
+			WHERE  USER_ID          = upper(${user_id})
+			  AND  HOUSE_CODE       = ${house_code}
+		]]>
+	</method>
+	
+	<method name="svcSetLogin_Update_New">
+		<![CDATA[
+			UPDATE ICOMLUSR
+		    SET    
+		    	   PASS_CHECK_CNT = NVL(${PASS_CHECK_CNT},0)
+		    	 , PASSWORD       = $S{pwd_new}
+		    	 , PW_RESET_DATE  = $S{current_day}
+		         , LAST_LOGIN_DATE = $S{current_day}
+		         , LAST_LOGIN_TIME = $S{current_time}
+		         , LAST_LOGIN_IP = $S{userIp}
+		    WHERE  USER_ID        = upper(${user_id})
+			  AND  HOUSE_CODE     = ${house_code}
+		]]>
+	</method>
+
+	<!-- ICT 사용 -->
+	<method name="svcSetLogin_Update_New_ICT">
+		<![CDATA[
+			UPDATE ICOMLUSR_ICT
+		       SET    
+		    	   PASS_CHECK_CNT  = NVL(${PASS_CHECK_CNT},0)
+		    	 , PASSWORD        = $S{pwd_new}
+		    	 , PW_RESET_DATE   = $S{current_day}
+		         , LAST_LOGIN_DATE = $S{current_day}
+		         , LAST_LOGIN_TIME = $S{current_time}
+		         , LAST_LOGIN_IP   = $S{userIp}
+		    WHERE  USER_ID         = upper(${user_id})
+			  AND  HOUSE_CODE      = ${house_code}
+		]]>
+	</method>
+		
+	<method name="svcSetLogin_Log_Insert">
+		<![CDATA[
+	        INSERT INTO ICOMLUHS
+            (
+                 UH_NO,
+                 HOUSE_CODE,
+                 USER_TYPE,
+                 USER_ID,
+                 IP,
+                 ACC_TYPE,
+                 SUCCESS_YN,
+                 ADD_DATE,
+                 ADD_TIME
+            ) VALUES (
+                 ${UH_NO},
+                 ${house_code},
+                 $S{user_Type},
+                 ${user_id},
+                 $S{userIp},
+                 $S{acc_type},
+                 $S{successYn},
+                 TO_CHAR(SYSDATE, 'YYYYMMDD'),
+                 TO_CHAR(SYSDATE, 'HH24MISS')
+            )
+		]]>
+	</method>
+
+	<method name="svcSetLogoutProcess">
+		<![CDATA[
+	        INSERT INTO sulog
+            (
+                 NO,
+                 USER_TYPE,
+                 USER_ID,
+                 USER_NAME_LOC,
+                 PROGRAM,
+                 PROGRAM_DESC,
+                 JOB_TYPE,
+                 JOB_DATE,
+                 JOB_TIME,
+                 IP,
+                 PROCESS_ID,
+                 METHOD_NAME
+            ) VALUES (
+                 ${user_log_no},
+                 ${userType},
+                 ${ID},
+                 ${nameLoc},
+                 'Logout',
+                 'Logout',
+                 'LO',
+                 ${now_date}, 
+                 ${now_time},
+                 ${userIp},
+                 'CO_004',
+                 'Logout'
+            ) 
+		]]>
+	</method>
+	
+	<method name="et_getQueryTotCount_dataStore_ICOMMACH">
+	<![CDATA[
+		SELECT COUNT(*)
+		FROM  SDSHD
+		WHERE DEL_FLAG <> 'Y'
+		  --AND NOTE_TYPE = '#con_type#'
+		  --AND ADD_DATE between TO_CHAR(SYSDATE - 180, 'YYYYMMDD') and TO_CHAR(SYSDATE, 'YYYYMMDD') 
+		  AND VIEW_USER_TYPE  IN ( '#view_user_type#', 'X' ) 
+	]]>
+		<if test="${search}" operator="ne" value="null">
+			<if test="${gubun}" operator="eq" value="S">
+				AND  SUBJECT LIKE '%#quest#%'
+			</if>
+			<if test="${gubun}" operator="eq" value="U">
+				AND  GETUSERNAME('#house_code#',ADD_USER_ID,'LOC') LIKE '%#quest#%'
+			</if>
+			<if test="${gubun}" operator="eq" value="D">
+				AND  ADD_DATE LIKE '%#quest#%'
+			</if>
+		</if>
+	</method>
+	
+	<!-- ICT 수정  -->
+	<method name="et_getQueryTotCount_dataStore_ICOMMACH_ICT">
+	<![CDATA[
+		SELECT COUNT(*)
+		FROM  SDSHD_ICT
+		WHERE DEL_FLAG <> 'D'
+		  --AND NOTE_TYPE = '#con_type#'
+		  AND ADD_DATE between TO_CHAR(SYSDATE - 180, 'YYYYMMDD') and TO_CHAR(SYSDATE, 'YYYYMMDD') 
+		  AND VIEW_USER_TYPE = '#view_user_type#' 
+	]]>
+		<if test="${search}" operator="ne" value="null">
+			<if test="${gubun}" operator="eq" value="S">
+				AND  SUBJECT LIKE '%#quest#%'
+			</if>
+			<if test="${gubun}" operator="eq" value="U">
+				AND  GETUSERNAME_ICT('#house_code#',ADD_USER_ID,'LOC') LIKE '%#quest#%'
+			</if>
+			<if test="${gubun}" operator="eq" value="D">
+				AND  ADD_DATE LIKE '%#quest#%'
+			</if>
+		</if>
+	</method>
+	
+	
+	<method name="et_getQueryTotCount_ICOMMACH">
+	<![CDATA[
+		SELECT COUNT(*)
+		FROM  SNOTE
+		WHERE DEL_FLAG <> 'Y'
+		  --AND NOTE_TYPE = '#con_type#'
+		  --AND ADD_DATE between TO_CHAR(SYSDATE - 180, 'YYYYMMDD') and TO_CHAR(SYSDATE, 'YYYYMMDD') 
+		  AND VIEW_USER_TYPE IN ( '#view_user_type#', 'X' ) 		  
+	]]>
+		<if test="${search}" operator="ne" value="null">
+			<if test="${gubun}" operator="eq" value="S">
+				AND  SUBJECT LIKE '%#quest#%'
+			</if>
+			<if test="${gubun}" operator="eq" value="U">
+				AND  GETUSERNAME('#house_code#',ADD_USER_ID,'LOC') LIKE '%#quest#%'
+			</if>
+			<if test="${gubun}" operator="eq" value="D">
+				AND  ADD_DATE LIKE '%#quest#%'
+			</if>
+		</if>
+	</method>
+	
+	<!-- ICT 수정 -->
+	<method name="et_getQueryTotCount_ICOMMACH_ICT">
+	<![CDATA[
+		SELECT COUNT(*)
+		FROM  SNOTE_ICT
+		WHERE DEL_FLAG <> 'D'
+		  AND ADD_DATE between TO_CHAR(SYSDATE - 180, 'YYYYMMDD') and TO_CHAR(SYSDATE, 'YYYYMMDD') 
+		  AND VIEW_USER_TYPE = '#view_user_type#' 
+	]]>
+		<if test="${search}" operator="ne" value="null">
+			<if test="${gubun}" operator="eq" value="S">
+				AND  SUBJECT LIKE '%#quest#%'
+			</if>
+			<if test="${gubun}" operator="eq" value="U">
+				AND  GETUSERNAME_ICT('#house_code#',ADD_USER_ID,'LOC') LIKE '%#quest#%'
+			</if>
+			<if test="${gubun}" operator="eq" value="D">
+				AND  ADD_DATE LIKE '%#quest#%'
+			</if>
+		</if>
+	</method>
+	
+	<method name="et_getQuery_ICOMMACH">
+	<![CDATA[
+		SELECT LAST.A, LAST.NO, LAST.SUB, LAST.NAME, LAST.ADD_DATE, LAST.VIEW_COUNT, LAST.ATT_FLAG,  LAST.ATT, LAST.ADD_TIME
+		FROM
+		     (SELECT ROW_NUMBER() OVER(ORDER BY aaa.no desc) AS TTT, AAA.NO, AAA.SUB, AAA.NAME, AAA.ADD_DATE, AAA.ADD_TIME, AAA.VIEW_COUNT, AAA.ATT_FLAG,  AAA.ATT, AAA.A
+		      FROM
+		          (SELECT NO, SUB, NAME,  ADD_DATE, ADD_TIME, VIEW_COUNT,ATT_FLAG, ATT, A
+		           FROM (SELECT ROW_NUMBER() OVER(ORDER BY seq) AS A,
+		                       SEQ AS NO,
+		                       SUBJECT AS SUB,
+		                       /* CASE WHEN LENGTH(SUBJECT) < 20 THEN SUBJECT ELSE SUBSTR(SUBJECT,0,20) || '..(생략)' END AS SUB, */
+		                       --SUBSTR(SUBJECT, 0, 45) || CASE SUBSTR(SUBJECT, 30, 1) WHEN '' THEN '' ELSE '.....(생략)' END AS SUB,
+		                       (SELECT USER_NAME_LOC FROM ICOMLUSR WHERE HOUSE_CODE = '#house_code#' AND USER_ID = A.ADD_USER_ID) AS NAME,
+		                       SUBSTR(ADD_DATE,1,4) || '/' || SUBSTR(ADD_DATE,5,2) || '/' || SUBSTR(ADD_DATE,7,2) AS ADD_DATE,
+		                       SUBSTR(ADD_TIME,1,2) || ':' || SUBSTR(ADD_TIME,3,2) || ':' || SUBSTR(ADD_TIME,5,2) AS ADD_TIME,
+                            '' AS VIEW_COUNT,
+                            CASE NVL(ATTACH_NO, 'N') WHEN '' THEN 'N' WHEN 'N' THEN 'N' ELSE 'Y' END AS ATT_FLAG,
+		                       ATTACH_NO AS ATT
+		                 FROM SNOTE A
+		                 WHERE DEL_FLAG <> 'Y'
+		                 AND VIEW_USER_TYPE IN ( '#view_user_type#', 'X' ) 
+		                 --AND HOUSE_CODE = '#house_code#'
+		                 --AND NOTE_TYPE = '#con_type#'
+	]]>
+		<if test="${search}" operator="ne" value="null">
+			<if test="${gubun}" operator="eq" value="S">
+				AND  SUBJECT LIKE '%#quest#%'
+			</if>
+			<if test="${gubun}" operator="eq" value="U">
+				AND  GETUSERNAME('#house_code#',ADD_USER_ID,'LOC') LIKE '%#quest#%'
+			</if>
+			<if test="${gubun}" operator="eq" value="D">
+				AND  ADD_DATE LIKE '%#quest#%'
+			</if>
+		</if>
+	                 ) TMP
+	           ) AAA
+	       ) LAST
+		WHERE LAST.TTT BETWEEN #srowm# AND #erowm#
+	</method>
+
+	<!-- ICT 수정 -->
+	<method name="et_getQuery_ICOMMACH_ICT">
+	<![CDATA[
+		SELECT LAST.A, LAST.NO, LAST.SUB, LAST.NAME, LAST.ADD_DATE, LAST.VIEW_COUNT, LAST.ATT_FLAG,  LAST.ATT, LAST.ADD_TIME
+		FROM
+		     (SELECT ROW_NUMBER() OVER(ORDER BY aaa.no desc) AS TTT, AAA.NO, AAA.SUB, AAA.NAME, AAA.ADD_DATE, AAA.ADD_TIME, AAA.VIEW_COUNT, AAA.ATT_FLAG,  AAA.ATT, AAA.A
+		      FROM
+		          (SELECT NO, SUB, NAME,  ADD_DATE, ADD_TIME, VIEW_COUNT,ATT_FLAG, ATT, A
+		           FROM (SELECT ROW_NUMBER() OVER(ORDER BY seq) AS A,
+		                       SEQ AS NO,
+		                       SUBJECT AS SUB,
+		                       /* CASE WHEN LENGTH(SUBJECT) < 20 THEN SUBJECT ELSE SUBSTR(SUBJECT,0,20) || '..(생략)' END AS SUB, */
+		                       --SUBSTR(SUBJECT, 0, 45) || CASE SUBSTR(SUBJECT, 30, 1) WHEN '' THEN '' ELSE '.....(생략)' END AS SUB,
+		                       (SELECT USER_NAME_LOC FROM ICOMLUSR_ICT WHERE HOUSE_CODE = '#house_code#' AND USER_ID = A.ADD_USER_ID) AS NAME,
+		                       SUBSTR(ADD_DATE,1,4) || '/' || SUBSTR(ADD_DATE,5,2) || '/' || SUBSTR(ADD_DATE,7,2) AS ADD_DATE,
+		                       SUBSTR(ADD_TIME,1,2) || ':' || SUBSTR(ADD_TIME,3,2) || ':' || SUBSTR(ADD_TIME,5,2) AS ADD_TIME,
+                            '' AS VIEW_COUNT,
+                            CASE NVL(ATTACH_NO, 'N') WHEN '' THEN 'N' WHEN 'N' THEN 'N' ELSE 'Y' END AS ATT_FLAG,
+		                       ATTACH_NO AS ATT
+		                 FROM SNOTE_ICT A
+		                 WHERE DEL_FLAG <> 'Y'
+		                 AND VIEW_USER_TYPE IN ( '#view_user_type#', 'X' ) 
+	]]>
+		<if test="${search}" operator="ne" value="null">
+			<if test="${gubun}" operator="eq" value="S">
+				AND  SUBJECT LIKE '%#quest#%'
+			</if>
+			<if test="${gubun}" operator="eq" value="U">
+				AND  GETUSERNAME_ICT('#house_code#',ADD_USER_ID,'LOC') LIKE '%#quest#%'
+			</if>
+			<if test="${gubun}" operator="eq" value="D">
+				AND  ADD_DATE LIKE '%#quest#%'
+			</if>
+		</if>
+	                 ) TMP
+	           ) AAA
+	       ) LAST
+		WHERE LAST.TTT BETWEEN #srowm# AND #erowm#
+	</method>
+
+	<method name="et_getQueryTotCount_MAINFAQ">
+	<![CDATA[
+		SELECT COUNT(*)
+		FROM  SFAQ
+		WHERE DEL_FLAG <> 'Y'
+		  --AND NOTE_TYPE = '#con_type#'
+		  AND VIEW_USER_TYPE  IN ( '#view_user_type#', 'X' )
+		  --AND ADD_DATE between TO_CHAR(SYSDATE - 180, 'YYYYMMDD') and TO_CHAR(SYSDATE, 'YYYYMMDD') 
+	]]>
+		<if test="${search}" operator="ne" value="null">
+			<if test="${gubun}" operator="eq" value="S">
+				AND  SUBJECT LIKE '%#quest#%'
+			</if>
+			<if test="${gubun}" operator="eq" value="U">
+				AND  GETUSERNAME('#house_code#',ADD_USER_ID,'LOC') LIKE '%#quest#%'
+			</if>
+			<if test="${gubun}" operator="eq" value="D">
+				AND  ADD_DATE LIKE '%#quest#%'
+			</if>
+		</if>
+	</method>
+	
+	<method name="et_getQuery_MAINFAQ">
+	<![CDATA[
+		SELECT LAST.A, LAST.NO, LAST.SUB, LAST.NAME, LAST.ADD_DATE, LAST.VIEW_COUNT, LAST.ATT_FLAG,  LAST.ATT, LAST.ADD_TIME
+		FROM
+		     (SELECT ROW_NUMBER() OVER(ORDER BY aaa.no desc) AS TTT, AAA.NO, AAA.SUB, AAA.NAME, AAA.ADD_DATE, AAA.ADD_TIME, AAA.VIEW_COUNT, AAA.ATT_FLAG,  AAA.ATT, AAA.A
+		      FROM
+		          (SELECT NO, SUB, NAME,  ADD_DATE, ADD_TIME, VIEW_COUNT,ATT_FLAG, ATT, A
+		           FROM (SELECT ROW_NUMBER() OVER(ORDER BY seq) AS A,
+		                       SEQ AS NO,
+		                       SUBJECT AS SUB,
+		                       /* CASE WHEN LENGTH(SUBJECT) < 20 THEN SUBJECT ELSE SUBSTR(SUBJECT,0,20) || '..(생략)' END AS SUB, */
+		                       --SUBSTR(SUBJECT, 0, 45) || CASE SUBSTR(SUBJECT, 30, 1) WHEN '' THEN '' ELSE '.....(생략)' END AS SUB,
+		                       (SELECT USER_NAME_LOC FROM ICOMLUSR WHERE HOUSE_CODE = '#house_code#' AND USER_ID = A.ADD_USER_ID) AS NAME,
+		                       SUBSTR(ADD_DATE,1,4) || '/' || SUBSTR(ADD_DATE,5,2) || '/' || SUBSTR(ADD_DATE,7,2) AS ADD_DATE,
+		                       SUBSTR(ADD_TIME,1,2) || ':' || SUBSTR(ADD_TIME,3,2) || ':' || SUBSTR(ADD_TIME,5,2) AS ADD_TIME,
+                            '' AS VIEW_COUNT,
+                            CASE NVL(ATTACH_NO, 'N') WHEN '' THEN 'N' WHEN 'N' THEN 'N' ELSE 'Y' END AS ATT_FLAG,
+		                       ATTACH_NO AS ATT
+		                 FROM SFAQ A
+		                 WHERE DEL_FLAG <> 'Y'
+		                 --AND HOUSE_CODE = '#house_code#'
+		                 --AND NOTE_TYPE = '#con_type#'
+		                   AND VIEW_USER_TYPE IN ( '#view_user_type#', 'X' )
+	]]>
+		<if test="${search}" operator="ne" value="null">
+			<if test="${gubun}" operator="eq" value="S">
+				AND  SUBJECT LIKE '%#quest#%'
+			</if>
+			<if test="${gubun}" operator="eq" value="U">
+				AND  GETUSERNAME('#house_code#',ADD_USER_ID,'LOC') LIKE '%#quest#%'
+			</if>
+			<if test="${gubun}" operator="eq" value="D">
+				AND  ADD_DATE LIKE '%#quest#%'
+			</if>
+		</if>
+	                 ) TMP
+	           ) AAA
+	       ) LAST
+		WHERE LAST.TTT BETWEEN #srowm# AND #erowm#
+	</method>
+	
+	<method name="et_getQuery_dataStore_ICOMMACH">
+	<![CDATA[
+		SELECT LAST.A, LAST.NO, LAST.SUB, LAST.NAME, LAST.ADD_DATE, LAST.VIEW_COUNT, LAST.ATT_FLAG,  LAST.ATT, LAST.ADD_TIME
+		FROM
+		     (SELECT ROW_NUMBER() OVER(ORDER BY aaa.no desc) AS TTT, AAA.NO, AAA.SUB, AAA.NAME, AAA.ADD_DATE, AAA.ADD_TIME, AAA.VIEW_COUNT, AAA.ATT_FLAG,  AAA.ATT, AAA.A
+		      FROM
+		          (SELECT NO, SUB, NAME,  ADD_DATE, ADD_TIME, VIEW_COUNT,ATT_FLAG, ATT, A
+		           FROM (SELECT ROW_NUMBER() OVER(ORDER BY seq) AS A,
+		                       SEQ AS NO,
+		                       SUBJECT AS SUB,
+		                       /* CASE WHEN LENGTH(SUBJECT) < 20 THEN SUBJECT ELSE SUBSTR(SUBJECT,0,20) || '..(생략)' END AS SUB, */
+		                       --SUBSTR(SUBJECT, 0, 45) || CASE SUBSTR(SUBJECT, 30, 1) WHEN '' THEN '' ELSE '.....(생략)' END AS SUB,
+		                       (SELECT USER_NAME_LOC FROM ICOMLUSR WHERE HOUSE_CODE = '#house_code#' AND USER_ID = A.ADD_USER_ID) AS NAME,
+		                       SUBSTR(ADD_DATE,1,4) || '/' || SUBSTR(ADD_DATE,5,2) || '/' || SUBSTR(ADD_DATE,7,2) AS ADD_DATE,
+		                       SUBSTR(ADD_TIME,1,2) || ':' || SUBSTR(ADD_TIME,3,2) || ':' || SUBSTR(ADD_TIME,5,2) AS ADD_TIME,
+                            '' AS VIEW_COUNT,
+                            CASE NVL(ATTACH_NO, 'N') WHEN '' THEN 'N' WHEN 'N' THEN 'N' ELSE 'Y' END AS ATT_FLAG,
+		                       ATTACH_NO AS ATT
+		                 FROM SDSHD A
+		                 WHERE DEL_FLAG <> 'Y'
+		                 --AND HOUSE_CODE = '#house_code#'
+		                 --AND NOTE_TYPE = '#con_type#'
+		                   AND VIEW_USER_TYPE IN ( '#view_user_type#', 'X' )
+	]]>
+		<if test="${search}" operator="ne" value="null">
+			<if test="${gubun}" operator="eq" value="S">
+				AND  SUBJECT LIKE '%#quest#%'
+			</if>
+			<if test="${gubun}" operator="eq" value="U">
+				AND  GETUSERNAME('#house_code#',ADD_USER_ID,'LOC') LIKE '%#quest#%'
+			</if>
+			<if test="${gubun}" operator="eq" value="D">
+				AND  ADD_DATE LIKE '%#quest#%'
+			</if>
+		</if>
+	                 ) TMP
+	           ) AAA
+	       ) LAST
+		WHERE LAST.TTT BETWEEN #srowm# AND #erowm#
+	</method>
+
+
+	<!-- ICT 수정 -->
+	<method name="et_getQuery_dataStore_ICOMMACH_ICT">
+	<![CDATA[
+		SELECT LAST.A, LAST.NO, LAST.SUB, LAST.NAME, LAST.ADD_DATE, LAST.VIEW_COUNT, LAST.ATT_FLAG,  LAST.ATT, LAST.ADD_TIME
+		FROM
+		     (SELECT ROW_NUMBER() OVER(ORDER BY aaa.no desc) AS TTT, AAA.NO, AAA.SUB, AAA.NAME, AAA.ADD_DATE, AAA.ADD_TIME, AAA.VIEW_COUNT, AAA.ATT_FLAG,  AAA.ATT, AAA.A
+		      FROM
+		          (SELECT NO, SUB, NAME,  ADD_DATE, ADD_TIME, VIEW_COUNT,ATT_FLAG, ATT, A
+		           FROM (SELECT ROW_NUMBER() OVER(ORDER BY seq) AS A,
+		                       SEQ AS NO,
+		                       SUBJECT AS SUB,
+		                       /* CASE WHEN LENGTH(SUBJECT) < 20 THEN SUBJECT ELSE SUBSTR(SUBJECT,0,20) || '..(생략)' END AS SUB, */
+		                       --SUBSTR(SUBJECT, 0, 45) || CASE SUBSTR(SUBJECT, 30, 1) WHEN '' THEN '' ELSE '.....(생략)' END AS SUB,
+		                       (SELECT USER_NAME_LOC FROM ICOMLUSR_ICT WHERE HOUSE_CODE = '#house_code#' AND USER_ID = A.ADD_USER_ID) AS NAME,
+		                       SUBSTR(ADD_DATE,1,4) || '/' || SUBSTR(ADD_DATE,5,2) || '/' || SUBSTR(ADD_DATE,7,2) AS ADD_DATE,
+		                       SUBSTR(ADD_TIME,1,2) || ':' || SUBSTR(ADD_TIME,3,2) || ':' || SUBSTR(ADD_TIME,5,2) AS ADD_TIME,
+                            '' AS VIEW_COUNT,
+                            CASE NVL(ATTACH_NO, 'N') WHEN '' THEN 'N' WHEN 'N' THEN 'N' ELSE 'Y' END AS ATT_FLAG,
+		                       ATTACH_NO AS ATT
+		                 FROM SDSHD_ICT A
+		                 WHERE DEL_FLAG <> 'Y'
+		                 --AND HOUSE_CODE = '#house_code#'
+		                 --AND NOTE_TYPE = '#con_type#'
+		                   AND VIEW_USER_TYPE IN ( '#view_user_type#', 'X' )
+	]]>
+		<if test="${search}" operator="ne" value="null">
+			<if test="${gubun}" operator="eq" value="S">
+				AND  SUBJECT LIKE '%#quest#%'
+			</if>
+			<if test="${gubun}" operator="eq" value="U">
+				AND  GETUSERNAME_ICT('#house_code#',ADD_USER_ID,'LOC') LIKE '%#quest#%'
+			</if>
+			<if test="${gubun}" operator="eq" value="D">
+				AND  ADD_DATE LIKE '%#quest#%'
+			</if>
+		</if>
+	                 ) TMP
+	           ) AAA
+	       ) LAST
+		WHERE LAST.TTT BETWEEN #srowm# AND #erowm#
+	</method>
+
+	<method name="et_getQuery_ICOMMACH_POP_1">
+	<![CDATA[
+		SELECT
+		      SUBJECT, CONTENT,
+		      SUBSTR(ADD_DATE,0,4)||'-'||SUBSTR(ADD_DATE,5,2)||'-'||SUBSTR(ADD_DATE,7,2),
+		      ADD_USER_NAME, NVL(ATTACH_NO,'N') , FLAG
+		FROM ICOMMACH
+		WHERE NO = #seq#
+		AND DEL_FLAG <> 'D'
+	]]>
+	</method>
+
+	<method name="et_getQuery_ICOMMACH_POP_2">
+		UPDATE ICOMMACH
+        SET VIEW_COUNT = VIEW_COUNT + 1
+        WHERE NO = #seq#
+	</method>
+
+	<method name="et_getQuery_ICOMUPJO">
+		SELECT
+			CODE, TEXT
+		FROM ICOMUPJO
+	</method>
+
+	<method name="et_setInsert_ICOMVIST">
+		INSERT INTO ICOMVIST
+        ( NO, SEQ, USERNAME, EMAIL, COMP_CODE, INDUSTRY_TYPE, ADD_USER_ID,
+        ADD_USER_NAME, ADD_DATE, ADD_TIME, STATUS, FLAG, HIT)
+        VALUES (?,
+        (SELECT TO_CHAR(NVL(MAX(SEQ)+1,1),'FM000000') FROM ICOMVIST WHERE NO = ?),
+        ?, ?, ?, ?, '#add_user_id#',
+        '#add_user_name#', TO_CHAR(SYSDATE, 'YYYYMMDD'), TO_CHAR(SYSDATE, 'HH24MISS'), '#status#', ?, 1 )
+	</method>
+
+	<method name="setLogin_Pwd_History">
+			INSERT INTO ICOMPWDL  
+        	(
+	           HOUSE_CODE 
+			 , USER_ID    
+			 , PASSWORD   
+			 , ADD_DATE   
+        	)
+        	VALUES
+        	(
+        	 ${house_code}      
+        	 , upper(${user_id})         
+        	 , ${pwd_new}        
+        	 , TO_CHAR(SYSDATE, 'YYYY/MM/DD HH24:MI:SS')
+        	)
+	</method>
+	
+	<method name="et_getQueryTotCount_MAINRPT">
+	<![CDATA[
+		SELECT COUNT(*)
+		FROM  SRPT
+		WHERE DEL_FLAG <> 'Y'
+		  --AND NOTE_TYPE = '#con_type#'
+		  --AND VIEW_USER_TYPE = '#view_user_type#'
+		  --AND ADD_DATE between TO_CHAR(SYSDATE - 180, 'YYYYMMDD') and TO_CHAR(SYSDATE, 'YYYYMMDD') 
+	]]>
+		<if test="${view_user_type}" operator="eq" value="MUP150200001">
+				AND  GONGJi_GUBUN IN ('1','2')
+		</if>
+		<if test="${view_user_type}" operator="ne" value="MUP150200001">
+				<if test="${bd_admin}" operator="eq" value="1">
+						AND  GONGJi_GUBUN IN ('3')
+				</if>
+		</if>
+		<if test="${search}" operator="ne" value="null">
+			<if test="${gubun}" operator="eq" value="S">
+				AND  SUBJECT LIKE '%#quest#%'
+			</if>
+			<if test="${gubun}" operator="eq" value="U">
+				AND  GETUSERNAME('#house_code#',ADD_USER_ID,'LOC') LIKE '%#quest#%'
+			</if>
+			<if test="${gubun}" operator="eq" value="D">
+				AND  ADD_DATE LIKE '%#quest#%'
+			</if>
+		</if>
+	</method>
+	
+	<method name="et_getQuery_MAINRPT">
+	<![CDATA[
+		SELECT LAST.A, LAST.NO, LAST.SUB, LAST.NAME, LAST.ADD_DATE, LAST.VIEW_COUNT, LAST.ATT_FLAG,  LAST.ATT, LAST.ADD_TIME, LAST.COMPANY_NAME, LAST.COMPANY_CODE, LAST.GONGJI_GUBUN, LAST.GONGJI_GUBUN_TEXT
+		FROM
+		     (SELECT ROW_NUMBER() OVER(ORDER BY aaa.no desc) AS TTT, AAA.NO, AAA.SUB, AAA.NAME, AAA.ADD_DATE, AAA.ADD_TIME, AAA.VIEW_COUNT, AAA.ATT_FLAG,  AAA.ATT, AAA.A, AAA.COMPANY_NAME, AAA.COMPANY_CODE, AAA.GONGJI_GUBUN, AAA.GONGJI_GUBUN_TEXT
+		      FROM
+		          (SELECT NO, SUB, NAME,  ADD_DATE, ADD_TIME, VIEW_COUNT,ATT_FLAG, ATT, A,COMPANY_NAME,COMPANY_CODE,GONGJI_GUBUN,GONGJI_GUBUN_TEXT
+		           FROM (SELECT ROW_NUMBER() OVER(ORDER BY seq) AS A,
+		                       SEQ AS NO,
+		                       SUBJECT AS SUB,
+		                       /* CASE WHEN LENGTH(SUBJECT) < 20 THEN SUBJECT ELSE SUBSTR(SUBJECT,0,20) || '..(생략)' END AS SUB, */
+		                       --SUBSTR(SUBJECT, 0, 45) || CASE SUBSTR(SUBJECT, 30, 1) WHEN '' THEN '' ELSE '.....(생략)' END AS SUB,
+		                       (SELECT USER_NAME_LOC FROM ICOMLUSR WHERE HOUSE_CODE = '#house_code#' AND USER_ID = A.ADD_USER_ID) AS NAME,
+		                       SUBSTR(ADD_DATE,1,4) || '/' || SUBSTR(ADD_DATE,5,2) || '/' || SUBSTR(ADD_DATE,7,2) AS ADD_DATE,
+		                       SUBSTR(ADD_TIME,1,2) || ':' || SUBSTR(ADD_TIME,3,2) || ':' || SUBSTR(ADD_TIME,5,2) AS ADD_TIME,
+                            '' AS VIEW_COUNT,
+                            CASE NVL(ATTACH_NO, 'N') WHEN '' THEN 'N' WHEN 'N' THEN 'N' ELSE 'Y' END AS ATT_FLAG,
+		                       ATTACH_NO AS ATT,
+		                       (SELECT VENDOR_NAME_LOC FROM ICOMVNGL WHERE VENDOR_CODE = A.COMPANY_CODE) AS COMPANY_NAME,
+		                       A.COMPANY_CODE AS COMPANY_CODE,
+		                       A.GONGJI_GUBUN,
+                              (SELECT TEXT1 FROM SCODE WHERE TYPE='Z003' AND CODE = A.GONGJI_GUBUN) GONGJI_GUBUN_TEXT
+		                 FROM SRPT A
+		                 WHERE DEL_FLAG <> 'Y'
+		                 --AND HOUSE_CODE = '#house_code#'
+		                 --AND NOTE_TYPE = '#con_type#'
+		                 --AND VIEW_USER_TYPE IN ( '#view_user_type#', 'X' )
+	]]>
+		<if test="${view_user_type}" operator="eq" value="MUP150200001">
+				AND  GONGJi_GUBUN IN ('1','2')
+		</if>
+		<if test="${view_user_type}" operator="ne" value="MUP150200001">
+				<if test="${bd_admin}" operator="eq" value="1">
+						AND  GONGJi_GUBUN IN ('3')
+				</if>
+		</if>
+		<if test="${search}" operator="ne" value="null">
+			<if test="${gubun}" operator="eq" value="S">
+				AND  SUBJECT LIKE '%#quest#%'
+			</if>
+			<if test="${gubun}" operator="eq" value="U">
+				AND  GETUSERNAME('#house_code#',ADD_USER_ID,'LOC') LIKE '%#quest#%'
+			</if>
+			<if test="${gubun}" operator="eq" value="D">
+				AND  ADD_DATE LIKE '%#quest#%'
+			</if>
+		</if>
+	                 ) TMP
+	           ) AAA
+	       ) LAST
+		WHERE LAST.TTT BETWEEN #srowm# AND #erowm#
+	</method>
+	<!-- ICT 사용 -->
+	<method name="I_SMS">
+		<![CDATA[
+		/*SMS발송처리*/
+		INSERT INTO SMS_TABLE
+							(
+								 TR_SEQUENCE
+								,TR_USER_ID
+								,TR_USER_NUM
+								,TR_COMP_CD
+								,TR_PLACE
+								,TR_BIZ_ID1
+								,TR_BIZ_ID2
+								,TR_CALLBACK
+								,TR_DESTADDR
+								,TR_SMSTYPE
+								,TR_SENDSTAT
+								,TR_SENDDATE
+								-- TOBE 2017-07-01 제거 착신 통신사 ,TR_NET_ID
+								,TR_MSG
+								,TR_PRE_TIME
+								,TR_PRE_ID
+								-- TOBE 2017-07-01 추가 템플릿코드 , 매핑1~3
+								,UMS_TMPL_CD
+								,MPNG_1
+								,MPNG_2
+								,MPNG_3
+							)
+		VALUES
+							(
+								  SMS_SEQUENCE.NEXTVAL
+								, ${sysid}
+								, ${sysid}
+								, '001001'
+								, ${DEFAULT_ICT_JUMCD} /* TOBE 2017-07-01  ASIS '20325'	ICT 지원센터 */
+								, 'GEN'
+								, 'ELBID'
+								, ${trCallBack}
+								, nvl(${mobile_no},'0100009999')
+								, '0'
+								, '0'
+								, SYSDATE
+								-- TOBE 2017-07-01 제거 착신 통신사 , 'KTF'
+								, ${message}
+								, SYSDATE
+								, ${sysid}
+								-- TOBE 2017-07-01 추가 템플릿코드 , 매핑1~3
+								,${UMS_TMPL_CD}
+								,$S{MPNG_1}
+								,$S{MPNG_2}
+								,$S{MPNG_3}
+							)     
+		]]>
+	</method>
+	<method name="I_TLK">
+		<![CDATA[
+		/*TALK발송처리*/
+		INSERT INTO WBT_TABLE
+							(
+								 TR_SEQUENCE
+								,TR_USER_ID
+								,TR_USER_NUM
+								,TR_COMP_CD
+								,TR_PLACE
+								,TR_BIZ_ID1
+								,TR_BIZ_ID2
+								,TR_CALLBACK
+								,TR_DESTADDR
+								,TR_SMSTYPE
+								,TR_SENDSTAT
+								,TR_SENDDATE
+								-- TOBE 2017-07-01 제거 착신 통신사 ,TR_NET_ID
+								,TR_MSG
+								,TR_PRE_TIME
+								,TR_PRE_ID
+			                     -- TOBE 2017-07-01 추가 템플릿코드 , 매핑1~3
+			                    ,UMS_TMPL_CD
+			                    ,MPNG_1
+			                    ,MPNG_2
+			                    ,MPNG_3
+			                    ,UMS_SMS_CNVSD_YN     
+							)
+		VALUES
+							(
+								  WBT_SEQUENCE.NEXTVAL
+								, ${sysid}
+								, ${sysid}
+								, '001001'
+								, ${DEFAULT_ICT_JUMCD} /* TOBE 2017-07-01 ICT 글로벌 상수 ASIS '20325' ICT 지원센터 */
+								, 'GEN'
+								, 'ELBID'
+								, ${trCallBack}
+								, nvl(${mobile_no},'0100009999')
+								, '0'
+								, '0'
+								, SYSDATE
+								-- TOBE 2017-07-01 제거 착신 통신사 , 'KTF'
+								, ${message}
+								, SYSDATE
+								, ${sysid}
+								 -- TOBE 2017-07-01 추가 템플릿코드 , 매핑1~3
+			                    ,${UMS_TMPL_CD}
+			                    ,$S{MPNG_1}
+			                    ,$S{MPNG_2}
+			                    ,$S{MPNG_3}
+			                    ,$S{UMS_SMS_CNVSD_YN}		
+							)     
+		]]>
+	</method>
+	<method name="svcGetScssReqProcess_ICT">
+		<![CDATA[
+		    SELECT COUNT(*) CNT FROM ICOMVNGL_ICT
+			WHERE HOUSE_CODE = ${house_code}
+			AND VENDOR_CODE = ${vendor_code}
+			AND PURCHASE_BLOCK_FLAG = 'R'			
+		]]>
+	</method>	
+	<method name="svcSetScssReqProcess_ICT">
+		<![CDATA[
+		    UPDATE ICOMVNGL_ICT
+			SET PURCHASE_BLOCK_FLAG = 'R'
+			    ,SCSS_REQ_DATE = ${now_date}
+			    ,SCSS_REQ_TIME = ${now_time}
+			WHERE HOUSE_CODE = ${house_code}
+			AND VENDOR_CODE = ${vendor_code}			
+		]]>
+	</method>	
+	<method name="svcSetScssProcess_ICT0">
+		<![CDATA[
+				SELECT CODE,TEXT1,TEXT5,TEXT6,'' VENDOR_NAME_LOC
+				FROM SCODE
+				WHERE USE_FLAG = 'Y'
+				AND TYPE = 'B001_ICT'
+				AND CODE = '0001'
+				UNION ALL
+				SELECT '' CODE,'' TEXT1,A.PHONE_NO2 TEXT5,'' TEXT6, 
+				       (SELECT VENDOR_NAME_LOC FROM ICOMVNGL_ICT WHERE HOUSE_CODE = A.HOUSE_CODE AND VENDOR_CODE = A.CODE_NO) VENDOR_NAME_LOC 
+				FROM ICOMADDR_ICT A 
+				WHERE A.HOUSE_CODE = ${house_code}
+				AND A.CODE_TYPE = '2'
+				AND A.CODE_NO = ${vendor_code}				
+		]]>
+	</method>	
+	<method name="svcSetScssProcess_ICT1">
+		<![CDATA[
+	        INSERT INTO sulog
+            (
+                 NO,
+                 USER_TYPE,
+                 USER_ID,
+                 USER_NAME_LOC,
+                 PROGRAM,
+                 PROGRAM_DESC,
+                 JOB_TYPE,
+                 JOB_DATE,
+                 JOB_TIME,
+                 IP,
+                 PROCESS_ID,
+                 METHOD_NAME
+            ) VALUES (
+                 ${user_log_no},
+                 ${userType},
+                 ${id},
+                 ${nameLoc},
+                 'setScssProcess_ICT',
+                 '업체탈퇴 (ICT공급사용)',
+                 'WK',
+                 ${now_date}, 
+                 ${now_time},
+                 ${userIp},
+                 'CO_004',
+                 'setScssProcess_ICT'
+            ) 
+		]]>
+	</method>	
+	<method name="svcSetScssProcess_ICT2">
+		<![CDATA[
+		    UPDATE ICOMVNGL_ICT
+			SET STATUS = 'D'
+			    ,DEL_FLAG = 'Y'
+			    ,PURCHASE_BLOCK_FLAG = 'S'
+			    ,SCSS_DATE = ${now_date}
+			    ,SCSS_TIME = ${now_time}
+			    ,SCSS_USER_ID = ${id}
+			    ,RESIDENT_NO = NULL
+			    ,ENTRY_USER_NAME = NULL
+			    ,BANK_CODE = NULL
+			    ,BANK_ACCT = NULL
+			    ,DEPOSITOR_NAME = NULL
+			    ,BANK_KEY = NULL
+			    ,SMARTBILL_EMAIL = NULL
+			    ,ENTRY_TEL = NULL
+			    ,ENTRY_EMAIL = NULL
+			WHERE HOUSE_CODE = ${house_code}
+			AND VENDOR_CODE = ${vendor_code}			
+		]]>
+	</method>
+	<method name="svcSetScssProcess_ICT3">
+		<![CDATA[
+		    UPDATE ICOMVNCP_ICT
+			SET STATUS = 'D'
+			    ,PHONE_NO = NULL
+			    ,USER_NAME = NULL
+			    ,FAX_NO = NULL
+			    ,MOBILE_NO = NULL
+			    ,EMAIL = NULL
+			WHERE HOUSE_CODE = ${house_code}
+			AND VENDOR_CODE = ${vendor_code}			 
+		]]>
+	</method>
+	<method name="svcSetScssProcess_ICT4">
+		<![CDATA[
+		    UPDATE ICOMVNIT_ICT
+			SET STATUS = 'D'
+			    ,ADD_USER_NAME_ENG = NULL
+			    ,ADD_USER_NAME_LOC = NULL
+			    ,CHANGE_USER_NAME_ENG = NULL
+			    ,CHANGE_USER_NAME_LOC = NULL
+			    ,SALES_USER_NAME = NULL
+			    ,PHONE_NO = NULL
+			    ,MOBILE_NO = NULL
+			    ,EMAIL = NULL
+			WHERE HOUSE_CODE = ${house_code}
+			AND VENDOR_CODE = ${vendor_code}			 
+		]]>
+	</method>
+	<method name="svcSetScssProcess_ICT5">
+		<![CDATA[
+		    UPDATE ICOMVNPJ_ICT
+			SET STATUS = 'D'
+			WHERE HOUSE_CODE = ${house_code}
+			AND VENDOR_CODE = ${vendor_code}			 
+		]]>
+	</method>	
+	<method name="svcSetScssProcess_ICT6">
+		<![CDATA[
+		    UPDATE ICOMLUSR_ICT
+			SET STATUS = 'D'
+			    ,DEL_FLAG = 'Y'
+			    ,PASSWORD = NULL
+			    ,USER_NAME_LOC = NULL
+			    ,USER_NAME_ENG = NULL
+			    ,RESIDENT_NO = NULL
+			    ,PHONE_NO = NULL
+			    ,VERIFIER_KEY = NULL
+			    ,PASSWORD_OLD = NULL
+			WHERE HOUSE_CODE = ${house_code}
+			AND COMPANY_CODE = ${vendor_code}			
+		]]>
+	</method>	
+	<method name="svcSetScssProcess_ICT7">
+		<![CDATA[
+		    UPDATE ICOMADDR_ICT
+		    SET ZIP_CODE = NULL
+				,PHONE_NO1 = NULL
+				,FAX_NO = NULL
+				,HOMEPAGE = NULL
+				,ADDRESS_LOC = NULL
+				,ADDRESS_ENG = NULL
+				,CEO_NAME_LOC = NULL
+				,CEO_NAME_ENG = NULL
+				,EMAIL = NULL
+				,ZIP_BOX_NO = NULL
+				,PHONE_NO2 = NULL
+				,DELY_ZIP_CODE = NULL
+				,DELY_ADDRESS_LOC = NULL
+				,ADDRESS_TEXT = NULL
+			WHERE HOUSE_CODE = ${house_code}
+			AND CODE_NO IN (SELECT USER_ID 
+			                  FROM ICOMLUSR_ICT 
+			                 WHERE HOUSE_CODE = ${house_code}
+			                   AND COMPANY_CODE = ${vendor_code}
+			                UNION
+			                SELECT ${vendor_code}
+			                  FROM DUAL
+			                )	
+		]]>
+	</method>	
+	<method name="svcSetScssProcess_ICT8">
+		<![CDATA[
+		    UPDATE ICOYBDAP_ICT
+		    SET  USER_NAME = NULL
+		        ,USER_PHONE = NULL
+		        ,USER_MOBILE = NULL
+		        ,USER_EMAIL  = NULL
+			WHERE HOUSE_CODE = ${house_code}
+			AND VENDOR_CODE = ${vendor_code}
+		]]>
+	</method>	
+	<method name="svcSetScssProcess_ICT9">
+		<![CDATA[
+		    UPDATE ICOYBDAP_ICT
+		    SET USER_NAME = NULL
+		       ,USER_PHONE = NULL
+		       ,USER_MOBILE = NULL
+		       ,USER_EMAIL = NULL 
+			WHERE HOUSE_CODE = ${house_code}
+			AND VENDOR_CODE = ${vendor_code}
+		]]>
+	</method>		
+</service>

@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="EUC-KR" ?> 
+<service>
+	<method name="getPayBudgetGiveCnstList">
+		 SELECT
+			SPGL.STATUS_CD,
+			GETCODETEXT1('M1015', SPGL.STATUS_CD, 'KO') AS STATUS_NM,
+			NVL(SPGL.SIGN_STATUS, 'T') AS SIGN_STATUS,
+            GETCODETEXT1('M100', NVL(SPGL.SIGN_STATUS, 'T'), 'KO') AS SIGN_STATUS_TEXT,
+			SPGL.PAY_SEND_NO,
+			SPGL.PAY_AMT,
+			SPGL.VENDOR_CODE,
+			GETCOMPANYNAMELOC(SPGL.HOUSE_CODE,SPGL.VENDOR_CODE,'S') AS VENDOR_NAME,
+			SPGL.SIGNER_NO,
+			GETUSERNAME(SPGL.HOUSE_CODE, SPGL.ADD_USER_ID, 'LOC') AS SIGNER_NM,
+			SPGL.SIGNER_FLAG,
+			SPGL.ADD_USER_ID AS SIGNER_ID,
+			TXDT.TAX_NO,
+			CONVERT_DATE(TXHD.TAX_DATE) AS TAX_DATE,
+			CASE 
+		       	WHEN
+		       		TXHD.TAX_APP_NO IS NULL
+		       	THEN
+		       		'RP'
+				ELSE
+					'P'
+			END AS TAX_GUBUN,
+			TXHD.PROGRESS_CODE,
+			SB.PUBCODE,
+			CASE 
+		       	WHEN
+		       		SPGL.STATUS_CD = '30'
+		       		OR
+		       		SPGL.STATUS_CD = '40'
+		       		OR
+		       		SPGL.STATUS_CD = '80'
+		       	THEN
+		       		CONVERT_DATE(SPGL.CHANGE_DATE)		       		
+				ELSE
+					' '
+			END AS CHANGE_DATE,
+			SPGL.RTN_SIGNER_NO,
+			SPGL.BEFORE_SIGN_NO,
+			CASE 
+		       	WHEN
+		       		SPGL.STATUS_CD = '30'
+		       		OR
+		       		SPGL.STATUS_CD = '40'
+		       		OR
+		       		SPGL.STATUS_CD = '80'
+		       	THEN
+		       		CONVERT_DATE(SPGL.CHANGE_DATE)		       		
+				ELSE
+					'9999/12/31 '
+			END AS CHANGE_DATE_ORDERBY,
+			POHD.SUBJECT  AS PO_SUBJECT,
+			POHD.PO_NO,
+			SPLN.JUMJUJMCD,
+			(SELECT DEPT_NAME_LOC FROM ICOMOGDP WHERE DEPT = SPLN.JUMJUJMCD) JUMJUJMNM,
+			SPLN.PMKPMKCD,
+			(SELECT DESCRIPTION_LOC FROM ICOMMTGL WHERE ITEM_NO = SPLN.PMKPMKCD) PMKPMKNM
+		FROM
+			SPY1GL SPGL,
+			SPY1LN SPLN,
+			ICOYTXHD TXHD,
+			ICOYTXDT TXDT,
+			(
+				SELECT
+					RESSEQ,
+					PUBCODE,
+					LOADSTATUS,
+					NTS_ISSUEID
+				FROM
+					SALEEBILL
+				WHERE
+					LOADSTATUS  = 1
+			) SB,
+			ICOYTRDT TRDT,
+			ICOYPOHD POHD,
+			ICOYPODT PODT			
+		WHERE SPGL.HOUSE_CODE  = SPLN.HOUSE_CODE
+		  AND SPGL.PAY_SEND_NO = SPLN.PAY_SEND_NO
+		  AND SPLN.HOUSE_CODE  = TXDT.HOUSE_CODE
+       	  AND SPLN.TAX_NO      = TXDT.TAX_NO  
+       	  AND SPLN.TAX_SEQ     = TXDT.TAX_SEQ       	                	                 	            	          
+       	  AND TXHD.HOUSE_CODE  = TXDT.HOUSE_CODE
+		  AND TXHD.TAX_NO      = TXDT.TAX_NO  
+		  AND TXHD.TAX_NO      = SB.RESSEQ			  
+		  AND SPLN.TAX_NO      = TRDT.TAX_NO  
+       	  AND SPLN.TAX_SEQ     = TRDT.TAX_SEQ       	          	    
+       	  AND TRDT.PO_NO      = PODT.PO_NO  
+       	  AND TRDT.PO_SEQ     = PODT.PO_SEQ       	          
+       	  AND POHD.PO_NO      = PODT.PO_NO       	          
+		  <![CDATA[  
+		      AND SPGL.PAY_SEND_NO = $S{pay_send_no}
+	          AND SPGL.VENDOR_CODE = $S{vendor_code}
+	          AND SPGL.CHANGE_DATE 	BETWEEN $S{from_date} 
+	          AND $S{to_date}          
+	          AND TXHD.PROGRESS_CODE IN ('P','E')
+	          AND SPGL.DEL_YN      = 'N'
+	          AND SPGL.STATUS_CD   IN ('30','40','80')	          
+	          AND NVL(SPGL.SIGNER_NO, SPGL.ADD_USER_ID) = $S{purchaser_id}	          
+	          AND SPLN.JUMJUJMCD = $S{req_dept}
+	          AND SPLN.PMKPMKCD IN (SELECT ITEM_NO FROM ICOMMTGL WHERE MATERIAL_TYPE = '04')
+	          AND POHD.SUBJECT LIKE '%' || $S{po_subject} || '%'  
+	          ]]>
+		GROUP BY
+			SPGL.HOUSE_CODE,    SPGL.STATUS_CD,     SPGL.PAY_SEND_NO, SPGL.PAY_AMT,     SPGL.VENDOR_CODE,
+			SPGL.SIGNER_NO,     SPGL.SIGNER_FLAG,   SPGL.ADD_USER_ID, TXDT.TAX_NO,      TXHD.TAX_DATE,
+			TXHD.TAX_APP_NO,    TXHD.PROGRESS_CODE, SB.PUBCODE,       SPGL.CHANGE_DATE, SPGL.ADD_USER_ID,
+			SPGL.RTN_SIGNER_NO, SPGL.BEFORE_SIGN_NO,SPGL.SIGN_STATUS, POHD.SUBJECT,     POHD.PO_NO,
+			SPLN.JUMJUJMCD,        SPLN.PMKPMKCD
+		ORDER BY
+		    CHANGE_DATE_ORDERBY DESC,
+		    SIGN_STATUS DESC,
+		    STATUS_NM DESC,
+		    CHANGE_DATE DESC,
+		    PAY_SEND_NO DESC
+	</method>
+</service>

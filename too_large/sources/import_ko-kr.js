@@ -1,0 +1,58 @@
+(function() { 
+    return {
+	firstdesc: "가져올 인증서의 나머지 정보를 입력하십시오.",
+	blinkpasswdfail: "암호를 입력하지 않았습니다.",
+	blinkpfxfilefail: "파일을 선택하지 않았습니다.",
+	wrongpfxfilefail: "올바른 pfx 혹은 p12 파일을 선택하여 주십시오.",
+	blinkx509type: "인증서의 종류를 선택하지 않았습니다.",
+	end: "[마침]를 누르면 인증서 가져오기가 완료됩니다.",
+	errornotselect: "선택된 항목이 아닙니다.",
+	fail: "오류로 인해 인증서 가져오기가 정상적으로 수행되지 못하였습니다.",
+	findPFX: "찾아보기...",
+	keyfile: "개인키 파일(*.key)",
+	passwdfail: "암호가 일치하지 않습니다.",
+	PFXPassLabel: "가져올 인증서의 암호를 입력하십시오.",
+	pkcs11cancel: "보안토큰 비밀번호 입력이 취소되었습니다.",
+	pkcs11incorrect: "잘못된 보안토큰 비밀번호입니다.",
+	pkcs12: "개인 정보 교환 (*.pfx, *.p12)",
+	seldir: "기본 파일명 사용",
+	selfile: "...",
+	selfiletitle: "파일 선택",
+	selPFX: "개인정보 교환 형식 (.PFX, .P12)",
+	selPFXExam: "예) $HOME/MyCert.pfx",
+	selPFXLabel: "가져올 파일을 지정하십시오.",
+	selX509: "X.509 바이너리 형식 (.DER, .CER)",
+	selX509Label: "가져올 인증서의 종류를 선택하십시오.",
+	title: "인증서 가져오기",
+	x509bin: "X.509 바이너리 (*.der, *.cer)",
+	X509FileSel: "가져올 인증서와 개인키 파일을 선택하십시오.",
+	X509KM: "키관리용",
+	cert: "인증서 : ",
+	key: "개인키 : ",
+	X509kmcert: "키관리용 인증서",
+	x509kmcertfail: "키관리용 인증서가 입력되지 않았습니다.",
+	X509kmkey: "키관리용 키파일",
+	x509kmkeyfail: "키관리용 키파일이 입력되지 않았습니다.",
+	X509Sign: "서명용",
+	X509signcert: "서명용 인증서",
+	x509signcertfail: "서명용 인증서가 입력되지 않았습니다.",
+	X509signkey: "서명용 키파일",
+	x509signkeyfail: "서명용 키파일이 입력되지 않았습니다.",
+	X509TreePath: "가져올 위치",
+	X509TreeSec: "종류",
+
+	input_mouse: "마우스로 입력",
+
+	button_cancel: "취소",
+	button_prev: "< 뒤로",
+	button_next: "다음 >",
+	button_complete: "마침",
+
+	/* 접근성 */
+	ready: "인증서 가져오기 준비 완료",
+	close: "닫기",
+	xvvcursor_guide: "인증서 가져오기 레이어가 열렸습니다. 센스리더 사용자는 원활한 사용을 위해 가상커서를 해제해주시기 바랍니다. 가상커서는 현재 위치에서 엔터키를 입력하면 해제됩니다.",
+
+	blank: ""
+    }
+})();

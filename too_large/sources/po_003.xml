@@ -1,0 +1,391 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+<service>
+
+	<method name="getProgressList">
+		<![CDATA[
+			SELECT DT.PO_NO
+			   	  ,DT.ITEM_NO
+			   	  ,DT.DESCRIPTION_LOC
+				  ,DT.SPECIFICATION
+				  ,DT.MAKER_NAME
+				  ,DT.MAKER_CODE
+			   	  ,CONVERT_DATE(HD.PO_CREATE_DATE) AS PO_CREATE_DATE
+			   	  ,GETUSERNAMELOC(DT.HOUSE_CODE,HD.PURCHASER_ID) AS CHANGE_USER_NAME_LOC
+			   	  ,CONVERT_DATE(DT.RD_DATE) AS RD_DATE
+			   	  ,HD.CUR
+			   	  ,DT.UNIT_PRICE
+			   	  ,DT.ITEM_AMT
+			   	  ,DT.CUSTOMER_PRICE
+			   	  ,TRUNC (DT.CUSTOMER_PRICE*DT.ITEM_QTY) AS S_ITEM_AMT
+			   	  ,DT.DISCOUNT
+			   	  ,DT.UNIT_MEASURE
+			   	  ,DT.ITEM_QTY
+			   	  ,DT.GR_QTY
+			   	  ,DT.VENDOR_CODE
+			   	  ,GETVENDORNAME(DT.HOUSE_CODE,DT.VENDOR_CODE) AS VENDOR_NAME
+			   	  ,PRDT.PR_NO
+			   	  ,PRDT.UNIT_PRICE AS PR_PRICE
+			   	  ,PRDT.PR_AMT
+			   	  ,PRHD.CUST_CODE
+			   	  ,HD.COMPLETE_MARK
+			   	  ,HD.SUBJECT
+			   	  ,DT.QTA_NO
+			   	  ,DT.EXEC_NO
+			   	  ,HD.ORDER_NO
+			   	  ,PRHD.PR_TYPE
+			   	  ,CNHD.SUBJECT AS EXEC_NAME
+     			  ,PRHD.CUST_NAME
+     			  ,PRHD.WBS AS WBS_NO
+     			  ,PRHD.WBS_NAME AS WBS_NAME
+     			  ,(SELECT DEPT_NAME_LOC FROM ICOMOGDP WHERE DEPT = PRHD.PLANT_CODE) AS REQ_DEPT
+     			  ,CNDT.CONTRACT_FLAG
+     			  ,DECODE(ECT.STATUS, 'SD', ECT.CONT_SEQ , NULL) CONT_SEQ
+     			  ,DECODE(ECT.STATUS, 'SD', ECT.CONT_COUNT, NULL)  AS CONT_COUNT
+			FROM ICOYPODT DT, ICOYPOHD HD, ICOYPRDT PRDT,
+				 ICOYPRHD PRHD, ICOYCNDT CNDT, ICOYCNHD CNHD, ICOYECCT ECT, ICOYBDHD BDHD
+			WHERE DT.HOUSE_CODE 		= HD.HOUSE_CODE
+			AND   DT.PO_NO      		= HD.PO_NO
+			AND   PRHD.HOUSE_CODE 		= DT.HOUSE_CODE
+			AND   PRHD.PR_NO			= DT.PR_NO
+			AND   PRDT.HOUSE_CODE 		= DT.HOUSE_CODE
+			AND   PRDT.PR_NO			= DT.PR_NO
+			AND   PRDT.PR_SEQ			= DT.PR_SEQ
+			AND   CNDT.HOUSE_CODE 		= DT.HOUSE_CODE
+			AND   CNDT.EXEC_NO			= DT.EXEC_NO
+			AND   CNDT.EXEC_SEQ   		= DT.EXEC_SEQ
+			AND   CNDT.HOUSE_CODE 		= CNHD.HOUSE_CODE
+       		AND   CNDT.EXEC_NO    		= CNHD.EXEC_NO
+       		AND   ECT.BID_NO(+)         = DT.PO_NO
+       		AND   ECT.HOUSE_CODE(+)     = DT.HOUSE_CODE
+			AND   HD.STATUS <> 'D'
+			AND   DT.STATUS <> 'D'
+  			AND   DT.HOUSE_CODE			= '000' 
+			AND   CNDT.HOUSE_CODE		= BDHD.HOUSE_CODE (+)
+			AND   CNDT.RFQ_NO			= BDHD.BID_NO     (+)
+			AND   CNDT.RFQ_COUNT		= BDHD.BID_COUNT  (+)
+			AND   BDHD.BID_TYPE			= $S{bid_type_c}
+		]]>
+		<if test="${po_search_type}" operator="ne" value="po_date">
+			<![CDATA[
+					 AND   HD.PO_CREATE_DATE BETWEEN $S{from_date} 
+					 AND $S{to_date} 		
+			]]>
+		</if>
+		<if test="${po_search_type}" operator="eq" value="po_date">
+			<![CDATA[
+					 AND   DT.RD_DATE BETWEEN $S{from_date} 
+					 AND $S{to_date}
+			]]>
+		</if>
+		<![CDATA[
+			 AND getDeptCodeByID(HD.HOUSE_CODE,HD.COMPANY_CODE,HD.PURCHASER_ID) = $S{demand_dept}       
+			 <!-- AND PRDT.PURCHASER_ID		= $S{} -->				       
+			 AND DT.PO_NO          	LIKE '%' || $S{po_no} || '%'		
+			 AND DT.VENDOR_CODE    	= $S{vendor_code} 						
+			 AND DT.ITEM_NO        	= $S{item_no} 						
+			 AND DT.COMPLETE_MARK  	= $S{complete_mark} 						
+			 AND PRHD.ORDER_NO	  		= $S{order_no} 				
+			 AND PRDT.PURCHASER_ID		= $S{ctrl_person_id}	
+			 AND PRHD.CUST_NAME        LIKE '%' || $S{cust_name} || '%' 		 /* 고객사 */ 
+			 AND DT.WBS_NAME    	    LIKE '%' || $S{wbs_name} || '%' 		 /* 프로젝트명 */ 
+			 AND HD.SUBJECT    	    LIKE '%' || $S{po_name} || '%' 		 /* 발주명 */ 
+			 AND CNHD.SUBJECT    	    LIKE '%' || $S{ct_name} || '%' 		 /* 품의명 */ 
+			 AND DT.MAKER_NAME    	    LIKE '%' || $S{maker_name} || '%' 		 /* 메이커명 */ 
+			 AND PRHD.PLANT_CODE = $S{req_dept}   /* 요청부서 */  
+			ORDER BY HD.CHANGE_DATE DESC, DT.PO_NO ASC, DT.PO_SEQ ASC
+		]]>
+	</method>
+	
+	<method name="et_getMaintain">
+		<if test="${isThis}" operator="eq" value="true">
+            	 <![CDATA[
+            	 SELECT
+            	 	 GETICOMCODE2(HOUSE_CODE,'M080',CTRL_TYPE) AS  CTRL_TYPE_NAME
+            	 	,CTRL_CODE
+            	 	,CTRL_NAME_LOC
+            	 	,CTRL_NAME_ENG
+            	 	,GETUSERNAME(ICOMBACO.HOUSE_CODE, ICOMBACO.ADD_USER_ID, 'LOC') AS ADD_USER_NAME_LOC
+            	 	,GETUSERNAME(ICOMBACO.HOUSE_CODE, ICOMBACO.CHANGE_USER_ID, 'LOC') AS CHANGE_USER_NAME_LOC
+            	 	,CTRL_TYPE
+            	 	,CUST_CODE
+            	 	,getDeptNameLoc(HOUSE_CODE,'#company_code#',SALES_USER_DEPT) AS SALES_USER_DEPT_CODE
+            	 	,SALES_USER_DEPT
+            	 	,getCustNameLoc(CUST_CODE) AS CUST_CODE_NAME
+            	 FROM ICOMBACO
+            	 WHERE STATUS != 'D'
+            	 <OPT=S,S> AND CTRL_TYPE = ? </OPT>
+            	 <OPT=F,S> AND HOUSE_CODE = ? </OPT>
+            	 <OPT=F,S> AND COMPANY_CODE = ? </OPT>
+            	 <OPT=S,S> AND CTRL_CODE LIKE '%' || ? || '%' </OPT>
+            	 ORDER BY CTRL_CODE
+            	 ]]>
+		</if>
+		<if test="${isThis2}" operator="eq" value="true">
+        		 <![CDATA[
+        		 SELECT
+        		 	 GETICOMCODE2(HOUSE_CODE,'M080',CTRL_TYPE) AS  CTRL_TYPE_NAME
+        		 	,CTRL_CODE
+        		 	,CTRL_NAME_LOC
+        		 	,CTRL_NAME_ENG
+            	 	,GETUSERNAME(ICOMBACO.HOUSE_CODE, ICOMBACO.ADD_USER_ID, 'LOC') AS ADD_USER_NAME_LOC
+            	 	,GETUSERNAME(ICOMBACO.HOUSE_CODE, ICOMBACO.CHANGE_USER_ID, 'LOC') AS CHANGE_USER_NAME_LOC
+        		 	,CTRL_TYPE
+        		 	,CUST_CODE
+            	 	,SALES_USER_DEPT
+        		 FROM ICOMBACO
+        		 WHERE STATUS != 'D'
+        		 <OPT=S,S> AND CTRL_TYPE = ? </OPT>
+        		 <OPT=F,S> AND HOUSE_CODE = ? </OPT>
+        		 <OPT=F,S> AND COMPANY_CODE = ? </OPT>
+        		 <OPT=S,S> AND CTRL_CODE LIKE '%' || ? || '%' </OPT>
+        		 ]]>
+		</if>
+	</method>
+	<method name="et_setUpdate">
+            	 <![CDATA[
+             UPDATE ICOMBACO
+             SET      STATUS               = '#status#'
+                     ,CHANGE_DATE          = '#change_date#'
+                     ,CHANGE_TIME          = '#change_time#'
+                     ,CTRL_NAME_LOC        = ?
+                     ,CTRL_NAME_ENG        = ?
+                     ,CUST_CODE            = ?
+                     ,SALES_USER_DEPT      = ?
+                     ,CHANGE_USER_ID       = '#user_id#'
+             WHERE HOUSE_CODE   = ?
+               AND COMPANY_CODE = ?
+               AND CTRL_TYPE    = ?
+               AND CTRL_CODE    = ?
+               ]]>
+	</method>
+	<method name="et_confirmBACO">
+            	 <![CDATA[
+             SELECT COUNT(*)
+             FROM ICOMBACO
+             WHERE
+             <OPT=F,S> HOUSE_CODE = ? </OPT>
+             <OPT=F,S> AND COMPANY_CODE = ? </OPT>
+             <OPT=F,S> AND CTRL_TYPE = ? </OPT>
+             <OPT=F,S> AND CTRL_CODE = ? </OPT>
+               ]]>
+	</method>
+	<method name="et_setInsert">
+            	 <![CDATA[
+										 INSERT INTO ICOMBACO
+                     (
+                     	  HOUSE_CODE
+                     	, COMPANY_CODE
+                     	, CTRL_TYPE
+                     	, CTRL_CODE
+                     	, CTRL_NAME_LOC
+                     	, CTRL_NAME_ENG
+                     	, CUST_CODE
+                     	, SALES_USER_DEPT
+                     	, ADD_USER_ID
+                     	, CHANGE_USER_ID
+                     	, STATUS
+                     	, ADD_DATE
+                     	, ADD_TIME
+                     	, CHANGE_DATE
+                     	, CHANGE_TIME
+                     )
+                     VALUES
+                     (
+                     	  ?						--HOUSE_CODE
+                     	, ?                     --COMPANY_CODE
+                     	, ?                     --CTRL_TYPE
+                     	, ?                     --CTRL_CODE
+                     	, ?                     --CTRL_NAME_LOC
+                     	, ?						--CTRL_NAME_ENG
+                     	, ?						--CUST_CODE
+                     	, ?                     --SALES_USER_DEPT
+                     	, '#user_id#'         --ADD_USER_ID
+                     	, '#user_id#'         --CHANGE_USER_ID
+                     	, '#status#'          --STATUS
+                     	, '#add_date#'        --ADD_DATE
+                     	, '#add_time#'        --ADD_TIME
+                     	, '#add_date#'        --CHANGE_DATE
+                     	, '#add_time#'        --CHANGE_TIME
+                     )
+               ]]>
+	</method>
+	<method name="et_setDelete1">
+            	 <![CDATA[
+            INSERT INTO ICOMDLOG
+            VALUES ( '#change_date#', '#change_time#','#user_id#','ICOMBACO', ?  )
+               ]]>
+	</method>
+    <method name="et_setDelete2">
+            	 <![CDATA[
+             DELETE FROM ICOMBACO
+             WHERE HOUSE_CODE   = ?
+               AND COMPANY_CODE = ?
+               AND CTRL_TYPE    = ?
+               AND CTRL_CODE    = ?
+               ]]>
+	</method>
+    <method name="et_getCount">
+            	 <![CDATA[
+             SELECT COUNT(*) AS CNT FROM ICOMBACP
+             WHERE HOUSE_CODE = '#house_code#'
+             <OPT=F,S> AND COMPANY_CODE = ? </OPT>
+             <OPT=F,S> AND CTRL_TYPE = ? </OPT>
+             <OPT=F,S> AND CTRL_CODE = ? </OPT>
+               ]]>
+	</method>
+    <method name="et_getMaintain1">
+            	 <![CDATA[
+             SELECT
+                   GETICOMCODE2(HOUSE_CODE,'M080',CTRL_TYPE)    AS  CTRL_TYPE_NAME
+                 , CTRL_CODE
+                 , GETCTRLCODENAME(HOUSE_CODE,COMPANY_CODE,CTRL_TYPE,CTRL_CODE)    AS  CTRL_CODE_NAME
+                 , CTRL_PERSON_ID
+                 , GETUSERNAME(HOUSE_CODE, CTRL_PERSON_ID, 'LOC') AS CTRL_PERSON_NAME_LOC
+                 , GETADDRATTR(HOUSE_CODE, CTRL_PERSON_ID, '3', 'PHONE_NO1') AS PHONE_NO
+                 , COMPANY_CODE
+                 , CTRL_TYPE
+             FROM ICOMBACP
+             WHERE    STATUS         <> 'D'
+             <OPT=F,S>    AND  HOUSE_CODE     = ?     </OPT>
+             <OPT=F,S>    AND  COMPANY_CODE   = ?     </OPT>
+             <OPT=S,S>    AND  CTRL_CODE      = ?     </OPT>
+             <OPT=S,S>    AND  CTRL_TYPE      = ?     </OPT>
+             <OPT=S,S>    AND  CTRL_PERSON_ID = ?     </OPT>
+               ]]>
+
+                       <if test="${menu_type}" operator="ne" value="${menu_type_admin}">
+			AND NOT EXISTS (SELECT *
+							  FROM ICOMLUSR
+							 WHERE HOUSE_CODE = ICOMBACP.HOUSE_CODE
+							   AND USER_ID = ICOMBACP.CTRL_PERSON_ID
+							   AND NVL(MENU_PROFILE_CODE, ' ') = '#menu_type_admin#')
+		</if>
+
+
+             ORDER  BY  COMPANY_CODE, CTRL_CODE, CTRL_TYPE, CTRL_PERSON_ID, CTRL_PERSON_NAME_LOC DESC
+	</method>
+ <method name="chkBACPCnt">
+            	 <![CDATA[
+             SELECT  COUNT(*)  FROM ICOMBACP
+             WHERE  STATUS <> 'D'
+             <OPT=F,S>    AND  HOUSE_CODE     =  ?   </OPT>
+             <OPT=F,S>    AND  COMPANY_CODE   =  ?   </OPT>
+             <OPT=F,S>    AND  CTRL_CODE      =  ?   </OPT>
+             <OPT=F,S>    AND  CTRL_TYPE      =  ?   </OPT>
+             <OPT=F,S>    AND  CTRL_PERSON_ID =  ?   </OPT>
+               ]]>
+	</method>
+
+ <method name="et_setInsert1">
+            	 <![CDATA[
+             INSERT INTO ICOMBACP
+             (
+             	  HOUSE_CODE
+             	, COMPANY_CODE
+             	, CTRL_CODE
+             	, CTRL_TYPE
+             	, CTRL_PERSON_ID
+             	, ADD_USER_ID
+             	, STATUS
+             	, ADD_DATE
+             	, ADD_TIME
+             	, CHANGE_USER_ID
+             	, CHANGE_DATE
+             	, CHANGE_TIME
+             )
+             VALUES
+             (
+             	  ?                  --HOUSE_CODE
+             	, ?                 --COMPANY_CODE
+             	, ?                 --CTRL_CODE
+             	, ?                 --CTRL_TYPE
+             	, ?                 --CTRL_PERSON_ID
+             	, '#user_id#'     --ADD_USER_ID
+             	, '#status#'      --STATUS
+             	, '#add_date#'    --ADD_DATE
+             	, '#add_time#'    --ADD_TIME
+             	, '#user_id#'     --CHANGE_USER_ID
+             	, '#add_date#'    --CHANGE_DATE
+             	, '#add_time#'    --CHANGE_TIME
+             )
+               ]]>
+	</method>
+
+ <method name="et_setDelete13">
+            	 <![CDATA[
+           DELETE FROM ICOMBACP
+             WHERE HOUSE_CODE	= ?
+               AND COMPANY_CODE	= ?
+               AND CTRL_TYPE		= ?
+               AND CTRL_CODE		= ?
+               AND CTRL_PERSON_ID	= ?
+               ]]>
+	</method>
+ 	<method name="et_getUserInfo">
+		<![CDATA[
+	SELECT COMPANY_CODE, USER_NAME_LOC, USER_ID, POSITION,
+	DEPT, DEPT_NAME_LOC, PHONE_NO
+	FROM USER_POPUP_VW
+	<OPT=F,S>WHERE HOUSE_CODE = ?  </OPT>
+	<OPT=F,S>AND COMPANY_CODE = ?  </OPT>
+	<OPT=S,S>AND USER_ID = ?   </OPT>
+	<OPT=S,S>AND USER_NAME_LOC LIKE '%' || ? || '%'  </OPT>
+	<OPT=S,S>AND DEPT = ?  </OPT>
+		]]>
+	</method>
+
+ 	<method name="et_getCount2">
+		select count(*)
+		  from icombacp bacp
+		where bacp.house_code      = '#house_code#'
+		   and bacp.company_code    = '#company_code#'
+		<if test="${flag}" operator="eq" value="1">
+			and bacp.ctrl_type       = '#ctrl_type#'
+		</if>
+		<if test="${flag}" operator="ne" value="1">
+			and bacp.ctrl_type in ( '#ctrl_type#' )
+		</if>
+		and bacp.ctrl_person_id  = '#user_id#'
+	</method>
+
+ 	<method name="">
+		<![CDATA[
+
+		]]>
+	</method>
+
+ 	<method name="">
+		<![CDATA[
+
+		]]>
+	</method>
+
+ 	<method name="">
+		<![CDATA[
+
+		]]>
+	</method>
+
+ 	<method name="">
+		<![CDATA[
+
+		]]>
+	</method>
+
+ 	<method name="">
+		<![CDATA[
+
+		]]>
+	</method>
+
+ 	<method name="">
+		<![CDATA[
+
+		]]>
+	</method>
+
+
+
+
+
+</service>

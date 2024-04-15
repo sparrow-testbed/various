@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<service>
+	<method name="deleteSfileInfo">
+		DELETE FROM
+			SFILE
+		WHERE
+			DOC_NO = ${DOC_NO}
+		AND
+			DOC_SEQ = ${DOC_SEQ}
+	</method>
+</service>

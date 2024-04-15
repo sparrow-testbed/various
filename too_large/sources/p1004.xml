@@ -1,0 +1,1699 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<service>
+
+<method name="et_getRfqVedorList2">
+	SELECT																						
+		DISTINCT
+		VNGL.VENDOR_CODE,																		
+		VNGL.CREDIT_RATING AS CREDIT_GRADE,                                                 	
+		VNGL.VENDOR_NAME_LOC,                                                              	
+		GETADDRATTR(VNGL.HOUSE_CODE, VNGL.VENDOR_CODE, '2', 'HOMEPAGE') AS SITE_NAME,      	
+		GETADDRATTR(VNGL.HOUSE_CODE, VNGL.VENDOR_CODE, '2', 'PHONE_NO1') AS PHONE_NO1,     	
+		VNGL.SEARCH_KEY,                                                                   	
+		VNGL.PURCHASE_BLOCK_FLAG,                                                          	
+		(
+			CASE
+				VNGL.VENDOR_COND
+			WHEN
+				'R' THEN 'Y'
+			WHEN
+				'P' THEN 'N'
+			END
+		) AS VENDOR_COND,    	
+		VNGL.IRS_NO,                                                                       	
+		(
+			SELECT
+				USER_NAME
+			FROM
+				ICOMVNCP                                                    	
+			WHERE
+				HOUSE_CODE  = VNGL.HOUSE_CODE                                              	
+			AND
+				VENDOR_CODE = VNGL.VENDOR_CODE                                              
+			AND
+				SEQ         = '1'
+		) AS SALES_PERSON,                                        
+		GETICOMCODE2(VNGL.HOUSE_CODE, 'M076', VNGL.VENDOR_TYPE) AS VENDOR_TYPE_LOC,
+		GETICOMCODE2(VNGL.HOUSE_CODE, 'M634', VNGL.CLASS_GRADE) AS CLASS_GRADE,
+		CLASS_SCORE,
+        DECODE(NVL(C.TEXT1,'-'),'-','','부도') AS BANKRUPTCY_NM 		
+	FROM	                                                                                	
+		(
+			SELECT                                                       		                    
+				(
+					SELECT
+						DISTINCT PARENT_SG_REFITEM                             		                      	
+					FROM
+						SSGGL                                  			                        
+					WHERE
+						HOUSE_CODE = B.HOUSE_CODE
+					AND
+						SG_REFITEM = B.PARENT_SG_REFITEM
+					AND 
+						USE_FLAG = 'Y'
+					AND
+						NVL(DEL_FLAG, 'N') = 'N'		
+				) AS PARENT1,		                        
+				B.PARENT_SG_REFITEM AS PARENT2,                  		                            
+				A.SG_REFITEM AS SG,                                  		                        
+				A.VENDOR_CODE,
+				A.HOUSE_CODE                                                     	
+			FROM
+				SSGVN A,
+				SSGGL B          							                    
+			WHERE
+				A.HOUSE_CODE = B.HOUSE_CODE									                    
+			AND
+				A.SG_REFITEM = B.SG_REFITEM                          		                    
+			AND
+				A.HOUSE_CODE = ${houseCode}    						                            
+			AND
+				B.LEVEL_COUNT = '3'                                  		                    
+			AND
+				A.REGISTRY_FLAG = 'Y'                      					                    
+			AND
+				A.APPLY_FLAG = 'Y'                                      	                    
+		) A,
+		ICOMVNGL VNGL, 
+	    (
+	     SELECT A.PSBZ_NO, B.TEXT1
+	     FROM   EPSBADINFO A, (SELECT CODE, TEXT1
+	     FROM   SCODE
+	     WHERE  HOUSE_CODE           = '000'
+	       AND  TYPE                 = 'M1014'
+	       AND  NVL(DEL_FLAG,'N')   != 'Y') B
+	    WHERE A.ASOC_RGRSN_CD = B.CODE
+	    ) C
+	WHERE
+		VNGL.STATUS	IN ('C', 'R')
+	AND VNGL.HOUSE_CODE = ${houseCode}
+	AND VNGL.VENDOR_CODE LIKE '%' || $S{VENDOR_CODE} || '%'
+	AND UPPER(VNGL.VENDOR_NAME_LOC) like '%' || $S{MAKER_NAME} || '%'
+	AND A.HOUSE_CODE(+) = VNGL.HOUSE_CODE
+	AND A.VENDOR_CODE(+) = VNGL.VENDOR_CODE
+	AND VNGL.IRS_NO = C.PSBZ_NO(+)
+	AND A.PARENT1 = $S{materialType}
+	AND A.PARENT2 = $S{materialCtrlType}
+	AND A.SG = $S{materialClass1}
+	AND VNGL.VENDOR_TYPE = $S{vendorType}
+	AND VNGL.CLASS_GRADE = $S{creditRating}
+	AND VNGL.PURCHASE_BLOCK_FLAG IN ('N','K')
+	AND VNGL.JOB_STATUS = 'E'	
+	ORDER BY VNGL.VENDOR_CODE, VNGL.VENDOR_NAME_LOC		
+</method>
+	
+	<method name="getRfqList">
+	<![CDATA[
+			 SELECT                                                                                                                          
+			 		 RFQ_NO                                                                                                                  
+			 		,RFQ_COUNT                                                                                                               
+			 		,GETRFQLISTSTATUS_TEXT(H.HOUSE_CODE, GETRFQLISTSTATUS(H.HOUSE_CODE, H.RFQ_NO, H.RFQ_COUNT, 'TEXT')) AS RFQ_FLAG_TEXT                                          
+			 		,GETICOMCODE2(H.HOUSE_CODE, 'M112', H.RFQ_TYPE) AS RFQ_TYPE                                                              
+			 		,H.RFQ_CLOSE_DATE || H.RFQ_CLOSE_TIME                                                                                    
+			 		,(SELECT /*+ INDEX(ICOYRQDT ICOYRQDT_UK) */
+			 				COUNT(*) 
+			 		  FROM ICOYRQDT                                                                                          
+			 		  WHERE HOUSE_CODE = H.HOUSE_CODE                                                                                        
+			 		  AND   RFQ_NO     = H.RFQ_NO                                                                                            
+			 		  AND   RFQ_COUNT  = H.RFQ_COUNT                                                                                         
+			 		  AND   STATUS IN ('C', 'R')) AS ITEM_CNT                                                                                
+			 		,H.CHANGE_DATE                                                                                                           
+			 		,H.SUBJECT                                                                                                               
+			 		,H.RFQ_CLOSE_DATE || H.RFQ_CLOSE_TIME                                                                                      
+			 		,( SUBSTR(H.RFQ_CLOSE_DATE||H.RFQ_CLOSE_TIME,0,4) || '/' || SUBSTR(H.RFQ_CLOSE_DATE||H.RFQ_CLOSE_TIME,5,2)  || '/'  ||  
+			 			SUBSTR(H.RFQ_CLOSE_DATE||H.RFQ_CLOSE_TIME,7,2) || '  ' || SUBSTR(H.RFQ_CLOSE_DATE||H.RFQ_CLOSE_TIME,9,2)  || ':'     
+			 			|| SUBSTR(H.RFQ_CLOSE_DATE || H.RFQ_CLOSE_TIME,11,2) )                                                                 
+			 			AS RFQ_CLOSE_TIME                                                                                                    
+			 		,GETRFQVIEWCNT(H.HOUSE_CODE, H.RFQ_NO, H.RFQ_COUNT) AS VIEW_CNT                                                          
+			 		,H.BID_COUNT                                                                                                             
+			 		,GETRQSEVENDOR_CNT(H.HOUSE_CODE, H.RFQ_NO, H.RFQ_COUNT ) AS VENDOR_CNT 
+			 		,(SELECT COUNT(DISTINCT VENDOR_CODE) FROM ICOYRQSE
+				        WHERE HOUSE_CODE = H.HOUSE_CODE
+				          AND RFQ_NO = H.RFQ_NO
+				          AND RFQ_COUNT = H.RFQ_COUNT
+				          AND BID_FLAG = 'N'
+				          AND CONFIRM_FLAG = 'R'
+				      ) AS RFQ_GIVEUP_CNT                                                  
+			 		,NVL(getrqanData(H.HOUSE_CODE, H.RFQ_NO, H.RFQ_COUNT, 'ANNOUNCE_DATE'), 'N') AS ANNOUNCE_DATE                       
+			 		, '' as DEPT_NAME                                            
+			 		,GETUSERNAME(H.HOUSE_CODE, H.CHANGE_USER_ID, 'LOC') AS CHANGE_USER_NAME_LOC                                              
+			 		,GETCTRLCODENAME(H.HOUSE_CODE, H.COMPANY_CODE, 'P', H.CTRL_CODE) AS CTRL_CODE_NAME                                       
+			 		,H.CHANGE_USER_ID                                                                                                        
+			 		,getDeptCODEByID(H.HOUSE_CODE, H.COMPANY_CODE, H.CHANGE_USER_ID) AS CHANGE_DEPT_CODE                                     
+			 		,H.CREATE_TYPE                                                                                                           
+			 		,GETRFQLISTSTATUS(H.HOUSE_CODE, H.RFQ_NO, H.RFQ_COUNT, 'CODE') AS RFQ_FLAG                                               
+			 		,H.CTRL_CODE    
+			 		,DECODE((SELECT REQ_TYPE FROM ICOYPRHD WHERE HOUSE_CODE = H.HOUSE_CODE AND PR_NO = (SELECT PR_NO FROM ICOYRQDT WHERE HOUSE_CODE = H.HOUSE_CODE AND RFQ_NO = H.RFQ_NO AND RFQ_COUNT = H.RFQ_COUNT AND ROWNUM = 1) AND ROWNUM = 1),'P','구매요청','사전지원') AS REQ_TYPE
+			 		,H.RFQ_TYPE AS RFQ_TYPE_CODE   
+			 		,NVL((SELECT 'N' FROM DUAL WHERE EXISTS (
+		          		  		SELECT 1 FROM ICOYCNDT
+		          		  		 WHERE  HOUSE_CODE = H.HOUSE_CODE
+		          		  		   AND RFQ_NO = H.RFQ_NO
+		          		  		   AND RFQ_COUNT = H.RFQ_COUNT
+		          		  		   AND STATUS != 'D'))
+		          		   , 'Y') AS CAN_CANCEL_BIDDING  			 		                                                                                                      
+			 FROM ICOYRQHD H                                                                                                                 
+			  WHERE H.STATUS IN ('C', 'R')                                                                                                    
+			     AND   H.HOUSE_CODE = ${session.HOUSE_CODE}                                                                                       
+			 AND   H.CHANGE_DATE  BETWEEN   $S{start_change_date} 
+			 AND  $S{end_change_date}                                                       
+			 AND   H.RFQ_NO            =    $S{rfq_no}                                                                               
+			 AND   H.SUBJECT LIKE '%' || $S{subject} || '%'                                                                               
+			 AND   H.ADD_USER_ID = $S{ctrl_person_id}  
+			                        
+	]]>
+			<if test="${rfq_typeNVL}" operator="eq" value="true">
+			
+			</if>
+			<if test="${rfq_typeNVL}" operator="eq" value="false">
+				AND   H.create_type = '#rfq_type#' 
+			</if>
+			<if test="${rfq_flag}" operator="eq" value="N">
+				AND  (H.RFQ_FLAG	= 'N' OR H.SIGN_STATUS IN ('T','C'))
+			</if>
+			<if test="${rfq_flag}" operator="eq" value="R">
+				 AND  H.SIGN_STATUS =	'R' 
+			</if>
+			
+			<if test="${rfq_flag}" operator="eq" value="G">
+			<![CDATA[
+				 AND  H.SIGN_STATUS =	'E'                                                                                                      
+			 AND  GETRFQLISTSTATUS(H.HOUSE_CODE, H.RFQ_NO, H.RFQ_COUNT, 'TEXT') = 'G'                                                                                                        
+			 AND  TO_NUMBER(TO_CHAR(SYSDATE,'YYYYMMDD') || SUBSTR(TO_CHAR(SYSDATE, 'HH24MISS'), 1, 6)) < TO_NUMBER(H.RFQ_CLOSE_DATE || rpad(H.RFQ_CLOSE_TIME,6,'0'))
+			 ]]>              
+			</if>
+			<if test="${rfq_flag}" operator="eq" value="P">
+			<![CDATA[
+				 AND  H.SIGN_STATUS =	'E'                                                                                                      
+			 AND  GETRFQLISTSTATUS(H.HOUSE_CODE, H.RFQ_NO, H.RFQ_COUNT, 'TEXT') = 'P'                                                                                                        
+			 AND  TO_NUMBER(TO_CHAR(SYSDATE,'YYYYMMDD') || SUBSTR(TO_CHAR(SYSDATE, 'HH24MISS'), 1, 6))  >= TO_NUMBER(H.RFQ_CLOSE_DATE || rpad(H.RFQ_CLOSE_TIME,6,'0'))
+			 ]]>           
+			</if>
+			<if test="${rfq_flag}" operator="eq" value="C">
+				 AND  H.SIGN_STATUS =	'E'                                                                                                      
+			 AND  GETRFQLISTSTATUS(H.HOUSE_CODE, H.RFQ_NO, H.RFQ_COUNT, 'TEXT') = 'C'
+			 AND  TO_NUMBER(TO_CHAR(SYSDATE,'YYYYMMDD') || SUBSTR(TO_CHAR(SYSDATE, 'HH24MISS'), 1, 6))  >= TO_NUMBER(H.RFQ_CLOSE_DATE || rpad(H.RFQ_CLOSE_TIME,6,'0'))
+			</if>
+			<if test="${rfq_flag}" operator="eq" value="T">
+				 AND  H.SIGN_STATUS =	'E'                                                                                                      
+			 AND  GETRFQLISTSTATUS(H.HOUSE_CODE, H.RFQ_NO, H.RFQ_COUNT, 'TEXT') = 'T'
+			 AND  TO_NUMBER(TO_CHAR(SYSDATE,'YYYYMMDD') || SUBSTR(TO_CHAR(SYSDATE, 'HH24MISS'), 1, 6))  >= TO_NUMBER(H.RFQ_CLOSE_DATE || rpad(H.RFQ_CLOSE_TIME,6,'0'))
+			</if>
+			<!-- <if test="${flag}" operator="eq" value="false"> -->
+	   			 ORDER    BY H.RFQ_NO DESC, H.RFQ_COUNT DESC                                                                                                       
+			<!-- </if> -->   			                                                   
+	</method>
+	<method name="et_getRfqInterList">
+	<![CDATA[
+			 SELECT                                                                                                                          
+			 		 H.RFQ_NO                                                                                                                  
+			 		,H.RFQ_COUNT                                                                                                               
+			 		,GETRFQLISTSTATUS_TEXT(H.HOUSE_CODE, GETRFQLISTSTATUS(H.HOUSE_CODE, H.RFQ_NO, H.RFQ_COUNT, 'TEXT')) AS RFQ_FLAG_TEXT                                          
+			 		,GETICOMCODE2(H.HOUSE_CODE, 'M112', H.RFQ_TYPE) AS RFQ_TYPE                                                              
+			 		,H.RFQ_CLOSE_DATE || H.RFQ_CLOSE_TIME                                                                                    
+			 		,(SELECT COUNT(*) FROM ICOYRQDT                                                                                          
+			 		  WHERE HOUSE_CODE = H.HOUSE_CODE                                                                                        
+			 		  AND   RFQ_NO     = H.RFQ_NO                                                                                            
+			 		  AND   RFQ_COUNT  = H.RFQ_COUNT                                                                                         
+			 		  AND   STATUS IN ('C', 'R')) AS ITEM_CNT                                                                                
+			 		,H.CHANGE_DATE                                                                                                           
+			 		,H.SUBJECT                                                                                                               
+			 		,H.RFQ_CLOSE_DATE || H.RFQ_CLOSE_TIME                                                                                      
+			 		,( SUBSTR(H.RFQ_CLOSE_DATE||H.RFQ_CLOSE_TIME,0,4) || '/' || SUBSTR(H.RFQ_CLOSE_DATE||H.RFQ_CLOSE_TIME,5,2)  || '/'  ||  
+			 			SUBSTR(H.RFQ_CLOSE_DATE||H.RFQ_CLOSE_TIME,7,2) || '  ' || SUBSTR(H.RFQ_CLOSE_DATE||H.RFQ_CLOSE_TIME,9,2)  || ':'     
+			 			|| SUBSTR(H.RFQ_CLOSE_DATE || H.RFQ_CLOSE_TIME,11,2) )                                                                 
+			 			AS RFQ_CLOSE_TIME                                                                                                    
+			 		,GETRFQVIEWCNT(H.HOUSE_CODE, H.RFQ_NO, H.RFQ_COUNT) AS VIEW_CNT                                                          
+			 		,H.BID_COUNT                                                                                                             
+			 		,GETRQSEVENDOR_CNT(H.HOUSE_CODE, H.RFQ_NO, H.RFQ_COUNT ) AS VENDOR_CNT                                                   
+			 		,NVL(getrqanData(H.HOUSE_CODE, H.RFQ_NO, H.RFQ_COUNT, 'ANNOUNCE_DATE'), 'N') AS ANNOUNCE_DATE                       
+			 		,getDeptNAMEByID(H.HOUSE_CODE, H.COMPANY_CODE, H.CHANGE_USER_ID) AS DEPT_NAME                                            
+			 		,GETUSERNAME(H.HOUSE_CODE, H.CHANGE_USER_ID, 'LOC') AS CHANGE_USER_NAME_LOC                                              
+			 		,GETCTRLCODENAME(H.HOUSE_CODE, H.COMPANY_CODE, 'P', H.CTRL_CODE) AS CTRL_CODE_NAME                                       
+			 		,H.CHANGE_USER_ID                                                                                                        
+			 		,getDeptCODEByID(H.HOUSE_CODE, H.COMPANY_CODE, H.CHANGE_USER_ID) AS CHANGE_DEPT_CODE                                     
+			 		,H.CREATE_TYPE                                                                                                           
+			 		,GETRFQLISTSTATUS(H.HOUSE_CODE, H.RFQ_NO, H.RFQ_COUNT, 'CODE') AS RFQ_FLAG                                               
+			 		,H.CTRL_CODE
+			 		, (SELECT DECODE(COUNT(*), 0, '선정완료', '진행중') FROM ICOYQTDT WHERE HOUSE_CODE = D.HOUSE_CODE AND RFQ_NO = D.RFQ_NO AND RFQ_COUNT = D.RFQ_COUNT AND HUMAN_NO IS NOT NULL AND INTERVIEW_RESULT IS NULL) INTERVIEW_STATUS                                                                                                             
+			 FROM ICOYRQHD H, ICOYRQDT D, ICOYPRHD P                                                                                                                 
+			 WHERE H.HOUSE_CODE = D.HOUSE_CODE
+			   AND H.RFQ_NO     = D.RFQ_NO
+			   AND H.RFQ_COUNT  = D.RFQ_COUNT
+			   AND D.RFQ_SEQ    = '000001'
+			   AND D.HOUSE_CODE = P.HOUSE_CODE
+			   AND D.PR_NO      = P.PR_NO
+			   AND H.STATUS IN ('C', 'R')                                                                                                    
+			 <OPT=F,S> AND   H.HOUSE_CODE = ? </OPT>                                                                                         
+			 <OPT=S,S> AND   H.CHANGE_DATE  BETWEEN   ?	</OPT> <OPT=S,S> AND  ?	</OPT>                                                       
+			 <OPT=S,S> AND   H.RFQ_NO            =    ?	</OPT>     
+			 <OPT=S,S> AND   H.SUBJECT LIKE '%' || ? || '%' </OPT>   
+			 
+			 AND  H.SIGN_STATUS = 'E'
+			 AND  (H.RFQ_FLAG = 'P' OR H.RFQ_FLAG = 'C')
+			 AND  TO_NUMBER(TO_CHAR(SYSDATE,'YYYYMMDD') || SUBSTR(TO_CHAR(SYSDATE, 'HH24MISS'), 1, 6))  >= TO_NUMBER(H.RFQ_CLOSE_DATE || H.RFQ_CLOSE_TIME)
+			                                                                             
+ 			 AND  P.PROJECT_PM = '#pm_id#'  
+ 			 AND  H.EVAL_FLAG IN ('I', 'S') 	/* [I]인터뷰선정진행중, [S]인터뷰선정완료    */
+ 			 AND  EXISTS (SELECT HUMAN_NO FROM ICOYQTDT WHERE HOUSE_CODE = D.HOUSE_CODE AND RFQ_NO = D.RFQ_NO AND RFQ_COUNT = D.RFQ_COUNT AND RFQ_SEQ = D.RFQ_SEQ AND HUMAN_NO IS NOT NULL)                                                                                                   
+   			 ORDER    BY H.RFQ_NO DESC, H.RFQ_COUNT DESC      
+   		]]>                                                                                                 
+	</method>
+	
+	
+	<method name="et_getRfqHDDisplay">
+	<![CDATA[
+		  SELECT                                                                                                                         
+				 	   SUBJECT                                                                                                                  
+				 	  ,( SUBSTR(H.RFQ_CLOSE_DATE||H.RFQ_CLOSE_TIME,0,4) || '/'  || SUBSTR(H.RFQ_CLOSE_DATE||H.RFQ_CLOSE_TIME,5,2)  || '/'  ||   
+				          SUBSTR(H.RFQ_CLOSE_DATE||H.RFQ_CLOSE_TIME,7,2) || '  ' || SUBSTR(H.RFQ_CLOSE_DATE||H.RFQ_CLOSE_TIME,9,2)  || ':'      
+				 		 || SUBSTR(H.RFQ_CLOSE_DATE||H.RFQ_CLOSE_TIME,11,2) )  AS RFQ_CLOSE_DATE_VIEW                                           
+				       ,RFQ_CLOSE_DATE                                                                                                          
+				       ,RFQ_CLOSE_TIME                                                                                                          
+				       ,DELY_TERMS                                                                                                              
+				       ,GETICOMCODE2(HOUSE_CODE, 'M009', DELY_TERMS) AS DELY_TERMS_TEXT                                                         
+				       ,PAY_TERMS                                                                                                               
+				       ,GETICOMCODE2(HOUSE_CODE, 'M010', PAY_TERMS) AS PAY_TERMS_TEXT                                                           
+				       ,CUR                                                                                                                     
+				       ,SETTLE_TYPE                                                                                                             
+				       ,GETICOMCODE2(HOUSE_CODE, 'M149', SETTLE_TYPE) AS SETTLE_TYPE_TEXT                                                       
+				       ,TERM_CHANGE_FLAG                                                                                                        
+				       ,(SELECT TO_CHAR(VALID_FROM_DATE,'YYYY/MM/DD') VALID_FROM_DATE                                                                                                 
+				         FROM   ICOYRQDT                                                                                                        
+				         WHERE  HOUSE_CODE = H.HOUSE_CODE                                                                                       
+				         AND    RFQ_NO     = H.RFQ_NO                                                                                           
+				         AND    RFQ_COUNT  = H.RFQ_COUNT
+				         AND    rownum < 2                                                                                        
+				         ) AS VALID_FROM_DATE                                                                                  
+				       ,(SELECT TO_CHAR(VALID_TO_DATE,'YYYY/MM/DD') VALID_TO_DATE                                                                                                   
+				         FROM   ICOYRQDT                                                                                                        
+				         WHERE  HOUSE_CODE = H.HOUSE_CODE                                                                                       
+				         AND    RFQ_NO     = H.RFQ_NO                                                                                           
+				         AND    RFQ_COUNT  = H.RFQ_COUNT
+				         AND    rownum < 2                                                                                        
+				         ) AS VALID_TO_DATE                                                                                    
+				       ,RFQ_TYPE                                                                                                                
+				       ,GETICOMCODE2(HOUSE_CODE, 'M112', RFQ_TYPE) AS RFQ_TYPE_TEXT                                                             
+				       ,PRICE_TYPE                                                                                                              
+				       ,GETICOMCODE2(HOUSE_CODE, 'M059', PRICE_TYPE) AS PRICE_TYPE_TEXT                                                         
+				       ,SHIPPING_METHOD                                                                                                         
+				       ,GETICOMCODE2(HOUSE_CODE, 'M015', SHIPPING_METHOD) AS SHIPPING_METHOD_TEXT                                               
+				       ,USANCE_DAYS                                                                                                             
+				       ,DOM_EXP_FLAG                                                                                                            
+				       ,GETICOMCODE2(HOUSE_CODE, 'M032', DOM_EXP_FLAG) AS DOM_EXP_FLAG_TEXT                                                     
+				       ,ARRIVAL_PORT                                                                                                            
+				       ,ARRIVAL_PORT_NAME                                                                                                       
+				       ,(SELECT SHIPPER_TYPE                                                                                                    
+				         FROM   ICOYRQDT                                                                                                        
+				         WHERE  HOUSE_CODE = H.HOUSE_CODE                                                                                       
+				         AND    RFQ_NO     = H.RFQ_NO                                                                                           
+				         AND    RFQ_COUNT  = H.RFQ_COUNT
+				         AND    rownum < 2                                                                                        
+				         ) AS SHIPPER_TYPE                                                                                     
+				       ,(SELECT GETICOMCODE2(HOUSE_CODE, 'M025', SHIPPER_TYPE)                                                                  
+				         FROM   ICOYRQDT                                                                                                        
+				         WHERE  HOUSE_CODE = H.HOUSE_CODE                                                                                       
+				         AND    RFQ_NO     = H.RFQ_NO                                                                                           
+				         AND    RFQ_COUNT  = H.RFQ_COUNT
+				         AND    rownum < 2                                                                                        
+				         ) AS SHIPPER_TYPE_TEXT                                                                                
+				        ,H.REMARK                                                                                                               
+				        ,(SELECT COUNT(*)                                                                                                       
+				         FROM   ICOYRQAN                                                                                                        
+				         WHERE  HOUSE_CODE = H.HOUSE_CODE                                                                                       
+				         AND    RFQ_NO     = H.RFQ_NO                                                                                           
+				         AND    RFQ_COUNT  = H.RFQ_COUNT                                                                                        
+				         ) AS   RQAN_CNT                                                                                                        
+			 ,Z_SMS_SEND_FLAG                                                                                                               
+			 ,Z_RESULT_OPEN_FLAG                                                                                                            
+		     ,BID_REQ_TYPE                                              
+		     ,CREATE_TYPE                                               
+		     ,CTRL_CODE                                                 
+		     ,ADD_USER_ID                                               
+		     ,ATTACH_NO                                                 
+		     ,GETFILEATTCOUNT(ATTACH_NO) AS ATTACH_NO_CNT
+		     ,(SELECT PR_TYPE FROM ICOYPRHD WHERE HOUSE_CODE = H.HOUSE_CODE AND PR_NO = (SELECT PR_NO FROM ICOYRQDT WHERE HOUSE_CODE = H.HOUSE_CODE AND RFQ_NO = H.RFQ_NO AND RFQ_COUNT = H.RFQ_COUNT AND ROWNUM =1)) AS PR_TYPE                   
+		     ,(SELECT REQ_TYPE FROM ICOYPRHD WHERE HOUSE_CODE = H.HOUSE_CODE AND PR_NO = (SELECT PR_NO FROM ICOYRQDT WHERE HOUSE_CODE = H.HOUSE_CODE AND RFQ_NO = H.RFQ_NO AND RFQ_COUNT = H.RFQ_COUNT AND ROWNUM =1)) AS REQ_TYPE
+		     ,EVAL_FLAG 
+		     ,CONVERT_DATE(ADD_DATE) AS ADD_DATE_VIEW
+		     ,(SELECT USER_NAME_LOC FROM ICOMLUSR WHERE HOUSE_CODE = H.HOUSE_CODE AND USER_ID = H.ADD_USER_ID) AS ADD_USER_NAME
+		     ,H.PC_REASON
+		     ,GETFILENAMES(ATTACH_NO) AS RPT_GETFILENAMES
+		 FROM ICOYRQHD H                                                                                                                
+		 WHERE STATUS IN ('C', 'R')                                                                                                     
+		 <OPT=F,S> AND   HOUSE_CODE = ? </OPT>                                                                                          
+		 <OPT=S,S> AND   RFQ_NO     = ? </OPT>                                                                                          
+		 <OPT=S,N> AND   RFQ_COUNT  = ? </OPT>                                                                                                      
+		  ]]>    
+	</method>
+	
+	<method name="et_getRfqCountInfo">
+		<![CDATA[
+			SELECT
+				MAX(RFQ_COUNT)+1                                          
+			FROM
+				ICOYRQHD                                                      
+			<OPT=F,S> WHERE   HOUSE_CODE = ? </OPT>                                                                                          
+		    <OPT=S,S> AND   RFQ_NO     = ? </OPT>                                       
+			AND BID_TYPE = 'RQ'                                                
+			AND CREATE_TYPE IN('PR','PC')                                                
+			AND STATUS != 'D'      
+		]]>    
+	</method>
+	
+	<method name="et_getHumtCnt">
+				<![CDATA[
+			 		SELECT MT.NAME_LOC                                  
+			          FROM ICOYRQDT DT, ICOYRQSE SE, ICOMHUMT MT        
+			        <OPT=F,S>WHERE DT.HOUSE_CODE = ?  </OPT>            
+			        <OPT=S,S>  AND DT.RFQ_NO     = ?  </OPT>            
+			        <OPT=S,S>  AND DT.RFQ_COUNT  = ?  </OPT>            
+			         AND DT.HOUSE_CODE = SE.HOUSE_CODE                  
+			         AND DT.RFQ_NO     = SE.RFQ_NO                      
+			         AND DT.RFQ_COUNT  = SE.RFQ_COUNT                   
+			         AND SE.HOUSE_CODE = MT.HOUSE_CODE                  
+			         AND SE.VENDOR_CODE = MT.VENDOR_CODE                
+			         AND DT.ITEM_NO = MT.HUMAN_NO   
+			        ]]> 
+	</method>
+	
+	<method name="getRfqDTDisplay">
+	<![CDATA[
+         SELECT
+               PRDT.ITEM_NO
+              ,PRDT.DESCRIPTION_LOC
+              ,PRDT.SPECIFICATION
+              ,PRDT.PURCHASE_LOCATION
+              ,PRDT.REC_VENDOR_CODE
+              ,PRDT.REC_VENDOR_NAME
+              ,'' as PROJECT_NAME
+              ,PRDT.DELY_TO_ADDRESS
+              ,PRDT.WARRANTY
+              ,D.RFQ_QTY
+              ,D.YEAR_QTY
+              ,D.UNIT_MEASURE
+              ,D.PURCHASE_PRE_PRICE
+              ,NVL (D.RFQ_AMT, 0) AS RFQ_AMT
+              --,ROUND(ROUND(D.RFQ_AMT,1),0) AS RFQ_AMT
+              --,D.RD_DATE
+              ,DECODE(LENGTH(D.RD_DATE),8,SUBSTR(D.RD_DATE,0,4) || '/'  || SUBSTR(D.RD_DATE,5,2)  || '/'  || SUBSTR(D.RD_DATE,7,2),'') AS RD_DATE
+              ,NVL(H.ATTACH_NO, 'N') AS ATTACH_NO
+              ,(SELECT COUNT(*) 
+                  FROM SFILE
+                 WHERE DOC_NO = H.ATTACH_NO) AS ATTACH_NO_CNT
+              ,D.RFQ_SEQ
+              ,D.COST_COUNT
+              ,D.PLANT_CODE
+              ,D.DELY_TO_LOCATION
+              ,GETUSERNAME(D.HOUSE_CODE, PRDT.CHANGE_USER_ID, 'LOC') AS PR_CHANGE_USER_NAME
+              ,D.PR_NO
+              ,D.TBE_NO
+              ,D.PR_SEQ
+              ,H.CTRL_CODE
+              ,(CASE H.RFQ_TYPE
+                  WHEN 'OP' THEN ''
+                  ELSE
+                    (SELECT COUNT(*) || '' FROM ICOYRQSE
+                      WHERE HOUSE_CODE = D.HOUSE_CODE
+                        AND RFQ_NO     = D.RFQ_NO
+                        AND RFQ_COUNT  = D.RFQ_COUNT
+                        AND RFQ_SEQ    = D.RFQ_SEQ)
+                   END
+               ) AS VENDOR_CNT
+               ,(CASE H.RFQ_TYPE
+                  WHEN 'OP' THEN ''
+                  ELSE
+                    (SELECT COUNT(*) || '' FROM ICOYRQSE
+                      WHERE HOUSE_CODE = D.HOUSE_CODE
+                        AND RFQ_NO     = D.RFQ_NO
+                        AND RFQ_COUNT  = D.RFQ_COUNT
+                        AND RFQ_SEQ    = D.RFQ_SEQ)
+                   END
+               ) AS VENDOR_SELECTED
+              ,GETSELRQSE(H.HOUSE_CODE, D.RFQ_NO, D.RFQ_COUNT, D.RFQ_SEQ) AS VENDOR_SELECTED_REASON
+              ,GETRQEPDATAreCreate(H.HOUSE_CODE, D.RFQ_NO, D.RFQ_COUNT, D.RFQ_SEQ) AS PRICE_DOC
+              ,D.BID_COUNT
+              ,D.STR_FLAG
+              ,(CASE
+                WHEN D.STR_FLAG = 'S' THEN ''
+                WHEN D.STR_FLAG = 'D' THEN GETDEPTNAME(D.HOUSE_CODE, D.COMPANY_CODE, D.DELY_TO_LOCATION, 'LOC' )
+                ELSE D.DELY_TO_LOCATION
+                END
+               ) AS DELY_TO_LOCATION_NAME
+              ,D.CUR
+              ,D.Z_REMARK AS REMARK
+              ,D.TECHNIQUE_GRADE
+              ,D.TECHNIQUE_FLAG
+              ,D.TECHNIQUE_TYPE
+              ,D.INPUT_FROM_DATE
+              ,D.INPUT_TO_DATE
+              ,(SELECT NAME_LOC FROM ICOMHUMT 
+                 WHERE HOUSE_CODE = D.HOUSE_CODE 
+                   AND HUMAN_NO = D.ITEM_NO 
+                   AND STATUS != 'D'
+               ) AS HUMAN_NAME_LOC
+              ,H.BID_REQ_TYPE
+              ,PRDT.MAKER_CODE
+              ,PRDT.MAKER_NAME
+              ,H.PC_REASON
+         FROM ICOYRQHD H, ICOYRQDT D, ICOYPRDT PRDT
+        WHERE D.HOUSE_CODE 		= H.HOUSE_CODE
+          AND D.RFQ_NO     		= H.RFQ_NO
+          AND D.RFQ_COUNT  		= H.RFQ_COUNT
+          AND   D.HOUSE_CODE = ${session.HOUSE_CODE}
+          AND   D.RFQ_NO     = $S{rfq_no}  
+          AND   D.RFQ_COUNT  = $S{rfq_count}
+          AND D.STATUS 			IN ('C', 'R')
+          AND H.STATUS 			IN ('C', 'R')
+          AND PRDT.HOUSE_CODE 	= D.HOUSE_CODE
+          AND PRDT.PR_NO      	= D.PR_NO
+          AND PRDT.PR_SEQ     	= D.PR_SEQ
+	]]>  
+	</method>
+	
+	<method name="et_ChkBidCount">
+			<![CDATA[
+					 SELECT BID_COUNT					     
+					 FROM   ICOYRQHD                         
+					 WHERE  STATUS IN ('C', 'R')             
+					 <OPT=F,S> AND    HOUSE_CODE = ? </OPT>  
+					 <OPT=S,S> AND    RFQ_NO     = ? </OPT>  
+					 <OPT=S,N> AND    RFQ_COUNT  = ? </OPT>  
+				]]>
+	</method>
+	
+	<method name="et_delRQDT">
+	<![CDATA[
+				 DELETE FROM ICOYRQDT            
+				 WHERE HOUSE_CODE = ${session.HOUSE_CODE}            
+				 AND   RFQ_NO     = ${rfq_no}            
+				 AND   RFQ_COUNT  = ${rfq_count}            
+	]]>
+	</method>
+	
+	<method name="et_delRQSE">
+	<![CDATA[
+				 DELETE FROM ICOYRQSE            
+				 WHERE HOUSE_CODE = ${session.HOUSE_CODE}                               
+				 AND   RFQ_NO     = ${rfq_no}                                           
+				 AND   RFQ_COUNT  = ${rfq_count}                                        
+	]]>
+	</method>
+	
+	<method name="et_delRQOP">
+	<![CDATA[
+				 DELETE FROM ICOYRQOP            
+				 WHERE HOUSE_CODE = ${session.HOUSE_CODE}                                
+				 AND   RFQ_NO     = ${rfq_no}                                            
+				 AND   RFQ_COUNT  = ${rfq_count}                                         
+	]]>
+	</method>
+	
+	<method name="et_delRQEP">
+	<![CDATA[
+				 DELETE FROM ICOYRQEP            
+				 WHERE HOUSE_CODE = ${session.HOUSE_CODE}                               
+				 AND   RFQ_NO     = ${rfq_no}                                           
+				 AND   RFQ_COUNT  = ${rfq_count}                                        
+	]]>
+	</method>
+	
+		<method name="et_delRQAN">
+	<![CDATA[
+				 DELETE FROM ICOYRQAN            
+				 WHERE HOUSE_CODE = ${session.HOUSE_CODE}                                
+				 AND   RFQ_NO     = ${rfq_no}                                            
+				 AND   RFQ_COUNT  = ${rfq_count}                                         
+	]]>
+	</method>
+	
+		<method name="et_delPRHD">
+	<![CDATA[
+				 DELETE FROM ICOYPRHD            
+				 WHERE HOUSE_CODE = ${session.HOUSE_CODE}          
+				 AND   PR_NO      = ${pr_no}                      
+	]]>
+	</method>
+	
+		<method name="et_delPRDT">
+	<![CDATA[
+				 DELETE FROM ICOYPRDT            
+				 WHERE HOUSE_CODE = ${session.HOUSE_CODE}           
+				 AND   PR_NO      = ${pr_no}                       
+	]]>
+	</method>
+	
+	<method name="et_setPrHDCreate">
+		INSERT INTO ICOYPRHD (       
+			HOUSE_CODE,   PR_NO,        STATUS,      COMPANY_CODE,   PLANT_CODE,
+			PR_TYPE,      SIGN_STATUS,  SIGN_DATE,   SIGN_PERSON_ID, SIGN_PERSON_NAME,
+			TEL_NO,       SUBJECT,      REQ_TYPE,    ADD_DATE,       ADD_TIME,
+			ADD_USER_ID,  CHANGE_DATE,  CHANGE_TIME, CHANGE_USER_ID, DEMAND_DEPT_NAME,
+			DELY_TO_USER, DELY_TO_PHONE
+		)
+		VALUES (                   
+			${HOUSE_CODE},
+			${PR_NO},
+			${STATUS},
+			${COMPANY_CODE},
+			${PLANT_CODE},
+			
+			${PR_TYPE},
+			${SIGN_STATUS},  
+			${SIGN_DATE},   
+			${SIGN_PERSON_ID}, 
+			${SIGN_PERSON_NAME},
+			
+			${TEL_NO},       
+			${SUBJECT},      
+			${REQ_TYPE},    
+			${ADD_DATE},       
+			${ADD_TIME},
+			
+			${ADD_USER_ID},  
+			${CHANGE_DATE},  
+			${CHANGE_TIME}, 
+			${CHANGE_USER_ID}, 
+			${DEMAND_DEPT_NAME},
+			
+			${DELY_TO_USER}, 
+			${DELY_TO_PHONE}
+		)                               
+	</method>
+	
+	<method name="et_setPrDTCreate">
+	<![CDATA[
+		INSERT INTO ICOYPRDT (                                   
+			HOUSE_CODE,     PR_NO,           PR_SEQ,        STATUS,             COMPANY_CODE,
+			PLANT_CODE,     ITEM_NO,         SHIPPER_TYPE,  PR_PROCEEDING_FLAG, PURCHASE_LOCATION,
+			CTRL_CODE,      UNIT_MEASURE,    PR_QTY,        CONFIRM_QTY,        CUR,
+			LIST_PRICE,     UNIT_PRICE,      PR_AMT,        RD_DATE,            PURCHASER_ID,
+			PURCHASER_NAME, ATTACH_NO,       YEAR_QTY,      PURCHASE_DEPT,      PURCHASE_DEPT_NAME,
+			ADD_DATE,       ADD_USER_ID,     ADD_TIME,      CHANGE_DATE,        CHANGE_USER_ID,
+			CHANGE_TIME,    DESCRIPTION_LOC, SPECIFICATION, MAKER_CODE,         MAKER_NAME,
+			DELY_TO_ADDRESS
+		)
+		VALUES (
+			${HOUSE_CODE},     
+			${PR_NO},           
+			LPAD(${PR_SEQ}, 5, '0'), 
+			${STATUS},             
+			${COMPANY_CODE},
+			
+			${PLANT_CODE},     
+			${ITEM_NO},         
+			${SHIPPER_TYPE},         
+			${PR_PROCEEDING_FLAG}, 
+			${PURCHASE_LOCATION},
+			
+			${CTRL_CODE},      
+			${UNIT_MEASURE},    
+			${PR_QTY},               
+			${CONFIRM_QTY},        
+			${CUR},
+			
+			${LIST_PRICE},     
+			${UNIT_PRICE},      
+			${PR_AMT},               
+			${RD_DATE},            
+			${PURCHASER_ID},
+			
+			${PURCHASER_NAME}, 
+			${ATTACH_NO},       
+			${YEAR_QTY},             
+			${PURCHASE_DEPT},      
+			${PURCHASE_DEPT_NAME},
+			
+			${ADD_DATE},       
+			${ADD_USER_ID},     
+			${ADD_TIME},             
+			${CHANGE_DATE},        
+			${CHANGE_USER_ID},
+			
+			${CHANGE_TIME},    
+			${DESCRIPTION_LOC}, 
+			${SPECIFICATION},        
+			${MAKER_CODE},         
+			${MAKER_NAME},
+			
+			${DELY_TO_ADDRESS}
+		)                                
+	]]>
+	</method>
+	
+	<method name="et_setRfqHDCreate">
+	<![CDATA[
+		INSERT INTO ICOYRQHD (                               
+			HOUSE_CODE,        RFQ_NO,         RFQ_COUNT,      STATUS,           COMPANY_CODE,
+			RFQ_DATE,          RFQ_CLOSE_DATE, RFQ_CLOSE_TIME, RFQ_TYPE,         PC_REASON,
+			SETTLE_TYPE,       BID_TYPE,       RFQ_FLAG,       TERM_CHANGE_FLAG, CREATE_TYPE,
+			BID_COUNT,         CTRL_CODE,      ADD_USER_ID,    ADD_DATE,         ADD_TIME,
+			CHANGE_DATE,       CHANGE_TIME,    CHANGE_USER_ID, SUBJECT,          REMARK,
+			DOM_EXP_FLAG,      ARRIVAL_PORT,   USANCE_DAYS,    SHIPPING_METHOD,  PAY_TERMS,
+			ARRIVAL_PORT_NAME, DELY_TERMS,     PRICE_TYPE,     SETTLE_COUNT,     RESERVE_PRICE,
+			CURRENT_PRICE,     BID_DEC_AMT,    TEL_NO,         EMAIL,            BD_TYPE,
+			CUR,               START_DATE,     START_TIME,     Z_SMS_SEND_FLAG,  Z_RESULT_OPEN_FLAG,
+			BID_REQ_TYPE,      BID_RFQ_TYPE,   ATTACH_NO,      SIGN_STATUS           
+		)
+		VALUES (         
+			${HOUSE_CODE},                                             
+			${RFQ_NO},         
+			${RFQ_COUNT},      
+			${STATUS},           
+			${COMPANY_CODE},
+			
+			${RFQ_DATE},                                               
+			${RFQ_CLOSE_DATE}, 
+			${RFQ_CLOSE_TIME}, 
+			${RFQ_TYPE},         
+			${PC_REASON},
+			
+			${SETTLE_TYPE},                                            
+			${BID_TYPE},       
+			${RFQ_FLAG},       
+			${TERM_CHANGE_FLAG}, 
+			${CREATE_TYPE},
+			
+			${BID_COUNT},                                              
+			${CTRL_CODE},      
+			${ADD_USER_ID},    
+			${ADD_DATE},         
+			${ADD_TIME},
+			
+			${CHANGE_DATE},                                            
+			${CHANGE_TIME},    
+			${CHANGE_USER_ID}, 
+			${SUBJECT},          
+			${REMARK},
+			
+			${DOM_EXP_FLAG},                                           
+			${ARRIVAL_PORT},   
+			${USANCE_DAYS},    
+			${SHIPPING_METHOD},  
+			${PAY_TERMS},
+			
+			GETICOMCODE2(
+				${HOUSE_CODE},
+				'M005',
+				${ARRIVAL_PORT_NAME}
+			), 
+			${DELY_TERMS},     
+			${PRICE_TYPE},     
+			${SETTLE_COUNT},     
+			${RESERVE_PRICE},
+			
+			${CURRENT_PRICE},                                          
+			${BID_DEC_AMT},    
+			${TEL_NO},         
+			${EMAIL},            
+			${BD_TYPE},
+			
+			${CUR},                                                    
+			${START_DATE},     
+			${START_TIME},     
+			${Z_SMS_SEND_FLAG},  
+			${Z_RESULT_OPEN_FLAG},
+			
+			${BID_REQ_TYPE},                                           
+			${CREATE_TYPE},    
+			${H_ATTACH_NO},      
+			${SIGN_STATUS}
+		)                                
+	]]>
+	</method>
+	
+	<method name="et_setRfqDTCreate">
+	<![CDATA[
+		INSERT INTO ICOYRQDT (         
+			HOUSE_CODE,      RFQ_NO,              RFQ_COUNT,           RFQ_SEQ,          STATUS,
+			COMPANY_CODE,    PLANT_CODE,          RFQ_PROCEEDING_FLAG, ADD_DATE,         ADD_TIME,
+			ADD_USER_ID,     CHANGE_DATE,         CHANGE_TIME,         CHANGE_USER_ID,   ITEM_NO,
+			UNIT_MEASURE,    RD_DATE,             VALID_FROM_DATE,     VALID_TO_DATE,    PURCHASE_PRE_PRICE,
+			RFQ_QTY,         RFQ_AMT,             BID_COUNT,           CUR,              PR_NO,
+			PR_SEQ,          SETTLE_FLAG,         SETTLE_QTY,          TBE_FLAG,         TBE_DEPT,
+			PRICE_TYPE,      TBE_PROCEEDING_FLAG, SAMPLE_FLAG,         DELY_TO_LOCATION, ATTACH_NO,
+			SHIPPER_TYPE,    CONTRACT_FLAG,       COST_COUNT,          YEAR_QTY,         DELY_TO_ADDRESS,
+			MIN_PRICE,       MAX_PRICE,           STR_FLAG,            TBE_NO,           Z_REMARK,
+			TECHNIQUE_GRADE, TECHNIQUE_TYPE,      INPUT_FROM_DATE,     INPUT_TO_DATE,    TECHNIQUE_FLAG,
+			SPECIFICATION,   MAKER_NAME
+		)
+		VALUES (
+			${HOUSE_CODE},           
+			${RFQ_NO},              
+			${RFQ_COUNT},           
+			LPAD(${RFQ_SEQ}, 6, '0'), 
+			${STATUS},
+			
+			${COMPANY_CODE},         
+			${PLANT_CODE},          
+			${RFQ_PROCEEDING_FLAG}, 
+			${ADD_DATE},              
+			${ADD_TIME},
+			
+			${ADD_USER_ID},          
+			${CHANGE_DATE},         
+			${CHANGE_TIME},         
+			${CHANGE_USER_ID},        
+			${ITEM_NO},
+			
+			${UNIT_MEASURE},         
+			${RD_DATE},             
+			${VALID_FROM_DATE},     
+			${VALID_TO_DATE},         
+			${PURCHASE_PRE_PRICE},
+			
+			${RFQ_QTY},              
+			${RFQ_AMT},             
+			${BID_COUNT},           
+			${CUR},                   
+			${PR_NO},
+			
+			LPAD(${PR_SEQ}, 5, '0'), 
+			${SETTLE_FLAG},         
+			${SETTLE_QTY},          
+			${TBE_FLAG},              
+			${TBE_DEPT},
+			
+			${PRICE_TYPE},           
+			${TBE_PROCEEDING_FLAG}, 
+			${SAMPLE_FLAG},         
+			${DELY_TO_LOCATION},      
+			${ATTACH_NO},
+			
+			${SHIPPER_TYPE},         
+			${CONTRACT_FLAG},       
+			${COST_COUNT},          
+			${YEAR_QTY},              
+			${DELY_TO_ADDRESS},
+			
+			${MIN_PRICE},            
+			${MAX_PRICE},           
+			${STR_FLAG},            
+			${TBE_NO},                
+			${Z_REMARK},
+			
+			${TECHNIQUE_GRADE},      
+			${TECHNIQUE_TYPE},      
+			${INPUT_FROM_DATE},     
+			${INPUT_TO_DATE},         
+			${TECHNIQUE_FLAG},
+			
+			${SPECIFICATION},        
+			${MAKER_NAME}
+		)                               
+	]]>
+	</method>
+	
+	<method name="et_setRfqOPCreate">
+	<![CDATA[
+		INSERT INTO ICOYRQOP (       
+			HOUSE_CODE,  RFQ_NO,      RFQ_COUNT,   RFQ_SEQ,  PURCHASE_LOCATION,
+			VENDOR_CODE, STATUS,      ADD_USER_ID, ADD_DATE, ADD_TIME,
+			CHANGE_DATE, CHANGE_TIME, CHANGE_USER_ID       
+		)
+		VALUES (                   
+			${HOUSE_CODE},  
+			${RFQ_NO},      
+			${RFQ_COUNT},     
+			LPAD(${RFQ_SEQ}, 6, 0),  
+			${PURCHASE_LOCATION},
+			
+			${VENDOR_CODE}, 
+			${STATUS},      
+			${ADD_USER_ID},                            
+			${ADD_DATE}, 
+			${ADD_TIME},
+			
+			${CHANGE_DATE}, 
+			${CHANGE_TIME}, 
+			${CHANGE_USER_ID}
+		)                            
+	]]>
+	</method>
+	
+	<method name="et_setRfqSECreate">
+	<![CDATA[
+		INSERT INTO ICOYRQSE (
+			HOUSE_CODE,     VENDOR_CODE,  RFQ_NO,       RFQ_COUNT,    RFQ_SEQ,
+			STATUS,         COMPANY_CODE, CONFIRM_FLAG, CONFIRM_DATE, CONFIRM_USER_ID,
+			BID_FLAG,       ADD_DATE,     ADD_USER_ID,  ADD_TIME,     CHANGE_DATE,
+			CHANGE_USER_ID, CHANGE_TIME,  CONFIRM_TIME
+		)
+		VALUES(
+			${HOUSE_CODE},     
+			${VENDOR_CODE},  
+			${RFQ_NO},       
+			${RFQ_COUNT},    
+			LPAD(${RFQ_SEQ}, 6, '0'),
+			
+			${STATUS},         
+			${COMPANY_CODE}, 
+			${CONFIRM_FLAG}, 
+			${CONFIRM_DATE}, 
+			${CONFIRM_USER_ID},
+			
+			${BID_FLAG},       
+			${ADD_DATE},     
+			${ADD_USER_ID},  
+			${ADD_TIME},     
+			${CHANGE_DATE},
+			
+			${CHANGE_USER_ID}, 
+			${CHANGE_TIME},  
+			${CONFIRM_TIME}
+		)                            
+	]]>
+	</method>
+	
+	<method name="et_setRfqEPCreate">
+	<![CDATA[
+		INSERT INTO ICOYRQEP (    
+			HOUSE_CODE, VENDOR_CODE, RFQ_NO,       RFQ_COUNT,       RFQ_SEQ,
+			COST_SEQ,   STATUS,      COMPANY_CODE, COST_PRICE_NAME, COST_PRICE_VALUE,
+			ADD_DATE,   ADD_TIME,    ADD_USER_ID,  CHANGE_DATE,     CHANGE_TIME,
+			CHANGE_USER_ID    
+		)
+		VALUES(
+			${HOUSE_CODE},             
+			${VENDOR_CODE}, 
+			${RFQ_NO},       
+			${RFQ_COUNT},       
+			LPAD(${RFQ_SEQ}, 6, '0'),
+			
+			LPAD(${COST_SEQ}, 6, '0'), 
+			${STATUS},      
+			${COMPANY_CODE}, 
+			${COST_PRICE_NAME}, 
+			${COST_PRICE_VALUE},
+			
+			${ADD_DATE},               
+			${ADD_TIME},    
+			${ADD_USER_ID},  
+			${CHANGE_DATE},     
+			${CHANGE_TIME},
+			
+			${CHANGE_USER_ID}
+		)                         
+	]]>
+	</method>
+	
+	<method name="et_setRfqANCreate">
+	<![CDATA[
+		INSERT INTO ICOYRQAN (      
+			HOUSE_CODE,     RFQ_NO,             RFQ_COUNT,        STATUS,        COMPANY_CODE,
+			ANNOUNCE_DATE,  ANNOUNCE_TIME_FROM, ANNOUNCE_TIME_TO, ANNOUNCE_HOST, ANNOUNCE_AREA,
+			ANNOUNCE_PLACE, ANNOUNCE_NOTIFIER,  ANNOUNCE_RESP,    DOC_FRW_DATE,  ADD_USER_ID,
+			ADD_DATE,       ADD_TIME,           CHANGE_USER_ID,   CHANGE_DATE,   CHANGE_TIME,
+			ANNOUNCE_COMMENT    
+		)
+		VALUES(                  
+			${HOUSE_CODE},      
+			${RFQ_NO},             
+			${RFQ_COUNT},        
+			${STATUS},        
+			${COMPANY_CODE},
+			
+			${ANNOUNCE_DATE},   
+			${ANNOUNCE_TIME_FROM}, 
+			${ANNOUNCE_TIME_TO}, 
+			${ANNOUNCE_HOST}, 
+			${ANNOUNCE_AREA},
+			
+			${ANNOUNCE_PLACE},  
+			${ANNOUNCE_NOTIFIER},  
+			${ANNOUNCE_RESP},    
+			${DOC_FRW_DATE},  
+			${ADD_USER_ID},
+			
+			${ADD_DATE},        
+			${ADD_TIME},           
+			${CHANGE_USER_ID},   
+			${CHANGE_DATE},   
+			${CHANGE_TIME},
+			
+			${ANNOUNCE_COMMENT}
+		)                           
+	]]>
+	</method>
+	
+		<method name="et_setRfqHDChange">
+	<![CDATA[
+			 UPDATE ICOYRQHD                 
+		 SET                             
+		 	 STATUS              = $S{STATUS}     
+		 	,RFQ_DATE            = $S{RFQ_DATE}     
+		 	,RFQ_CLOSE_DATE      = $S{RFQ_CLOSE_DATE}     
+		 	,RFQ_CLOSE_TIME      = $S{RFQ_CLOSE_TIME}     
+		 	,RFQ_TYPE            = $S{RFQ_TYPE}     
+		 	,SETTLE_TYPE         = $S{SETTLE_TYPE}     
+		 	,RFQ_FLAG            = $S{RFQ_FLAG}     
+		 	,TERM_CHANGE_FLAG    = $S{TERM_CHANGE_FLAG}     
+		 	,CHANGE_DATE         = $S{CHANGE_DATE}     
+		 	,CHANGE_TIME         = $S{CHANGE_TIME}     
+		 	,CHANGE_USER_ID      = $S{CHANGE_USER_ID}     
+		 	,SUBJECT             = $S{SUBJECT}     
+		 	,REMARK              = $S{REMARK}     
+		 	,DOM_EXP_FLAG        = $S{DOM_EXP_FLAG}     
+		 	,ARRIVAL_PORT        = $S{ARRIVAL_PORT}     
+		 	,USANCE_DAYS         = $S{USANCE_DAYS}     
+		 	,SHIPPING_METHOD     = $S{SHIPPING_METHOD}     
+		 	,PAY_TERMS           = $S{PAY_TERMS}     
+		 	,ARRIVAL_PORT_NAME   = $S{ARRIVAL_PORT_NAME}   
+		 	,DELY_TERMS          = $S{DELY_TERMS}     
+		 	,PRICE_TYPE          = $S{PRICE_TYPE}     
+		 	,CUR                 = $S{CUR}     
+		 	,Z_SMS_SEND_FLAG     = $S{Z_SMS_SEND_FLAG}     
+		 	,Z_RESULT_OPEN_FLAG  = $S{Z_RESULT_OPEN_FLAG}
+		 	,ATTACH_NO           = $S{H_ATTACH_NO}
+		 	,SIGN_STATUS		 = $S{SIGN_STATUS}
+		 	,PC_REASON			 = $S{PC_REASON}
+		 WHERE HOUSE_CODE = $S{HOUSE_CODE}            
+		 AND   RFQ_NO     = $S{RFQ_NO}            
+		 AND   RFQ_COUNT  = $S{RFQ_COUNT}            
+	]]>
+	</method>
+	
+	<method name="et_setRfqHDChange_delete">
+	<![CDATA[
+			 UPDATE	ICOYRQHD SET STATUS	= 'D'        
+			 WHERE	HOUSE_CODE  = ${session.HOUSE_CODE}                  
+			 AND	RFQ_NO	    = ${rfqNo}	                 
+			 AND	RFQ_COUNT   = ${rfqCount}                  
+	]]>
+	</method>
+	
+	<method name="et_setRfqDTDelete">
+	<![CDATA[
+			 UPDATE	ICOYRQDT SET STATUS	= 'D'        
+			 WHERE	HOUSE_CODE  = ${session.HOUSE_CODE}                  
+			 AND	RFQ_NO	    = ${rfqNo}	                 
+			 AND	RFQ_COUNT   = ${rfqCount}          
+	]]>
+	</method>
+	<method name="et_setRfqANDelete">
+	<![CDATA[
+			 UPDATE	ICOYRQAN SET STATUS	= 'D'        
+			 WHERE	HOUSE_CODE  = ${session.HOUSE_CODE}                  
+			 AND	RFQ_NO	    = ${rfqNo}	                 
+			 AND	RFQ_COUNT   = ${rfqCount}                        
+	]]>
+	</method>
+	<method name="et_setRfqEPDelete">
+	<![CDATA[
+			 UPDATE	ICOYRQEP SET STATUS	= 'D'        
+			 WHERE	HOUSE_CODE  = ${session.HOUSE_CODE}                  
+			 AND	RFQ_NO	    = ${rfqNo}	                 
+			 AND	RFQ_COUNT   = ${rfqCount}                  
+	]]>
+	</method>
+	<method name="et_setRfqOPChange_delete">
+	<![CDATA[
+			 UPDATE	ICOYRQOP SET STATUS	= 'D'        
+			 WHERE	HOUSE_CODE  = ${session.HOUSE_CODE}                  
+			 AND	RFQ_NO	    = ${rfqNo}	                 
+			 AND	RFQ_COUNT   = ${rfqCount}                      
+	]]>
+	</method>
+	<method name="et_setRfqDelete_return">
+	<![CDATA[
+			 SELECT	HOUSE_CODE, PR_NO,PR_SEQ FROM ICOYRQDT       
+			 WHERE	HOUSE_CODE  = ${session.HOUSE_CODE}                  
+			  AND	RFQ_NO	    = ${rfqNo}	                 
+			 AND	RFQ_COUNT   = ${rfqCount}     
+	]]>
+	</method>
+	
+	<method name="et_setRfqDelete_return_2">
+	<![CDATA[
+			 UPDATE  ICOYPRDT	SET	PR_PROCEEDING_FLAG	= 'P'  
+			 WHERE	HOUSE_CODE  = ${session.HOUSE_CODE}                  
+			 AND		PR_NO   = ${pr_no}                         
+			 AND		PR_SEQ	= ${pr_seq}	                       
+	]]>
+	</method>
+	
+	<method name="et_re_getRfqDTDisplay">
+	<![CDATA[
+		SELECT                                                        
+                  D.ITEM_NO                                               
+                 ,PRDT.DESCRIPTION_LOC     
+                 ,PRDT.SPECIFICATION       
+                 ,PRDT.MAKER_CODE      
+                 ,PRDT.MAKER_NAME     
+                 ,PRDT.DELY_TO_ADDRESS                                      
+        		 ,PRDT.WBS_NAME as PROJECT_NAME
+                 ,PRDT.REC_VENDOR_NAME
+                 ,PRDT.WARRANTY        
+                 ,D.RFQ_QTY                                               
+                 ,D.YEAR_QTY                                              
+                 ,D.UNIT_MEASURE                                          
+                 ,D.PURCHASE_PRE_PRICE                                    
+                 ,D.RFQ_AMT                                               
+                 ,CONVERT_DATE(D.RD_DATE) AS RD_DATE                                               
+                 ,NVL(H.ATTACH_NO, 'N') AS ATTACH_NO                 
+                 ,(SELECT COUNT(*) FROM SFILE                        
+                   WHERE DOC_NO = H.ATTACH_NO) AS ATTACH_NO_CNT            
+                 ,D.RFQ_SEQ                                               
+                 ,D.COST_COUNT                                            
+                 ,D.PLANT_CODE                                            
+                 ,D.DELY_TO_LOCATION                                     
+                 ,GETUSERNAME(D.HOUSE_CODE, PRDT.CHANGE_USER_ID, 'LOC') AS PR_CHANGE_USER_NAME                
+                 ,D.PR_NO                                              
+                 ,D.PR_SEQ                                             
+                 ,PRDT.PURCHASE_LOCATION    
+                 ,H.CTRL_CODE                                          
+                 ,(CASE                                                
+                         H.RFQ_NO                                       
+                         WHEN 'OP' THEN ''                              
+                         ELSE                                           
+                             (SELECT COUNT(*) || '' FROM ICOYRQSE    
+                              WHERE HOUSE_CODE = D.HOUSE_CODE           
+                              AND   RFQ_NO      = D.RFQ_NO               
+                              AND   RFQ_COUNT  = D.RFQ_COUNT            
+                              AND   RFQ_SEQ      = D.RFQ_SEQ)             
+                   END                                                 
+                   ) AS VENDOR_CNT                                     
+                 ,GETSELRQSE(H.HOUSE_CODE, D.RFQ_NO, D.RFQ_COUNT, D.RFQ_SEQ) AS VENDOR_SELECTED_REASON 
+                 ,GETRQEPDATARECREATE(H.HOUSE_CODE, D.RFQ_NO, D.RFQ_COUNT, D.RFQ_SEQ) AS PRICE_DOC 
+                 ,D.BID_COUNT                                          
+                 ,D.STR_FLAG                                           
+                 ,(CASE                                                 
+                           WHEN D.STR_FLAG = 'S' THEN ''  
+                           WHEN D.STR_FLAG = 'D' THEN GETDEPTNAME(D.HOUSE_CODE, D.COMPANY_CODE, D.DELY_TO_LOCATION, 'LOC' ) 
+                           ELSE D.DELY_TO_LOCATION                       
+                  END                                                  
+                   ) AS DELY_TO_LOCATION_NAME                           
+                 ,D.CUR                                                  
+                 ,D.Z_REMARK                                               
+                 ,D.TECHNIQUE_GRADE                                      
+                 ,D.TECHNIQUE_FLAG                                      
+                 ,D.TECHNIQUE_TYPE                                      
+                 ,D.INPUT_FROM_DATE                                      
+                 ,D.INPUT_TO_DATE                                          
+                 ,H.BID_REQ_TYPE 
+                 ,H.PC_REASON                                      
+         FROM ICOYRQHD H, ICOYRQDT D, ICOYPRDT PRDT                                    
+         WHERE H.HOUSE_CODE = D.HOUSE_CODE                             
+         AND   H.RFQ_NO     = D.RFQ_NO                                 
+         AND   H.RFQ_COUNT  = D.RFQ_COUNT                              
+         AND   H.STATUS IN ('C', 'R')                                  
+         AND   D.HOUSE_CODE = ${session.HOUSE_CODE}                     
+         AND   D.RFQ_NO     = ${rfq_no}                     
+         AND   D.RFQ_COUNT  = ${rfq_count}                     
+         AND   D.STATUS IN ('C', 'R')                                  
+         AND   D.SETTLE_FLAG = 'N'     
+         AND PRDT.HOUSE_CODE = D.HOUSE_CODE
+         AND PRDT.PR_NO      = D.PR_NO
+         AND PRDT.PR_SEQ     = D.PR_SEQ   
+		                                 
+	]]>
+	</method>
+	
+<method name="getRfqResultList">
+	<![CDATA[
+			     SELECT  H.RFQ_NO                                                                 
+		                  ,H.RFQ_COUNT                                                              
+		                  ,H.SUBJECT                                                                
+		                  ,GETUSERNAME(H.HOUSE_CODE, H.CHANGE_USER_ID ,'LOC') AS CHANGE_USER_NAME_LOC   
+		                  ,D.ITEM_NO                                                                
+					      ,(SELECT DESCRIPTION_LOC 
+					         FROM ICOMMTGL 
+					        WHERE HOUSE_CODE = D.HOUSE_CODE 
+					              AND ITEM_NO = D.ITEM_NO 
+					       ) AS DESCRIPTION_LOC 
+		                  ,D.RFQ_QTY                                                                
+		                  ,D.UNIT_MEASURE                                                           
+		                  ,D.CUR                                                                    
+		                  ,CONVERT_DATE(D.RD_DATE) AS RD_DATE                                                                
+		                  ,D.PR_NO                                                                  
+		                  ,D.PR_SEQ
+		                 -- ,PRHD.PR_TYPE
+		                  ,T.QTA_NO                                                                 
+		                  ,T.ITEM_AMT AS SUPPLY_AMT                                                           
+		                  ,NVL(T.SETTLE_FLAG,'N') as SETTLE_FLAG
+		                  ,T.VENDOR_CODE                                                            
+		                  ,GETCOMPANYNAMELOC(T.HOUSE_CODE, T.VENDOR_CODE, 'S')  AS VENDOR_NAME      
+		                  ,T.CUSTOMER_PRICE                                                         
+		                  ,T.UNIT_PRICE AS SUPPLY_PRICE                                                             
+		           		 -- ,P.UNIT_PRICE AS PR_UNIT_PRICE                                            
+		           		 -- ,P.PR_KRW_AMT                                                             
+		           		  ,H.SIGN_STATUS
+		           		  ,GETICOMCODE2(H.HOUSE_CODE,'M100', H.SIGN_STATUS) AS SIGN_STATUS_TEXT
+		          		  ,H.CTRL_CODE                       
+		          		  ,NVL((SELECT 'N' FROM DUAL WHERE EXISTS (
+		          		  		SELECT 1 FROM ICOYCNDT
+		          		  		 WHERE  HOUSE_CODE = H.HOUSE_CODE
+		          		  		   AND RFQ_NO = H.RFQ_NO
+		          		  		   AND RFQ_COUNT = H.RFQ_COUNT
+		          		  		   AND STATUS != 'D'))
+		          		   , 'Y') AS CAN_CANCEL_BIDDING  
+		          		  ,H.RFQ_TYPE
+		          		  ,GETICOMCODE2(H.HOUSE_CODE, 'M112', H.RFQ_TYPE) AS RFQ_TYPE_NAME                                   
+		          FROM    ICOYRQHD H , ICOYRQDT D, ICOYRQSE S, ICOYQTDT T--, ICOYPRDT P, ICOYPRHD PRHD, ICOYQTHD QTHD               
+		         WHERE H.HOUSE_CODE    	= ${session.HOUSE_CODE}                                      
+		         AND H.CHANGE_DATE  	BETWEEN  $S{start_change_date}
+		                                    AND  $S{end_change_date}         
+		         AND S.VENDOR_CODE 		= $S{vendor_code}                                      
+		         AND H.CHANGE_USER_ID   = $S{change_user}                             
+		         AND H.RFQ_NO           = $S{rfq_no}                                  
+		         AND   H.BID_TYPE = 'RQ'
+		         AND  (CASE WHEN T.SETTLE_FLAG = 'Y' THEN 'Y' ELSE 'N' END) = $S{settle_flag} 
+		         AND  (TO_NUMBER($S{s4}) >= TO_NUMBER(H.RFQ_CLOSE_DATE || H.RFQ_CLOSE_TIME)  OR (H.RFQ_TYPE IN ('MA','MI','SI')))                         
+		         AND   D.PR_NO            =    $S{pr_no}       
+		        AND   D.ITEM_NO          =    $S{item_no}                        
+		          AND H.HOUSE_CODE = D.HOUSE_CODE                                                   
+		          AND H.RFQ_NO = D.RFQ_NO                                                           
+		          AND H.RFQ_COUNT = D.RFQ_COUNT                                                     
+		          AND D.HOUSE_CODE = S.HOUSE_CODE                                                   
+		          AND D.RFQ_NO = S.RFQ_NO                                                           
+		          AND D.RFQ_COUNT = S.RFQ_COUNT                                                     
+		          AND D.RFQ_SEQ = S.RFQ_SEQ                                                         
+		          AND S.HOUSE_CODE = T.HOUSE_CODE                                                   
+		          AND S.VENDOR_CODE = T.VENDOR_CODE                                                 
+		          AND S.RFQ_NO = T.RFQ_NO                                                           
+		          AND S.RFQ_COUNT = T.RFQ_COUNT                                                     
+		          AND S.RFQ_SEQ = T.RFQ_SEQ                                                         
+		         -- AND D.HOUSE_CODE = P.HOUSE_CODE(+)                                                   
+		         -- AND D.PR_NO = P.PR_NO(+)
+		         -- AND D.PR_SEQ = P.PR_SEQ(+)
+		         -- AND P.HOUSE_CODE = PRHD.HOUSE_CODE(+)                                                   
+            	--  AND P.PR_NO = PRHD.PR_NO(+)
+            	  AND H.STATUS != 'D'
+		          AND D.STATUS != 'D'
+		          AND S.STATUS != 'D'
+		          AND T.STATUS != 'D'
+		         -- AND QTHD.HOUSE_CODE  = T.HOUSE_CODE
+		         -- AND QTHD.VENDOR_CODE = T.VENDOR_CODE
+		         -- AND QTHD.QTA_NO      = T.QTA_NO
+		         -- AND QTHD.SEND_FLAG   = 'Y'
+		      ORDER BY 	H.RFQ_NO DESC,
+		      			H.RFQ_COUNT DESC,
+		      			S.VENDOR_CODE,
+		      			D.ITEM_NO,
+		      			NVL(T.SETTLE_FLAG,'N') DESC,
+		      			T.UNIT_PRICE
+		      			
+	]]>
+	</method>
+	
+	<method name="et_getRfqVedorList">
+	<![CDATA[
+			     SELECT																																									
+				 		DISTINCT VNGL.VENDOR_CODE,																													
+				 		VNGL.VENDOR_NAME_LOC,                                                              	
+				 		GETADDRATTR(VNGL.HOUSE_CODE, VNGL.VENDOR_CODE, '2', 'HOMEPAGE') AS SITE_NAME,      	
+				 		GETADDRATTR(VNGL.HOUSE_CODE, VNGL.VENDOR_CODE, '2', 'PHONE_NO1') AS PHONE_NO1,     	
+				 		VNGL.SEARCH_KEY,                                                                   	
+				 		VNGL.PURCHASE_BLOCK_FLAG,                                                          	
+				 		(CASE VNGL.VENDOR_COND WHEN	'R'	THEN 'Y' WHEN 'P' THEN 'N' END)	AS VENDOR_COND,    	
+				 		VNGL.IRS_NO,                                                                       	
+				 		(SELECT USER_NAME FROM ICOMVNCP                                                    	
+				 		 WHERE  HOUSE_CODE  = VNGL.HOUSE_CODE                                              	
+				 		 AND    VENDOR_CODE = VNGL.VENDOR_CODE                                             	
+				 		 AND    SEQ         = '1')	AS SALES_PERSON,   
+		     			'' AS LABEL											                                       
+	]]>
+	<if test="${flag}" operator="eq" value="Y">
+	<![CDATA[
+				  FROM	ICOMVNGL VNGL,SSGVN VNGD                                                   
+					  WHERE	VNGL.STATUS	IN ('C', 'R')                                                     
+					  AND   VNGL.HOUSE_CODE = VNGD.HOUSE_CODE												   										
+		  		      AND   VNGL.VENDOR_CODE = VNGD.VENDOR_CODE												   									
+					 <OPT=F,S> AND	VNGL.HOUSE_CODE	= ?                     </OPT>                        
+					 <OPT=S,S> AND	VNGL.VENDOR_CODE LIKE ? || '%'            </OPT>                        
+					 <OPT=S,S> AND	VNGL.VENDOR_NAME_LOC LIKE '%' || ? || '%'   </OPT>                        
+					 <OPT=S,S> AND	VNGL.SEARCH_KEY LIKE '%' || ? || '%'        </OPT>            
+					]]>
+					<if test="${SG_REFITEMS}" operator="eq" value="''">
+						  AND	VNGD.SG_REFITEM IN (#SG_REFITEMS#)
+					</if>
+			</if>
+			
+			<if test="${flag}" operator="ne" value="Y">
+			<![CDATA[
+				  FROM	ICOMVNGL VNGL				                                                       		
+					  WHERE	VNGL.STATUS	IN ('C', 'R')                                                   	
+					 <OPT=F,S> AND	VNGL.HOUSE_CODE	= ?                     </OPT>                      	
+					 <OPT=S,S> AND	VNGL.VENDOR_CODE LIKE ? || '%'            </OPT>                      	
+					 <OPT=S,S> AND	VNGL.VENDOR_NAME_LOC LIKE '%' || ? || '%'   </OPT>                      	
+					 <OPT=S,S> AND	VNGL.SEARCH_KEY LIKE '%' || ? || '%'        </OPT> 
+				]]>
+			</if>
+	</method>
+	
+		<method name="et_getRfqCount">
+	<![CDATA[
+			      SELECT COUNT(*)   AS  RFQ_CNT                                    
+			      FROM   ICOYPRDT                                               
+			      WHERE  HOUSE_CODE         =   '#house_code#'                
+			      AND  ITEM_NO   =   ${RFQ_NO}                 	
+			        AND  STATUS      		IN  ('C','R')     
+			       AND  PR_PROCEEDING_FLAG IN ('NO_SUCH_CODE')                                       
+	]]>
+	</method>
+	
+	<method name="et_setPRComfirm">
+	<![CDATA[
+		UPDATE	ICOYPRDT SET				    		 
+			CONFIRM_QTY		= ${DT_RFQ_QTY}	        		 
+			,PR_PROCEEDING_FLAG	= 'C'
+			,BID_STATUS = 'PR'				 
+		WHERE	HOUSE_CODE 	= ${HOUSE_CODE}  						 
+		AND	PR_NO 		= ${DT_PR_NO}				   		 
+		AND	PR_SEQ 		= lpad(${DT_PR_SEQ}, 5, '0') 	                                     
+	]]>
+	</method>
+	
+		<method name="temp_Approval">
+	<![CDATA[
+			   	 UPDATE	ICOYRQHD						
+				   SET  SIGN_STATUS		= ?							
+					   ,SIGN_PERSON_ID	= ?			    
+					   ,SIGN_DATE		= ?					
+		 		 WHERE HOUSE_CODE		= ?	            
+				   AND RFQ_NO			= ?							
+				   AND RFQ_COUNT		= ?						
+				   AND STATUS			IN ('C', 'R')		                      
+	]]>
+	</method>
+	
+		<method name="et_getRfqAnnounce">
+	<![CDATA[
+		     SELECT                                                                 
+		         RFQ_NO,                                                            
+		         (SELECT SUBJECT FROM ICOYRQHD                                      
+		          WHERE HOUSE_CODE = AN.HOUSE_CODE                                  
+		          AND   RFQ_NO     = AN.RFQ_NO                                      
+		          AND   RFQ_COUNT  = AN.RFQ_COUNT) AS SUBJECT,                      
+		         RFQ_COUNT AS RFQ_COUNT,                                            
+		         ANNOUNCE_DATE,                                                     
+		         ANNOUNCE_TIME_FROM,                                                
+		         ANNOUNCE_TIME_TO,                                                  
+		         (SELECT	COMPANY_NAME_LOC FROM ICOMCMGL                          
+		           WHERE	HOUSE_CODE      = AN.HOUSE_CODE                         
+		             AND	COMPANY_CODE    = AN.ANNOUNCE_HOST) AS ANNOUNCE_HOST,   
+		         ANNOUNCE_AREA,                                                     
+		         ANNOUNCE_PLACE,                                                    
+		         ANNOUNCE_NOTIFIER,                                                 
+		         DOC_FRW_DATE,                                                      
+		         ANNOUNCE_RESP,                                                     
+		         ANNOUNCE_COMMENT
+		        ,SUBSTR(ANNOUNCE_DATE,0,4) || '/' || SUBSTR(ANNOUNCE_DATE,5,2) || '/' || SUBSTR(ANNOUNCE_DATE,7,2) as ANNOUNCE_DATE_VIEW
+		        ,SUBSTR(ANNOUNCE_TIME_FROM,0,2)|| ':' || SUBSTR(ANNOUNCE_TIME_FROM,3,2) || ' ~ ' ||
+		         SUBSTR(ANNOUNCE_TIME_TO,0,2)|| ':' || SUBSTR(ANNOUNCE_TIME_TO,3,2) as ANNOUNCE_TIME_VIEW                                                
+		     FROM    ICOYRQAN AN                                                    
+		     WHERE   STATUS IN ('C','R')                                            
+		 <OPT=F,S>    AND     HOUSE_CODE  = ?  </OPT>                               
+		 <OPT=S,S>    AND     RFQ_NO      = ?  </OPT>                               		
+		 <OPT=S,N>    AND     RFQ_COUNT   = ?  </OPT>     	                                         
+	]]>
+	</method>
+	
+		<method name="et_getVendorCode">
+	<![CDATA[
+		SELECT SE.VENDOR_CODE                    
+		FROM ICOYRQHD RH,    ICOYRQSE SE                                                                                                           
+		WHERE RH.STATUS IN ('C', 'R')            
+ 		<OPT=F,S>AND RH.HOUSE_CODE = ?  </OPT>   	 
+ 		<OPT=S,S>AND RH.RFQ_NO     = ?  </OPT>   	 
+ 		<OPT=S,S>AND RH.RFQ_COUNT  = ?	</OPT>   	 
+		 AND RH.HOUSE_CODE = SE.HOUSE_CODE   
+		 AND RH.RFQ_NO     = SE.RFQ_NO       
+		 AND RH.RFQ_COUNT  = SE.RFQ_COUNT	 	                                         
+	]]>
+	</method>
+	
+	<method name="et_setRFQClose">
+	<![CDATA[
+			 UPDATE	ICOYRQHD				 
+			 SET	RFQ_FLAG = 'P'			 
+				  ,	RFQ_CLOSE_DATE = $S{rfq_close_date}		
+ 				  ,	RFQ_CLOSE_TIME = $S{rfq_close_time}		
+ 			 WHERE	HOUSE_CODE = ${session.HOUSE_CODE}		 
+			 AND	RFQ_NO	   = $S{rfq_no}			 
+			 AND	RFQ_COUNT  = $S{rfq_count}			                                          
+	]]>
+	</method>
+	
+	<method name="et_setRFQExtends">
+	<![CDATA[
+			 UPDATE	ICOYRQHD				 
+			 SET				 
+					RFQ_FLAG       = 'B',		
+					RFQ_CLOSE_DATE = $S{RFQ_EXTENDS_DATE},		
+ 					RFQ_CLOSE_TIME = $S{RFQ_EXTENDS_TIME}		
+ 			 WHERE	HOUSE_CODE = ${session.HOUSE_CODE}			 
+			 AND	RFQ_NO	   = ${RFQ_NO}			 
+			 AND	RFQ_COUNT  = ${RFQ_COUNT}	
+			 AND    'N'        = ( SELECT MIN(SETTLE_FLAG) SETTLE_FLAG
+									 FROM ICOYRQDT 
+									 WHERE RFQ_NO  = ${RFQ_NO}
+									 AND RFQ_COUNT = ${RFQ_COUNT}	
+									 AND STATUS IN ( 'C','R') )		    
+			 --AND	TO_CHAR(SYSDATE, 'YYYYMMDDHH24MI') <=  RFQ_CLOSE_DATE || RFQ_CLOSE_TIME                                          
+	]]>
+	</method>
+
+
+	<method name="et_getRFQStatus">
+	<![CDATA[
+			 SELECT MIN(SETTLE_FLAG) SETTLE_FLAG
+			  FROM ICOYRQDT 
+			 WHERE 1=1
+			<OPT=F,S>   AND RFQ_NO   =  ? </OPT>
+			<OPT=F,S>  AND RFQ_COUNT =  ? </OPT>
+		   	   AND STATUS IN ( 'C','R') 		                                              
+	]]>
+	</method>
+		
+	<method name="et_getVendorDisplay">
+	<![CDATA[
+		 SELECT		S.VENDOR_CODE,				                                                 
+					GETCOMPANYNAMELOC(S.HOUSE_CODE, S.VENDOR_CODE, 'S')  AS VENDOR_NAME,        
+					(CASE NVL(H.SEND_FLAG, 'N')	WHEN 'N' HEN 'N' ELSE 'Y' END)	AS BID_FLAG 
+		 FROM		ICOYRQSE S					                                                
+					LEFT OUTER JOIN	ICOYQTHD H	                                                
+		 ON			S.HOUSE_CODE 	= H.HOUSE_CODE	                                            
+		 AND		S.RFQ_NO 	 	= H.RFQ_NO	                                                
+		 AND		S.RFQ_COUNT		= H.RFQ_COUNT                                               
+		 AND		S.VENDOR_CODE 	= H.VENDOR_CODE                                             
+		 WHERE		S.STATUS IN	('C','R')	                                                    
+		 <OPT=F,S> AND		S.HOUSE_CODE 	= ?   </OPT>                                        
+		 <OPT=S,S> AND		S.RFQ_NO 		= ?	  </OPT>                                        
+		 <OPT=S,N> AND		S.RFQ_COUNT		= ?   </OPT>                                        
+		 <OPT=S,S> AND		S.RFQ_SEQ 		= ?   </OPT>                                         			                                         
+	]]>
+	</method>
+	
+		<method name="et_getVendorDisplay2">
+	<![CDATA[
+		 SELECT		S.VENDOR_CODE,				                                                 
+					GETCOMPANYNAMELOC(S.HOUSE_CODE, S.VENDOR_CODE, 'S')  AS VENDOR_NAME,        
+					(CASE NVL(H.SEND_FLAG, 'N')	WHEN 'N' THEN 'N' ELSE 'Y' END)	AS BID_FLAG,
+					(CASE WHEN NVL(S.CONFIRM_FLAG,'') = 'R' AND NVL(S.BID_FLAG,'Y') = 'N' THEN 'Y' ELSE 'N' END) AS REJECT_FLAG    
+		 FROM		ICOYRQSE S					                                                
+					LEFT OUTER JOIN	ICOYQTHD H	                                                
+		 ON			S.HOUSE_CODE 	= H.HOUSE_CODE	                                            
+		 AND		S.RFQ_NO 	 	= H.RFQ_NO	                                                
+		 AND		S.RFQ_COUNT		= H.RFQ_COUNT                                               
+		 AND		S.VENDOR_CODE 	= H.VENDOR_CODE                                             
+		 WHERE		S.STATUS IN	('C','R')	                                                    
+		   AND		S.HOUSE_CODE 	= ${session.HOUSE_CODE}                                        
+		   AND		S.RFQ_NO 		= $S{rfq_no}                                        
+		   AND		S.RFQ_COUNT		= $S{rfq_count}                                        
+		   AND		S.RFQ_SEQ 		= $S{rfq_seq}  
+		 GROUP BY   S.HOUSE_CODE, S.VENDOR_CODE, H.SEND_FLAG, S.CONFIRM_FLAG, S.BID_FLAG                                       			                                         
+	]]>
+	</method>
+	
+	<method name="et_Approval">
+	<![CDATA[
+		 UPDATE	ICOYRQHD										 
+		   SET SIGN_STATUS		= '#flag#',					 
+			   SIGN_PERSON_ID	= '#sign_user_id#',			 
+			   SIGN_DATE		= '#sign_date#'				 
+		 WHERE HOUSE_CODE		= '#house_code#'	 
+		   AND COMPANY_CODE		= '#company_code#'	 
+		   AND RFQ_NO			= '#exec_no#'					 
+		   AND RFQ_COUNT		= '#exec_seq#'				 
+		   AND STATUS			!= 'D'							 			                                         
+	]]>
+	</method>
+	
+	<method name="setMail">
+	<![CDATA[
+		 SELECT MIN(LUSR.EMAIL)                  AS EMAIL,                 
+		        MIN(RQSE.CHANGE_USER_NAME_LOC)   AS CHANGE_USER_NAME_LOC,  
+		        MIN(VNGL.EMAIL)                  AS EMAIL1,                 
+		        MIN(VNGL.NAME_LOC)               AS NAME_LOC,              
+		        MIN(LUSR.PHONE_NO)               AS PHONE_NO               
+		  FROM ICOYRQSE RQSE                                               
+		        LEFT OUTER JOIN ICOMLUSR LUSR                              
+		            ON RQSE.HOUSE_CODE = LUSR.HOUSE_CODE                   
+		            AND RQSE.CHANGE_USER_ID = LUSR.USER_ID                 
+		        LEFT OUTER JOIN ICOMVNGL VNGL                              
+		            ON RQSE.HOUSE_CODE = VNGL.HOUSE_CODE                   
+		            AND RQSE.VENDOR_CODE = VNGL.VENDOR_CODE                
+		  WHERE RQSE.HOUSE_CODE = '#HOUSE_CODE#'                         
+		    AND RQSE.RFQ_NO = '#RFQ_NO#'	                                
+		    AND RQSE.RFQ_COUNT = #RFQ_COUNT#                             
+		    AND RQSE.STATUS <> 'D'                                         
+		  GROUP BY RQSE.VENDOR_CODE                                        	
+	]]>
+	</method>
+	
+	<method name="et_Reject">
+	<![CDATA[
+		 UPDATE	ICOYRQHD										 
+		   SET SIGN_STATUS		= '#flag#',					 
+			   SIGN_PERSON_ID	= '#sign_user_id#'
+		 WHERE HOUSE_CODE		= '#house_code#'	 
+		   AND COMPANY_CODE		= '#company#'	 
+		   AND RFQ_NO			= '#exec_no#'					 
+		   AND RFQ_COUNT		= '#exec_seq#'				 
+		   AND STATUS			!= 'D'							 	
+	]]>
+	</method>
+	
+	
+	<method name="et_getInterViewHum_BACK">
+	<![CDATA[
+		
+	SELECT                                      
+         MT.HOUSE_CODE                             
+        ,MT.COMPANY_CODE                           
+        ,MT.HUMAN_NO                               
+        ,MT.STATUS                                 
+        ,MT.ADD_DATE                               
+        ,MT.ADD_TIME                               
+        ,MT.ADD_USER_ID                            
+        ,MT.CHANGE_DATE                            
+        ,MT.CHANGE_TIME                            
+        ,MT.CHANGE_USER_ID                         
+        ,MT.VENDOR_CODE                            
+        ,MT.NAME_LOC                               
+        ,MT.PHONE_NO                               
+        ,MT.EMAIL                                  
+        ,MT.ZIP_CODE                               
+        ,MT.ADDRESS_LOC                            
+        ,MT.FINAL_GRADUATION                       
+        ,GETICOMCODE1('100','M172',MT.ASSOCIATION_GRADE) 
+          AS ASSOCIATION_GRADE        
+        ,GETICOMCODE1('100','M174',MT.POSITION)    
+          AS POSITION           
+        ,MT.FIRST_PROJECT_DATE                     
+        ,MT.REMARK                                 
+        ,MT.RESIDENT_NO                            
+        ,MT.MOBILE_NO                              
+        ,MT.MILITARY_SERVICE                       
+        ,MT.IT_WORK_PERIOD                        
+        ,MT.VENDOR_GRADE                          
+        ,GETICOMCODE1('100','M173',MT.REGULAR_FLAG) 
+          AS  REGULAR_FLAG                           
+        ,MT.JOIN_DATE                              
+        ,MT.FIRST_PROJECT_VENDOR
+        ,getCompanyName(MT.HOUSE_CODE, MT.VENDOR_CODE,'S','LOC') AS COMPANY_NAME                   
+       FROM ICOMHUMT MT, ICOYRQSE RQ                               
+       WHERE MT.HOUSE_CODE = RQ.HOUSE_CODE
+         AND MT.VENDOR_CODE = RQ.VENDOR_CODE
+         AND MT.COMPANY_CODE = RQ.COMPANY_CODE 
+         AND RQ.HOUSE_CODE     =  '#house_code#'
+         AND RFQ_NO ='#rfq_no#'
+         AND RQ.RFQ_COUNT = '#rfq_count#'
+         AND RQ.RFQ_SEQ = '000001'
+         AND RQ.COMPANY_CODE = '#company_code#'
+         AND MT.STATUS IN ('C','R') 					 	
+	]]>
+	</method>
+	
+	
+	<method name="et_getInterViewHum">
+	<![CDATA[
+	SELECT                                      
+         MT.HOUSE_CODE                             
+        ,MT.COMPANY_CODE                           
+        ,MT.HUMAN_NO                               
+        ,MT.STATUS                                 
+        ,MT.ADD_DATE                               
+        ,MT.ADD_TIME                               
+        ,MT.ADD_USER_ID                            
+        ,MT.CHANGE_DATE                            
+        ,MT.CHANGE_TIME                            
+        ,MT.CHANGE_USER_ID                         
+        ,MT.VENDOR_CODE                            
+        ,MT.NAME_LOC                               
+        ,MT.PHONE_NO                               
+        ,MT.EMAIL                                  
+        ,MT.ZIP_CODE                               
+        ,MT.ADDRESS_LOC                            
+        ,MT.FINAL_GRADUATION                       
+        ,GETICOMCODE1('100','M172',MT.ASSOCIATION_GRADE) 
+          AS ASSOCIATION_GRADE        
+        ,GETICOMCODE1('100','M174',MT.POSITION)    
+          AS POSITION           
+        ,MT.FIRST_PROJECT_DATE                     
+        ,MT.REMARK                                 
+        ,MT.RESIDENT_NO                            
+        ,DECODE(LENGTH(MT.MOBILE_NO), 10 , SUBSTR(MT.MOBILE_NO,0,3) || '-' || SUBSTR(MT.MOBILE_NO,4,3) || '-' || SUBSTR(MT.MOBILE_NO,7,4) 
+                                         , 11 , SUBSTR(MT.MOBILE_NO,0,3) || '-' || SUBSTR(MT.MOBILE_NO,4,4) || '-' || SUBSTR(MT.MOBILE_NO,8,4)
+                                         , '' ) AS MOBILE_NO
+        ,MT.MILITARY_SERVICE                       
+        ,MT.IT_WORK_PERIOD                        
+        ,MT.VENDOR_GRADE                          
+        ,GETICOMCODE1('100','M173',MT.REGULAR_FLAG) 
+          AS  REGULAR_FLAG                           
+        ,MT.JOIN_DATE                              
+        ,MT.FIRST_PROJECT_VENDOR
+        ,getCompanyName(MT.HOUSE_CODE, MT.VENDOR_CODE,'S','LOC') AS COMPANY_NAME
+        ,QT.INTERVIEW_FLAG
+        ,QT.INTERVIEW_RESULT
+        ,QT.INTERVIEW_REMARK
+        ,QT.QTA_NO
+        ,QT.QTA_SEQ
+        ,QT.RFQ_NO
+        ,QT.RFQ_SEQ
+        ,QT.RFQ_COUNT                   
+        ,GETUSERNAMELOC(QT.HOUSE_CODE, QT.ADD_USER_ID) ADD_USER_NAME
+       FROM ICOYQTDT QT, ICOMHUMT MT                               
+       WHERE MT.HOUSE_CODE = QT.HOUSE_CODE
+         AND MT.VENDOR_CODE = QT.VENDOR_CODE
+         AND MT.COMPANY_CODE = QT.COMPANY_CODE 
+         AND MT.HUMAN_NO = QT.HUMAN_NO
+         AND QT.HOUSE_CODE     =  '#house_code#'
+         AND QT.RFQ_NO ='#rfq_no#'
+         AND QT.RFQ_COUNT = '#rfq_count#'
+         --AND QT.COMPANY_CODE = '#company_code#'
+         AND MT.STATUS IN ('C','R')
+         ORDER BY getCompanyName(MT.HOUSE_CODE, MT.VENDOR_CODE,'S','LOC'), MT.NAME_LOC
+	]]>
+	</method>
+	
+	
+	
+	<method name="et_insertInterViewResult">
+	<![CDATA[
+		UPDATE ICOYQTDT 
+			SET INTERVIEW_RESULT = ?,
+		    INTERVIEW_REMARK = ?
+		 WHERE HOUSE_CODE = '#house_code#'
+		   AND QTA_NO = ?
+		   AND QTA_SEQ = ?
+		   AND VENDOR_CODE = ?
+	]]>
+	</method>
+	
+	<method name="et_insertInterViewResult_1">
+	<![CDATA[
+		UPDATE ICOYRQHD
+			SET EVAL_FLAG = '#eval_flag#'
+		 WHERE HOUSE_CODE = '#house_code#'
+		   AND RFQ_NO =  '#rfq_no#'
+		   AND RFQ_COUNT =  '#rfq_count#'
+	]]>
+	</method>
+	
+	<method name="et_insertInterView">
+	<![CDATA[
+		UPDATE ICOYQTDT SET INTERVIEW_FLAG = ?
+							, INTERVIEW_DATE = '#interDate#' || '#interTime#'
+		 WHERE HOUSE_CODE = '#house_code#'
+		   AND QTA_NO = ?
+		   AND QTA_SEQ = ?
+		   AND VENDOR_CODE = ?
+	]]>
+	</method>
+	
+	<method name="et_getPrCount">
+	SELECT 	COUNT(1) AS CNT 
+	FROM 	ICOYRQDT
+	WHERE 	PR_NO||PR_SEQ IN (#addVal#)
+	AND     STATUS IN ('C','R')
+	</method>
+	
+	<method name="et_getRfqPriceHeader">
+		SELECT 	MAX(H.SUBJECT) AS SUBJECT
+   		,		MAX(H.RFQ_CLOSE_DATE) AS RFQ_CLOSE_DATE
+   		,  		GETVENDORNAME(MAX(D.HOUSE_CODE), MAX(D.VENDOR_CODE)) AS VENDOR_NAME
+   		,		SUM(D.ITEM_AMT) AS TOT_AMT
+   		FROM    ICOYRQHD H, ICOYQTDT D, ICOYRQDT E, ICOYRQSE RQSE                                     
+   		WHERE   H.HOUSE_CODE     = D.HOUSE_CODE                                           
+   		AND     H.RFQ_NO         = D.RFQ_NO                                               
+   		AND     H.RFQ_COUNT      = D.RFQ_COUNT                                            
+   		AND     D.HOUSE_CODE     = E.HOUSE_CODE                                           
+   		AND     D.RFQ_NO         = E.RFQ_NO                                               
+   		AND     D.RFQ_COUNT      = E.RFQ_COUNT                                            
+   		AND     D.RFQ_SEQ        = E.RFQ_SEQ                                              
+   		AND     RQSE.HOUSE_CODE  = D.HOUSE_CODE                                           
+   		AND     RQSE.RFQ_NO      = D.RFQ_NO                                               
+   		AND     RQSE.RFQ_COUNT   = D.RFQ_COUNT                                            
+   		AND     RQSE.RFQ_SEQ     = D.RFQ_SEQ                                              
+   		AND     RQSE.VENDOR_CODE = D.VENDOR_CODE
+		AND     D.RFQ_NO         = ${rfq_no}
+		AND     D.RFQ_COUNT      = ${rfq_count}
+		AND     D.STATUS IN ('C','R')                                                     
+   		AND     E.STATUS IN ('C','R')                                                     
+   		AND     RQSE.STATUS IN ('C','R')
+   		AND D.SETTLE_FLAG = 'Y'
+	</method>
+	
+	<method name="et_getRfqPriceList">
+		SELECT 	RANK() OVER( PARTITION BY VENDOR_CODE ORDER BY VENDOR_CODE, ITEM_NO, RFQ_SEQ) AS ORDER_SEQ
+		,		A.*
+		FROM
+		(
+			SELECT	'1' AS GUBUN
+			,		D.VENDOR_CODE
+			,		GETVENDORNAME(D.HOUSE_CODE, D.VENDOR_CODE) AS VENDOR_NAME
+			,		E.ITEM_NO
+			,		(SELECT DESCRIPTION_LOC FROM ICOMMTGL WHERE ITEM_NO = E.ITEM_NO ) AS ITEM_NAME			
+			,		D.ITEM_QTY
+			,		NVL(D.UNIT_PRICE,    0) AS UNIT_PRICE
+			,		D.ITEM_AMT AS SUPPLY_AMT
+			,		D.RFQ_SEQ
+			FROM    ICOYQTDT D, ICOYRQDT E, ICOYRQSE RQSE                                     
+			WHERE   D.HOUSE_CODE     = E.HOUSE_CODE                                           
+			AND     D.RFQ_NO         = E.RFQ_NO                                               
+			AND     D.RFQ_COUNT      = E.RFQ_COUNT                                            
+			AND     D.RFQ_SEQ        = E.RFQ_SEQ                                              
+			AND     RQSE.HOUSE_CODE  = D.HOUSE_CODE                                           
+			AND     RQSE.RFQ_NO      = D.RFQ_NO                                               
+			AND     RQSE.RFQ_COUNT   = D.RFQ_COUNT                                            
+			AND     RQSE.RFQ_SEQ     = D.RFQ_SEQ                                              
+			AND     RQSE.VENDOR_CODE = D.VENDOR_CODE
+			AND     D.RFQ_NO         = ${rfq_no}
+			AND     D.RFQ_COUNT      = ${rfq_count}
+			AND     D.STATUS IN ('C','R')                                                     
+			AND     E.STATUS IN ('C','R')                                                     
+			AND     RQSE.STATUS IN ('C','R')
+			UNION ALL
+			SELECT	'2'
+			,		D.VENDOR_CODE
+			,		GETVENDORNAME(MAX(D.HOUSE_CODE), D.VENDOR_CODE) AS VENDOR_NAME
+			,		'TOT'
+			,		''
+			,		SUM(D.ITEM_QTY) 
+			,		NVL(SUM(D.UNIT_PRICE), 0) AS UNIT_PRICE
+			,		SUM(D.ITEM_AMT) AS SUPPLY_AMT
+			,		'000000'
+			FROM    ICOYQTDT D, ICOYRQDT E, ICOYRQSE RQSE                                     
+			WHERE   D.HOUSE_CODE     = E.HOUSE_CODE                                           
+			AND     D.RFQ_NO         = E.RFQ_NO                                               
+			AND     D.RFQ_COUNT      = E.RFQ_COUNT                                            
+			AND     D.RFQ_SEQ        = E.RFQ_SEQ                                              
+			AND     RQSE.HOUSE_CODE  = D.HOUSE_CODE                                           
+			AND     RQSE.RFQ_NO      = D.RFQ_NO                                               
+			AND     RQSE.RFQ_COUNT   = D.RFQ_COUNT                                            
+			AND     RQSE.RFQ_SEQ     = D.RFQ_SEQ                                              
+			AND     RQSE.VENDOR_CODE = D.VENDOR_CODE
+			AND     D.RFQ_NO         = ${rfq_no}
+			AND     D.RFQ_COUNT      = ${rfq_count}
+			AND     D.STATUS IN ('C','R')                                                     
+			AND     E.STATUS IN ('C','R')                                                     
+			AND     RQSE.STATUS IN ('C','R')
+			GROUP BY D.VENDOR_CODE
+		)A
+		ORDER BY VENDOR_CODE, ITEM_NO
+	</method>
+</service>
+
+

@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<service>
+	<method name="getBdAnnListSeller">
+	<![CDATA[
+           SELECT  
+           		   DECODE(SUBSTR(VW.ANN_NO,1,2),'BD',VW.BID_NO,VW.ANN_NO) AS ANN_NO ,
+                   VW.ANN_ITEM         ,
+                   VW.ANN_VERSION,
+                   VW.BID_TYPE,
+				   VW.CONT_TYPE1 ,
+				   VW.CONT_TYPE2 ,
+				   GETICOMCODE2(VW.HOUSE_CODE, 'M974', VW.CONT_TYPE1 )||' / '|| 
+				   GETICOMCODE2(VW.HOUSE_CODE, 'M973', VW.CONT_TYPE2 )||' / '||
+				   GETICOMCODE2(VW.HOUSE_CODE, 'M930', VW.PROM_CRIT ) AS CONT_TYPE1_TEXT ,
+                   TO_CHAR(TO_DATE(VW.APP_BEGIN_DATE||VW.APP_BEGIN_TIME, 'YYYYMMDDHH24MISS'),'YYYY/MM/DD HH24:MI') AS APP_BEGIN_DATE_TIME ,
+                   TO_CHAR(TO_DATE(VW.APP_END_DATE||VW.APP_END_TIME, 'YYYYMMDDHH24MISS'),'YYYY/MM/DD HH24:MI') AS APP_END_DATE_TIME ,
+                   TO_CHAR(TO_DATE(VW.BID_BEGIN_DATE||VW.BID_BEGIN_TIME, 'YYYYMMDDHH24MISS'),'YYYY/MM/DD HH24:MI') AS BID_BEGIN_DATE_TIME ,
+                   TO_CHAR(TO_DATE(VW.BID_END_DATE||VW.BID_END_TIME, 'YYYYMMDDHH24MISS'),'YYYY/MM/DD HH24:MI') AS BID_END_DATE_TIME ,
+                   DECODE (VW.ANNOUNCE_DATE, NULL, '', TO_CHAR (TO_DATE (VW.ANNOUNCE_DATE),'YYYY/MM/DD')) AS ANNOUNCE_DATE,
+                   DECODE (VW.ANNOUNCE_FLAG, 'Y', '필수참석', 'N', '선택', '없음') AS ANNOUNCE_FLAG,
+                   VW.ATTACH_NO,
+                   (SELECT COUNT(*) FROM ICOMATCH WHERE DOC_NO = VW.ATTACH_NO) AS ATTACH_CNT,
+                   CASE WHEN VW.BID_STATUS IN ('SB','NB','NE') THEN DECODE(VW.BID_STATUS, 'SB', '낙찰', 'NB','유찰', 'NE','협상중')
+                              WHEN VW.BID_STATUS in ('AR','UR','CR') THEN '공고작성'
+                        WHEN VW.BID_STATUS in ('CC') THEN '공고취소'
+                        WHEN VW.BID_STATUS in ('AC','UC')
+                        THEN (CASE WHEN VW.ANN_DATE  >  TO_CHAR(SYSDATE, 'YYYYMMDD') THEN '공고대기'
+                          		   ELSE CASE WHEN SYSDATE < VW.APP_SDATE AND SYSDATE < VW.APP_EDATE THEN '공고중'
+											 WHEN SYSDATE >= VW.APP_SDATE AND SYSDATE < VW.APP_EDATE
+											 THEN CASE WHEN VW.CONT_TYPE2 <> 'LP'
+											 		   THEN '참가신청중'
+											 		   ELSE '공고중'
+											 	  END
+                                        	 ELSE CASE WHEN VW.BID_EDATE <= SYSDATE
+                                        	 		   THEN '입찰종료'
+                                        	 		   WHEN SYSDATE < VW.BID_SDATE
+						                               THEN DECODE(VW.BID_STATUS, 'RC','입찰마감', 'SC','입찰대기', 'QC','입찰대기')
+						                               WHEN VW.BID_SDATE <= SYSDATE AND SYSDATE < VW.BID_EDATE
+						                               THEN '입찰진행중'
+						                               ELSE '입찰대기'
+						                          END
+                                        END
+                              END)
+                        WHEN VW.BID_STATUS in ('SR','QR')
+                            THEN '1단계 평가'
+                        WHEN VW.BID_STATUS in ('RC','SC','QC', 'RR')
+                            THEN (CASE WHEN VW.BID_EDATE <= SYSDATE
+                                       THEN '입찰종료'
+                                       WHEN SYSDATE < VW.BID_SDATE
+                                       THEN DECODE(VW.BID_STATUS, 'RC','입찰마감', 'SC','입찰대기', 'QC','입찰대기')
+                                       WHEN VW.BID_SDATE <= SYSDATE AND SYSDATE < VW.BID_EDATE
+                                       THEN '입찰진행중'
+                                       ELSE '입찰대기'
+                                  END)
+                    END  AS STATUS_TEXT,
+                    VW.BID_STATUS,
+                    VW.BID_NO,
+                    VW.BID_COUNT,
+                    DECODE(NVL(AP.APP_DATE, ''), '', 'N', 'Y') AS STATUS
+                  ,VW.VOTE_COUNT
+                  ,TO_CHAR(TO_DATE(VW.X_DOC_SUBMIT_DATE||VW.X_DOC_SUBMIT_TIME, 'YYYYMMDDHH24MISS'),'YYYY/MM/DD HH24:MI') AS X_DOC_SUBMIT_DATE_TIME
+                  
+            FROM (SELECT  HD.BID_TYPE,
+                          HD.ANN_NO,          HD.ANN_ITEM,        HD.CONT_TYPE1,     HD.CONT_TYPE2,
+                          HD.APP_BEGIN_DATE,  HD.APP_BEGIN_TIME,  HD.APP_END_DATE,   HD.APP_END_TIME,
+                          HD.ANNOUNCE_DATE,   HD.ATTACH_NO,       HD.BID_STATUS,     HD.ANN_DATE,
+                          PG.BID_BEGIN_DATE,  PG.BID_BEGIN_TIME,  PG.BID_END_DATE,   PG.BID_END_TIME,
+                          HD.HOUSE_CODE,      HD.BID_NO,          HD.BID_COUNT,		 HD.ANNOUNCE_FLAG,
+                          TO_DATE(HD.APP_BEGIN_DATE||HD.APP_BEGIN_TIME, 'YYYYMMDDHH24MISS') AS APP_SDATE,
+                          TO_DATE(HD.APP_END_DATE||HD.APP_END_TIME, 'YYYYMMDDHH24MISS') AS APP_EDATE,
+                          TO_DATE(PG.BID_BEGIN_DATE||PG.BID_BEGIN_TIME, 'YYYYMMDDHH24MISS') AS BID_SDATE,
+                          TO_DATE(PG.BID_END_DATE||PG.BID_END_TIME, 'YYYYMMDDHH24MISS') AS BID_EDATE,
+                          HD.X_DOC_SUBMIT_DATE,HD.X_DOC_SUBMIT_TIME
+                         ,HD.PREFERRED_BIDDER
+                         ,VN.VENDOR_CODE AS VENDOR_CODE
+                         ,PG.VOTE_COUNT
+         				 ,CASE 
+         				 		WHEN CONT_TYPE1 = 'LC' AND TO_NUMBER(LOC_CNT) > 0
+         				 								THEN (CASE 
+																WHEN VN.CITY_CODE = '1' AND NVL(INSTR(NVL(HD.LOC_CODE, ''), VN.CITY_CODE), 0) <> 1 THEN 'N'
+												 				WHEN NVL(INSTR(NVL(HD.LOC_CODE, ''), VN.CITY_CODE), 0) = 0 THEN 'N'
+												 				ELSE 'Y'
+											 				END)
+						  ELSE 'Y'
+						END AS DISP_YN	
+		               ,CASE WHEN HD.ANN_VERSION IS NULL THEN (SELECT CODE FROM SCODE WHERE TYPE = 'VR001')
+		                ELSE HD.ANN_VERSION
+		                END AS ANN_VERSION
+		               --,HD.BID_TYPE 			
+		               ,HD.ADD_DATE||HD.ADD_TIME AS ADD_DATE_TIME
+		               ,HD.PROM_CRIT   
+                     FROM ICOYBDHD HD
+                     	LEFT OUTER JOIN ICOYBDPG PG
+                      		--ON HD.BID_TYPE   		= 'D'
+                           		--AND HD.HOUSE_CODE 	= PG.HOUSE_CODE
+                           		ON  HD.HOUSE_CODE 	= PG.HOUSE_CODE
+                         		AND HD.BID_NO     	= PG.BID_NO
+                         		AND HD.BID_COUNT  	= PG.BID_COUNT
+						JOIN ICOMVNGL VN 
+              				ON HD.HOUSE_CODE 		= VN.HOUSE_CODE 
+              					AND VN.VENDOR_CODE 	= ${COMPANY_CODE}
+                     WHERE HD.STATUS 		IN ('C' ,'R')
+                         AND PG.STATUS 		IN ('C' ,'R')
+						 AND HD.BID_STATUS 	IN ('AC','UC','CC','SR','QC','RC','SC','RR')
+                         AND HD.SIGN_STATUS IN ('C')
+                		 AND HD.HOUSE_CODE  = ${HOUSE_CODE}     
+                		 AND HD.ANN_DATE BETWEEN  $S{START_CHANGE_DATE} 
+                		 AND  $S{END_CHANGE_DATE} 
+                 		 AND HD.ANN_NO    	=  $S{ANN_NO}
+                 		 AND HD.ANN_ITEM  	LIKE  '%'||$S{ANN_ITEM}||'%'  
+                 ) VW, ICOYBDAP AP
+            WHERE VW.HOUSE_CODE     = AP.HOUSE_CODE(+)
+              --AND VW.BID_TYPE       = 'D'
+              AND VW.BID_NO         = AP.BID_NO(+)
+              AND VW.BID_COUNT      = AP.BID_COUNT(+)
+       		  AND VW.VENDOR_CODE 	= AP.VENDOR_CODE(+) 
+              AND AP.BID_CANCEL(+)  = 'N'
+              --AND TO_NUMBER(VW.ANN_DATE) <= TO_NUMBER(TO_CHAR(SYSDATE,'YYYYMMDD'))
+              AND (VW.CONT_TYPE1 <> 'NC' OR
+                   ${COMPANY_CODE} IN (SELECT VENDOR_CODE FROM ICOYBDAP
+                                        WHERE HOUSE_CODE = VW.HOUSE_CODE
+                                          AND BID_NO     = VW.BID_NO
+                                          AND BID_COUNT  = VW.BID_COUNT
+                                          AND BID_CANCEL = 'N'
+                                          AND STATUS IN ('C', 'R')) )
+              AND VW.DISP_YN = 'Y'  
+            ]]>
+		<if test="${BD_STATUS_TEXT}" operator = "ne" value="">
+			<![CDATA[
+           AND  (CASE WHEN VW.BID_STATUS IN ('SB','NB','NE') THEN DECODE(VW.BID_STATUS, 'SB', '낙찰', 'NB','유찰', 'NE','협상중')
+                        WHEN VW.BID_STATUS in ('AR','UR','CR') THEN '공고작성'
+                        WHEN VW.BID_STATUS in ('CC') THEN '공고취소'
+                        WHEN VW.BID_STATUS in ('AC','UC')
+                        THEN (CASE WHEN VW.ANN_DATE  >  TO_CHAR(SYSDATE, 'YYYYMMDD') THEN '공고대기'
+                          		   ELSE CASE WHEN SYSDATE < VW.APP_SDATE AND SYSDATE < VW.APP_EDATE THEN '공고중'
+											 WHEN SYSDATE >= VW.APP_SDATE AND SYSDATE < VW.APP_EDATE
+											 THEN CASE WHEN VW.CONT_TYPE2 <> 'LP'
+											 		   THEN '참가신청중'
+											 		   ELSE '공고중'
+											 	  END
+                                        	 ELSE CASE WHEN VW.BID_EDATE <= SYSDATE
+                                        	 		   THEN '입찰종료'
+                                        	 		   WHEN SYSDATE < VW.BID_SDATE
+						                               THEN DECODE(VW.BID_STATUS, 'RC','입찰마감', 'SC','입찰대기', 'QC','입찰대기')
+						                               WHEN VW.BID_SDATE <= SYSDATE AND SYSDATE < VW.BID_EDATE
+						                               THEN '입찰진행중'
+						                               ELSE '입찰대기'
+						                          END
+                                        END
+                              END)
+                        WHEN VW.BID_STATUS in ('SR','QR')
+                            THEN '1단계 평가'
+                        WHEN VW.BID_STATUS in ('RC','SC','QC', 'RR')
+                            THEN (CASE WHEN VW.BID_EDATE <= SYSDATE
+                                       THEN '입찰종료'
+                                       WHEN SYSDATE < VW.BID_SDATE
+                                       THEN DECODE(VW.BID_STATUS, 'RC','입찰마감', 'SC','입찰대기', 'QC','입찰대기')
+                                       WHEN VW.BID_SDATE <= SYSDATE AND SYSDATE < VW.BID_EDATE
+                                       THEN '입찰진행중'
+                                       ELSE '입찰대기'
+                                  END)
+                    END  ) = $S{BD_STATUS_TEXT} ]]>
+               </if>               
+       ORDER BY VW.ADD_DATE_TIME DESC
+	
+	</method>
+ 
+	
+</service>

@@ -1,0 +1,6 @@
+framework module JRPodPrivate {
+  umbrella header "JRPodPrivate-umbrella.h"
+
+  export *
+  module * { export * }
+}

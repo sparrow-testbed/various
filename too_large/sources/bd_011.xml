@@ -1,0 +1,274 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<service>
+	<method name="et_bdHdDisplay">
+    <![CDATA[
+    SELECT                                                                                                              
+	  PUB_DATE                  --공고일자                                                                         
+	, PUB_ITEM                  --입찰건명                                                                         
+	, BD_CATEGORY               --입찰종류                                                                         
+	, CHANGE_USER_NAME_LOC      --입찰담당자                                                                       
+	, CTRL_PERSON_NAME_LOC      --입찰담당자                                                                       
+	, CTRL_PERSON_ID      		  --입찰담당자                                                                        
+	, BD_TYPE                   --입찰방법                                                                         
+	, BD_METHOD                --입찰형태                                                                         
+	, JODAL_BD_NO               --조달청입찰번호                                                                   
+	, LIMIT_CRIT                --제한조건                                                                         
+	, SECURITY_PAYMENT          --보증금전자납부                                                                   
+	, BUDGET_ESTIMATE_FLAG      --예산/추정가격공개                                                                
+	, REQ_BEGIN_DATE            --입찰신청시작일자                                                                 
+	, REQ_BEGIN_TIME            --입찰신청시작시간                                                                 
+	, REQ_END_DATE              --입찰신청마감일자                                                                 
+	, REQ_END_TIME              --입찰신청마감시간                                                                 
+	, BD_OPEN_DATE              --개찰일자                                                                         
+	, BD_OPEN_TIME              --개찰일시                                                                         
+	, BD_ELIGIBILITY            --입찰참가자격                                                                     
+	, REQ_ETC                   --기타사항                                                                         
+	, ATTACH_NO                 --공고서첨부파일                                                                   
+	, GETFILECOUNT(ATTACH_NO) AS ATTACH_CNT  --첨부파일 수                                   
+	, ATTACH_NO1                 --규격서첨부파일                                                                  
+	, GETFILECOUNT(ATTACH_NO1) AS ATTACH_CNT1  --첨부파일 수                                 
+	, PREPARE_KIND              --예정가격기준                                                                     
+	, PREPARE_RATE              --예정가격범위                                                                     
+	, PREPARE_MAX               --예비가격 사용수                                                                  
+	, PREPARE_VOTE              --추첨 예비가격 수                                                                 
+	, MIN_VOTE_RATE             --투찰율                                                                           
+	, ESTIMATED_COST            --사업예산                                                                         
+	, DEDUCTION_COST            --추정가격                                                                         
+	, PREPARE_FLAG              --예정가격확정여부                                                                 
+	, PREPARE_BASIC_PRICE       --예정가격기초금액                                                                 
+	, PREPARE_CONFIRM_PRICE     --예정가격확정금액                                                                 
+	, PREPARE_ADD_DATE AS PREPARE_ADD_DATE  --예정가격등록일자                
+	, PREPARE_CONFIRM_DATE AS PREPARE_CONFIRM_DATE  --예정가격확정일자        
+	, EXPLAIN_DATE              --사양설명회 개최일                                                                
+	, EXPLAIN_TIME_FROM         --사양설명회 시간(FROM)                                                            
+	, EXPLAIN_TIME_TO           --사양설명회 시간(TO)                                                              
+	, EXPLAIN_AREA              --사양설명회 지역                                                                  
+	, EXPLAIN_PLACE             --사양설명회 지역                                                                  
+	, EXPLAIN_FLAG              --사양설명회 참석필수여부                                                          
+	, EXPLAIN_RESP              --사양설명회 담당자                                                                
+	, EXPLAIN_TEL               --사양설명회 담당자 문의처                                                         
+	, EXPLAIN_COMMENT           --사양설명회 특기사항                                                              
+	, BD_STATUS                 --진행상                                                                           
+	, BD_KIND                   --입찰구분                                                                         
+	, TECHNOLOGY_ASSESSMENT     --기술평가비율                                                                     
+	, PROP_SUB_DATE        	 --제안서 제출일   			                                                              
+	, PROP_SUB_TIME			 --제안서 제출시간			                                                                        
+	, OPEN_STATUS 			 --개찰여부 개찰-PC,미개찰 PN     
+	                  
+  	, (SELECT COUNT(DISTINCT SELLER_CODE) 
+	      FROM SEBSE 
+	      WHERE NVL(DEL_FLAG, 'N') = 'N'	                              
+	       AND BD_NO = H.BD_NO AND BD_COUNT = H.BD_COUNT) AS VND_CNT 	  
+	, GETCODETEXT1('M163',BD_TYPE   , $S{session.LANGUAGE}) AS BD_TYPE_TEXT                                   
+	, GETCODETEXT1('M164',BD_METHOD , $S{session.LANGUAGE}) AS BD_METHOD_TEXT   
+	                
+FROM SEBGL H                                                                                                        
+WHERE 1=1
+AND BD_NO    = ${bd_no}                      
+AND BD_COUNT = ${bd_count}                  
+AND NVL(DEL_FLAG, 'N') = 'N'      
+    ]]>
+	</method>
+
+	<method name="et_bdDtDisplay">
+    <![CDATA[
+SELECT                                                 
+      ROWNUM NO                                            
+    , BD_SEQ                   --입찰요청헝번                        
+    , DESCRIPTION_LOC          --품명                        
+    , SPECIFICATION            --규격                        
+    , PR_QTY                   --구매요청수량                        
+    , '0' UNIT_PRICE           --단가                            
+    , '0' PR_AMT               --금액                            
+    , PR_NUMBER                --구매요청번호                        
+    , PR_SEQ                   --구매요청항번                        
+    , UNIT_MEASURE             --단위                       
+    , GETCODETEXT1('M007',UNIT_MEASURE, ${session.LANGUAGE}) AS UNIT_MEASURE_TEXT --단위설명
+    , MAKER                     --메이커(제조사)              		 
+    , YEAR_OF_MANUFACTURE       --연간소요량                          
+    , MATERIAL_NUMBER           --품목코드
+    , DILIVER_PLACE AS DELY_TO_LOCATION  --납품장소                
+    , POR_DATE     AS RD_DATE   --납품요청일   
+    , PR_USER_ID                --구매요청자                   	    
+    , CTRL_PERSON_ID            --구매담당자                        
+    , DEMAND_DEPT               --요청부서  
+   -- , GETSELEBSE (BD_NO, BD_COUNT ) AS SELLER_CODE									 
+    , (SELECT COUNT(DISTINCT SELLER_CODE) FROM SEBSE WHERE NVL(DEL_FLAG, 'N') = 'N'  
+          AND BD_NO = D.BD_NO AND BD_COUNT = D.BD_COUNT) AS SELLER_CODE_CNT  -- 선정된 업체	 
+FROM SEBLN D                                            
+WHERE NVL(DEL_FLAG, 'N') = 'N'    
+AND BD_NO    = ${bd_no}                      
+AND BD_COUNT = ${bd_count}                   
+]]>
+<if test="${bd_method}" operator="eq" value="PL">   /*최저가*/                                                                   
+      <![CDATA[   ORDER BY D.PR_AMT  	]]>   
+</if>
+
+ 
+	</method>
+	
+	<method name="et_setEBSECreate">
+    <![CDATA[
+	INSERT INTO SEBSE 			
+		(                   
+			 HOUSE_CODE       
+			,COMPANY_CODE       
+			,SELLER_CODE       
+			,BD_NO            
+			,BD_COUNT         
+			,BD_SEQ           
+			,ADD_DATE         
+			,ADD_USER_ID      
+			,ADD_TIME         
+			,CHANGE_DATE			
+			,CHANGE_USER_ID   
+			,CHANGE_TIME      
+			,DEL_FLAG         
+   		)                 
+VALUES           
+(
+
+	 ${house_code		}     
+	,${company_code		}  
+	,${seller_code		}    
+	,${bd_no            } 
+	,${bd_count         }
+	,${bd_seq           }
+	,${add_date         }
+	,${add_user_id      }
+	,${add_time         }
+	,${change_date		}
+	,${change_user_id   }
+	,${change_time      }
+	,${del_flag         }
+)   
+    ]]>
+	</method>
+	<method name="et_setDeleteSPRGL">
+    <![CDATA[
+	    DELETE FROM SPRGL WHERE PR_NUMBER = ${PR_NUMBER}
+    ]]>
+	</method>
+	
+
+	<method name="setPRReject_updateLN">
+    <![CDATA[
+               UPDATE SPRLN SET /* PU_011.setPRReject */
+                            RETURN_REASON= $S{RETURN_REASON}      
+                          , PR_STATUS    = 'R'    
+                          , RETURN_DATE  = $S{RETURN_DATE}  
+                      WHERE COMPANY_CODE = $S{COMPANY_CODE} 
+                      AND PR_NUMBER      = $S{PR_NUMBER}         
+                      AND PR_SEQ         = $S{PR_SEQ}          
+
+    ]]>
+	</method>
+	<method name="et_setEBGLUpdate">
+    <![CDATA[
+	UPDATE SEBGL SET             			                                           
+       PUB_DATE					=	${pub_date}                                         
+     , PUB_ITEM					=	${pub_item}                                         
+     , BD_CATEGORY				=	${bd_category}                                      
+     , BD_TYPE					=	${bd_type}                                          
+     , BD_METHOD           	=	${bd_method}                               
+     , JODAL_BD_NO          	=	${jodal_bd_no}                            
+     , LIMIT_CRIT				=	${limit_crit}                                   
+     , SECURITY_PAYMENT			=	${security_payment}                            
+     , BUDGET_ESTIMATE_FLAG		=	${budget_estimate_flag}                         
+     , REQ_BEGIN_DATE			=	${req_begin_date}                               
+     , REQ_BEGIN_TIME			=	${req_begin_time}                               
+     , REQ_END_DATE				=	${req_end_date}                                   
+     , REQ_END_TIME 			=	${req_end_time}                                 
+     , BD_OPEN_DATE				=	${bd_open_date}                                   
+     , BD_OPEN_TIME				=	${bd_open_time}                                 
+     , BD_ELIGIBILITY 			=	${bd_eligibility}                           
+     , REQ_ETC					=	${req_etc}                                      
+     , ATTACH_NO				=	${attach_no}                                    
+     , ATTACH_NO1				=	${attach_no1}                                   
+     , PREPARE_KIND				=	${prepare_kind}                                 
+     , PREPARE_RATE 			=	${prepare_rate}                                 
+     , PREPARE_MAX 				=	${prepare_max}                                  
+     , PREPARE_VOTE				=	${prepare_vote}                                   
+     , MIN_VOTE_RATE			=	${min_vote_rate}                                
+     , ESTIMATED_COST			=	${estimated_cost}                               
+     , DEDUCTION_COST			=	${deduction_cost}                                 
+     , PREPARE_FLAG				=	${prepare_flag}                               
+     , PREPARE_CONFIRM_DATE		=	${prepare_confirm_date}                         
+     , BD_STATUS				=	${bd_status}                                  
+     , CHANGE_DATE				=	${current.date}                                  
+     , CHANGE_TIME				=	${current.time}                                   
+     , CHANGE_USER_ID			=	${session.ID}                           
+     , EXPLAIN_DATE				=	${explain_date}                               
+     , EXPLAIN_TIME_FROM		=	${exp_from_time}                              
+     , EXPLAIN_TIME_TO			=	${exp_to_time}                              
+     , EXPLAIN_AREA				=	${explain_area}                               
+     , EXPLAIN_PLACE			=	${explain_place}                              
+     , EXPLAIN_FLAG				=	${explain_flag}                               
+     , EXPLAIN_RESP				=	${explain_resp}                               
+     , EXPLAIN_TEL				=	${explain_tel}                              
+     , EXPLAIN_COMMENT			=	${explain_comment}                            
+     , CTRL_PERSON_ID			=	${change_user_id}                             
+     , CTRL_PERSON_NAME_LOC		=	${change_user_name}                             
+     , CTRL_PERSON_NAME_ENG		=	${NAME_ENG}                                     
+     , CTRL_PERSON_DEPT			=	${DEPT}                                         
+     , BD_KIND					=	${bd_kind}                                    
+     , TECHNOLOGY_ASSESSMENT	=	${technology_assessment}                      
+     , PROP_SUB_DATE			=	${prop_sub_date}                              
+     , PROP_SUB_TIME			=	${prop_sub_time}                              
+ WHERE HOUSE_CODE 				=	${house_code}                                          
+   AND COMPANY_CODE 			=	${company_code}                                          
+   AND BD_NO 					=	${bd_no}                                          
+   AND BD_COUNT 				=	${bd_count}                                     
+   AND NVL(DEL_FLAG,'N') 		=   'N'                                           
+    ]]>
+	</method>
+	
+	<method name="et_setEBLNUpdate">
+    <![CDATA[
+UPDATE SEBLN SET                                                
+       DESCRIPTION_LOC			=	${DESCRIPTION_LOC}                
+     , SPECIFICATION			=	${SPECIFICATION}                  
+     , UNIT_MEASURE				=	${UNIT_MEASURE}                   
+     , PR_QTY					=	${PR_QTY}                         
+     , PR_AMT					=	${PR_AMT}                         
+     , PR_NUMBER				=	${PR_NUMBER}                      
+     , PR_SEQ					=	${PR_SEQ}                         
+     , DILIVER_PLACE			=	${DELY_TO_LOCATION}               
+     , UNIT_PRICE				=	${UNIT_PRICE}                     
+     , CHANGE_DATE				=	${ADD_DATE}                       
+     , CHANGE_TIME				=	${ADD_TIME}                       
+     , CHANGE_USER_ID			=	${change_user_id}                 
+     , PR_USER_ID           	=	${PR_USER_ID}                  
+	 , CTRL_PERSON_ID			=	${CTRL_PERSON_ID}              
+	 , DEMAND_DEPT				=	${DEMAND_DEPT}                 
+ WHERE HOUSE_CODE				=	${house_code}                       
+   AND COMPANY_CODE				=	${company_code}                       
+   AND BD_NO 					=	${bd_no}                    
+   AND BD_COUNT					=	${bd_count}                    
+   AND BD_SEQ					=	${BD_SEQ}                      
+   AND NVL(DEL_FLAG, 'N')  		=   'N'                                
+       
+
+    ]]>
+	</method>	
+	
+
+	<method name="setBDSend">
+    <![CDATA[
+UPDATE SEBGL SET                                                
+       BD_STATUS				=	${bd_status}                
+     , PUB_DATE 				=	${current.date}                  
+     , CHANGE_DATE				=	${current.date}                          
+     , CHANGE_TIME				=	${current.time}                       
+     , CHANGE_USER_ID			=	${session.ID}           
+ WHERE HOUSE_CODE				=	${house_code}                       
+   AND COMPANY_CODE				=	${company_code}                       
+   AND BD_NO 					=	${bd_no}                    
+   AND BD_COUNT					=	${bd_count}                    
+   AND NVL(DEL_FLAG, 'N')  		=   'N'                                
+       
+
+    ]]>
+	</method>	
+	
+</service>

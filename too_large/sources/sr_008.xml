@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+<service>
+	
+	
+    <method name = "getScrDetail">
+    	<![CDATA[
+    		             
+			select a.s_factor_refitem, a.factor_name, b.item_name, b.seq, b.item_score				
+  				from icomvsfh a, icomvsfd b 						
+			where a.s_factor_refitem = b.s_factor_refitem 		
+  			  and a.S_FACTOR_REFITEM = ${s_factor_refitem}
+  			  and a.house_code = ${session.HOUSE_CODE}				
+  			  order by b.seq asc
+    	]]>
+    </method>
+
+	 <method name = "setScrUpdate_1">
+    <![CDATA[
+    	update icomvsfh set								
+			   factor_name = ${ScreeningItemName},       															
+			   change_date = TO_CHAR(SYSDATE,'YYYYMMDD'), 	
+			   add_user_id = ${session.ID}					
+	    where s_factor_refitem = ${s_factor_refitem} 		
+				and house_code = ${session.HOUSE_CODE}				
+    ]]>
+    </method>
+    
+    <method name = "setScrUpdate_2">
+    <![CDATA[
+         		
+		update icomvsfd set 						
+			   item_name =  ${item_name} ,
+			   item_score =  ${item_score}
+		where  seq =  ${seq} 			
+    		and s_factor_refitem = ${s_factor_refitem}
+    		and house_code = ${session.HOUSE_CODE}			
+    ]]>
+    </method>
+	
+	
+	
+    <method name="setScrInsert_1">
+    <![CDATA[
+		insert into icomvsfh ( 	
+			   house_code, 			
+			   s_factor_refitem, 		
+			   factor_name,    		
+			   factor_type,  			
+			   scale_count,  			
+			   required_seq, 		
+			   status,					
+			   add_date,				
+			   change_date,			
+			   add_user_id)			
+			 select  							
+			   ${session.HOUSE_CODE},				
+			   ${s_factor_refitem},   	
+			   ${ScreeningItemName},									
+			   'S',								
+			   ${scale},									
+		   	   0,						
+			   'C',								
+			   TO_CHAR(SYSDATE,'YYYYMMDD'), 	
+			   TO_CHAR(SYSDATE,'YYYYMMDD'), 	
+			   ${session.ID} from dual
+		   					   	
+    ]]>
+    </method>
+    
+    <method name="setScrInsert_2">
+    <![CDATA[
+		insert into icomvsfd ( 				
+   		  		house_code, 						
+		  		s_factor_item_refitem, 				
+		  		item_name,    						
+		  		status,
+		  		item_score,								
+		 		seq,  								
+		  		s_factor_refitem) 					
+			select  							
+			  ${session.HOUSE_CODE},				
+			  NVL(max(s_factor_item_refitem),0) + 1,  
+			  ${item_name},									
+			  'C',
+			  ${item_score},								
+			  ${seq},									
+			  ${s_factor_refitem} from icomvsfd 			   					   	
+    ]]>
+    </method>
+	
+	 <method name ="chkUpdateItem">
+    <![CDATA[
+    	    select * from icomvssi 	
+            	where s_factor_refitem = ${s_factor_refitem}
+						and house_code = ${session.HOUSE_CODE}				
+    ]]>
+    </method>
+    
+	
+	 <method name="currvalForMssql">
+    <![CDATA[
+		select NVL(max(s_factor_refitem),0) + 1 as currVal
+			from icomvsfh
+    ]]>
+    </method>
+    
+    
+    
+        
+
+</service>

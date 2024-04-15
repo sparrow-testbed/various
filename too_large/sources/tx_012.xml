@@ -1,0 +1,488 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<service>
+	 
+	<method name="bl_getPayOperateExpenseList">
+		SELECT	TAX_NO
+		,		MAX(VENDOR_CODE) AS VENDOR_CODE
+		,		MAX(VENDOR_NAME) AS VENDOR_NAME
+		,		MAX(AMT) AS AMT
+		,		MAX(VAT_AMT) AS VAT_AMT
+		,		MAX(TOT_AMT) AS TOT_AMT
+		,       TAX_DATE
+		,       MAX(TAX_GUBUN) AS TAX_GUBUN 
+		,       MAX(PROGRESS_CODE) AS PROGRESS_CODE 
+		,       MAX(PUBCODE) AS PUBCODE 
+		,       MAX(PROC_DEPT) AS PROC_DEPT
+        ,       MAX(PROC_DEPT_NAME) AS PROC_DEPT_NAME
+		,       MAX(TAX_APP_NO) AS TAX_APP_NO
+		FROM
+		(
+			SELECT	TXHD.TAX_NO
+			,		TRHD.VENDOR_CODE AS VENDOR_CODE
+			,		GETCOMPANYNAMELOC(TRHD.HOUSE_CODE,TRHD.VENDOR_CODE,'S') AS VENDOR_NAME
+			,	   	(
+				    	SELECT	COUNT(1)
+				    	FROM
+				     	SPY1LN 	PYLN
+				    	INNER JOIN SPY1GL PYGL ON PYLN.HOUSE_CODE = PYGL.HOUSE_CODE AND PYLN.PAY_SEND_NO = PYGL.PAY_SEND_NO
+				    	WHERE	PYLN.HOUSE_CODE = TXDT.HOUSE_CODE
+				    	AND		PYLN.TAX_NO     = TXDT.TAX_NO
+				    	AND		PYLN.TAX_SEQ    = TXDT.TAX_SEQ
+				    	AND		PYGL.DEL_YN     = 'N'
+				   	) AS PY_CNT
+		   	,		TXHD.SUP_AMT AS AMT
+		   	,		TXHD.VAT_AMT AS VAT_AMT
+		   	,		TXHD.SUP_AMT + TXHD.VAT_AMT AS TOT_AMT
+		   	,       CONVERT_DATE(TXHD.TAX_DATE) AS TAX_DATE
+  			,       CASE 
+						WHEN TXHD.TAX_APP_NO IS NULL THEN 'RP'
+						ELSE 'P'
+					END AS TAX_GUBUN
+  			,       TXHD.PROGRESS_CODE
+  			,		(SELECT PUBCODE FROM SALEEBILL WHERE RESSEQ = TXHD.TAX_NO) AS PUBCODE 
+  			,       TXHD.PROC_DEPT AS PROC_DEPT                 
+            ,       GETDEPTNAMELOC(TXHD.HOUSE_CODE, 'WOORI', TXHD.PROC_DEPT) AS PROC_DEPT_NAME
+            ,       CASE WHEN TXHD.TAX_APP_NO IS NULL THEN (SELECT MAX(SB.NTS_ISSUEID) FROM SALEEBILL SB WHERE RESSEQ = TXHD.TAX_NO) ELSE TXHD.TAX_APP_NO END AS TAX_APP_NO
+		  	FROM	ICOYTRHD TRHD
+		  	,		ICOYTRDT TRDT
+		  	,		ICOYTXHD TXHD	
+		  	,		ICOYTXDT TXDT
+		  	,		(
+		    			SELECT  TAX_NO
+		    			,  		APP_STATUS_CD
+		    			FROM 
+		    			(
+							SELECT	RANK() OVER( PARTITION BY TAX_NO ORDER BY ADD_DATE||ADD_TIME DESC) AS ORDER_SEQ
+		     				,  		TAX_NO
+		     				, 	 	APP_STATUS_CD
+		     				FROM  SPY2GL 
+		    			)
+		    			WHERE  ORDER_SEQ = 1
+		       		) PYGL
+			WHERE 	TXHD.KTGRM = '02' --01 : 상품, 02 : 용역
+			AND 	TRHD.HOUSE_CODE = TRDT.HOUSE_CODE
+		    AND 	TRHD.PAY_NO = TRDT.PAY_NO
+			AND 	TRDT.HOUSE_CODE = TXHD.HOUSE_CODE
+			AND 	TRDT.TAX_NO = TXHD.TAX_NO
+			AND 	TRDT.HOUSE_CODE = TXDT.HOUSE_CODE
+			AND 	TRDT.TAX_NO = TXDT.TAX_NO
+			AND 	TRDT.TAX_SEQ = TXDT.TAX_SEQ            
+			AND 	TRDT.TAX_NO = PYGL.TAX_NO(+)
+		    <![CDATA[  
+      		AND 	NVL(PYGL.APP_STATUS_CD, 'R') = 'R'
+		  	AND 	TRHD.HOUSE_CODE  = ${session.HOUSE_CODE}
+		   	AND 	TXHD.PROGRESS_CODE IN ('P','E')
+		    AND 	TXHD.COMPANY_CODE = $S{vendor_code}										
+		    AND 	TXHD.TAX_NO       = $S{tax_no}								
+      	    AND 	TXHD.TAX_DATE 	BETWEEN $S{inv_start_date}
+		    AND 	$S{inv_end_date}          
+		    AND 	TXHD.PROGRESS_CODE = $S{progress_code}								
+			]]>   			  			 
+			<if test="${user_dept}" operator="ne" value="">
+			AND TXHD.PROC_DEPT = $S{user_dept}
+			</if>
+		)
+   		WHERE PY_CNT = 0
+		GROUP BY TAX_NO, TAX_DATE    
+   		ORDER BY TAX_NO DESC
+	</method>
+	<method name="bl_getPayOperateExpenseList_BAK">
+		SELECT
+		   *
+		  FROM
+		   (
+		    SELECT
+		     TXHD.TAX_NO,
+		     TXDT.TAX_SEQ,
+		     PODT.DELY_TO_LOCATION AS DELY_TO_LOCATION,
+		     GETDEPTNAME(PODT.HOUSE_CODE, PODT.COMPANY_CODE, PODT.DELY_TO_LOCATION, 'LOC' ) AS DELY_TO_LOCATION_NM,
+		     OGIL.ILGAE_CD AS IGJM_CD,
+		     MTGL.ACCOUNT_CODE AS ACCOUNT_CODE,
+		     MTGL.ACCOUNT_NM AS ACCOUNT_NM,
+		     TRDT.ITEM_NO AS ITEM_NO,
+		     MTGL.DESCRIPTION_LOC AS ITEM_NM,
+		     PODT.SPECIFICATION AS SPECIFICATION,
+		--     TRDT.ITEM_QTY AS QTY,
+		--     TRDT.DELY_UNIT_PRICE AS UNIT_PRICE,
+		     TRHD.VENDOR_CODE,
+		     GETCOMPANYNAMELOC(TRHD.HOUSE_CODE,TRHD.VENDOR_CODE,'S') AS VENDOR_NAME,
+		     (
+		      SELECT
+		       COUNT(1)
+		      FROM
+		       SPY1LN PYLN
+		      INNER JOIN SPY1GL PYGL ON PYLN.HOUSE_CODE = PYGL.HOUSE_CODE AND PYLN.PAY_SEND_NO = PYGL.PAY_SEND_NO
+		      WHERE
+		       PYLN.HOUSE_CODE = TXDT.HOUSE_CODE
+		      AND
+		       PYLN.TAX_NO     = TXDT.TAX_NO
+		      AND
+		       PYLN.TAX_SEQ    = TXDT.TAX_SEQ
+		      AND
+		       PYGL.DEL_YN     = 'N'
+		     ) AS PY_CNT,
+		     TRHD.ADD_DATE,
+		     TXHD.SUP_AMT AS AMT,
+		     TXHD.VAT_AMT,
+		     TXHD.SUP_AMT + TXHD.VAT_AMT AS TOT_AMT
+		    FROM
+		     ICOYTRHD TRHD,
+		     ICOYTRDT TRDT,
+		     ICOYPODT PODT,
+		     ICOMOGIL OGIL,
+		     ICOYTXHD TXHD,
+		     ICOMMTGL MTGL,
+		     ICOYTXDT TXDT,
+		     (
+				SELECT 	TAX_NO
+				,		APP_STATUS_CD
+				FROM	
+				(
+					SELECT 	RANK() OVER( PARTITION BY TAX_NO ORDER BY ADD_DATE||ADD_TIME DESC) AS ORDER_SEQ
+					,		TAX_NO
+					,		APP_STATUS_CD
+					FROM 	SPY2GL 
+				)
+				WHERE 	ORDER_SEQ = 1		     
+		     )	PYGL
+		    WHERE TRHD.HOUSE_CODE = TRDT.HOUSE_CODE
+		    AND TRHD.PAY_NO = TRDT.PAY_NO
+		    AND TRDT.HOUSE_CODE = PODT.HOUSE_CODE
+		    AND TRDT.PO_NO = PODT.PO_NO
+		    AND TRDT.PO_SEQ = PODT.PO_SEQ
+		    AND PODT.HOUSE_CODE = OGIL.HOUSE_CODE(+)
+		    AND PODT.DELY_TO_LOCATION = OGIL.DEPT(+)
+		    AND TRDT.HOUSE_CODE = TXHD.HOUSE_CODE
+		    AND TRDT.TAX_NO = TXHD.TAX_NO
+		    AND TRDT.HOUSE_CODE = TXDT.HOUSE_CODE
+		    AND TRDT.TAX_NO = TXDT.TAX_NO  
+		    AND TRDT.TAX_SEQ = TXDT.TAX_SEQ            
+		    AND TRDT.HOUSE_CODE = MTGL.HOUSE_CODE
+		    AND TRDT.ITEM_NO = MTGL.ITEM_NO
+		    AND TRDT.TAX_NO = PYGL.TAX_NO(+)
+		    <![CDATA[  
+      		AND NVL(PYGL.APP_STATUS_CD, 'R') = 'R'
+		    --AND MTGL.MATERIAL_TYPE IN ('02','04')
+		  	AND TRHD.HOUSE_CODE  = ${session.HOUSE_CODE}
+		   	AND TXHD.PROGRESS_CODE IN ('P','E')
+		    AND TXHD.COMPANY_CODE = $S{vendor_code}										
+		    AND TXHD.TAX_NO       = $S{tax_no}								
+      	    AND TXHD.TAX_DATE 	BETWEEN $S{inv_start_date}
+		    AND $S{inv_end_date}          
+		    AND TXHD.PROGRESS_CODE = $S{progress_code}								
+			]]>   			  			 
+			)
+			WHERE
+				PY_CNT = 0
+			ORDER BY
+				ADD_DATE DESC,
+				TAX_NO DESC
+	</method>
+
+	<method name="bl_getItemList">
+		SELECT 	ITEM_NO 		AS ITEM_CODE
+		,		DESCRIPTION_LOC AS ITEM_NAME
+		,		SPECIFICATION 	AS SPEC
+		,		ITEM_QTY 		AS QTY
+		,		UNIT_PRICE 		AS PRICE
+		,		ITEM_AMT 		AS SUPPLIER_PRICE
+		,		TAX_AMT 		AS TAX_PRICE
+		,		PAY_AMT 		AS TOT_PRICE
+		,		REMARKS
+		FROM 	ICOYTRDT 
+		WHERE 	TAX_NO = ${tax_no}
+	</method>
+	<method name="bl_getSpy2List">
+		SELECT 	
+			   SPGL.HOUSE_CODE,	SPGL.PAY_ACT_NO,	SPGL.VENDOR_CODE, SPGL.STD_DATE, SPGL.DEPOSITOR_NAME
+			 , SPGL.BANK_CODE		, SPGL.BANK_ACCT, SPGL.SUPPLY_AMT, SPGL.TAX_AMT, SPGL.TOT_AMT
+             , SPGL.BMSBMSYY, SPGL.BUGUMCD, SPGL.ACT_DATE, SPGL.EXPENSECD, SPGL.SEMOKCD
+             , SPGL.SAUPCD			, SPGL.DOC_TYPE		, SPGL.PAY_TYPE		, TO_MULTI_BYTE(SPGL.PAY_REASON) AS PAY_REASON, SPGL.TAX_NO		
+             , SPGL.NTS_APP_NO   , SPGL.ACC_TAX_DATE , SPGL.ACC_TAX_SEQ  , SPGL.APP_STATUS_CD	, SPGL.ADD_DATE
+             , SPGL.ADD_TIME, SPGL.ADD_USER_ID, SPGL.SEBUCD, SPGL.ZIPHANGCD, SPGL.PYDTM_APV_NO, SPGL.SLIP_NO
+             , SPGL.USER_TRM_NO , SPGL.ISU_DT, VNGL.VENDOR_NAME_LOC AS VENDOR_NAME, VNGL.IRS_NO, SPGL.EXECUTE_NO
+             , SPGL.COMPLATE_DATE -- TOBE 2017-07-01 추가 
+             , SPGL.COMPLATE_TIME -- TOBE 2017-07-01 추가
+             , CASE WHEN EXE_TRY_DT IS NULL THEN
+			       90
+			   ELSE
+				    (SYSDATE-TO_DATE(EXE_TRY_DT,'YYYY-MM-DD HH24:MI:SS'))*24*60*60
+			   END EXE_TRY_TERM
+		FROM   SPY2GL SPGL,	ICOMVNGL VNGL
+		WHERE  SPGL.PAY_ACT_NO = ${pay_act_no}
+		  AND  SPGL.VENDOR_CODE = VNGL.VENDOR_CODE 
+	</method>
+
+	<method name="bl_getOperateExpenseHeader">
+		SELECT 	TXHD.TAX_NO
+		,		VNGL.VENDOR_NAME_LOC
+		,		VNGL.IRS_NO
+		,		TXHD.SUP_AMT + TXHD.VAT_AMT AS TOT_AMT
+		,		TXHD.SUP_AMT
+		,		TXHD.VAT_AMT
+		,		VNGL.BANK_ACCT
+		,		VNGL.BANK_CODE
+		,		VNGL.DEPOSITOR_NAME
+		FROM	ICOYTXHD TXHD
+		,		ICOMVNGL VNGL
+		WHERE	TXHD.HOUSE_CODE = VNGL.HOUSE_CODE
+		AND 	TXHD.COMPANY_CODE = VNGL.VENDOR_CODE
+		AND 	TXHD.TAX_NO = '#tax_no#'
+	</method>
+	
+	<method name="setApproval_1">
+		INSERT INTO SPY2GL 
+		(
+			HOUSE_CODE
+		,	PAY_ACT_NO
+		,	VENDOR_CODE
+		,	STD_DATE
+		,	DEPOSITOR_NAME	
+		,	BANK_CODE		
+		,	BANK_ACCT
+		,	SUPPLY_AMT
+		,	TAX_AMT
+		,	TOT_AMT
+		,	BMSBMSYY
+		,	BUGUMCD
+		,	ACT_DATE
+		,	EXPENSECD
+		,	SEMOKCD
+		,	SAUPCD			
+		,	DOC_TYPE		
+		,	PAY_TYPE		
+		,	PAY_REASON
+		,	TAX_NO		
+		,   NTS_APP_NO   
+		,   ACC_TAX_DATE 
+		,   ACC_TAX_SEQ  
+		,	APP_STATUS_CD	
+		,	ADD_DATE
+		,	ADD_TIME
+		,	ADD_USER_ID
+		,   ISU_DT
+		,   SEBUCD
+		,   ZIPHANGCD
+		,   ZIPHANGNM
+		,   STATUS_CD
+		)VALUES(
+			${session.HOUSE_CODE}
+		,	${pay_act_no	}	
+		,	${vendor_code	}
+		,	${RGS_DT	    }
+		,	${depositor_name}
+		,	${bank_code		}
+		,	${bank_acct     }
+		,	${spl_am        }
+		,	${tax_am        }
+		,	${exe_am        }
+		,	${bmsbmsyy      }
+		,	${bugumcd       }
+		,	${act_date      }
+		,	${expensecd     }
+		,	${semokcd       }
+		,	${saupcd		}
+		,	${doc_type_loc	}
+		,	${pay_type		}
+		,	${pay_reason    }
+		,	${tax_no		}
+		,   ${nts_app_no    }
+		,   ${acc_tax_date  }
+		,   ${acc_tax_seq	}  		
+		,	'P'
+		,	TO_CHAR(SYSDATE, 'YYYYMMDD')
+		,	TO_CHAR(SYSDATE, 'HH24MISS')
+		,	${session.ID    }
+		,   ${ISU_DT	} 
+		,   ${sebucd	} 
+		,   ${ziphangcd	} 
+		,   ${ziphangnm	} 
+		,   '10'
+		)	
+	</method>
+	
+	<method name="setApproval_2">
+		INSERT INTO SPY2LN
+		(
+			HOUSE_CODE
+		,	PAY_ACT_NO
+		,	PAY_ACT_SEQ
+		,	PMKPMKCD
+		,	CNT
+		,	AMT
+		,	APPAPPAM
+		,	ADD_DATE
+		,	ADD_TIME
+		,	ADD_USER_ID
+		)
+		SELECT 	${session.HOUSE_CODE}
+		,		${pay_act_no}
+		,		TRIM (TO_CHAR (ROWNUM, '000000'))
+		,		ITEM_NO
+		,		ITEM_QTY
+		,		UNIT_PRICE
+		/*,		ITEM_AMT*/
+		,       DELY_AMT
+		,		TO_CHAR(SYSDATE, 'YYYYMMDD')
+		,		TO_CHAR(SYSDATE, 'HH24MISS')
+		,		${session.ID}
+		FROM 	ICOYTRDT 
+		WHERE 	TAX_NO = ${tax_no}
+	</method>
+	
+	<method name="bl_getOperateExpenseDetail">
+		SELECT 	
+		        VENDOR_CODE
+		,		CONVERT_DATE(STD_DATE) AS STD_DATE
+		, 		CASE WHEN (A.APP_STATUS_CD = 'M' AND A.STATUS_CD = '30' ) THEN '책임자요청'  
+         			 WHEN (A.APP_STATUS_CD = 'M' AND A.STATUS_CD = '40') THEN '책임자승인'
+         			 ELSE B.TEXT1
+                END 
+                AS STATUS_NM
+		,		GETCOMPANYNAMELOC(A.HOUSE_CODE, VENDOR_CODE, 'S') AS VENDOR_NAME
+		,		(SELECT IRS_NO FROM ICOMVNGL WHERE VENDOR_CODE = A.VENDOR_CODE) AS IRS_NO
+		,		TOT_AMT
+		,		SUPPLY_AMT
+		,		TAX_AMT
+		,		BANK_CODE
+		,		BANK_ACCT
+		,		DEPOSITOR_NAME
+		,		BMSBMSYY
+		,		BUGUMCD
+		,		(SELECT DEPT_NAME_LOC FROM ICOMOGDP WHERE DEPT = BUGUMCD) AS BUGUMNM
+		,		CONVERT_DATE(ACT_DATE) AS ACT_DATE
+-- 		,		TO_CHAR(TO_DATE(ACT_DATE, 'YYYY-MM-DD'), 'YYYY-MM-DD') AS ACT_DATE 
+		,		EXPENSECD
+		,		SEMOKCD
+		,		SAUPCD
+		,		DOC_TYPE
+		,		PAY_TYPE
+		,		PAY_REASON
+		,  	 	NTS_APP_NO   
+		,   	ACC_TAX_NO
+		,   	CONVERT_DATE(ACC_TAX_DATE) AS ACC_TAX_DATE
+--		,   	TO_CHAR(TO_DATE(ACC_TAX_DATE , 'YYYY-MM-DD'), 'YYYY-MM-DD') AS ACC_TAX_DATE
+		,   	ACC_TAX_SEQ 
+		,		TAX_NO
+		,       PYDTM_APV_NO
+		,       SLIP_NO
+		,       SEBUCD
+		,       ZIPHANGCD
+		,       EXECUTE_NO
+		,       SIGNER1_NO
+		,       SIGNER2_NO
+		,       NVL(STATUS_CD,'0') STATUS_CD
+		,       A.ADD_USER_ID
+		,       A.APP_STATUS_CD
+		,       USER_TRM_NO
+		,      (               -- TOBE 2017-07-01 추가 당일구분
+				CASE
+					WHEN
+						COMPLATE_DATE IS NULL
+					THEN
+						'F'
+					WHEN
+						SYSDATE - TO_DATE(
+							SUBSTRING(
+								NVL(COMPLATE_DATE, '20150101'
+								), 0, 8
+							) || '000000',
+							'YYYYMMDDHH24MISS'
+						) > 1
+					THEN
+						'F'
+					ELSE
+						'T'
+				END
+			) AS CANCLE_ABLE
+		, (SELECT TEXT2   FROM SCODE  WHERE HOUSE_CODE = A.HOUSE_CODE  AND TYPE = 'M349' AND CODE = A.BANK_CODE   AND USE_FLAG = 'Y'   AND LANGUAGE = 'KO' ) AS BANK_CODE_TEXT		
+		, (SELECT TEXT2   FROM SCODE  WHERE HOUSE_CODE = A.HOUSE_CODE  AND TYPE = 'M810' AND CODE = A.EXPENSECD   AND USE_FLAG = 'Y'   AND LANGUAGE = 'KO' ) AS EXPENSECD_TEXT
+		, (SELECT TEXT2   FROM SCODE  WHERE HOUSE_CODE = A.HOUSE_CODE  AND TYPE = 'M811' AND CODE = A.SEMOKCD   AND USE_FLAG = 'Y'   AND LANGUAGE = 'KO' ) AS SEMOKCD_TEXT		
+		, (SELECT TEXT2   FROM SCODE  WHERE HOUSE_CODE = A.HOUSE_CODE  AND TYPE = 'M812' AND CODE = A.SEBUCD   AND USE_FLAG = 'Y'   AND LANGUAGE = 'KO' ) AS SEBUCD_TEXT
+		, ZIPHANGNM		
+		, GETUSERINFO(A.HOUSE_CODE,A.EXECUTE_NO,'NAME') AS EXECUTE_NM
+        , GETUSERINFO(A.HOUSE_CODE,A.SIGNER1_NO,'NAME') AS SIGNER1_NM
+        , GETUSERINFO(A.HOUSE_CODE,A.SIGNER2_NO,'NAME') AS SIGNER2_NM	
+		FROM 	SPY2GL A 
+		     , (SELECT * FROM SCODE WHERE TYPE='M815' AND USE_FLAG = 'Y') B
+		WHERE   A.HOUSE_CODE    = B.HOUSE_CODE(+)
+		  AND   A.APP_STATUS_CD = B.CODE(+)   
+		  AND   A.PAY_ACT_NO = '#pay_act_no#'
+	</method>
+	<method name="setPydtmApvNoUpdate">
+		UPDATE SPY2GL
+		SET   
+		       STATUS_CD       = '20'
+		     , PYDTM_APV_NO  = ${PYDTM_APV_NO}
+		     , APP_STATUS_CD = 'M'
+		     , USER_TRM_NO = $S{user_trm_no}
+		WHERE  PAY_ACT_NO = ${pay_act_no}
+	</method>
+	<method name="setExecuteNoUpdate">
+		UPDATE SPY2GL
+		SET    
+				EXECUTE_NO  = $S{execute_no}
+			  , USER_TRM_NO = $S{user_trm_no}		     
+		WHERE  PAY_ACT_NO = ${pay_act_no}
+	</method>
+	<method name="setSignerUpdate">
+		UPDATE SPY2GL
+		SET    
+				STATUS_CD       = '30'
+		      , EXECUTE_NO  = $S{execute_no}
+		      , SIGNER1_NO = ${signer1_no}
+		      , SIGNER2_NO = $S{signer2_no}
+		      , USER_TRM_NO = $S{user_trm_no}
+		WHERE  PAY_ACT_NO = ${pay_act_no}
+	</method>
+	<method name="updateSpy2glSigner1">
+		UPDATE SPY2GL
+		SET    
+				STATUS_CD       = '40'
+		      , CHANGE_DATE   = TO_CHAR(SYSDATE,'YYYYMMDD')
+		      , CHANGE_TIME   = TO_CHAR(SYSDATE,'HH24MISS')
+		      , CHANGE_USER_ID   = ${session.ID}
+		WHERE  PAY_ACT_NO = ${pay_act_no}
+	</method>
+	<method name="setSlipNoUpdate_1">
+		UPDATE SPY2GL
+		SET    
+				STATUS_CD       = $S{STATUS_CD} -- TOBE 2017-07-01 (ASIS '90')
+		     , SLIP_NO            = ${SLIP_NO}
+		     , PAY_ACT_NO2   = ${PAY_ACT_NO}
+		     , APP_STATUS_CD = ${APP_STATUS_CD} -- TOBE 2017-07-01  (ASIS 'A')
+		     , COMPLATE_DATE   = TO_CHAR(SYSDATE,'YYYYMMDD')
+		     , COMPLATE_TIME   = TO_CHAR(SYSDATE,'HH24MISS')
+		WHERE  PAY_ACT_NO = ${pay_act_no}
+	</method>
+	<method name="setSlipNoUpdate_2">
+		UPDATE ICOYTXHD SET CHANGE_DATE = TO_CHAR(SYSDATE,'YYYYMMDD'),
+							CHANGE_TIME = TO_CHAR(SYSDATE,'HH24MISS'),
+							CHANGE_USER_ID = ${session.ID},  
+							PROGRESS_CODE =  'E',
+							PAY_END_DATE  = TO_CHAR(SYSDATE,'YYYYMMDD')
+		WHERE HOUSE_CODE = ${session.HOUSE_CODE}   
+  			  AND TAX_NO = ${TAX_NO}	  		
+	</method>
+	
+	<!-- TOBE 2017-07-01 추가 경상비 F:경비집행완료 -->
+	<method name="setSlipNoUpdateF">
+		UPDATE SPY2GL
+		SET    STATUS_CD     = '90'
+			 , APP_STATUS_CD = 'F'    
+		WHERE  PAY_ACT_NO = ${pay_act_no}
+	</method>
+	
+	<method name="bl_getUserTrmNo">
+		SELECT USER_TRM_NO FROM SPY2GL
+		WHERE 1 = 1
+		AND PAY_ACT_NO = ${pay_act_no}	  		
+	</method>
+	<method name="updateSpy2glExeTryDt">
+		UPDATE
+			SPY2GL
+		SET
+			EXE_TRY_DT  = TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')			
+		WHERE PAY_ACT_NO = ${pay_act_no}	  
+	</method>
+</service>

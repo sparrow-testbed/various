@@ -1,0 +1,23 @@
+<html>
+<head>
+<title>XecureWeb Demo</title>
+<meta http-equiv="Content-Type" content="text/html; charset=euc-kr">
+
+</head>
+<body bgcolor="#FFFFFF" text="#000000" leftmargin="0" topmargin="0" marginwidth="0" marginheight="0">
+
+<form name=test action="test2.jsp" method="post" >
+<input type=text name="text_field1" ><br>
+<input type=text name="text_field2"><br>
+<input type=hidden id="text_id" name="text_field3"><br>
+<input type=submit value="전송">
+</form>
+<br>
+
+<script language='javascript'>
+document.test.text_id.value = "abc";
+//alert(document.test.text_id.value);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<service>
+    <method name="et_getBsCanList">
+	<![CDATA[
+SELECT CC_SRNO,EXE_DT,TDY_PVDT_DSCD,BIZ_DIS,TRN_CODE
+        ,substr(prc_dt,1,4) || '/' || substr(prc_dt,5,2)|| '/' || substr(prc_dt,7,2) as prc_dt 
+        ,EPS_STCD,OPR_NO,ORG_GLBL_ID,SLIP_NMGT_DSCD,TRN_STCD,BKCD,TRN_EVNT_CD
+          ,MAIN_ACC_DSCD,MAIN_ACCD,UNI_CD,FND_PDCD,CNSC_SQ_NO,TRN_RCKN_DT
+          ,CSNO,BKW_ACNO,PDCD,BDSYS_DSCD,ATM_THRW_FD_DSCD,TRF_AM_VRF_YN
+          ,NXDT_XCH_OBC_YN,PLRL_APPV_YN,CAN_TGT_TRN_LOG_SRNO
+          ,substr(ACCT_DT,1,4) || '/' || substr(ACCT_DT,5,2)|| '/' || substr(ACCT_DT,7,2) as ACCT_DT
+          ,DL_BRCD,DL_BRNM,MNG_BRCD,MNG_BRNM,PSTN_CCT_BRCD,IOFF_DSCD
+          ,ACC_DSCD,ACCD,ACCD_NM,JRNL_AM_TYCD,ACI_DTL_DSCD,ADJ_JRNL_DSCD
+          ,RAP_DSCD,SLIP_SCNT,CUCD,TRF_KRW_AM,CUR_KRW_AM,BCHK_KRW_AM
+          ,OBC_KRW_AM,TRF_FC_AM,TRF_FC_XC_KRW_AM,PSTN_FC_AM,PSTN_FC_XC_KRW_AM
+          ,TRN_WTHO_SB_RT,IOFF_SB_DSCD,SLIP_TRN_DT,SLIP_NO,SLIP_RGS_SRNO
+          ,TRN_LOG_SRNO,FX_TRN_LOSS_AM,FX_TRN_PFT_AM
+ FROM ICOYICAA
+ where CC_SRNO >= 0
+<OPT=S,S>and   prc_dt = ?</OPT>
+<OPT=S,S>and   ACCD = ?</OPT>
+<OPT=S,S>and EPS_STCD = ?</OPT>
+<OPT=S,S>and acct_dt = ?</OPT>
+<OPT=S,S>and mng_brcd = ?</OPT>
+
+
+    ]]>
+
+
+
+
+	</method>
+
+	<method name="et_InsertBsPrcStatus">
+	<![CDATA[
+	insert into ICOYICAA 
+	( 
+       CC_SRNO
+      ,BIZ_DIS
+      ,PRC_DT
+      ,ACCT_DT
+      ,DL_BRCD
+      ,MNG_BRCD
+      ,ACCD
+      ,RAP_DSCD
+      ,TRF_KRW_AM
+      ,TDY_PVDT_DSCD
+      ,SLIP_TRN_DT
+      ,SLIP_NO
+      ,SLIP_RGS_SRNO
+      ,TRN_LOG_SRNO
+      ,FX_TRN_LOSS_AM
+      ,FX_TRN_PFT_AM
+      ,EPS_STCD
+      ,MNG_BRNM
+	) select 
+	         DECODE ( MAX(CC_SRNO) , NULL , '00001' , LPAD(MAX(CAST(CC_SRNO AS NUMBER)) + 1, 5, '0')  )
+             ,?
+             ,?
+             ,?
+             ,?
+             ,?
+             ,?
+             ,?
+             ,?
+             ,?
+             ,?    
+             ,?
+             ,?
+             ,?
+             ,?
+             ,?
+             ,?
+             ,?
+    from ICOYICAA
+	]]>
+    </method>
+  
+  	<method name="et_InsertBsPrcStatusF">
+	<![CDATA[
+	insert into ICOYICAA 
+	( 
+       BIZ_DIS
+      ,PRC_DT
+      ,EPS_STCD
+      ,ACCT_DT
+      ,DL_BRCD
+      ,MNG_BRCD
+      ,ACCD
+      ,RAP_DSCD
+      ,TRF_KRW_AM
+      ,TDY_PVDT_DSCD
+      ,CC_SRNO
+      ,SLIP_TRN_DT
+      ,SLIP_NO
+      ,SLIP_RGS_SRNO
+      ,TRN_LOG_SRNO
+      ,FX_TRN_LOSS_AM
+      ,FX_TRN_PFT_AM
+      ,MNG_BRNM
+	) select 
+    ?
+    ,?
+    ,?
+    ,?
+    ,?
+    ,?
+    ,?
+    ,?
+    ,?
+    ,?
+    , DECODE ( MAX(CC_SRNO) , NULL , '00001' , LPAD(MAX(CAST(CC_SRNO AS NUMBER)) + 1, 5, '0')  )    
+    ,?
+    ,?
+    ,?    
+    ,?
+    ,?
+    ,?
+    ,?
+    from ICOYICAA
+ 
+	]]>
+    </method>
+  
+    
+	<method name="et_UpdateBsPrcStatusF">
+	<![CDATA[
+        update ICOYICAA set
+                    BIZ_DIS         = ?
+                   ,PRC_DT          = ?
+                   ,EPS_STCD        = ?
+                   ,ACCT_DT         = ?
+                   ,DL_BRCD         = ?
+                   ,MNG_BRCD        = ?
+                   ,ACCD            = ?
+                   ,RAP_DSCD        = ?
+                   ,TRF_KRW_AM      = ?
+                   ,TDY_PVDT_DSCD   = ?
+                   ,SLIP_TRN_DT     = ?
+                   ,SLIP_NO         = ?
+                   ,SLIP_RGS_SRNO   = ?
+                   ,TRN_LOG_SRNO    = ?
+                   ,FX_TRN_LOSS_AM  = ?
+                   ,FX_TRN_PFT_AM   = ?
+        where CC_SRNO = ? 
+	]]>
+    </method>
+
+	<method name="et_UpdateBsPrcStatus">
+	<![CDATA[
+        update ICOYICAA set
+                    biz_dis = ?       
+                    ,prc_dt    = ?     
+                    ,acct_dt      = ?  
+                    ,dl_brcd        = ?
+                    ,mng_brcd       = ?
+                    ,accd           = ?
+                    ,rap_dscd       = ?
+                    ,trf_krw_am     = ?
+                    ,tdy_pvdt_dscd  = ?
+                    ,slip_trn_dt    = ?
+                    ,slip_no        = ?
+		            ,slip_rgs_srno  = ?
+		            ,trn_log_srno   = ?
+		            ,fx_trn_loss_am = ?
+		            ,fx_trn_pft_am  = ?
+                    ,eps_stcd       = '10'
+        where CC_SRNO = ? 
+	]]>
+    </method>
+
+
+
+
+
+
+
+
+	<method name="et_UpdatWebPrcStatus">
+	<![CDATA[
+        update ICOYICAA set
+            eps_stcd = ?
+        where CC_SRNO = ? 
+	]]>
+    </method>
+
+
+	<method name="et_UpdatBsCanStatus">
+	<![CDATA[
+        update ICOYICAA set
+            eps_stcd = ?
+        where CC_SRNO = ? 
+	]]>
+    </method>
+
+
+	<method name="et_UpdatWebCanStatus">
+	<![CDATA[
+        update ICOYICAA set
+            eps_stcd = ?
+        where CC_SRNO = ? 
+	]]>
+    </method>
+
+	<method name="et_LogInsertSINFHD">
+	<![CDATA[
+	INSERT INTO SINFHD 
+	( 
+     HOUSE_CODE
+     ,INF_NO
+     ,INF_TYPE
+     ,INF_CODE
+     ,INF_DATE
+     ,INF_START_TIME
+     ,INF_END_TIME
+     ,INF_STATUS
+     ,INF_REASON
+     ,INF_SEND
+     ,INF_ID
+     ,INF_RECEIVE_NO
+	)
+	VALUES
+	(
+      ?
+     ,?
+     ,?
+     ,?
+     ,?
+     ,?
+     ,?
+     ,?
+     ,?
+     ,?
+     ,?
+     ,?
+	)
+	]]>
+    </method>
+
+
+	<method name="insert_if_msg">
+	<![CDATA[
+	INSERT INTO IFLOG(             
+	   IF_SEQ
+	  ,IF_NAME
+	  ,SEND_NO
+	  ,SEND_SEQ
+	  ,CONTS
+	  ,ADD_DATE
+	  ,ADD_TIME
+	  ,ADD_USER_ID
+	)VALUES(
+	   IFLOG_SEQ.NEXTVAL
+	  ,${IF_NAME}
+	  ,${SEND_NO}
+	  ,(SELECT COUNT(*)+1 FROM IFLOG WHERE ADD_DATE = TO_CHAR(SYSDATE,'YYYYMMDD') AND SEND_NO = ${SEND_NO})
+	  ,${CONTS}
+	  ,TO_CHAR(SYSDATE,'YYYYMMDD') 
+	  ,TO_CHAR(SYSDATE,'HH24MISS') 
+	  ,${session.ID}
+	)                               
+	]]>
+    </method>
+
+
+
+</service>

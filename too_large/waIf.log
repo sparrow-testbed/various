@@ -1,0 +1,78 @@
+[2023-01-11 15:48:18] [INFO ] XmlLoader           + Web Application component extracting starting
+[2023-01-11 15:48:21] [INFO ] XmlLoader           + web.xml info gather starting : web.xml
+[2023-01-11 15:48:21] [INFO ] WebXmlHandler       + Web xml parsing : file:/D:/pcms_source/junsu/shell/temp/20201246/eps/sparrow/sources/web.xml
+[2023-01-11 15:48:21] [INFO ] WebXmlHandler       + Web xml parsing finished...
+[2023-01-11 15:48:21] [ERROR] XmlLoader           + Occurs java dom exception in D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\mt_003.xml
+[2023-01-11 15:48:21] [ERROR] XmlLoader           + [THROWABLE] org.jdom2.input.JDOMParseException: Error on line 58 of document file:/D:/pcms_source/junsu/shell/temp/20201246/eps/sparrow/sources/mt_003.xml: 문자 시퀀스 "]]>"는 CDATA 섹션 끝을 표시하는 데 사용되지 않는 경우 
+[2023-01-11 15:48:21] [ERROR]                       콘텐츠에 나타나지 않아야 합니다.
+[2023-01-11 15:48:21] [ERROR] XmlLoader           |  + org.jdom2.input.sax.SAXBuilderEngine.build(SAXBuilderEngine.java:228)
+[2023-01-11 15:48:21] [ERROR] XmlLoader           |  + org.jdom2.input.sax.SAXBuilderEngine.build(SAXBuilderEngine.java:277)
+[2023-01-11 15:48:21] [ERROR] XmlLoader           |  + org.jdom2.input.sax.SAXBuilderEngine.build(SAXBuilderEngine.java:264)
+[2023-01-11 15:48:21] [ERROR] XmlLoader           |  + org.jdom2.input.SAXBuilder.build(SAXBuilder.java:1116)
+[2023-01-11 15:48:21] [ERROR] XmlLoader           |  + com.fasoo.waIf.xml.XmlLoader.load(XmlLoader.java:131)
+[2023-01-11 15:48:21] [ERROR] XmlLoader           |  + com.fasoo.waIf.WebInfoExtractor.main(WebInfoExtractor.java:50)
+[2023-01-11 15:48:21] [ERROR] XmlLoader           + [Caused by] org.xml.sax.SAXParseException: 문자 시퀀스 "]]>"는 CDATA 섹션 끝을 표시하는 데 사용되지 않는 경우 콘텐츠에 나타나지 않아야 합니다.
+[2023-01-11 15:48:21] [ERROR] XmlLoader           |  + com.sun.org.apache.xerces.internal.util.ErrorHandlerWrapper.createSAXParseException(ErrorHandlerWrapper.java:203)
+[2023-01-11 15:48:21] [ERROR] XmlLoader           |  + com.sun.org.apache.xerces.internal.util.ErrorHandlerWrapper.fatalError(ErrorHandlerWrapper.java:177)
+[2023-01-11 15:48:21] [ERROR] XmlLoader           |  + com.sun.org.apache.xerces.internal.impl.XMLErrorReporter.reportError(XMLErrorReporter.java:400)
+[2023-01-11 15:48:21] [ERROR] XmlLoader           |  + com.sun.org.apache.xerces.internal.impl.XMLErrorReporter.reportError(XMLErrorReporter.java:327)
+[2023-01-11 15:48:21] [ERROR] XmlLoader           |  + com.sun.org.apache.xerces.internal.impl.XMLScanner.reportFatalError(XMLScanner.java:1472)
+[2023-01-11 15:48:21] [ERROR] XmlLoader           |  + com.sun.org.apache.xerces.internal.impl.XMLDocumentFragmentScannerImpl.scanContent(XMLDocumentFragmentScannerImpl.java:1618)
+[2023-01-11 15:48:21] [ERROR] XmlLoader           |  + com.sun.org.apache.xerces.internal.impl.XMLDocumentFragmentScannerImpl$FragmentContentDriver.next(XMLDocumentFragmentScannerImpl.java:2931)
+[2023-01-11 15:48:21] [ERROR] XmlLoader           |  + com.sun.org.apache.xerces.internal.impl.XMLDocumentScannerImpl.next(XMLDocumentScannerImpl.java:602)
+[2023-01-11 15:48:21] [ERROR] XmlLoader           |  + com.sun.org.apache.xerces.internal.impl.XMLNSDocumentScannerImpl.next(XMLNSDocumentScannerImpl.java:112)
+[2023-01-11 15:48:21] [ERROR] XmlLoader           |  + com.sun.org.apache.xerces.internal.impl.XMLDocumentFragmentScannerImpl.scanDocument(XMLDocumentFragmentScannerImpl.java:505)
+[2023-01-11 15:48:21] [ERROR] XmlLoader           |  + com.sun.org.apache.xerces.internal.parsers.XML11Configuration.parse(XML11Configuration.java:842)
+[2023-01-11 15:48:21] [ERROR] XmlLoader           |  + com.sun.org.apache.xerces.internal.parsers.XML11Configuration.parse(XML11Configuration.java:771)
+[2023-01-11 15:48:21] [ERROR] XmlLoader           |  + com.sun.org.apache.xerces.internal.parsers.XMLParser.parse(XMLParser.java:141)
+[2023-01-11 15:48:21] [ERROR] XmlLoader           |  + com.sun.org.apache.xerces.internal.parsers.AbstractSAXParser.parse(AbstractSAXParser.java:1213)
+[2023-01-11 15:48:21] [ERROR] XmlLoader           |  + com.sun.org.apache.xerces.internal.jaxp.SAXParserImpl$JAXPSAXParser.parse(SAXParserImpl.java:643)
+[2023-01-11 15:48:21] [ERROR] XmlLoader           |  + org.jdom2.input.sax.SAXBuilderEngine.build(SAXBuilderEngine.java:217)
+[2023-01-11 15:48:21] [ERROR] XmlLoader           |  + org.jdom2.input.sax.SAXBuilderEngine.build(SAXBuilderEngine.java:277)
+[2023-01-11 15:48:21] [ERROR] XmlLoader           |  + org.jdom2.input.sax.SAXBuilderEngine.build(SAXBuilderEngine.java:264)
+[2023-01-11 15:48:21] [ERROR] XmlLoader           |  + org.jdom2.input.SAXBuilder.build(SAXBuilder.java:1116)
+[2023-01-11 15:48:21] [ERROR] XmlLoader           |  + com.fasoo.waIf.xml.XmlLoader.load(XmlLoader.java:131)
+[2023-01-11 15:48:21] [ERROR] XmlLoader           |  + com.fasoo.waIf.WebInfoExtractor.main(WebInfoExtractor.java:50)
+[2023-01-11 15:48:21] [INFO ] XmlLoader           + web.xml info gather starting : web_back.xml
+[2023-01-11 15:48:21] [INFO ] WebXmlHandler       + Web xml parsing : file:/D:/pcms_source/junsu/shell/temp/20201246/eps/sparrow/sources/web_back.xml
+[2023-01-11 15:48:21] [INFO ] WebXmlHandler       + Web xml parsing finished...
+[2023-01-11 15:48:21] [ERROR] XmlLoader           + Occurs java dom exception in D:\pcms_source\junsu\shell\temp\20201246\eps\sparrow\sources\axis2_back.xml
+[2023-01-11 15:48:21] [ERROR] XmlLoader           + [THROWABLE] org.jdom2.input.JDOMParseException: Error on line 532 of document file:/D:/pcms_source/junsu/shell/temp/20201246/eps/sparrow/sources/axis2_back.xml: 요소 유형 "transportReceiver"은(는) 짝이 맞는 종료 
+[2023-01-11 15:48:21] [ERROR]                       태그 "</transportReceiver>"(으)로 종료되어야 합니다.
+[2023-01-11 15:48:21] [ERROR] XmlLoader           |  + org.jdom2.input.sax.SAXBuilderEngine.build(SAXBuilderEngine.java:228)
+[2023-01-11 15:48:21] [ERROR] XmlLoader           |  + org.jdom2.input.sax.SAXBuilderEngine.build(SAXBuilderEngine.java:277)
+[2023-01-11 15:48:21] [ERROR] XmlLoader           |  + org.jdom2.input.sax.SAXBuilderEngine.build(SAXBuilderEngine.java:264)
+[2023-01-11 15:48:21] [ERROR] XmlLoader           |  + org.jdom2.input.SAXBuilder.build(SAXBuilder.java:1116)
+[2023-01-11 15:48:21] [ERROR] XmlLoader           |  + com.fasoo.waIf.xml.XmlLoader.load(XmlLoader.java:131)
+[2023-01-11 15:48:21] [ERROR] XmlLoader           |  + com.fasoo.waIf.WebInfoExtractor.main(WebInfoExtractor.java:50)
+[2023-01-11 15:48:21] [ERROR] XmlLoader           + [Caused by] org.xml.sax.SAXParseException: 요소 유형 "transportReceiver"은(는) 짝이 맞는 종료 태그 "</transportReceiver>"(으)로 종료되어야 합니다.
+[2023-01-11 15:48:21] [ERROR] XmlLoader           |  + com.sun.org.apache.xerces.internal.util.ErrorHandlerWrapper.createSAXParseException(ErrorHandlerWrapper.java:203)
+[2023-01-11 15:48:21] [ERROR] XmlLoader           |  + com.sun.org.apache.xerces.internal.util.ErrorHandlerWrapper.fatalError(ErrorHandlerWrapper.java:177)
+[2023-01-11 15:48:21] [ERROR] XmlLoader           |  + com.sun.org.apache.xerces.internal.impl.XMLErrorReporter.reportError(XMLErrorReporter.java:400)
+[2023-01-11 15:48:21] [ERROR] XmlLoader           |  + com.sun.org.apache.xerces.internal.impl.XMLErrorReporter.reportError(XMLErrorReporter.java:327)
+[2023-01-11 15:48:21] [ERROR] XmlLoader           |  + com.sun.org.apache.xerces.internal.impl.XMLScanner.reportFatalError(XMLScanner.java:1472)
+[2023-01-11 15:48:21] [ERROR] XmlLoader           |  + com.sun.org.apache.xerces.internal.impl.XMLDocumentFragmentScannerImpl.scanEndElement(XMLDocumentFragmentScannerImpl.java:1749)
+[2023-01-11 15:48:21] [ERROR] XmlLoader           |  + com.sun.org.apache.xerces.internal.impl.XMLDocumentFragmentScannerImpl$FragmentContentDriver.next(XMLDocumentFragmentScannerImpl.java:2967)
+[2023-01-11 15:48:21] [ERROR] XmlLoader           |  + com.sun.org.apache.xerces.internal.impl.XMLDocumentScannerImpl.next(XMLDocumentScannerImpl.java:602)
+[2023-01-11 15:48:21] [ERROR] XmlLoader           |  + com.sun.org.apache.xerces.internal.impl.XMLNSDocumentScannerImpl.next(XMLNSDocumentScannerImpl.java:112)
+[2023-01-11 15:48:21] [ERROR] XmlLoader           |  + com.sun.org.apache.xerces.internal.impl.XMLDocumentFragmentScannerImpl.scanDocument(XMLDocumentFragmentScannerImpl.java:505)
+[2023-01-11 15:48:21] [ERROR] XmlLoader           |  + com.sun.org.apache.xerces.internal.parsers.XML11Configuration.parse(XML11Configuration.java:842)
+[2023-01-11 15:48:21] [ERROR] XmlLoader           |  + com.sun.org.apache.xerces.internal.parsers.XML11Configuration.parse(XML11Configuration.java:771)
+[2023-01-11 15:48:21] [ERROR] XmlLoader           |  + com.sun.org.apache.xerces.internal.parsers.XMLParser.parse(XMLParser.java:141)
+[2023-01-11 15:48:21] [ERROR] XmlLoader           |  + com.sun.org.apache.xerces.internal.parsers.AbstractSAXParser.parse(AbstractSAXParser.java:1213)
+[2023-01-11 15:48:21] [ERROR] XmlLoader           |  + com.sun.org.apache.xerces.internal.jaxp.SAXParserImpl$JAXPSAXParser.parse(SAXParserImpl.java:643)
+[2023-01-11 15:48:21] [ERROR] XmlLoader           |  + org.jdom2.input.sax.SAXBuilderEngine.build(SAXBuilderEngine.java:217)
+[2023-01-11 15:48:21] [ERROR] XmlLoader           |  + org.jdom2.input.sax.SAXBuilderEngine.build(SAXBuilderEngine.java:277)
+[2023-01-11 15:48:21] [ERROR] XmlLoader           |  + org.jdom2.input.sax.SAXBuilderEngine.build(SAXBuilderEngine.java:264)
+[2023-01-11 15:48:21] [ERROR] XmlLoader           |  + org.jdom2.input.SAXBuilder.build(SAXBuilder.java:1116)
+[2023-01-11 15:48:21] [ERROR] XmlLoader           |  + com.fasoo.waIf.xml.XmlLoader.load(XmlLoader.java:131)
+[2023-01-11 15:48:21] [ERROR] XmlLoader           |  + com.fasoo.waIf.WebInfoExtractor.main(WebInfoExtractor.java:50)
+[2023-01-11 15:48:21] [INFO ] XmlLoader           + ----------------------------------------------------------
+[2023-01-11 15:48:21] [INFO ] XmlLoader           + Result of extracting
+[2023-01-11 15:48:21] [INFO ] XmlLoader           |  + web.xml files : 2
+[2023-01-11 15:48:21] [INFO ] XmlLoader           |  + beans files : 0
+[2023-01-11 15:48:21] [INFO ] XmlLoader           |  + struts.xml file : 0
+[2023-01-11 15:48:21] [INFO ] XmlLoader           |  + struts-config.xml file : 0
+[2023-01-11 15:48:21] [INFO ] XmlLoader           + ----------------------------------------------------------
+[2023-01-11 15:48:21] [INFO ] WebInfoExtractor    + Loading time : 2.716 seconds
+[2023-01-11 15:48:21] [INFO ] WebInfoExtractor    + Running web info gathering is finished.

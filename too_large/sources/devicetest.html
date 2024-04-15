@@ -1,0 +1,159 @@
+<HTML>
+<HEAD>
+	<TITLE>단말정보 요청 테스트 페이지 입니다.</TITLE>
+</HEAD>
+
+<SCRIPT LANGUAGE="JavaScript">	
+
+	function GetBrowserInfo(form)
+	{	
+		ret = WooriDeviceForOcx.OpenDevice();
+		if( ret == 0 )
+		{
+			ret = WooriDeviceForOcx.GetTerminalInfo(30);
+			if( ret == 0 )		
+			{
+				msg = WooriDeviceForOcx.GetResult();
+				form.txtBrowserInfo.value = msg;
+			}
+			else
+			{
+				msg = WooriDeviceForOcx.GetErrorMsg(ret);
+				alert(msg);
+			}
+		
+			WooriDeviceForOcx.CloseDevice();
+		}
+		else
+		{
+			msg = WooriDeviceForOcx.GetErrorMsg(ret);
+			alert(msg);
+		}
+
+	}
+
+	function GetManagerList(form)
+	{
+		ret = WooriDeviceForOcx.OpenDevice();
+		if( ret == 0 )
+		{
+			nLevel = form.txtLevel.value;
+			ret = WooriDeviceForOcx.GetManagerList(nLevel,30);
+			if( ret == 0 )		
+			{
+				msg = WooriDeviceForOcx.GetResult();
+				form.txtManagerList.value = msg;
+			}
+			else
+			{
+				msg = WooriDeviceForOcx.GetErrorMsg(ret);
+				alert(msg);
+			}
+		
+			WooriDeviceForOcx.CloseDevice();
+		}
+		else
+		{
+			msg = WooriDeviceForOcx.GetErrorMsg(ret);
+			alert(msg);
+		}
+	}
+
+	function PrintPBPR(form)
+	{
+		ret = WooriDeviceForOcx.OpenDevice();
+		if( ret == 0 )
+		{	
+			nLPI = form.txtLPI.value;
+			nCPI = form.txtCPI.value;
+			MsgNo = form.txtMsgNo.value;
+			
+			alert("Call PrintPBPR");
+			ret = WooriDeviceForOcx.PrintPBPR(form.txtData.value,MsgNo,nLPI,nCPI,3,51);
+			if( ret == 0 )		
+			{
+				alert("출력 전송 성공");
+			}
+			else
+			{
+				alert("출력 전송 실패");
+				msg = WooriDeviceForOcx.GetErrorMsg(ret);
+				alert(msg);
+			}
+
+			WooriDeviceForOcx.CloseDevice();		
+		}
+		else
+		{
+			msg = WooriDeviceForOcx.GetErrorMsg(ret);
+			alert(msg);
+		}
+
+	}
+
+	function CallBio(form)
+	{
+		ret = WooriDeviceForOcx.OpenDevice();
+		if( ret == 0 )
+		{	
+			nWaitTime = form.txtWait.value;
+			nPos = form.txtPos.value;
+
+			ret = WooriDeviceForOcx.GetBioControl();
+			if( ret == 0 )
+			{			
+				ret = WooriDeviceForOcx.GetBioVerifyPos(nWaitTime,"20001D890",nPos);
+				if( ret == 0 )
+				{
+					msg = WooriDeviceForOcx.GetResult();
+					form.txtBio.value = msg;
+				}
+				else
+				{					
+					alert("지문정보 획득에 실패하였습니다.");
+				}
+
+				WooriDeviceForOcx.ReleaseBioControl();
+			}
+			else
+			{
+				msg = WooriDeviceForOcx.GetErrorMsg(ret);
+				alert(msg);
+			}
+
+			WooriDeviceForOcx.CloseDevice();
+		}
+		else
+		{
+			msg = WooriDeviceForOcx.GetErrorMsg(ret);
+			alert(msg);
+		}
+	}	
+
+</SCRIPT>
+
+<BODY>
+
+<p>
+<font size=2>
+<FORM>
+	브라우저 정보 : <INPUT type="text" name="txtBrowserInfo" size="50"><INPUT type="button" name="callInfo" value="요청" onClick="GetBrowserInfo(this.form)"><br>
+        책임자 Level : <INPUT type="text" name="txtLevel" size="10"><br>
+	책임자 리스트 : <INPUT type="text" name="txtManagerList" size="150"><INPUT type="button" name="callManager" value="요청" onClick="GetManagerList(this.form)"><br>
+	LPI:<INPUT type="text" name="txtLPI" value="5" size="3"> CPI:<INPUT type="text" name="txtCPI" value="10" size="3"> 
+        유도메시지번호:<INPUT type"text" name="txtMsgNo" value="5" size="3"><br>
+	출력 내용<br>
+	<TEXTAREA name="txtData" rows="10" cols="80"></TEXTAREA><br>
+	<INPUT type="button" name="callPrint" value="요청" onClick="PrintPBPR(this.form)"><br><br>
+	바이오 정보 요청 : 대기시간<INPUT type="text" name="txtWait" size="10" value="30"> 위치<INPUT type="text" name="txtPos" size="10" value="5"><br>	
+ 	<TEXTAREA name="txtBio" rows="10" cols="80"></TEXTAREA><br>
+	<INPUT type="button" name="callBio" value="바이오" onClick="CallBio(this.form)"><br><br>	
+</FORM>
+</font>
+
+<OBJECT ID=WooriDeviceForOcx WIDTH=1 HEIGHT=1 CLASSID="CLSID:AEB14039-7D0A-4ADD-AD93-45F0E4439871" codebase="WooriDeviceForOcx.cab#version=1.0.0.5">
+</OBJECT>
+
+</BODY>
+
+</HTML>

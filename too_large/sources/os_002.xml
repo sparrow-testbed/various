@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<service>
+	<method name="getOsList">
+		<![CDATA[
+		SELECT
+			H.OSQ_NO,
+			H.OSQ_COUNT,
+			H.SUBJECT,
+			CONVERT_DATE(H.OSQ_CLOSE_DATE) AS OSQ_DATE,
+			CASE
+				WHEN
+					H.OSQ_FLAG = 'T' OR H.SIGN_STATUS IN ('T','C')
+				THEN
+					'작성중'
+				WHEN
+					H.osq_flag = 'P' AND  H.SIGN_STATUS = 'E'
+				THEN
+					'실사요청'
+				WHEN
+					H.osq_flag = 'D' AND  H.SIGN_STATUS = 'E'
+				THEN
+					'실사포기'
+				WHEN
+					H.osq_flag = 'E' AND  H.SIGN_STATUS = 'E'
+				THEN
+					'실사진행'
+				WHEN
+					H.osq_flag = 'C' AND  H.SIGN_STATUS = 'E'
+				THEN
+					'실사완료'
+				WHEN
+					H.osq_flag = 'R' AND  H.SIGN_STATUS = 'E'
+				THEN
+					'실사반려'
+			END AS STATUS_NAME,
+			GETUSERNAME(H.HOUSE_CODE, H.CHANGE_USER_ID, 'LOC') AS CHANGE_USER_NAME_LOC,
+			H.OSQ_FLAG
+			 ,(SELECT VENDOR_CODE  
+		           FROM SOSSE 
+                  WHERE (HOUSE_CODE ,OSQ_NO,OSQ_COUNT,OSQ_SEQ) IN (SELECT HOUSE_CODE ,OSQ_NO,OSQ_COUNT,MAX(OSQ_SEQ) 
+                                                                     FROM SOSSE 
+                                                                     WHERE HOUSE_CODE = H.HOUSE_CODE  
+		  		                                                       AND OSQ_NO = H.OSQ_NO 
+ 		  		                                                       AND OSQ_COUNT = H.OSQ_COUNT 		  		                                                     
+                                                                    GROUP BY HOUSE_CODE ,OSQ_NO,OSQ_COUNT)) VENDOR_CODE    
+              ,(SELECT GETVENDORNAME(HOUSE_CODE, VENDOR_CODE)  
+		           FROM SOSSE 
+                  WHERE (HOUSE_CODE ,OSQ_NO,OSQ_COUNT,OSQ_SEQ) IN (SELECT HOUSE_CODE ,OSQ_NO,OSQ_COUNT,MAX(OSQ_SEQ) 
+                                                                     FROM SOSSE 
+                                                                     WHERE HOUSE_CODE = H.HOUSE_CODE  
+		  		                                                       AND OSQ_NO = H.OSQ_NO 
+ 		  		                                                       AND OSQ_COUNT = H.OSQ_COUNT 		  		                                                     
+                                                                    GROUP BY HOUSE_CODE ,OSQ_NO,OSQ_COUNT)) VENDOR_NAME                                                         
+                                                                    
+		FROM
+			SOSGL H
+		WHERE
+			H.STATUS IN ('C', 'R')
+		AND
+			H.HOUSE_CODE = ${HOUSE_CODE}
+		AND H.OSQ_DATE BETWEEN $S{start_change_date}
+		AND $S{end_change_date}
+		AND H.OSQ_NO = $S{osq_no}
+		AND H.SUBJECT LIKE '%' || $S{subject} || '%'
+		AND H.ADD_USER_ID = $S{ctrl_person_id}
+		]]>
+		<if test="${osq_flag}" operator="eq" value="T">
+			AND  (H.OSQ_FLAG = 'T' OR H.SIGN_STATUS IN ('T','C'))
+		</if>
+		<if test="${osq_flag}" operator="eq" value="P">
+			<![CDATA[
+			AND  H.osq_flag    = 'P'
+			AND  H.SIGN_STATUS = 'E'
+			]]>
+		</if>
+		<if test="${osq_flag}" operator="eq" value="D">
+			<![CDATA[
+			AND  H.osq_flag    = 'D'
+			AND  H.SIGN_STATUS = 'E'
+			]]>
+		</if>
+		<if test="${osq_flag}" operator="eq" value="E">
+			<![CDATA[
+			AND  H.osq_flag    = 'E'
+			AND  H.SIGN_STATUS = 'E'
+			]]>
+		</if>
+		<if test="${osq_flag}" operator="eq" value="C">
+			AND  H.osq_flag    = 'C'
+			AND  H.SIGN_STATUS = 'E'
+		</if>
+		ORDER BY
+			OSQ_NO DESC, OSQ_COUNT DESC
+	</method>
+	
+	<method name="selectSosglInfoOsqStatus">
+		SELECT
+			OSQ_FLAG
+		FROM
+			SOSGL
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			OSQ_NO     = ${OSQ_NO}
+		AND
+			OSQ_COUNT  = ${OSQ_COUNT}
+	</method>
+	
+	<method name="updateIcoyprdtInfoDeleteSos">
+		UPDATE
+			ICOYPRDT
+		SET
+			CONFIRM_QTY        = NULL,
+			PR_PROCEEDING_FLAG = 'P',
+			BID_STATUS         = 'PR'
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			(PR_NO, PR_SEQ) IN (
+				SELECT
+					PR_NO,
+					PR_SEQ
+				FROM
+					SOSLN
+				WHERE
+					HOUSE_CODE = ${HOUSE_CODE}
+				AND
+					OSQ_NO     = ${OSQ_NO}
+				AND
+					OSQ_COUNT  = ${OSQ_COUNT}
+			)
+	</method>
+	
+	<method name="deleteSosgl">
+		DELETE FROM
+			SOSGL
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			OSQ_NO     = ${OSQ_NO}
+		AND
+			OSQ_COUNT  = ${OSQ_COUNT}
+	</method>
+	
+	<method name="deleteSosln">
+		DELETE FROM
+			SOSLN
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			OSQ_NO     = ${OSQ_NO}
+		AND
+			OSQ_COUNT  = ${OSQ_COUNT}
+	</method>
+	
+	<method name="deleteSosse">
+		DELETE FROM
+			SOSSE
+		WHERE
+			HOUSE_CODE = ${HOUSE_CODE}
+		AND
+			OSQ_NO     = ${OSQ_NO}
+		AND
+			OSQ_COUNT  = ${OSQ_COUNT}
+	</method>
+</service>

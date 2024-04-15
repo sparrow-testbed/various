@@ -1,0 +1,79 @@
+<html>
+<head>
+<title>File Upload Test</title>
+<meta http-equiv="Content-Type" content="text/html; charset=ks_c_5601-1987">
+</head>
+<body>
+<center>
+<br><br>
+File Upload Test
+<!--<FORM ENCTYPE="multipart/form-data" ACTION="Upload.php" METHOD=POST>-->
+<!--<FORM ENCTYPE="multipart/form-data" ACTION="/cgi-bin/fileup.cgi" METHOD=POST>
+Send this file: <INPUT NAME="userfile" TYPE="file">
+<INPUT TYPE="submit" VALUE="Upload File">
+</FORM>-->
+<br>
+<b>With Control</b><br>
+<OBJECT ID="XecureFile2" CLASSID="CLSID:800E8DD5-0182-4278-8873-F009BDE5F7B5"
+CODEBASE="/XecureObject/xfile_install.cab#Version=1,0,0,1" ></OBJECT>
+
+<script language='javascript'>
+function test() {
+	var hostname  = window.location.hostname;
+	var po = window.location.port;
+	var port = parseInt( po, 10 );
+	var r;
+	var errCode;
+	var errMsg='';
+
+	r = document.XecureFile2.FileUpload(hostname, port, "/XecureDemo/file/fileupload.jsp", "test!!!" );
+	if(r != '' ) {
+		document.write(r);
+	}
+	else {
+		errCode = document.XecureFile2.GetLastErrorCode();
+		errMsg = document.XecureFile2.GetLastErrorMsg();
+		document.write(errMsg);
+	}
+	return true;
+}
+function test1() {
+	var hostname  = window.location.hostname;
+	var po = window.location.port;
+	var port = parseInt( po, 10 );
+	var r;
+	var errCode;
+	var errMsg='';
+
+	r = document.XecureFile2.FileUpload(hostname, port, "/XecureDemo/file/fileupload2.jsp", "test!!!" );
+	if(r != '' ) {
+		document.write(r);
+	}
+	else {
+		errCode = document.XecureFile2.GetLastErrorCode();
+		errMsg = document.XecureFile2.GetLastErrorMsg();
+		document.write(errMsg);
+	}
+	return true;
+}
+
+</script>
+
+<a href="" onClick="test();">자동 업로드 구현</a>
+<br>
+save메쏘드를 사용한다.
+<br><br>
+<a href="" onClick="test1();">직접 업로드 구현</a>
+<br>
+파일명, 환경, 제어 등의 세부 작업을 직접 콘트롤한다.
+<br><br>
+<b>With Control</b><br>
+<FORM ENCTYPE="multipart/form-data" ACTION="Upload.php" METHOD=POST>
+  <input name="userfile[]" type="file"><br>
+  <input name="userfile[]" type="file"><br>
+<INPUT TYPE="submit" VALUE="Upload File">
+</FORM>
+
+
+</body>
+</html>

@@ -1,0 +1,423 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<service>
+	<method name="et_chkBidEndDate">
+	<![CDATA[ 
+         SELECT
+               (case when TO_NUMBER(TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')) < TO_NUMBER(PG.BID_END_DATE||PG.BID_END_TIME) then 'Y'
+                     else 'N'
+                end) status
+           FROM ICOYBDPG PG
+          WHERE PG.HOUSE_CODE = ${HOUSE_CODE}
+           AND PG.BID_NO      = ${BID_NO}
+           AND PG.BID_COUNT   = ${BID_COUNT}
+           AND PG.VOTE_COUNT  = ${VOTE_COUNT}                                                                   	
+		]]>
+	</method> 
+	<method name="et_chkJoinEndDate">
+	<![CDATA[ 
+		SELECT
+				CASE WHEN TO_NUMBER(TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')) < TO_NUMBER(HD.X_DOC_SUBMIT_DATE||HD.X_DOC_SUBMIT_TIME) THEN 'Y'
+			    	ELSE 'N'
+				END STATUS
+		FROM 	ICOYBDHD HD		
+		WHERE 	HD.HOUSE_CODE = ${HOUSE_CODE}
+		AND 	HD.BID_NO      = ${BID_NO}
+		AND 	HD.BID_COUNT   = ${BID_COUNT}                                                      	
+		]]>
+	</method> 
+	<method name="et_chkIsBDAP">
+	<![CDATA[
+     SELECT
+            CASE WHEN COUNT(VENDOR_CODE) > 0 THEN 'Y' ELSE 'N' END ||'@'|| NVL(FINAL_FLAG, ' ') AS IS_YN
+       FROM ICOYBDAP
+      WHERE HOUSE_CODE  = ${HOUSE_CODE}
+        AND BID_NO      = ${BID_NO}
+        AND BID_COUNT   = ${BID_COUNT}
+        AND VENDOR_CODE = ${COMPANY_CODE}
+      GROUP BY FINAL_FLAG
+	]]>
+	</method>
+	
+	<method name="et_setBDAPinsert_1">
+	<![CDATA[
+                 UPDATE ICOYBDAP
+                    SET APP_DATE      = TO_CHAR(SYSDATE,'YYYYMMDD')
+                       ,APP_TIME      = TO_CHAR(SYSDATE,'HH24MISS')
+                       ,USER_NAME     = $S{USER_NAME    }
+                       ,USER_POSITION = $S{USER_POSITION}
+                       ,USER_PHONE    = $S{USER_PHONE   }
+                       ,USER_MOBILE   = $S{USER_MOBILE  }
+                       ,USER_EMAIL    = $S{USER_EMAIL   }
+	]]>
+
+	<if test="${bdap_flag}" operator="eq" value=" "> 
+		<![CDATA[
+                       ,UNT_FLAG     = 'N'
+                       ,ACHV_FLAG    = 'Y'
+                       ,FINAL_FLAG   = 'Y'
+		]]>
+	</if>
+
+	<![CDATA[
+                  WHERE HOUSE_CODE  = ${HOUSE_CODE}
+                    AND BID_NO      = ${BID_NO}
+                    AND BID_COUNT   = ${BID_COUNT}
+                    AND VENDOR_CODE = ${COMPANY_CODE}
+	]]>
+	</method>
+	
+	<method name="et_setBDAPinsert_2">
+	<![CDATA[
+        INSERT INTO ICOYBDAP (
+                                HOUSE_CODE              ,
+                                BID_NO                  ,
+                                BID_COUNT               ,
+                                VENDOR_CODE             ,
+                                STATUS                  ,
+                                ADD_DATE                ,
+                                ADD_TIME                ,
+                                ADD_USER_ID             ,
+                                ADD_USER_NAME_LOC       ,
+                                ADD_USER_NAME_ENG       ,
+                                ADD_USER_DEPT           ,
+                                APP_DATE                ,
+                                APP_TIME                ,
+                                EXPLAN_FLAG             ,
+                                UNT_FLAG                ,
+                                ACHV_FLAG               ,
+                                FINAL_FLAG              ,
+                                INCO_REASON             ,
+                                GUAR_TYPE               ,
+                                ATTACH_NO               ,
+                                USER_NAME               ,
+                                USER_POSITION           ,
+                                USER_PHONE              ,
+                                USER_MOBILE             ,
+                                USER_EMAIL
+        ) VALUES (
+                                ${HOUSE_CODE     }         ,
+                                ${BID_NO         }         ,
+                                ${BID_COUNT      }         ,
+                                ${COMPANY_CODE    }         ,
+                                'C'           ,                -- STATUS
+                                TO_CHAR(SYSDATE,'YYYYMMDD'),   -- ADD_DATE
+                                TO_CHAR(SYSDATE,'HH24MISS'),   -- ADD_TIME
+                                ${ID         }    ,
+                                ${NAME_LOC   }    ,
+                                ${NAME_ENG   }    ,
+                                ${DEPT       }    ,
+                                TO_CHAR(SYSDATE,'YYYYMMDD'),   -- APP_DATE
+                                TO_CHAR(SYSDATE,'HH24MISS'),   -- APP_TIME
+                                ''            ,                -- EXPLAN_FLAG
+                                'N'            ,               -- UNT_FLAG
+                                'Y'            ,               -- ACHV_FLAG
+                                'Y'            ,               -- FINAL_FLAG
+                                ''            ,                -- INCO_REASON
+                                ''            ,                -- GUAR_TYPE
+                                ''            ,                -- ATTACH_NO
+                                $S{USER_NAME        }       ,
+                                $S{USER_POSITION    }       ,
+                                $S{USER_PHONE       }       ,
+                                $S{USER_MOBILE      }       ,
+                                $S{USER_EMAIL       }
+        )
+	]]>
+	</method>
+	
+	<method name="et_chkBidESTM">
+	<![CDATA[
+     SELECT NVL(ESTM_MAX,0) ESTM_MAX,NVL(ESTM_VOTE,0) ESTM_VOTE
+       FROM ICOYBDHD
+      WHERE HOUSE_CODE  = ${HOUSE_CODE}
+        AND BID_NO      = ${BID_NO}
+        AND BID_COUNT   = ${BID_COUNT}
+	]]>
+	</method>
+
+	<method name="et_setBid">
+	<![CDATA[
+        INSERT INTO ICOYBDVO (
+                                HOUSE_CODE
+                               ,BID_NO
+                               ,BID_COUNT
+                               ,VOTE_COUNT
+                               ,VENDOR_CODE
+                               ,STATUS
+                               ,ADD_DATE
+                               ,ADD_TIME
+                               ,ADD_USER_ID
+                               ,ADD_USER_NAME_LOC
+                               ,ADD_USER_NAME_ENG
+                               ,ADD_USER_DEPT
+                               ,VOTE_DATE
+                               ,VOTE_TIME
+                               ,BID_AMT
+                               ,BID_AMT_ENC
+                               ,CERTV
+                               ,TIMESTAMP
+                               ,SIGN_CERT
+                               ,ATTACH_NO
+                               ,CHOICE_ESTM_NUM1
+                               ,CHOICE_ESTM_NUM2
+                               ,CHOICE_ESTM_NUM3
+                               ,CHOICE_ESTM_NUM4
+        ) VALUES (
+                                ${HOUSE_CODE	}
+                               ,${BID_NO        }
+                               ,${BID_COUNT     }
+                               ,${VOTE_COUNT    }
+                               ,${COMPANY_CODE   }
+                               ,'C'
+                               ,TO_CHAR(SYSDATE,'YYYYMMDD')
+                               ,TO_CHAR(SYSDATE,'HH24MISS')
+                               ,${ID		}
+                               ,${NAME_LOC     }
+                               ,${NAME_ENG     }
+                               ,${DEPT         }
+                               ,TO_CHAR(SYSDATE,'YYYYMMDD')
+                               ,TO_CHAR(SYSDATE,'HH24MISS')
+                               ,${BID_AMT		}
+                               ,${BID_AMT           }  --추후에 변경필요 BID_AMT_ENC
+                               ,$S{CERTV                 }
+                               ,$S{TIMESTAMP             }
+                               ,$S{SIGN_CERT             }
+                               ,${attach_no             }
+                               ,${CHOICE_ESTM_NUM1      }
+                               ,${CHOICE_ESTM_NUM2      }
+                               ,${CHOICE_ESTM_NUM3      }
+                               ,${CHOICE_ESTM_NUM4      }
+        )
+	]]>
+	</method> 
+	<method name="et_setBidBDVT">
+	<![CDATA[
+        INSERT INTO ICOYBDVT (
+                                HOUSE_CODE
+                               ,BID_NO
+                               ,BID_COUNT
+                               ,VOTE_COUNT
+                               ,VENDOR_CODE
+                               ,ITEM_SEQ
+                               ,STATUS
+                               ,ADD_DATE
+                               ,ADD_TIME
+                               ,ADD_USER_ID
+                               ,BID_PRICE
+                               ,BID_PRICE_ENC
+                               ,CERTV
+                               ,TIMESTAMP
+                               ,SIGN_CERT
+        ) VALUES (
+                                ${HOUSE_CODE }
+                               ,${BID_NO     }
+                               ,${BID_COUNT  }
+                               ,${VOTE_COUNT }
+                               ,${COMPANY_CODE}
+                               ,${ITEM_SEQ   }
+                               ,'C'
+                               ,TO_CHAR(SYSDATE,'YYYYMMDD')
+                               ,TO_CHAR(SYSDATE,'HH24MISS')
+                               ,${ID  }
+                               ,''
+                               ,$S{BID_PRICE}   --추후에 변경필요 BID_PRICE_ENC
+                               ,$S{CERTV        }
+                               ,$S{TIMESTAMP    }
+                               ,$S{SIGN_CERT    }
+        )
+	]]>
+	</method>
+	
+	<method name="getBDHD_VnInfo">
+	<![CDATA[
+         SELECT
+                VENDOR_NAME_LOC AS VENDOR_NAME,
+                IRS_NO,
+                ZIP_CODE||' '||ADDRESS_LOC AS ADDRESS,
+                PHONE_NO1 AS TEL_NO,
+                CEO_NAME_LOC,
+                COMPANY_REG_NO,
+                (SELECT COUNT(*)
+                   FROM ICOYBDAP
+                  WHERE HOUSE_CODE  =  ${HOUSE_CODE }
+                    AND BID_NO      = ${BID_NO     }
+                    AND BID_COUNT   = ${BID_COUNT  }
+                    AND VENDOR_CODE = ${COMPANY_CODE}
+                    AND BID_CANCEL  = 'N'
+                    AND STATUS  IN ('C', 'R')
+                ) AS BDAP_CNT,
+                USER_NAME,
+                USER_POSITION,
+                USER_PHONE,
+                USER_MOBILE,
+                USER_EMAIL ,
+                (SELECT ESTM_KIND
+                   FROM ICOYBDHD
+                  WHERE HOUSE_CODE  = ${HOUSE_CODE }
+                    AND BID_NO      = ${BID_NO     }
+                    AND BID_COUNT   = ${BID_COUNT  } ) AS ESTM_KIND,
+                (SELECT X_ESTM_CHECK
+                   FROM ICOYBDHD
+                  WHERE HOUSE_CODE  = ${HOUSE_CODE }
+                    AND BID_NO      = ${BID_NO     }
+                    AND BID_COUNT   = ${BID_COUNT  } ) AS X_ESTM_CHECK,
+                (SELECT CD.TEXT2
+                   FROM ICOYBDHD HD, SCODE CD
+                  WHERE HD.HOUSE_CODE =  ${HOUSE_CODE }
+                    AND HD.BID_NO     = ${BID_NO     }
+                    AND HD.BID_COUNT  = ${BID_COUNT  }
+                    AND CD.HOUSE_CODE = HD.HOUSE_CODE
+                    AND CD.TYPE       = 'M959'
+                    AND HD.ESTM_KIND  = CD.CODE ) AS ESTM_KIND_NM
+                , VN.PURCHASE_BLOCK_FLAG    
+         FROM ICOMVNGL VN
+             ,(SELECT HOUSE_CODE, VENDOR_CODE, USER_NAME, USER_POSITION, USER_PHONE, USER_MOBILE, USER_EMAIL
+                 FROM ICOYBDAP
+                WHERE HOUSE_CODE = ${HOUSE_CODE }
+                  AND BID_NO     = ${BID_NO     }
+                  AND BID_COUNT  = ${BID_COUNT  } ) AP
+             ,ICOMADDR AD
+         WHERE VN.HOUSE_CODE  =  ${HOUSE_CODE }
+           AND VN.VENDOR_CODE = ${COMPANY_CODE}
+           AND VN.HOUSE_CODE  = AP.HOUSE_CODE(+)
+           AND VN.VENDOR_CODE = AP.VENDOR_CODE(+)
+           AND VN.HOUSE_CODE  = AD.HOUSE_CODE
+           AND VN.VENDOR_CODE = AD.CODE_NO
+           AND AD.CODE_TYPE   = '2'
+           AND NVL(VN.DEL_FLAG,'N') = 'N'
+	]]>
+	</method>
+	
+	<method name="et_setQtee">
+		INSERT                      
+		INTO ICOMQTEE               
+		(                           
+		HOUSE_CODE,                 
+		VENDOR_CODE,                
+		BID_NO,                 		
+		BID_COUNT,                  
+		QUARANTEE,                  
+		STATUS,                   	
+		ADD_DATE,                   
+		ADD_TIME,                   
+		ADD_USER_ID,                
+		ADD_USER_NAME_LOC,          
+		ADD_USER_NAME_ENG,          
+		CHANGE_DATE,                
+		CHANGE_TIME,                
+		CHANGE_USER_ID,             
+		CHANGE_USER_NAME_LOC,       
+		CHANGE_USER_NAME_ENG        
+		) VALUES                    
+		(                           
+		${HOUSE_CODE},                 
+		${COMPANY_CODE},                
+		${BID_NO},                 		
+		${BID_COUNT},                  
+		${BID_AMT},                  
+		${STATUS},            				
+		TO_CHAR(SYSDATE,'YYYYMMDD'),
+		TO_CHAR(SYSDATE,'HH24MISS'),
+		${ID},                      			
+		${NAME_LOC},             				
+		${NAME_ENG},             				
+		TO_CHAR(SYSDATE,'YYYYMMDD'),
+		TO_CHAR(SYSDATE,'HH24MISS'),
+		${ID},                      			
+		${NAME_LOC},             				
+		${NAME_ENG}             				
+		)                           	
+	</method>  	
+	
+	<method name="et_updQtee">
+		UPDATE ICOMQTEE SET
+		 QUARANTEE			= ${BID_AMT}                                   
+		,STATUS              = ${STATUS}            		     	
+		,ADD_DATE            = TO_CHAR(SYSDATE,'YYYYMMDD')       
+		,ADD_TIME            = TO_CHAR(SYSDATE,'HH24MISS')       
+		,ADD_USER_ID         = ${ID}                             
+		,ADD_USER_NAME_LOC   = ${NAME_LOC}             	       
+		,ADD_USER_NAME_ENG   = ${NAME_ENG}             	       
+		,CHANGE_DATE         = TO_CHAR(SYSDATE,'YYYYMMDD')       
+		,CHANGE_TIME         = TO_CHAR(SYSDATE,'HH24MISS')       
+		,CHANGE_USER_ID      = ${ID}                             
+		,CHANGE_USER_NAME_LOC= ${NAME_LOC}       
+		,CHANGE_USER_NAME_ENG= ${NAME_ENG} 
+		WHERE	HOUSE_CODE	= ${HOUSE_CODE}
+		AND 	VENDOR_CODE	= ${COMPANY_CODE}
+		AND 	BID_NO		= ${BID_NO}
+		AND  	BID_COUNT	= ${BID_COUNT}               	
+	</method>  	
+	
+	<method name="et_getQtee">
+		SELECT 	COUNT(1) AS CNT
+		FROM 	ICOMQTEE
+		WHERE	HOUSE_CODE	= ${HOUSE_CODE}
+		AND 	VENDOR_CODE	= ${COMPANY_CODE}
+		AND 	BID_NO		= ${BID_NO}
+		AND  	BID_COUNT	= ${BID_COUNT}
+	</method>  	
+	
+	<method name="et_delBdat">
+		DELETE 	FROM ICOYBDAT
+		WHERE  	HOUSE_CODE = ${HOUSE_CODE}
+		AND 	BID_NO = ${BID_NO}
+		AND		BID_COUNT = ${BID_COUNT}
+		AND		VENDOR_CODE = ${COMPANY_CODE}
+	</method>  	
+	
+	<method name="et_setBdat">
+		INSERT INTO ICOYBDAT(
+			HOUSE_CODE
+		,	BID_NO
+		,	BID_COUNT
+		,	VENDOR_CODE
+		,	ADD_DATE
+		,	ADD_TIME
+		,	ADD_USER_ID
+		,	ADD_USER_NAME_LOC
+		,	ATTACH_NO
+		)VALUES(
+			${HOUSE_CODE}
+		,	${BID_NO}
+		,	${BID_COUNT}
+		,	${COMPANY_CODE}
+		,	TO_CHAR(SYSDATE,'YYYYMMDD')
+		,	TO_CHAR(SYSDATE,'HH24MISS')
+		,	${ID}
+		,	${NAME_LOC}
+		,	${ATTACH_NO}
+		)                       	
+	</method>  	
+
+
+	<method name="et_setBdap">
+UPDATE ICOYBDAP SET FINAL_FLAG = 'M'
+WHERE BID_NO      = ${BID_NO}
+  AND BID_COUNT   = ${BID_COUNT}
+  AND VENDOR_CODE = ${COMPANY_CODE}
+  AND STATUS      IN ( 'C','R')
+  AND FINAL_FLAG  = 'U'  
+	</method> 
+	
+	<method name="getVNCP">
+		SELECT 	USER_NAME
+		, 		PHONE_NO
+		, 		MOBILE_NO
+		, 		EMAIL FROM ICOMVNCP 
+		WHERE 	VENDOR_CODE = ${VENDOR_CODE}
+		AND 	ROWNUM = 1  	
+	</method>  	
+	<method name="et_chkOpenDate">
+		<![CDATA[  
+         SELECT CASE WHEN TO_NUMBER(TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')) < TO_NUMBER(PG.OPEN_DATE||PG.OPEN_TIME) 
+                     THEN 'Y'
+                     ELSE 'N'
+                 END STATUS
+           FROM ICOYBDPG PG
+          WHERE PG.HOUSE_CODE = ${HOUSE_CODE}
+            AND PG.BID_NO     = ${BID_NO}
+            AND PG.BID_COUNT  = ${BID_COUNT}
+            AND PG.VOTE_COUNT = ${VOTE_COUNT}
+		]]>   
+	</method>
+</service>

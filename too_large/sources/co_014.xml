@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+<service>
+	<method name="selectVendorList">
+		SELECT
+			GL.VENDOR_CODE,
+			GL.VENDOR_NAME_LOC,
+			DR.CEO_NAME_LOC, 
+			GETIRSNO(GL.IRS_NO) AS IRS_NO
+		FROM
+			ICOMVNGL GL
+		RIGHT OUTER JOIN ICOMADDR DR ON DR.HOUSE_CODE = GL.HOUSE_CODE AND DR.CODE_NO = GL.VENDOR_CODE 
+		WHERE
+			GL.HOUSE_CODE = ${HOUSE_CODE} 
+		AND
+			GL.STATUS IN ('C','R') 
+		AND
+			GL.JOB_STATUS = 'E'  
+		AND
+			DR.CODE_TYPE = '2' 
+		AND
+			GL.PURCHASE_BLOCK_FLAG != 'Y'
+		AND GL.VENDOR_CODE LIKE '%' || UPPER(  $S{VENDOR_CODE}  ) || '%' 
+		AND GL.VENDOR_NAME_LOC LIKE '%' || $S{VENDOR_NAME_LOC} || '%'
+		ORDER BY
+			GL.VENDOR_CODE
+	</method>
+</service>

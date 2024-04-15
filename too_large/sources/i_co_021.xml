@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+<service>
+	<method name="selectCrPeList">
+	<![CDATA[
+			SELECT
+				     DECODE(DOC_TYPE,'ANN_ICT','공고','BID_ICT','공문') DOC_TYPE 
+					,DOC_NO
+					,DOC_SEQ
+					,REV_NO
+					,ASIS_USER_NAME_LOC||' ('||ASIS_USER_ID||')' ASIS_USER  
+					,TOBE_USER_NAME_LOC||' ('||TOBE_USER_ID||')' TOBE_USER  
+					,ADD_USER_NAME_LOC||' ('||ADD_USER_ID||')' ADD_USER  
+					,TO_CHAR(TO_DATE(ADD_DATE||ADD_TIME, 'YYYYMMDDHH24MISS'),'YYYY/MM/DD HH24:MI') ADD_DT
+			FROM ICOYCRPE_ICT
+			WHERE HOUSE_CODE = ${session.HOUSE_CODE }                                    
+			AND   DOC_NO     = ${DOC_NO}                                      
+			AND   DOC_SEQ    = ${DOC_SEQ}        
+			ORDER BY DOC_NO,DOC_SEQ,REV_NO
+	]]>
+	</method>
+</service>

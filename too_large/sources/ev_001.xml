@@ -1,0 +1,461 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+<service>
+	<!-- 공사평가대기 목록  -->
+	<method name="bl_getCsEvWaitList">
+		<![CDATA[
+			SELECT 	
+			        IVHD.EVAL_FLAG
+			,       (SELECT TEXT1 FROM SCODE WHERE TYPE = 'M905' AND CODE = IVHD.EVAL_FLAG) EVAL_FLAG_NM
+			,       IVHD.EVAL_USER_ID
+			,       GETUSERNAMELOC(IVHD.HOUSE_CODE,IVHD.EVAL_USER_ID) AS EVAL_USER_NM
+			,       IVHD.CSKD_GB
+			,       (SELECT TEXT1 FROM SCODE WHERE TYPE = 'M903' AND CODE = IVHD.CSKD_GB)  CSKD_GB_NM
+			,       IVHD.INV_NO
+			,		IVDT.INV_SEQ
+			,		IVHD.SIGN_STATUS
+			,		CONVERT_DATE(IVDT.GR_DATE) GR_DATE	
+			,		IVHD.INV_PERSON_ID
+			,		GETUSERNAMELOC(IVHD.HOUSE_CODE,IVHD.INV_PERSON_ID) AS INV_PERSON_NM
+			,		IVHD.VENDOR_CODE AS COMPANY_CODE
+			,		GETVENDORNAME(IVHD.HOUSE_CODE, IVHD.VENDOR_CODE) AS COMPANY_NAME
+			,		IVDT.ITEM_NO
+			,		IVDT.DESCRIPTION_LOC
+			,		IVDT.GR_QTY AS ITEM_QTY
+			,		IVDT.GR_QTY * IVDT.UNIT_PRICE AS ITEM_AMT
+			--,		TRDT.TAX_NO
+			,		GETUSERNAMELOC(IVHD.HOUSE_CODE,IVHD.PURCHASE_ID) AS PURCHASE_NAME
+			,		IVDT.PO_NO
+			,  		MTGL.KTGRM
+   			,  		(SELECT TEXT2 FROM SCODE WHERE TYPE = 'M346' AND CODE = MTGL.KTGRM AND DEL_FLAG = 'N' AND USE_FLAG = 'Y') AS KTGRM_NAME
+   			,       POHD.SUBJECT
+   			,       (SELECT TEXT2 FROM SCODE WHERE TYPE = 'M979' AND CODE = NVL(IVDT.TAX_TGT_YN,'Y') AND DEL_FLAG = 'N' AND USE_FLAG = 'Y') AS TAX_TGT_YN
+			FROM 	ICOYIVHD IVHD, ICOYIVDT IVDT, ICOYPOHD POHD, ICOMMTGL MTGl
+			WHERE 	IVHD.HOUSE_CODE  = IVDT.HOUSE_CODE
+			AND   	IVHD.INV_NO   = IVDT.INV_NO
+			AND   	IVHD.INV_NO   = $S{inv_no}
+			AND   	IVDT.HOUSE_CODE  = POHD.HOUSE_CODE
+			AND   	IVDT.PO_NO   = POHD.PO_NO
+			AND   	IVDT.HOUSE_CODE  = MTGl.HOUSE_CODE
+			AND   	IVDT.ITEM_NO   = MTGl.ITEM_NO
+			AND 	NVL(IVDT.TAX_YN, 'N') = 'N'
+			AND 	IVHD.PURCHASE_ID = $S{purchase_id}
+			AND 	IVHD.VENDOR_CODE = $S{vendor_code}
+			AND 	MTGl.MATERIAL_TYPE = $S{material_type}
+			AND 	MTGl.MATERIAL_CTRL_TYPE = $S{material_ctrl_type}
+			AND	 	MTGl.MATERIAL_CLASS1 = $S{material_class1}
+			AND 	MTGl.MATERIAL_CLASS2 = $S{material_class2}
+			AND   	IVHD.STATUS   != 'D'
+			AND   	IVDT.STATUS   != 'D'
+			AND   	POHD.STATUS   != 'D'
+			AND   	IVHD.HOUSE_CODE   = ${session.HOUSE_CODE}
+			AND     IVHD.SIGN_STATUS IN ('E1','RE')
+			AND     NVL(IVHD.EVAL_FLAG,'N') IN ('T','P')
+			AND     IVHD.CSKD_GB IN (SELECT CODE FROM SCODE WHERE TYPE = 'M903' AND USE_FLAG = 'Y' AND DEL_FLAG = 'N')		 
+			--AND   	IVHD.CONFIRM_DATE1 BETWEEN $S{from_date} 		AND 	$S{to_date}
+			AND   	IVDT.GR_DATE >= $S{from_date} 		
+			AND 	    IVDT.GR_DATE <= $S{to_date}
+			AND     IVDT.GR_QTY > 0
+			AND     NVL(IVDT.TAX_TGT_YN,'Y') = $S{tax_tgt_yn}
+			AND   	IVHD.EVAL_USER_ID   = $S{eval_user_id}
+			AND     IVHD.INV_PERSON_ID  = $S{inv_user_id}
+			AND     IVHD.CSKD_GB  = $S{cskd_gb}				
+			ORDER BY IVHD.VENDOR_CODE, IVDT.GR_DATE DESC			  
+		]]>			
+	</method>
+	
+	<!-- 공사평가 목록  -->
+	<method name="bl_getCsEvList">
+		<![CDATA[
+			SELECT 	
+			        IVHD.EVAL_FLAG
+			,       (SELECT TEXT1 FROM SCODE WHERE TYPE = 'M905' AND CODE = IVHD.EVAL_FLAG) EVAL_FLAG_NM
+			,       ECHD.EC_NO
+			,       CONVERT_DATE(ECHD.EVAL_DATE) EVAL_DATE
+			,       ECHD.EVAL_USER_ID
+			,       GETUSERNAMELOC(ECHD.HOUSE_CODE,ECHD.EVAL_USER_ID) AS EVAL_USER_NM
+			,       IVHD.CSKD_GB
+			,       (SELECT TEXT1 FROM SCODE WHERE TYPE = 'M903' AND CODE = IVHD.CSKD_GB)  CSKD_GB_NM
+			,       IVHD.INV_NO
+			,		IVDT.INV_SEQ
+			,		IVHD.SIGN_STATUS
+			,		CONVERT_DATE(IVDT.GR_DATE) GR_DATE	
+			,		IVHD.INV_PERSON_ID
+			,		GETUSERNAMELOC(IVHD.HOUSE_CODE,IVHD.INV_PERSON_ID) AS INV_PERSON_NM
+			,		IVHD.VENDOR_CODE AS COMPANY_CODE
+			,		GETVENDORNAME(IVHD.HOUSE_CODE, IVHD.VENDOR_CODE) AS COMPANY_NAME
+			,		IVDT.ITEM_NO
+			,		IVDT.DESCRIPTION_LOC
+			,		IVDT.GR_QTY AS ITEM_QTY
+			,		IVDT.GR_QTY * IVDT.UNIT_PRICE AS ITEM_AMT
+			--,		TRDT.TAX_NO
+			,		GETUSERNAMELOC(IVHD.HOUSE_CODE,IVHD.PURCHASE_ID) AS PURCHASE_NAME
+			,		IVDT.PO_NO
+			,  		MTGL.KTGRM
+   			,  		(SELECT TEXT2 FROM SCODE WHERE TYPE = 'M346' AND CODE = MTGL.KTGRM AND DEL_FLAG = 'N' AND USE_FLAG = 'Y') AS KTGRM_NAME
+   			,       POHD.SUBJECT
+   			,       (SELECT TEXT2 FROM SCODE WHERE TYPE = 'M979' AND CODE = NVL(IVDT.TAX_TGT_YN,'Y') AND DEL_FLAG = 'N' AND USE_FLAG = 'Y') AS TAX_TGT_YN
+			FROM 	ICOYECHD ECHD, ICOYIVHD IVHD, ICOYIVDT IVDT, ICOYPOHD POHD, ICOMMTGL MTGl
+			WHERE 	ECHD.HOUSE_CODE  = IVHD.HOUSE_CODE
+			AND     ECHD.INV_NO      = IVHD.INV_NO
+			AND     IVHD.HOUSE_CODE  = IVDT.HOUSE_CODE
+			AND   	IVHD.INV_NO   = IVDT.INV_NO
+			AND   	IVHD.INV_NO   = $S{inv_no}
+			AND   	IVDT.HOUSE_CODE  = POHD.HOUSE_CODE
+			AND   	IVDT.PO_NO   = POHD.PO_NO
+			AND   	IVDT.HOUSE_CODE  = MTGl.HOUSE_CODE
+			AND   	IVDT.ITEM_NO   = MTGl.ITEM_NO
+			--AND 	NVL(IVDT.TAX_YN, 'N') = 'N'
+			AND 	IVHD.PURCHASE_ID = $S{purchase_id}
+			AND 	IVHD.VENDOR_CODE = $S{vendor_code}
+			AND 	MTGl.MATERIAL_TYPE = $S{material_type}
+			AND 	MTGl.MATERIAL_CTRL_TYPE = $S{material_ctrl_type}
+			AND	 	MTGl.MATERIAL_CLASS1 = $S{material_class1}
+			AND 	MTGl.MATERIAL_CLASS2 = $S{material_class2}
+			AND   	IVHD.STATUS   != 'D'
+			AND   	IVDT.STATUS   != 'D'
+			AND   	POHD.STATUS   != 'D'
+			AND   	IVHD.HOUSE_CODE   = ${session.HOUSE_CODE}
+			AND     IVHD.SIGN_STATUS IN ('E1','RE')
+			AND     NVL(IVHD.EVAL_FLAG,'N') IN ('C')
+			AND     IVHD.CSKD_GB IN (SELECT CODE FROM SCODE WHERE TYPE = 'M903' AND USE_FLAG = 'Y' AND DEL_FLAG = 'N')		 
+			--AND   	IVHD.CONFIRM_DATE1 BETWEEN $S{from_date} 		AND 	$S{to_date}
+			AND   	ECHD.EVAL_DATE >= $S{from_date} 		
+			AND 	ECHD.EVAL_DATE <= $S{to_date}
+			AND     IVDT.GR_QTY > 0
+			AND     NVL(IVDT.TAX_TGT_YN,'Y') = $S{tax_tgt_yn}
+			AND   	ECHD.EVAL_USER_ID   = $S{eval_user_id}
+			AND     IVHD.INV_PERSON_ID  = $S{inv_user_id}
+			AND     ECHD.CSKD_GB  = $S{cskd_gb}								
+			ORDER BY IVHD.VENDOR_CODE, IVDT.GR_DATE DESC	
+			
+					  
+		]]>			
+	</method>
+	
+	<!-- 공사정보  -->
+	<method name="bl_getCsInfo">
+		<![CDATA[
+			SELECT  IVHD.SUBJECT
+			       ,IVHD.INV_PERSON_ID
+			       ,GETUSERNAMELOC(IVHD.HOUSE_CODE,IVHD.INV_PERSON_ID) INV_PERSON_NM
+			       ,IVHD.VENDOR_CODE
+			       ,GETVENDORNAME(IVHD.HOUSE_CODE ,IVHD.VENDOR_CODE) VENDOR_NAME
+			       ,IVHD.PO_TTL_AMT
+			       ,TO_CHAR(IVHD.INV_AMT,'999,999,999,999,999') INV_AMT
+			       ,IVHD.EVAL_USER_ID
+			       ,GETUSERNAMELOC(IVHD.HOUSE_CODE,IVHD.EVAL_USER_ID) EVAL_USER_NM
+			       ,IVHD.CSKD_GB
+			       ,(SELECT TEXT1 FROM SCODE WHERE TYPE = 'M903' AND CODE = IVHD.CSKD_GB)  CSKD_GB_NM
+			FROM ICOYIVHD IVHD
+			WHERE IVHD.HOUSE_CODE = ${session.HOUSE_CODE}
+			AND IVHD.STATUS IN ('C','R')
+			AND IVHD.INV_NO = ${inv_no}
+		]]>			
+	</method>
+	
+	<!-- 공사평가표  -->
+	<method name="bl_getCsEvalSheet">
+		<![CDATA[
+			SELECT B.ES_CD
+			      ,B.ES_VER
+			      ,B.ES_SEQ
+			      ,(SELECT TEXT1 FROM SCODE WHERE TYPE = 'M904' AND CODE = B.GRP_GB) GRP_GB_NM
+			      ,B.GRP_GB_DM
+			      ,B.GRP_GB
+			      ,B.EV_TXT
+			      ,B.ES_DM
+			FROM ICOYESHD A, ICOYESDT B
+			WHERE A.HOUSE_CODE = B.HOUSE_CODE
+			AND A.HOUSE_CODE = ${session.HOUSE_CODE}
+			AND A.ES_CD = B.ES_CD
+			AND STATUS IN ('C','R')
+			AND EV_GB = ${ev_gb}
+			AND A.CSKD_GB = ${cskd_gb}
+			ORDER BY ES_SEQ		  
+		]]>			
+	</method>
+	
+	
+	
+	<!-- 공사정보결과 -->
+	<method name="bl_getCsInfoRst">
+		<![CDATA[
+			SELECT  IVHD.SUBJECT
+			       ,IVHD.INV_PERSON_ID
+			       ,GETUSERNAMELOC(IVHD.HOUSE_CODE,IVHD.INV_PERSON_ID) INV_PERSON_NM
+			       ,IVHD.VENDOR_CODE
+			       ,GETVENDORNAME(IVHD.HOUSE_CODE ,IVHD.VENDOR_CODE) VENDOR_NAME
+			       ,IVHD.PO_TTL_AMT
+			       ,TO_CHAR(IVHD.INV_AMT,'999,999,999,999,999') INV_AMT
+			       ,ECHD.EVAL_USER_ID
+			       ,GETUSERNAMELOC(ECHD.HOUSE_CODE,ECHD.EVAL_USER_ID) EVAL_USER_NM
+			       ,ECHD.CSKD_GB
+			       ,(SELECT TEXT1 FROM SCODE WHERE TYPE = 'M903' AND CODE = ECHD.CSKD_GB)  CSKD_GB_NM
+			       ,ECHD.ASC_SUM
+			       ,ECHD.REMARK
+			       ,ECHD.EVAL_DATE
+			       ,ECHD.ATTACH_NO				      
+			FROM ICOYIVHD IVHD, ICOYECHD ECHD 
+			WHERE IVHD.HOUSE_CODE = ECHD.HOUSE_CODE
+			AND IVHD.INV_NO = ECHD.INV_NO 
+			AND IVHD.STATUS IN ('C','R')
+			AND ECHD.HOUSE_CODE = ${session.HOUSE_CODE}
+			AND ECHD.EC_NO      = ${ec_no}
+		]]>			
+	</method>
+	
+	<!-- 공사평가결과  -->
+	<method name="bl_getCsEvalRst">
+		<![CDATA[
+			SELECT ECDT.ES_CD
+			      ,ECDT.ES_VER
+			      ,ECDT.ES_SEQ
+			      ,(SELECT TEXT1 FROM SCODE WHERE TYPE = 'M904' AND CODE = ESDT.GRP_GB) GRP_GB_NM
+				  ,ESDT.GRP_GB_DM
+			      ,ESDT.GRP_GB
+			      ,ESDT.EV_TXT
+				  ,ESDT.ES_DM
+				  ,ECDT.ASC_GD
+				  ,(SELECT ASC_GD_NM FROM ICOYESDM 
+				     WHERE HOUSE_CODE = ECDT.HOUSE_CODE 
+				       AND ES_CD = ECDT.ES_CD 
+				       AND ES_VER = ECDT.ES_VER 
+				       AND ES_SEQ = ECDT.ES_SEQ 
+				       AND ASC_GD = ECDT.ASC_GD) ASC_GD_NM
+				  ,ECDT.ASC1	
+				  ,ECHD.EC_NO
+				  ,ECDT.EC_SEQ
+			FROM ICOYECHD ECHD, ICOYECDT ECDT, ICOYESDT ESDT
+			WHERE ECHD.HOUSE_CODE = ECDT.HOUSE_CODE
+			AND ECHD.EC_NO = ECDT.EC_NO
+			AND ECDT.ES_CD = ESDT.ES_CD
+			AND ECDT.ES_VER = ESDT.ES_VER
+			AND ECDT.ES_SEQ = ESDT.ES_SEQ
+			AND ECHD.HOUSE_CODE = ${session.HOUSE_CODE}
+			AND ECHD.EC_NO      = ${ec_no}
+			ORDER BY EC_SEQ
+		]]>			
+	</method>
+	
+	<method name="et_setEcHDCreate">
+		INSERT INTO ICOYECHD (
+			 HOUSE_CODE  
+			,EC_NO       
+			,INV_NO      
+			,CSKD_GB     
+			,VENDOR_CODE 
+			,ASC_SUM     
+			,REMARK      
+			,EVAL_USER_ID
+			,EVAL_DATE   
+			,EVAL_TIME
+			,ATTACH_NO   				
+		) VALUES (
+			 ${HOUSE_CODE}                
+			,${EC_NO}                
+			,${INV_NO}                
+			,${CSKD_GB}                
+			,${VENDOR_CODE}                
+			,${ASC_SUM}                
+			,${REMARK}                
+			,${EVAL_USER_ID}                
+			,TO_CHAR(SYSDATE, 'YYYYMMDD')     
+			,TO_CHAR(SYSDATE, 'HH24MISS')
+			,${ATTACH_NO} 		
+		)
+	</method>
+	
+	<method name="et_setEcDTCreate">
+		INSERT INTO ICOYECDT (
+			 HOUSE_CODE
+			,EC_NO     
+			,EC_SEQ    
+			,ES_CD     
+			,ES_VER    
+			,ES_SEQ    
+			,ASC_GD    
+			,ASC1      
+		)
+		VALUES(
+			 ${HOUSE_CODE}                
+			,${EC_NO}                 
+			,lpad(${EC_SEQ}, 5, '0') 
+			,${ES_CD}                 
+			,${ES_VER}                 
+			,${ES_SEQ}                 
+			,${ASC_GD}                 
+			,${ASC1}                 
+		)
+	</method>
+	
+	<method name="et_setIvHDUpd">
+		UPDATE ICOYIVHD
+		SET EVAL_FLAG = 'C'
+		   ,EVAL_TO_DATE = TO_CHAR(SYSDATE, 'YYYYMMDD') 
+		WHERE HOUSE_CODE = ${HOUSE_CODE}  
+		AND INV_NO = ${INV_NO}
+	</method>
+	
+	<method name="setEchdDelete">
+	    <![CDATA[
+	    		DELETE FROM ICOYECHD 
+	    		WHERE HOUSE_CODE = ${session.HOUSE_CODE}
+	    		AND EC_NO = ${EC_NO}		
+			]]>
+	</method>
+	
+	<method name="setEcdtDelete">
+	    <![CDATA[
+	    		DELETE FROM ICOYECDT 
+	    		WHERE HOUSE_CODE = ${session.HOUSE_CODE}
+	    		AND EC_NO = ${EC_NO}		
+			]]>
+	</method>
+	
+	<method name="et_setIvHDUpd2">
+		UPDATE ICOYIVHD
+		SET EVAL_FLAG = 'T'
+		   ,EVAL_TO_DATE = NULL 
+		WHERE HOUSE_CODE = ${session.HOUSE_CODE}
+		AND INV_NO = ${INV_NO}
+	</method>
+	
+	<method name="et_doEvalChg">
+		UPDATE ICOYIVHD
+		SET EVAL_USER_ID = ?
+		WHERE
+		HOUSE_CODE = ?
+		AND INV_NO = ?
+	</method>
+	
+	<method name="bl_getICOYTRTX_FLAG">
+	<![CDATA[
+	SELECT SUM(A.CNT) AS CNT 
+		  	  FROM (SELECT COUNT(*) AS CNT 
+			  	      FROM ICOYTRHD
+				 	 WHERE HOUSE_CODE = ${session.HOUSE_CODE}
+				   	   AND PAY_NO IN (SELECT PAY_NO 
+				   						FROM ICOYTRDT 
+        		   					   WHERE HOUSE_CODE = ${session.HOUSE_CODE}
+        		   					   	 AND INV_NO 	= ${INV_NO} )
+				   	   AND STATUS IN ('C','R')
+				 	UNION ALL
+					SELECT COUNT(*) AS CNT 
+				  	  FROM ICOYTXHD
+        		 	 WHERE HOUSE_CODE = ${session.HOUSE_CODE}
+				   	   AND TAX_NO IN (SELECT TAX_NO 
+				   						FROM ICOYTRDT 
+		   					           WHERE HOUSE_CODE = ${session.HOUSE_CODE}
+		   					             AND INV_NO 	= ${INV_NO})
+				   	   AND STATUS IN ('C','R')) A				   	    
+	]]>
+	</method>
+	
+	<!-- 공사평가 통계  -->
+	<method name="bl_getCsEvList2">
+		<![CDATA[
+			SELECT 
+	             C.SUBJECT
+	            ,(SELECT TEXT1 FROM SCODE WHERE TYPE = 'M903' AND CODE = B.CSKD_GB)  CSKD_GB_NM 
+	            ,C.INV_AMT
+	            ,GETUSERNAMELOC(C.HOUSE_CODE,C.INV_PERSON_ID) INV_PERSON_NM 
+	            ,GETUSERNAMELOC(B.HOUSE_CODE,B.EVAL_USER_ID) EVAL_USER_NM
+	            ,CONVERT_DATE(B.EVAL_DATE) EVAL_DATE
+	            ,A.EC_NO 
+	            ,A.ASC1_1
+	            ,A.ASC1_2
+	            ,A.ASC1_3
+	            ,A.ASC1_4
+	            ,A.ASC1_5
+	            ,A.ASC1_6
+	            ,A.ASC1_7
+	            ,A.ASC1_8
+	            ,A.ASC1_9
+	            ,A.ASC1_10
+	            ,A.ASC1_11
+	            ,A.ASC1_12
+	            ,A.ASC1_13
+	            ,A.ASC1_14
+	            ,A.ASC1_15
+	            ,A.ASC1_16
+	            ,A.ASC1_17
+	            ,A.ASC1_18
+	            ,A.ASC1_19
+	            ,A.ASC1_20
+	            ,SUBSTR(B.REMARK,1,20) REMARK
+	            ,B.ASC_SUM
+	            ,C.PO_TTL_AMT
+	            ,B.EC_NO
+				,C.INV_NO
+				,C.VENDOR_CODE AS COMPANY_CODE
+				,GETVENDORNAME(C.HOUSE_CODE, C.VENDOR_CODE) AS COMPANY_NAME                            
+	      FROM
+	      ( 
+	         SELECT
+	         	 EC_NO
+	         	,MAX(DECODE(RID,1,ASC1)) ASC1_1
+	         	,MAX(DECODE(RID,2,ASC1)) ASC1_2
+	         	,MAX(DECODE(RID,3,ASC1)) ASC1_3
+	         	,MAX(DECODE(RID,4,ASC1)) ASC1_4
+	         	,MAX(DECODE(RID,5,ASC1)) ASC1_5
+	         	,MAX(DECODE(RID,6,ASC1)) ASC1_6
+	         	,MAX(DECODE(RID,7,ASC1)) ASC1_7
+	         	,MAX(DECODE(RID,8,ASC1)) ASC1_8
+	         	,MAX(DECODE(RID,9,ASC1)) ASC1_9
+	         	,MAX(DECODE(RID,10,ASC1)) ASC1_10
+	         	,MAX(DECODE(RID,11,ASC1)) ASC1_11
+	         	,MAX(DECODE(RID,12,ASC1)) ASC1_12
+	         	,MAX(DECODE(RID,13,ASC1)) ASC1_13
+	         	,MAX(DECODE(RID,14,ASC1)) ASC1_14
+	         	,MAX(DECODE(RID,15,ASC1)) ASC1_15
+	         	,MAX(DECODE(RID,16,ASC1)) ASC1_16
+	         	,MAX(DECODE(RID,17,ASC1)) ASC1_17
+	         	,MAX(DECODE(RID,18,ASC1)) ASC1_18
+	         	,MAX(DECODE(RID,19,ASC1)) ASC1_19
+	         	,MAX(DECODE(RID,20,ASC1)) ASC1_20	         		         
+	         FROM 
+	         (
+	            SELECT  
+	            	EC_NO
+	               ,ROW_NUMBER() OVER (PARTITION BY EC_NO ORDER BY ES_SEQ) RID
+	               ,ASC1
+	            FROM
+	            (
+	            SELECT ECDT.ES_CD
+				      ,ECDT.ES_VER
+				      ,ECDT.ES_SEQ
+				      ,ECDT.ASC1	
+					  ,ECHD.EC_NO
+					  ,ECDT.EC_SEQ
+				FROM ICOYECHD ECHD, ICOYECDT ECDT, ICOYESDT ESDT
+				WHERE ECHD.HOUSE_CODE = ECDT.HOUSE_CODE
+				AND ECHD.EC_NO = ECDT.EC_NO
+				AND ECDT.ES_CD = ESDT.ES_CD
+				AND ECDT.ES_VER = ESDT.ES_VER
+				AND ECDT.ES_SEQ = ESDT.ES_SEQ
+				AND ECHD.HOUSE_CODE = ${session.HOUSE_CODE}
+				AND ECHD.CSKD_GB = $S{cskd_gb}
+				)
+			  )
+			  GROUP BY EC_NO 
+			)A, ICOYECHD B, ICOYIVHD C 
+		 WHERE A.EC_NO = B.EC_NO
+		 AND B.HOUSE_CODE = C.HOUSE_CODE
+		 AND B.INV_NO = C.INV_NO
+		 AND C.STATUS   != 'D'
+	     AND C.HOUSE_CODE = ${session.HOUSE_CODE}
+		 AND C.SIGN_STATUS IN ('E1','RE')
+		 AND NVL(C.EVAL_FLAG,'N') IN ('C')
+		 AND B.EVAL_DATE >= $S{from_date} 		
+		 AND B.EVAL_DATE <= $S{to_date}
+		 AND B.EVAL_USER_ID   = $S{eval_user_id}
+		 AND C.INV_PERSON_ID  = $S{inv_user_id}
+		 AND B.CSKD_GB  = $S{cskd_gb}
+		 AND B.VENDOR_CODE = $S{vendor_code}
+		 AND C.INV_NO   = $S{inv_no}				
+		 AND B.EC_NO   = $S{ec_no}
+		 ORDER BY B.EC_NO 						  
+		]]>			
+	</method>
+</service>
+

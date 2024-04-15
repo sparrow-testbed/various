@@ -1,0 +1,1086 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+<service>
+	<method name="et_getPOUPDDetail">
+		<![CDATA[
+            SELECT
+     			 'R'				AS  CUD_FG
+				,'A'				AS  CONTRACT_REMAIN
+				,NVL(DT.GR_QTY,0)   AS  CHK_QTY
+			    ,DT.HOUSE_CODE
+				,DT.ITEM_NO
+				,MT.MATERIAL_TYPE
+				,DT.DESCRIPTION_LOC
+				,CONVERT_DATE(DT.RD_DATE) AS RD_DATE
+				,DT.UNIT_MEASURE
+				,DT.ITEM_QTY
+				,DT.UNIT_PRICE
+				,DT.ITEM_AMT
+				,PD.UNIT_PRICE AS PR_UNIT_PRICE
+				,DT.PR_AMT
+				,DT.PR_AMT - DT.ITEM_AMT AS DOWN_AMT
+				,DT.PR_NO
+				,DT.CUST_CODE
+				,(SELECT CUST_NAME FROM ICOYPRHD WHERE HOUSE_CODE = DT.HOUSE_CODE AND PR_NO = DT.PR_NO)  AS CUST_NAME
+				,HD.CUR
+				,DT.EXCHANGE_RATE
+				,DT.ITEM_AMT AS EXEC_AMT_KRW
+				,DT.ITEM_AMT_KRW
+				,DT.DELY_TO_LOCATION
+				,DT.DELY_TO_ADDRESS
+				, GETICOMCODE1(DT.HOUSE_CODE,'M187',DT.DELY_TO_LOCATION) AS DELY_TO_LOCATION_DESC
+				,DT.QTA_NO
+				,DT.QTA_SEQ
+				,DT.PR_SEQ
+				,DT.EXEC_NO
+				,DT.EXEC_SEQ
+				,DT.CUSTOMER_PRICE
+				,DT.DISCOUNT
+				, GETICOMCODE1(PD.HOUSE_CODE,'M169',PD.TECHNIQUE_GRADE) AS TECHNIQUE_GRADE
+				,PD.INPUT_FROM_DATE
+				,PD.INPUT_TO_DATE
+				,DT.PR_USER_ID
+				,DT.PR_DEPT
+				,DT.MAKER_CODE
+				,DT.MAKER_NAME
+				,DT.SPECIFICATION
+				,DT.PO_NO
+				,DT.PO_SEQ
+				,HD.CTRL_CODE
+				,DT.ORDER_NO
+				,DT.ORDER_SEQ
+				,DT.ORDER_COUNT
+				,DT.WBS_NO
+				,DT.WBS_SUB_NO
+				,DT.WBS_TXT
+				,DT.WBS_NAME
+				,DT.WARRANTY
+			FROM	ICOYPOHD HD	,
+					ICOYPODT DT	,
+					ICOYPRDT PD ,
+					ICOMMTGL MT
+			WHERE	DT.HOUSE_CODE	= HD.HOUSE_CODE
+			AND	DT.PO_NO	= HD.PO_NO
+			AND	DT.HOUSE_CODE	= PD.HOUSE_CODE(+)
+			AND	DT.PR_NO	= PD.PR_NO(+)
+			AND	DT.PR_SEQ	= PD.PR_SEQ(+)
+			AND	DT.HOUSE_CODE	=	MT.HOUSE_CODE
+			AND	DT.ITEM_NO		=	MT.ITEM_NO
+			<OPT=F,S>AND	DT.HOUSE_CODE   = ?</OPT>
+			<OPT=S,S>AND	DT.PO_NO        = ?</OPT>
+			AND	DT.STATUS       IN ('C', 'R')
+			AND	HD.STATUS       IN ('C', 'R')
+		ORDER BY DT.PO_SEQ
+
+		]]>
+	</method>
+
+
+	<method name="et_getPOHeader">
+		<![CDATA[
+	SELECT   PH.PO_NO
+  	    	,PH.VENDOR_CODE
+  	    	, GETCOMPANYNAMELOC(PH.HOUSE_CODE, PH.VENDOR_CODE, 'S')  AS VENDOR_NAME
+  	    	, GETUSERNAMELOC(PH.HOUSE_CODE, PH.ADD_USER_ID)  AS USER_NAME
+  	    	,PH.SUBJECT
+  	    	,PH.CTRL_CODE
+  	    	--,GETICOMCODE1(PH.HOUSE_CODE,'M352',PH.PAY_TERMS) AS PAY_TERMS_DESC
+  	    	,GETICOMCODE1(PH.HOUSE_CODE,'M010',PH.PAY_TERMS) AS PAY_TERMS_DESC
+  	    	,PH.PAY_TERMS
+  	    	,PH.PR_TYPE
+  	    	,GETICOMCODE2(PH.HOUSE_CODE,'M138',PH.PR_TYPE) AS PR_TYPE_DESC
+  	    	,PH.ORDER_NO
+  	    	,PH.ORDER_NAME
+  	    	,PH.CUR
+  	    	,PH.PO_TTL_AMT
+  	    	,PH.TAKE_USER_NAME AS TAKE_USER_ID
+  	    	,GetUserNameLoc(PH.HOUSE_CODE, PH.TAKE_USER_NAME)   TAKE_USER_NAME
+  	    	,CNDT.CTR_DATE
+  	    	,PH.TAKE_TEL
+  	    	,PH.REMARK
+  	    	,PD.EXEC_NO
+  	    	,CNDT.CTR_NO
+  	    	,PRHD.CUST_CODE
+			,PRHD.CUST_NAME
+  	    	,PH.PO_CREATE_DATE
+  	    	,PH.VENDOR_CP_NAME
+  	    	,PH.VENDOR_MOBILE_NO
+  	    	,PH.CONTRACT_FROM_DATE
+  	    	,PH.CONTRACT_TO_DATE
+			, case PH.CONTRACT_FLAG when 'Y' then PH.CONTRACT_NO else '' end AS CONTRACT_NO
+  	    	,PH.SIGN_PERSON_ID
+  	    	,PH.SIGN_DATE
+  	    	,PH.ADD_USER_ID
+  	    	,PH.ADD_DATE
+  	    	,PH.ADD_TIME
+  	    	,PH.PO_TYPE
+  	    	,PH.PO_TTL_AMT PO_AMT_KRW
+  	    	,PD.EXCHANGE_RATE
+  	    	--,GETICOMCODE1(PH.HOUSE_CODE,'M383',PH.BSART) AS BSART_DESC
+			,NVL(( SELECT
+					MAX(INV_PERSON_ID)
+					FROM ICOYIVHD IVHD, ICOYIVDT IVDT
+					WHERE
+					IVDT.HOUSE_CODE = PD.HOUSE_CODE
+					AND IVDT.PO_NO = PD.PO_NO
+					AND IVDT.PO_SEQ = PD.PO_SEQ
+					AND IVHD.INV_NO = IVDT.INV_NO
+			),PD.PR_USER_ID) INV_PERSON_ID
+			,GETUSERNAMELOC(PH.HOUSE_CODE, NVL(( SELECT
+													CASE MAX(INV_PERSON_ID) WHEN NULL THEN PD.PR_USER_ID ELSE MAX(INV_PERSON_ID) END
+												 FROM ICOYIVHD IVHD, ICOYIVDT IVDT
+												 WHERE
+												 IVDT.HOUSE_CODE = PD.HOUSE_CODE
+													AND IVDT.PO_NO = PD.PO_NO
+													AND IVDT.PO_SEQ = PD.PO_SEQ
+													AND IVHD.INV_NO = IVDT.INV_NO
+							),PD.PR_USER_ID)) INV_PERSON_NAME
+		    ,PD.PO_NO  AS DOC_NO
+			,PH.ATTACH_NO
+			,(SELECT COUNT(IVDT.INV_NO)
+			    FROM ICOYIVHD IVHD, ICOYIVDT IVDT
+			   WHERE IVHD.HOUSE_CODE  = IVDT.HOUSE_CODE
+			     AND IVHD.INV_NO      = IVDT.INV_NO
+			     /*AND IVHD.SIGN_STATUS = 'P'*/
+			     /*결재중인것이 있을경우 중도처리 안됨*/
+			     AND IVHD.APP_STATUS = 'P'
+			     AND IVDT.HOUSE_CODE  = PD.HOUSE_CODE
+			     AND IVDT.PO_NO       = PD.PO_NO
+			     AND IVDT.PO_SEQ      = PD.PO_SEQ
+			 ) AS INV_PROGRESS_CNT
+	    FROM ICOYPODT PD, ICOYPOHD PH, ICOYPRHD PRHD, ICOYCNDT CNDT
+			<OPT=F,S>	WHERE PD.HOUSE_CODE   = ?                 	                  			  </OPT>
+			<OPT=S,S>	AND   PD.PO_NO        = ?					                      		  </OPT>
+				  		AND   PD.STATUS       IN ('C', 'R')
+				  		AND   PH.HOUSE_CODE   = PD.HOUSE_CODE
+				  		AND   PH.PO_NO        = PD.PO_NO
+				  		AND   PD.HOUSE_CODE	  = PRHD.HOUSE_CODE(+)
+				  		AND   PD.PR_NO		  = PRHD.PR_NO(+)
+				  		AND   PD.HOUSE_CODE	  = CNDT.HOUSE_CODE(+)
+				  		AND   PD.EXEC_NO	  = CNDT.EXEC_NO(+)
+				  		AND   PD.EXEC_SEQ     = CNDT.EXEC_SEQ(+)
+				  		AND   PH.STATUS       IN ('C', 'R')
+						ORDER BY 1 DESC
+		]]>
+	</method>
+
+	<method name="up_ICOYPODT_DO">
+		<![CDATA[
+			UPDATE ICOYPODT SET
+				STATUS                         =   ?
+				,ADD_DATE                       =   ?
+				,ADD_TIME                       =   ?
+				,ADD_USER_ID                    =   ?
+				,CHANGE_DATE                    =   ?
+				,CHANGE_TIME                    =   ?
+				,CHANGE_USER_ID                 =   ?
+				,COMPANY_CODE                   =   ?
+				,PLANT_CODE                     =   ?
+				,VENDOR_CODE                    =   ?
+				,ITEM_NO                        =   ?
+				,PURCHASE_LOCATION              =   ?
+				,MAKER_CODE                     =   ?
+				,MAKER_NAME                     =   ?
+				,UNIT_MEASURE                   =   ?
+				,ITEM_QTY                       =   ?
+				,UNIT_PRICE                     =   ?
+				,ITEM_AMT                       =   ?
+				,RD_DATE                        =   ?
+				,VENDOR_ITEM_NO                 =   ''
+				,COMPLETE_MARK                  =   'N'
+				,DO_QTY                         =   0
+				,INV_QTY                        =   0
+				,GR_QTY                         =   0
+				,INSPECT_TYPE                   =   ''
+				,ATTACH_NO                      =   ?
+				,PR_DEPT                        =   ?
+				,PR_USER_ID                     =   ?
+				,INV_COMPLETE_FLAG              =   'N'
+				,COMPLETE_GR_MARK               =   'N'
+				,INFO_CREATE_TYPE               =   ?
+				,DELY_TO_ADDRESS                =   ?
+				,DESCRIPTION_ENG                =   ?
+				,DESCRIPTION_LOC                =   ?
+				,SPECIFICATION                  =   ?
+				,DELY_TO_LOCATION               =   ?
+				,PKG_TYPE                       =   ''
+				,UNIT_TAX                       =   0
+				,STR_FLAG                       =   ?
+				,PREV_UNIT_PRICE                =   ?
+				,ACCOUNT_CODE                   =   ?
+				,Z_CODE2						=	?
+				,Z_CODE3						=	?
+				,Z_LOI_FLAG						=	'N'
+				,DO_FLAG						=	CASE ? WHEN 'true' THEN 'Y' ELSE 'N' END
+				,Z_WORK_STAGE_FLAG              =   CASE ? WHEN 'true' THEN 'Y' ELSE 'N' END
+				,Z_DELIVERY_CONFIRM_FLAG        =   CASE ? WHEN 'true' THEN 'Y' ELSE 'N' END
+				,QI_FLAG						=	''
+				,QTA_NO					        =   ?
+				,QTA_SEQ	                    =   ?
+				,PR_NO	                        =   ?
+				,PR_SEQ	                        =   ?
+				,EXEC_NO	                    =   ?
+				,EXEC_SEQ                       =   ?
+				,CUSTOMER_PRICE	                =   ?
+				,DISCOUNT						=	?
+				,CUST_CODE                      =   ?
+				,EXCHANGE_RATE	                =   ?
+				,PR_AMT         				=	?
+				,VALID_FROM_DATE				=	''
+				,VALID_TO_DATE					=	''
+				,ITEM_AMT_KRW					=	?
+				,WARRANTY						=   ?
+			WHERE HOUSE_CODE                    =   ?
+				AND PO_NO                       =   ?
+				AND PO_SEQ                      =   ?
+		]]>
+	</method>
+
+	<method name="up_ICOYPOHD_DO">
+		<![CDATA[
+			UPDATE  ICOYPOHD  SET
+				 STATUS                  = ?
+				,ADD_DATE                = ?
+				,ADD_TIME                = ?
+				,ADD_USER_ID             = ?
+				,CHANGE_DATE             = ?
+				,CHANGE_TIME             = ?
+				,CHANGE_USER_ID          = ?
+				,COMPANY_CODE            = ?
+				,PLANT_CODE              = ?
+				,PO_CREATE_DATE          = ?
+				,VENDOR_CODE             = ?
+				--,SHIPPER_TYPE            = 'D'
+				,PAY_TERMS               = ?
+				,DELY_TERMS              = ?
+				,CUR                     = ?
+				,PO_TTL_AMT              = ?
+				,CTRL_CODE               = ?
+				,PURCHASER_ID            = ?
+				,PURCHASER_NAME          = ?
+				,EMAIL_FLAG              = 'N'
+				,COMPLETE_MARK           = 'N'
+				,PO_TYPE                 = ?
+				,SIGN_STATUS             = 'E'
+				,SIGN_DATE               = ?
+				,SIGN_PERSON_ID          = ?
+				,GR_BASE_FLAG            = 'N'
+				,SUBJECT                 = ?
+				,REMARK                  = ?
+				,ORDER_NO                = ?
+				,ORDER_NAME              = ?
+				,PR_TYPE                 = ?
+				,TAKE_USER_NAME          = ?
+				,TAKE_TEL                = ?
+				,VENDOR_CP_NAME	 	   = ?
+				,VENDOR_MOBILE_NO 	   = ?
+				,CONTRACT_FROM_DATE	   = ?
+				,CONTRACT_TO_DATE   	   = ?
+				,PO_AMT_KRW   	   	   = ROUND(?,0)
+			WHERE HOUSE_CODE              = ?
+				AND PO_NO                   = ?
+		]]>
+	</method>
+
+	<method name="setPRDT_1">
+		<![CDATA[
+	        SELECT PR_NO, PR_SEQ
+	        FROM   ICOYPODT
+	        WHERE  HOUSE_CODE = '#house_code#'
+	          AND  PO_NO = '#po_no#'
+	          AND  STATUS <> 'D'
+		]]>
+	</method>
+
+	<method name="setPRDT_2">
+		<![CDATA[
+           UPDATE ICOYPRDT
+           SET    PR_PROCEEDING_FLAG = 'O'
+           WHERE  HOUSE_CODE = '#house_code#'
+             AND  PR_NO = '#pr_no#'
+             AND  PR_SEQ = '#pr_seq#'
+		]]>
+	</method>
+
+	<method name="updateCndt_1">
+		<![CDATA[
+	 	 	SELECT PD.PO_NO, PD.PO_SEQ, CD.EXEC_NO, CD.EXEC_SEQ
+	        FROM ICOYPODT PD, ICOYCNDT CD
+	        WHERE CD.HOUSE_CODE = PD.HOUSE_CODE
+				AND CD.EXEC_NO   = PD.EXEC_NO
+				AND PD.PO_NO     = '#po_no#'
+				AND CD.EXEC_SEQ  = PD.EXEC_SEQ
+		]]>
+	</method>
+
+	<method name="updateCndt_2">
+		<![CDATA[
+            UPDATE ICOYCNDT SET
+		 	 PO_NO = '#po_no#'
+		 	, PO_SEQ = '#po_seq#'
+		 	where EXEC_NO = '#exec_no#'
+		 	AND EXEC_SEQ = '#exec_seq#'
+		]]>
+	</method>
+
+	<method name="del_PO_1">
+		<![CDATA[
+	       	DELETE ICOYPOHD
+	       	WHERE HOUSE_CODE	=	?
+	       	AND   PO_NO			=	?
+		]]>
+	</method>
+
+	<method name="del_PO_2">
+		<![CDATA[
+	       	DELETE ICOYPODT
+	       	WHERE HOUSE_CODE	=	?
+	       	AND   PO_NO			=	?
+		]]>
+	</method>
+
+	<method name="in_ICOYPODT_DO">
+               INSERT INTO ICOYPODT (
+               			 HOUSE_CODE
+               			,PO_NO
+               			,PO_SEQ
+               			,STATUS
+               			,ADD_DATE
+               			,ADD_TIME
+               			,ADD_USER_ID
+               			,CHANGE_DATE
+               			,CHANGE_TIME
+               			,CHANGE_USER_ID
+               			,COMPANY_CODE
+               			,PLANT_CODE
+               			,VENDOR_CODE
+               			,ITEM_NO
+               			,PURCHASE_LOCATION
+               			,MAKER_CODE
+               			,MAKER_NAME
+               			,UNIT_MEASURE
+               			,ITEM_QTY
+               			,UNIT_PRICE
+               			,ITEM_AMT
+               			,RD_DATE
+               			,VENDOR_ITEM_NO
+               			,COMPLETE_MARK
+               			,DO_QTY
+               			,INV_QTY
+               			,GR_QTY
+               			,INSPECT_TYPE
+               			,ATTACH_NO
+               			,PR_DEPT
+               			,PR_USER_ID
+               			,INV_COMPLETE_FLAG
+               			,COMPLETE_GR_MARK
+               			,INFO_CREATE_TYPE
+               			,DELY_TO_ADDRESS
+               			,DESCRIPTION_ENG
+               			,DESCRIPTION_LOC
+               			,SPECIFICATION
+               			,DELY_TO_LOCATION
+               			,PKG_TYPE
+               			,UNIT_TAX
+               			,STR_FLAG
+               			,PREV_UNIT_PRICE
+               			,ACCOUNT_CODE
+						,Z_CODE2
+						,Z_CODE3
+						,Z_LOI_FLAG
+              			,DO_FLAG
+                        ,Z_WORK_STAGE_FLAG
+                        ,Z_DELIVERY_CONFIRM_FLAG
+              			,QI_FLAG
+              			,QTA_NO
+					,QTA_SEQ
+					,PR_NO
+					,PR_SEQ
+					,EXEC_NO
+					,EXEC_SEQ
+					,CUSTOMER_PRICE
+					,DISCOUNT
+					,CUST_CODE
+					,EXCHANGE_RATE
+					,PR_AMT
+					,VALID_FROM_DATE
+					,VALID_TO_DATE
+					,ITEM_AMT_KRW
+					,ORDER_NO
+					,ORDER_SEQ
+					,WBS_NO
+					,WBS_SUB_NO
+					,WBS_TXT
+					, ORDER_COUNT
+					, WARRANTY
+					, WBS_NAME
+		 )VALUES(
+               			 ?
+               			,?
+               			,lpad(?, 5, '0')
+               			,?
+               			,?
+               			,?
+               			,?
+               			,?
+               			,?
+               			,?
+               			,?
+               			,?
+               			,?
+               			,?
+               			,?
+               			,?
+               			,?
+               			,?
+               			,?
+               			, ROUND( NVL(NULLIF(?, ''), 0) ,5 )
+               			,?
+               			,?
+               			,''
+               			,'N'
+               			,0
+               			,0
+               			,0
+                          ,''
+               			,?
+               			,?
+               			,?
+               			,'N'
+               			,'N'
+               			,?
+               			,?
+               			,?
+               			,?
+               			,?
+               			,?
+               			,''
+               			,0
+               			,?
+               			, ROUND(NVL(NULLIF(?, ''), 0) ,5)
+               			,?
+               			,?
+               			,?
+               			,'N'
+               			, CASE ? WHEN 'true' THEN 'Y' ELSE 'N' END
+               			, CASE ? WHEN 'true' THEN 'Y' ELSE 'N' END
+               			, CASE ? WHEN 'true' THEN 'Y' ELSE 'N' END
+               			,''
+		 			,?
+		 			,?
+		 			,?
+		 			,?
+		 			,?
+		 			,?
+		 			,?
+		 			,?
+		 			,?
+		 			, ROUND( NVL(NULLIF(?, ''), 0) ,5 )
+		 			, ROUND( NVL(NULLIF(?, ''), 0) ,5)
+					,''
+					,''
+		 			,?
+					,?
+					,?
+					,?
+					,?
+					,?
+					,?
+					,?
+                    ,?
+		 	)
+	</method>
+
+	<method name="in_update_goods_group_1">
+			SELECT GL.GOODS_GROUP
+				FROM ICOMMTGL GL, ICOYPODT DT
+			WHERE DT.HOUSE_CODE = '#house_code#'
+			  AND DT.PO_NO      = '#po_no#'
+			  AND DT.STATUS     IN ('C','R')
+			  AND GL.HOUSE_CODE = DT.HOUSE_CODE
+			  AND GL.ITEM_NO    = DT.ITEM_NO
+	</method>
+
+	<method name="in_update_goods_group_2">
+			UPDATE ICOYPODT
+			   SET GOODS_GROUP = '#goods_group#'
+			WHERE HOUSE_CODE = '#house_code#'
+			  AND PO_NO      = '#po_no#'
+			  AND STATUS     IN ('C','R')
+	</method>
+
+	<method name="in_ICOYINDR">
+	        UPDATE ICOYINDR
+	        SET     CUM_PO_QTY            =  NVL(CUM_PO_QTY,0)+ NVL(? ,0)
+	               ,STATUS                =  'R'
+	               ,CHANGE_DATE           = ?
+	               ,CHANGE_TIME           = ?
+	               ,CHANGE_USER_ID        = ?
+	        WHERE HOUSE_CODE         = ?
+	          AND VENDOR_CODE        = ?
+	          AND ITEM_NO            = ?
+	          AND STATUS IN ('C', 'R')
+	</method>
+
+	<method name="in_ICOYPOHD_DO">
+             INSERT INTO ICOYPOHD
+             (
+                       HOUSE_CODE
+                      ,PO_NO
+                      ,STATUS
+                      ,ADD_DATE
+                      ,ADD_TIME
+                      ,ADD_USER_ID
+                      ,CHANGE_DATE
+                      ,CHANGE_TIME
+                      ,CHANGE_USER_ID
+                      ,COMPANY_CODE
+                      ,PLANT_CODE
+                      ,PO_CREATE_DATE
+                      ,VENDOR_CODE
+                      ,SHIPPER_TYPE
+                      ,PAY_TERMS
+                      ,DELY_TERMS
+                      ,CUR
+                      ,PO_TTL_AMT
+                      ,CTRL_CODE
+                      ,PURCHASER_ID
+                      ,PURCHASER_NAME
+                      ,EMAIL_FLAG
+                      ,COMPLETE_MARK
+                      ,PO_TYPE
+                      ,SIGN_STATUS
+                      ,SIGN_DATE
+                      ,SIGN_PERSON_ID
+                      ,GR_BASE_FLAG
+                      ,SUBJECT
+                      ,REMARK
+                      ,ORDER_NO
+                      ,ORDER_NAME
+                      ,PR_TYPE
+                      ,TAKE_USER_NAME
+                      ,TAKE_TEL
+                      ,VENDOR_CP_NAME
+			          ,VENDOR_MOBILE_NO
+					  ,CONTRACT_FROM_DATE
+					  ,CONTRACT_TO_DATE
+					  ,PO_AMT_KRW
+					  ,ATTACH_NO
+					)VALUES (
+                       ?
+                      ,?
+                      ,?
+                      ,?
+                      ,?
+                      ,?
+                      ,?
+                      ,?
+                      ,?
+                      ,?
+                      ,?
+                      ,?
+                      ,?
+                      ,'D'
+                      ,?
+                      ,?
+                      ,?
+                      ,?
+                      ,?
+                      ,?
+                      ,?
+                      ,'N'
+                      ,'N'
+                      ,?
+                      ,'E'
+                      ,?
+                      ,?
+                      ,'N'
+                      ,?
+                      ,?
+                      ,?
+                      ,?
+                      ,?
+                      ,?
+                      ,?
+                      ,?
+                      ,?
+                      ,?
+                      ,?
+                      ,?
+                      ,?
+              )
+	</method>
+
+	<method name="et_getForeignPOHeaderU">
+		<![CDATA[
+		 	SELECT   SUBJECT
+		 			,VENDOR_CODE
+		 			,GETVENDORNAME(HOUSE_CODE,VENDOR_CODE) AS VENDOR_NAME
+		 			,OFFER_VENDOR_CODE
+		 			,GETVENDORNAME(HOUSE_CODE,OFFER_VENDOR_CODE) AS OFFER_VENDOR_NAME
+		 			,PO_CREATE_DATE
+		 			,SHIPPING_METHOD
+		 			,GETICOMCODE2(HOUSE_CODE,'M138',PR_TYPE) AS PR_TYPE
+		 			,PR_TYPE AS PR_TYPE_CODE
+		 			,ORDER_NO
+		 			,ORDER_NAME
+		 			,PO_TTL_AMT
+		 			,TAKE_USER_NAME
+		 			,GETICOMCODE1(HOUSE_CODE,'M010',PAY_TERMS) AS PAY_TERMS
+		 			,PAY_TERMS AS PAY_TERMS_CODE
+		 			,CUR
+		 			,TAKE_TEL
+		 			,GETICOMCODE1(HOUSE_CODE,'M009',DELY_TERMS) AS DELY_TERMS
+		 			,DELY_TERMS AS DELY_TERMS_CODE
+		 			,ADVISE_BANK_CODE
+		 			,ADVISE_BANK_NAME
+		 			,BUYER_FWDR_CODE
+		 			,BUYER_FWDR_NAME
+		 			,VENDOR_FWDR_CODE
+		 			,VENDOR_FWDR_NAME
+		 			,CONSIGNEE
+		 			,ARRIVAL_PORT
+		 			,DEPART_PORT
+		 			,ARRIVAL_PORT_NAME
+		 			,DEPART_PORT_NAME
+		 	FROM ICOYPOHD
+<OPT=F,S>	WHERE HOUSE_CODE = ?                                                      </OPT>
+<OPT=S,S>	AND   PO_NO 	 = ?													  </OPT>
+		 	ORDER BY PO_NO DESC
+		]]>
+	</method>
+
+	<method name="setSIGN_STATUS_1">
+		<![CDATA[
+			 UPDATE ICOYPOHD
+			 SET SIGN_STATUS      ='#FLAG#',
+			     SIGN_DATE      = TO_CHAR(SYSDATE, 'YYYYMMDD'),
+			     SIGN_PERSON_ID ='#user_id#'
+			 WHERE HOUSE_CODE = '#house_code#'
+   			   AND PO_NO = ?
+		]]>
+	</method>
+
+	<method name="setSIGN_STATUS_2">
+		<![CDATA[
+		 UPDATE ICOYPODT
+		 SET RD_DATE  = (CASE SIGN(RD_DATE - TO_CHAR(SYSDATE,'YYYYMMDD'))
+		                    WHEN 1 THEN RD_DATE
+		                    WHEN 0 THEN RD_DATE
+		                    WHEN -1 THEN TO_CHAR(SYSDATE,'YYYYMMDD')
+		                END)
+		 WHERE HOUSE_CODE = '#house_code#'
+		   AND PO_NO = ?
+		]]>
+	</method>
+
+
+	<method name="setPODT">
+		<![CDATA[
+			 UPDATE ICOYPODT
+			 SET   RD_DATE = TO_CHAR(SYSDATE, 'YYYYMMDD')
+			 WHERE HOUSE_CODE = '#house_code#'
+			   AND PO_NO = ?
+			   AND RD_DATE < TO_CHAR(SYSDATE, 'YYYYMMDD')
+		]]>
+	</method>
+
+    <method name="in_PIS_PO">
+    <![CDATA[
+            INSERT INTO  TB_SCM_PO
+            (
+                 PO_NO
+                ,PO_SEQ
+                ,PO_DATE
+                ,CONSULT_NO
+                ,CONSULT_DGR
+                ,CONSULT_SEQ
+                ,PJT_CODE
+                ,CONTRACT_DIV
+                ,DELY_TO_ADDRESS
+                ,WARRANTY
+                ,ITEM_NO
+                ,DISCRIPTION_LOC
+                ,MAKER_CODE
+                ,MAKER_NAME
+                ,SPECIFICATION
+                ,VENDOR_CODE
+                ,VENDOR_NAME
+                ,ITEM_QTY
+                ,UNIT_MEASURE
+                ,UNIT_PRICE
+                ,ITEM_AMT
+                ,REMARK
+                ,REG_ID
+                ,REG_DTTM
+                ,UPD_ID
+                ,UPD_DTTM
+            )
+            SELECT
+              POHD.PO_NO
+            , PODT.PO_SEQ
+            , POHD.PO_CREATE_DATE
+            , PODT.ORDER_NO
+            , PODT.ORDER_COUNT
+            , PODT.ORDER_SEQ
+            , PODT.WBS_NO
+            , PRDT.CONTRACT_DIV
+            , PODT.DELY_TO_ADDRESS
+            , PODT.WARRANTY
+            , PODT.ITEM_NO
+            , PODT.DESCRIPTION_LOC
+            , PODT.MAKER_CODE
+            , PODT.MAKER_NAME
+            , PODT.SPECIFICATION
+            , PODT.VENDOR_CODE
+            , VNGL.VENDOR_NAME_LOC
+            , PODT.ITEM_QTY
+            , PODT.UNIT_MEASURE
+            , PODT.UNIT_PRICE
+            , PODT.ITEM_AMT
+            , PODT.Z_REMARK
+            , PODT.ADD_USER_ID
+            , PODT.ADD_DATE || PODT.ADD_TIME AS REG_DTTM
+            , PODT.CHANGE_USER_ID
+            , PODT.CHANGE_DATE || PODT.CHANGE_TIME AS UPD_DTTM
+            FROM ICOYPOHD POHD, ICOYPODT PODT, ICOYPRDT PRDT, ICOMVNGL VNGL
+            WHERE POHD.HOUSE_CODE = '#house_code#'
+            AND POHD.HOUSE_CODE = PODT.HOUSE_CODE
+            AND PODT.HOUSE_CODE = PRDT.HOUSE_CODE
+            AND PODT.HOUSE_CODE = VNGL.HOUSE_CODE
+            AND POHD.PO_NO = '#po_no#'
+            AND POHD.PO_NO = PODT.PO_NO
+            AND PODT.PR_NO = PRDT.PR_NO
+            AND PODT.PR_SEQ = PRDT.PR_SEQ
+            AND PODT.VENDOR_CODE = VNGL.VENDOR_CODE
+        ]]>
+    </method>
+
+
+    <method name="upd_PIS_PO">
+    <![CDATA[
+    	UPDATE TB_SCM_PO
+ 			SET DELY_TO_ADDRESS = '#DELY_TO_ADDRESS#'
+   			  , WARRANTY = '#WARRANTY#'
+ 		WHERE PO_NO 	  = '#PO_NO#'
+   		  AND PO_SEQ 	  = '#PO_SEQ#'
+   		   ]]>
+    </method>
+
+        <method name="et_setPoIngStop">
+    <![CDATA[
+    	UPDATE ICOYPOHD
+    	   SET  END_DATE = '#add_date#'
+    	       ,END_TIME = '#add_time#'
+    	       ,END_USER_ID = '#id#'
+    	       ,END_REMARK = '#end_remark#'
+    	 WHERE HOUSE_CODE = '#house_code#'
+    	   AND PO_NO = '#po_no#'
+   		   ]]>
+    </method>
+
+        <method name="et_setPoIngStop_setIvhd">
+    <![CDATA[
+    	UPDATE ICOYIVHD
+    	   SET  SIGN_STATUS = 'R'
+    	       ,CHANGE_DATE = '#add_date#'
+    	       ,CHANGE_TIME = '#add_time#'
+    	       ,CHANGE_USER_ID = '#id#'
+    	 WHERE HOUSE_CODE = '#house_code#'
+    	   AND INV_NO IN (SELECT INV_NO
+    	   				    FROM ICOYIVDT
+    	   				   WHERE HOUSE_CODE = '#house_code#'
+    	   				     AND PO_NO = '#po_no#')
+--    	   AND SIGN_STATUS = 'P'
+    	   AND SIGN_STATUS = 'E1'
+   		   ]]>
+    </method>
+	<method name="in_ICOYPRDT_cancel">
+			UPDATE ICOYPRDT
+			   SET PR_PROCEEDING_FLAG = 'P'
+		 		  ,PO_VENDOR_CODE     = null
+				  ,PO_UNIT_PRICE      = null
+				  ,CHANGE_DATE        = null
+				  ,CHANGE_TIME        = null
+			 WHERE HOUSE_CODE         = '#house_code#'
+			   AND PR_NO              = '#hid_pr_no#'
+			   AND PR_SEQ             = '#hid_pr_seq#'
+	</method>
+
+	<method name="in_ICOYCNHD_cancel">
+			UPDATE ICOYCNHD
+			SET STATUS = 'D'   
+			 WHERE HOUSE_CODE = '#house_code#'
+			   AND EXEC_NO    = '#hid_exec_no#'
+			   AND 1 = (SELECT COUNT(*) FROM ICOYCNDT 
+			             WHERE HOUSE_CODE  = '#house_code#'
+			               AND EXEC_NO    = '#hid_exec_no#'
+			               AND STATUS IN ('C','R') 
+			           )
+	</method>
+
+	<method name="in_ICOYCNDP_cancel">
+			UPDATE ICOYCNDP
+			SET STATUS = 'D' 
+			 WHERE HOUSE_CODE = '#house_code#'
+			   AND EXEC_NO    = '#hid_exec_no#'
+			   AND 1 = (SELECT COUNT(*) FROM ICOYCNDT 
+			             WHERE HOUSE_CODE  = '#house_code#'
+			               AND EXEC_NO    = '#hid_exec_no#'
+			               AND STATUS IN ('C','R') 
+			           )
+	</method>
+	<method name="in_ICOYPOHD_cancel">
+			UPDATE ICOYPOHD
+			SET STATUS = 'D' 
+			 WHERE HOUSE_CODE = '#house_code#'
+			   AND PO_NO      = '#hid_po_no#'
+	</method>
+	<method name="in_ICOYPODT_cancel">
+	        UPDATE ICOYPODT
+			SET STATUS = 'D'
+			 WHERE HOUSE_CODE = '#house_code#'
+			   AND PO_NO      = '#hid_po_no#'
+	</method>
+	
+	<method name="in_ICOYIVHD_cancel">
+	<![CDATA[
+	        UPDATE ICOYIVHD
+			SET STATUS = 'D'
+			WHERE HOUSE_CODE = '#house_code#'
+			AND STATUS IN ('C','R') 
+			AND SIGN_STATUS NOT IN ('E1','RE')
+			AND INV_NO IN (SELECT INV_NO 
+					                 FROM ICOYIVDT 
+					                WHERE HOUSE_CODE = '#house_code#'  
+					                  AND STATUS IN ('C','R') 
+					                  AND PO_NO = '#hid_po_no#')
+     ]]>               
+	</method>
+	
+	<method name="in_ICOYIVDT_cancel">
+	<![CDATA[
+			UPDATE ICOYIVDT 
+			SET STATUS = 'D' 
+			WHERE HOUSE_CODE = '#house_code#'  
+			AND STATUS IN ('C','R') 
+			AND PO_NO = '#hid_po_no#'
+     ]]>               
+	</method>
+	
+	<method name="in_ICOYCNDT_cancel">
+	        UPDATE ICOYCNDT
+			SET STATUS = 'D'  
+			 WHERE HOUSE_CODE = '#house_code#'
+			   AND PO_NO      = '#hid_po_no#'
+	</method>
+	
+	
+	<method name="bl_getICOYIVHD_FLAG">
+	<![CDATA[
+			SELECT COUNT(*) CNT 
+			FROM ICOYIVHD 
+			WHERE HOUSE_CODE = '#house_code#'
+			AND STATUS IN ('C','R') 
+			AND SIGN_STATUS IN ('E1','RE')
+			AND INV_NO IN (SELECT INV_NO 
+			                 FROM ICOYIVDT 
+			                WHERE HOUSE_CODE = '#house_code#'
+			                  AND STATUS IN ('C','R') 
+			                  AND PO_NO = '#po_no#' )
+	]]>
+	</method>
+	
+	<method name="in_setPoReturn_1">
+	<![CDATA[
+			UPDATE ICOYPRDT 
+			SET PR_PROCEEDING_FLAG = 'B' 
+			WHERE HOUSE_CODE = '#house_code#'  
+			AND (PR_NO,PR_SEQ) IN (SELECT PR_NO,PR_SEQ 
+			                         FROM ICOYCNDT 
+			                        WHERE HOUSE_CODE = '#house_code#' 
+			                          AND PO_NO = '#po_no#')           
+     ]]>               
+	</method>
+	
+	<method name="in_setPoReturn_2">
+	<![CDATA[
+			UPDATE ICOYCNDT 
+            SET PO_NO = NULL 
+            WHERE HOUSE_CODE = '#house_code#' 
+            AND PO_NO = '#po_no#'
+     ]]>               
+	</method>
+	
+	<method name="in_setPoReturn_3">
+	<![CDATA[
+			UPDATE ICOYIVHD
+			SET STATUS = 'D'
+			WHERE HOUSE_CODE = '#house_code#'
+			AND STATUS IN ('C','R') 
+			AND SIGN_STATUS NOT IN ('E1','RE')
+			AND INV_NO IN (SELECT INV_NO 
+					                 FROM ICOYIVDT 
+					                WHERE HOUSE_CODE = '#house_code#'  
+					                  AND STATUS IN ('C','R') 
+					                  AND PO_NO = '#po_no#')
+     ]]>               
+	</method>
+	
+	<method name="in_setPoReturn_4">
+	<![CDATA[
+			UPDATE ICOYIVDT
+			SET STATUS = 'D' 
+			WHERE HOUSE_CODE = '#house_code#'  
+			AND STATUS IN ('C','R') 
+			AND PO_NO = '#po_no#'
+     ]]>               
+	</method>
+	
+	<method name="in_setPoReturn_5">
+	<![CDATA[
+	        UPDATE ICOYPOHD
+			SET STATUS = 'D'
+			WHERE HOUSE_CODE = '#house_code#' 
+			AND STATUS IN ('C','R') 
+			AND PO_NO = '#po_no#'
+     ]]>               
+	</method>
+	
+	<method name="in_setPoReturn_6">
+	<![CDATA[
+			UPDATE ICOYPODT
+			SET STATUS = 'D'
+			WHERE HOUSE_CODE = '#house_code#'  
+            AND STATUS IN ('C','R') 
+            AND PO_NO = '#po_no#'
+     ]]>               
+	</method>
+	
+	<method name="sel_setPoCancel_1">
+		<![CDATA[
+		    SELECT COUNT(*) CNT 
+			FROM ICOYIVHD 
+			WHERE HOUSE_CODE = ${session.HOUSE_CODE}
+			AND STATUS IN ('C','R') 
+			AND SIGN_STATUS IN ('E1','RE')
+			AND INV_NO IN (SELECT INV_NO 
+			                 FROM ICOYIVDT 
+			                WHERE HOUSE_CODE = ${session.HOUSE_CODE}
+			                  AND STATUS IN ('C','R') 
+			                  AND PO_NO = ${PO_NO}	
+						   )	 	 	
+		]]>
+	</method>
+	
+	<method name="sel_setExPoCancel_1">
+		<![CDATA[
+	 	 	SELECT COUNT(*) CNT 
+			FROM ICOYIVHD 
+			WHERE HOUSE_CODE = ${session.HOUSE_CODE}
+			AND STATUS IN ('C','R') 
+			AND SIGN_STATUS IN ('E1','RE')
+			AND INV_NO IN (SELECT INV_NO 
+			                 FROM ICOYIVDT 
+			                WHERE HOUSE_CODE = ${session.HOUSE_CODE}
+			                  AND STATUS IN ('C','R') 
+			                  AND PO_NO IN (SELECT PO_NO 
+							                  FROM ICOYCNDT 
+							                 WHERE HOUSE_CODE = ${session.HOUSE_CODE}
+							                   AND EXEC_NO = ${exec_no}	
+							                ) 
+						    )
+		]]>
+	</method>
+	
+	<method name="in_setExPoCancel_1">
+	<![CDATA[
+			UPDATE ICOYPRDT 
+			SET PR_PROCEEDING_FLAG = 'B' 
+			WHERE HOUSE_CODE = '#house_code#'  
+			AND (PR_NO,PR_SEQ) IN (SELECT PR_NO,PR_SEQ 
+			                         FROM ICOYCNDT 
+			                        WHERE HOUSE_CODE = '#house_code#' 
+			                          AND EXEC_NO = '#exec_no#')           
+     ]]>               
+	</method>
+	
+	<method name="in_setExPoCancel_2">
+	<![CDATA[
+	        UPDATE ICOYIVHD
+			SET STATUS = 'D' 
+			WHERE HOUSE_CODE = '#house_code#'
+			AND STATUS IN ('C','R') 
+			AND SIGN_STATUS NOT IN ('E1','RE')
+			AND INV_NO IN (SELECT INV_NO 
+					         FROM ICOYIVDT 
+					        WHERE HOUSE_CODE = '#house_code#'  
+					          AND STATUS IN ('C','R') 
+					          AND PO_NO IN (SELECT PO_NO 
+					                          FROM ICOYCNDT 
+					                         WHERE HOUSE_CODE = '#house_code#'
+					                           AND EXEC_NO = '#exec_no#'	
+					                        )
+					       )
+     ]]>               
+	</method>
+	
+	<method name="in_setExPoCancel_3">
+	<![CDATA[
+	        UPDATE ICOYIVDT
+			SET STATUS = 'D' 
+			WHERE HOUSE_CODE = '#house_code#'  
+			AND STATUS IN ('C','R') 
+			AND PO_NO IN (SELECT PO_NO 
+					        FROM ICOYCNDT 
+					       WHERE HOUSE_CODE = '#house_code#'
+					         AND EXEC_NO = '#exec_no#'	
+					      )
+     ]]>               
+	</method>
+	
+	<method name="in_setExPoCancel_4">
+	<![CDATA[
+	        UPDATE ICOYPOHD
+			SET STATUS = 'D' 
+			WHERE HOUSE_CODE = '#house_code#' 
+			AND STATUS IN ('C','R') 
+			AND PO_NO IN (SELECT PO_NO 
+					        FROM ICOYCNDT 
+					       WHERE HOUSE_CODE = '#house_code#'
+					         AND EXEC_NO = '#exec_no#'	
+					      )
+     ]]>               
+	</method>
+	
+	<method name="in_setExPoCancel_5">
+	<![CDATA[
+			UPDATE ICOYPODT
+			SET STATUS = 'D' 
+            WHERE HOUSE_CODE = '#house_code#'  
+            AND STATUS IN ('C','R') 
+            AND PO_NO IN (SELECT PO_NO 
+					        FROM ICOYCNDT 
+					       WHERE HOUSE_CODE = '#house_code#'
+					         AND EXEC_NO = '#exec_no#'	
+					      )
+     ]]>               
+	</method>
+	
+	<method name="in_setExPoCancel_6">
+			 UPDATE ICOYCNHD
+			 SET PO_YN = 'N'			     
+			 WHERE HOUSE_CODE = '#house_code#'
+			   AND EXEC_NO    = '#exec_no#'	
+	</method>
+	
+	<method name="in_setExPoCancel_7">
+	<![CDATA[
+			UPDATE ICOYCNDT 
+            SET PO_NO = NULL,
+			    PO_SEQ = NULL	 
+            WHERE HOUSE_CODE = '#house_code#' 
+            AND EXEC_NO = '#exec_no#'
+     ]]>               
+	</method>
+	
+</service>

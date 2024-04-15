@@ -1,0 +1,63 @@
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=ks_c_5601-1987">
+<head>
+<OBJECT ID="XecureWeb" CLASSID="CLSID:7E9FDB80-5316-11D4-B02C-00C04F0CD404" >
+<COMMENT>
+        <EMBED type='application/x-SoftForum-XecSSL40' hidden=true name='XecureWeb'>
+        <NOEMBED>
+</COMMENT>
+           No XecureWeb 4.0 PlugIn
+        </NOEMBED>
+        </EMBED>
+</OBJECT>
+
+<script language='javascript' src='/XecureObject/xecureweb.js'></script>
+<script language='javascript' src='/XecureObject/xecureweb_file.js'></script>
+<script language='javascript'>
+
+if (navigator.appName == 'Netscape') {
+
+  var XecureMime = navigator.mimeTypes["application/x-SoftForum-XWFile"];
+  if (XecureMime) {   // Xecure PlugIn 이 이미 설치되어 있는 경우
+        if ( file_isNewPlugin(XecureMime.enabledPlugin.description) == false) {
+               // if (navigator.userAgent.indexOf("Mozilla/5") == 0)
+                //        document.location.href = "/XecureObject/NPXecSSL60_Install.xpi";
+
+                if (navigator.userAgent.indexOf("Mozilla/4") == 0)  // Netscape 4.0 up. Using SmartUpdate
+                        file_downloadNow();
+        }
+   }
+   else {     // Xecure PlugIn 이 설치되어 있지 않은 경우
+                //if (navigator.userAgent.indexOf("Mozilla/5") == 0)
+                 //       document.location.href = "/XecureObject/NPXecSSL60_Install.xpi";
+                if (navigator.userAgent.indexOf("Mozilla/4") == 0)  // Netscape 4.0 up. Using SmartUpdate
+                        file_downloadNow();
+   }
+}
+
+</script>
+
+<OBJECT ID="FileAccess" CLASSID="CLSID:6AC69002-DAD5-11D4-B065-00C04F0CD404" CODEBASE="/XecureObject/xw40_install.cab#Version=4,1,0,8"><PARAM name="lang" value="ENGLISH">
+<COMMENT>
+        <EMBED type='application/x-SoftForum-XWFile' hidden=true name='FileAccess' lang='ENGLISH'>
+      <NOEMBED>
+</COMMENT>
+           No XecureWeb 4.0 File PlugIn
+        </NOEMBED>
+        </EMBED>
+
+</OBJECT>
+
+</head>
+<body>
+<br><br>
+<H><center> XecureWeb File upload/ download Demo </center></H>
+기다리시오...<br><br>
+<p><a href='file_upload1.php?abc=def&pop=hi' onClick="FileUpload(this); return false;">file upload (txt)</a></p>
+
+<p><a href='file_upload2.php' onClick="FileUpload(this); return false;">file upload test(save as original name)</a></p>
+
+<p><a href='file_download.php?abc=def&pop=hi' onClick="FileDownload('/user2/jsbaek/xecureweb_ver4/object/xw40_install.exe', this, 0, 0); return false;">file(bin) download test</a></p>
+<p><a href='file_download.php?abc=한글&pop=hi' onClick="FileDownload('/user2/jsbaek/xecureweb_ver4/object/xecureweb_file.js', this, 0, 0); return false;">file(txt) download test</a></p>
+</body>
+</html>

@@ -1,0 +1,39 @@
+<!-- html file 클라이언트의 동작, 
+     xecureweb_xp.js 의 Sign_with_option2 로 서명 ,  form을 통해 전송-->
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ks_c_5601-1987">
+<script language=javascript src="/XecureObject/xecureweb_xp.js"></script>
+<script language='javascript'>
+PrintObjectTag();
+</script>
+
+<body>
+
+<!--Title -->
+<h1>전자서명-식별번호 데모</h1>
+
+<form name=signform method=post action='sign_result_vid.jsp'>
+
+서명할 데이타<br>
+<textarea cols=90 rows=15 name='plain'>
+this is signature test document
+</textarea>
+<br>
+
+서명 메시지<br>
+<textarea cols=90 rows=15 name='signed_msg'>
+</textarea>
+<br><br>
+
+<!-- plain 데이타를 서명하여 signed_msg 에 담아 보여준다 -->
+
+<input type=button value='  서명 && 식별번호확인  ' onClick='signform.signed_msg.value = Sign_with_option2(0,0, signform.plain.value);'><br><br>
+<input type=submit value='서버로 전송' >
+<br>
+
+
+</form>
+
+</body>
+</html>

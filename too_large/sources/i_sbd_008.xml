@@ -1,0 +1,639 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<service>
+
+    <!-- ICT 사용 -->
+    <method name="getBdPriceList">
+    <![CDATA[
+         SELECT
+                 DECODE(SUBSTR(HD.ANN_NO,1,2),'BD',HD.BID_NO,HD.ANN_NO)                                                                         AS ANN_NO
+                ,HD.COST_STATUS                                                                                                                 AS COST_STATUS
+                ,NVL((
+                        SELECT  Z.BID_AMT
+                        FROM    ICOYBDVO_ICT Z
+                        WHERE   Z.HOUSE_CODE      = HD.HOUSE_CODE
+                        AND     Z.BID_NO          = HD.BID_NO
+                        AND     Z.BID_COUNT       = HD.BID_COUNT
+                        AND     Z.STATUS         IN ('C', 'R')
+                        AND     Z.VENDOR_CODE     = ${COMPANY_CODE}
+                     ), 0)                                                                                                                      AS BID_AMT
+                ,HD.ANN_ITEM                                                                                                                    AS ANN_ITEM
+                ,HD.CONT_TYPE1                                                                                                                  AS CONT_TYPE1
+                ,HD.CONT_TYPE2                                                                                                                  AS CONT_TYPE2
+                ,            (SELECT Z.TEXT2 FROM SCODE Z WHERE Z.HOUSE_CODE = HD.HOUSE_CODE AND Z.TYPE = 'M974_ICT' AND Z.CODE = HD.CONT_TYPE1)
+                 || ' / ' || (SELECT Z.TEXT2 FROM SCODE Z WHERE Z.HOUSE_CODE = HD.HOUSE_CODE AND Z.TYPE = 'M973_ICT' AND Z.CODE = HD.CONT_TYPE2)
+                 || ' / ' || (SELECT Z.TEXT2 FROM SCODE Z WHERE Z.HOUSE_CODE = HD.HOUSE_CODE AND Z.TYPE = 'M930_ICT' AND Z.CODE = HD.PROM_CRIT) AS CONT_TYPE1_TEXT
+                ,TO_CHAR(TO_DATE(PG.BID_BEGIN_DATE || PG.BID_BEGIN_TIME, 'YYYYMMDDHH24MISS'),'YYYY/MM/DD HH24:MI')                              AS BID_BEGIN_DATE_TIME
+                ,TO_CHAR(TO_DATE(PG.BID_END_DATE   || PG.BID_END_TIME,   'YYYYMMDDHH24MISS'),'YYYY/MM/DD HH24:MI')                              AS BID_END_DATE_TIME
+                ,HD.ATTACH_NO                                                                                                                   AS ATTACH_NO
+                ,NULL                                                                                                                           AS ATTACH_CNT
+                ,(CASE WHEN           TO_NUMBER(TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')) >= TO_NUMBER(PG.BID_BEGIN_DATE||PG.BID_BEGIN_TIME)
+                                 AND  TO_NUMBER(TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')) <  TO_NUMBER(PG.BID_END_DATE||PG.BID_END_TIME)         THEN '입찰진행중' -- 'P' -- 진행중
+                       WHEN          (TO_NUMBER(TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')) < TO_NUMBER(PG.BID_BEGIN_DATE||PG.BID_BEGIN_TIME)
+                                 OR   PG.BID_END_DATE IS NULL)                                                                              THEN '입찰대기' -- 'F' -- 예정중
+                       ELSE                                                                                                                      '입찰종료' -- 'C' -- 종료
+                  END)                                                                                                                          AS STATUS_TEXT
+               ,HD.BID_STATUS                                                                                                                   AS BID_STATUS
+               ,HD.BID_NO                                                                                                                       AS BID_NO
+               ,HD.BID_COUNT                                                                                                                    AS BID_COUNT
+               ,(CASE WHEN       TO_NUMBER(TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')) >= TO_NUMBER(PG.BID_BEGIN_DATE||PG.BID_BEGIN_TIME)
+                            AND  TO_NUMBER(TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')) <  TO_NUMBER(PG.BID_END_DATE||PG.BID_END_TIME)              THEN 'P' -- 진행중
+                      WHEN      (TO_NUMBER(TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')) < TO_NUMBER(PG.BID_BEGIN_DATE||PG.BID_BEGIN_TIME)
+                             OR  PG.BID_END_DATE IS NULL)                                                                                   THEN 'F' -- 예정중
+                      ELSE                                                                                                                       'C' -- 종료
+                END)                                                                                                                            AS STATUS
+               ,(SELECT COUNT(Z.BID_NO)
+                   FROM ICOYBDAP_ICT Z      -- 입찰참가신청
+                  WHERE Z.HOUSE_CODE   = HD.HOUSE_CODE
+                    AND Z.BID_NO       = HD.BID_NO
+                    AND Z.BID_COUNT    = HD.BID_COUNT
+                    AND Z.VENDOR_CODE  = ${COMPANY_CODE}
+                    AND Z.STATUS IN ('C', 'R')
+                    AND Z.ADD_DATE IS NOT NULL)                                                                                                 AS PARTICIPATE_FLAG
+               ,(SELECT COUNT(distinct Z.BID_NO)
+                   FROM ICOYBDVO_ICT Z
+                  WHERE Z.HOUSE_CODE   = HD.HOUSE_CODE
+                    AND Z.BID_NO       = HD.BID_NO
+                    AND Z.BID_COUNT    = HD.BID_COUNT
+                    AND Z.VENDOR_CODE  = ${COMPANY_CODE}
+                    AND Z.VOTE_COUNT   = PG.VOTE_COUNT
+                    AND Z.STATUS IN ('C', 'R')
+                )                                                                                                                               AS VOTE_FLAG
+                ,CASE WHEN (SELECT COUNT(Z.BID_NO)
+                              FROM ICOYBDVO_ICT Z   -- 투찰정보
+                             WHERE Z.HOUSE_CODE   = HD.HOUSE_CODE
+                               AND Z.BID_NO       = HD.BID_NO
+                               AND Z.BID_COUNT    = HD.BID_COUNT
+                               AND Z.VENDOR_CODE  = ${COMPANY_CODE}
+                               AND Z.VOTE_COUNT   = PG.VOTE_COUNT
+                               AND Z.STATUS IN ('C', 'R')
+                           )  > 0 THEN 'Y'
+                                  ELSE 'N'
+                 END                                                                                                                            AS VOTE_FLAG_TEXT
+                ,nvl((SELECT Z.FINAL_FLAG
+                        FROM ICOYBDAP_ICT Z
+                       WHERE Z.HOUSE_CODE   = HD.HOUSE_CODE
+                         AND Z.BID_NO       = HD.BID_NO
+                         AND Z.BID_COUNT    = HD.BID_COUNT
+                         AND Z.VENDOR_CODE  = ${COMPANY_CODE}
+                         AND Z.STATUS IN ('R')),'N')                                                                                            AS FINAL_FLAG
+               ,'Y'                                                                                                                             AS SPEC_FLAG    -- 제한경쟁인 경우
+              ,NVL((SELECT Z.BID_CANCEL
+                      FROM ICOYBDVO_ICT Z
+                     WHERE Z.HOUSE_CODE   = HD.HOUSE_CODE
+                       AND Z.BID_NO       = HD.BID_NO
+                       AND Z.BID_COUNT    = HD.BID_COUNT
+                       AND Z.VOTE_COUNT   = PG.VOTE_COUNT
+                       AND Z.VENDOR_CODE  = ${COMPANY_CODE}
+                       AND Z.STATUS IN ('C', 'R')
+                    ),'N') AS BID_CANCEL
+              ,PG.VOTE_COUNT                                                                                                                    AS VOTE_COUNT
+              ,'Y'                                                                                                                              AS ENABLE_YN
+              ,HD.ANNOUNCE_FLAG                                                                                                                 AS ANNOUNCE_FLAG
+              ,'N'                                                                                                                              AS ANNOUNCE_YN
+               ,CASE WHEN HD.ANN_VERSION IS NULL THEN (SELECT CODE FROM SCODE WHERE TYPE = 'VR001_ICT')
+                     ELSE HD.ANN_VERSION
+                END                                                                                                                             AS ANN_VERSION
+               ,HD.BID_TYPE                                                                                                                     AS BID_TYPE              
+               ,AP.RANK_FST_SME_YN
+               ,(SELECT COUNT(*) FROM ICOYBDAP_ICT Z
+                 WHERE Z.HOUSE_CODE   = AP.HOUSE_CODE
+                   AND Z.BID_NO       = AP.BID_NO
+                   AND Z.BID_COUNT    = AP.BID_COUNT
+                   AND Z.RANK_FST_SME_YN = 'Y'                  
+               ) RANK_FST_SME_YN2
+               ,CASE WHEN PG.VOTE_COUNT = 1 THEN 'Y'
+                	  WHEN PG.VOTE_COUNT > 1 AND 
+                	       (SELECT COUNT(Z.BID_NO)
+                              FROM ICOYBDVO_ICT Z   
+                             WHERE Z.HOUSE_CODE   = PG.HOUSE_CODE
+                               AND Z.BID_NO       = PG.BID_NO
+                               AND Z.BID_COUNT    = PG.BID_COUNT
+                               AND Z.VOTE_COUNT   = (PG.VOTE_COUNT - 1)
+                               AND Z.VENDOR_CODE  = ${COMPANY_CODE}                                                             
+                           )  > 0  THEN 'Y'                      
+                      ELSE 'N'
+                END                                                                                                                            AS BF_PTC_YN
+         FROM  ICOYBDHD_ICT HD
+             , ICOYBDPG_ICT PG
+             , ICOMVNGL_ICT VN
+             , ICOYBDAP_ICT AP             
+         WHERE 1=1
+         AND   HD.HOUSE_CODE  = PG.HOUSE_CODE
+         AND   HD.BID_NO      = PG.BID_NO
+         AND   HD.BID_COUNT   = PG.BID_COUNT
+         AND   HD.HOUSE_CODE  = AP.HOUSE_CODE
+         AND   HD.BID_NO      = AP.BID_NO
+         AND   HD.BID_COUNT   = AP.BID_COUNT
+         AND   VN.VENDOR_CODE = AP.VENDOR_CODE
+         
+         AND   AP.STATUS      = 'R'
+         AND   'Y' = NVL(AP.FINAL_FLAG,'N')         
+         
+         AND   HD.COST_STATUS = 'EC'
+                                
+         AND   HD.HOUSE_CODE  = ${HOUSE_CODE}
+         AND   HD.ES_FLAG     = 'E'
+         AND   (   PG.BID_BEGIN_DATE BETWEEN  ${START_CHANGE_DATE}
+                                     AND      ${END_CHANGE_DATE}
+                OR PG.BID_END_DATE   BETWEEN  ${START_CHANGE_DATE}
+                                      AND     ${END_CHANGE_DATE}
+               )
+         AND   HD.ANN_NO    =  $S{ANN_NO}
+         AND   HD.ANN_ITEM  LIKE  '%'||$S{ANN_ITEM}||'%'
+    ]]>
+
+    <if test="${bid_flag}" operator="eq" value="P"> <!---->
+        <![CDATA[
+            AND TO_NUMBER(PG.BID_BEGIN_DATE||PG.BID_BEGIN_TIME) <= TO_NUMBER(TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS'))
+            AND TO_NUMBER(TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS'))  <  TO_NUMBER(PG.BID_END_DATE||PG.BID_END_TIME)    -- 진행중
+        ]]>
+    </if>
+
+    <if test="${bid_flag}" operator="eq" value="F"> <!---->
+        <![CDATA[
+                AND  (TO_NUMBER(TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')) < TO_NUMBER(PG.BID_BEGIN_DATE||PG.BID_BEGIN_TIME) --예정중
+                       OR PG.BID_END_DATE IS NULL)
+        ]]>
+    </if>
+
+    <if test="${bid_flag}" operator="eq" value="C"> <!---->
+        <![CDATA[
+                AND   TO_NUMBER(TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')) >= TO_NUMBER(PG.BID_END_DATE||PG.BID_END_TIME) -- 종료
+        ]]>
+    </if>
+
+    <![CDATA[
+         AND   HD.BID_STATUS IN ('AC', 'UC')
+         AND   (${COMPANY_CODE} IN (SELECT Z.VENDOR_CODE
+                                      FROM ICOYBDAP_ICT Z
+                                     WHERE Z.HOUSE_CODE = HD.HOUSE_CODE
+                                       AND Z.BID_NO     = HD.BID_NO
+                                       AND Z.BID_COUNT  = HD.BID_COUNT
+                                       AND Z.STATUS IN ('C', 'R')) )
+         AND   HD.HOUSE_CODE  = VN.HOUSE_CODE
+         AND   VN.VENDOR_CODE = ${COMPANY_CODE}
+         AND   HD.SIGN_STATUS  IN ('C')
+         AND   HD.STATUS IN ('C' ,'R')
+         AND   PG.STATUS IN ('C' ,'R')
+       ORDER BY HD.ANN_DATE DESC
+              , HD.ADD_DATE DESC
+              , HD.ADD_TIME DESC
+              , HD.ANN_NO DESC
+    ]]>
+    </method>
+
+
+
+
+	<method name="getBdJoinList">
+	<![CDATA[
+		 SELECT * FROM (
+		 
+         SELECT
+                HD.ANN_VERSION 
+                ,HD.ANN_ITEM
+                ,HD.ANN_STATUS
+                ,HD.ANN_NO
+                ,HD.ANN_COUNT
+                ,CONVERT_DATE(HD.ANN_DATE) AS ANN_DATE
+                ,NVL(HD.CHANGE_USER_NAME_LOC,HD.ADD_USER_NAME_LOC)											AS CHANGE_USER_NAME
+                ,(
+       			 SELECT COUNT(*) FROM ICOYBDAP2_ICT A
+                 WHERE A.HOUSE_CODE   = HD.HOUSE_CODE
+                   AND A.ANN_NO       = HD.ANN_NO
+                   AND A.ANN_COUNT	  = HD.ANN_COUNT
+				   AND A.VENDOR_CODE  = ${COMPANY_CODE}
+				   AND A.STATUS IN ('R', 'C')                   
+                ) AS JOIN_FLAG
+                ,CASE WHEN (SELECT COUNT(*) FROM ICOYBDAP2_ICT A
+       						 WHERE A.HOUSE_CODE   = HD.HOUSE_CODE
+			                   AND A.ANN_NO       = HD.ANN_NO
+			                   AND A.ANN_COUNT	  = HD.ANN_COUNT
+							   AND A.VENDOR_CODE  = ${COMPANY_CODE}
+							   AND A.STATUS IN ('R', 'C') 
+                 )  > 0 THEN '참가' ELSE '미참가' END AS JOIN_FLAG_TEXT                                                                                                 
+                 ,CASE WHEN (SELECT COUNT(VENDOR_CODE)                                                                                                   
+                                         FROM ICOYBDAP2_ICT
+                                        WHERE HOUSE_CODE = '000'
+                                            AND VENDOR_CODE  = ${COMPANY_CODE}
+                                            AND ANN_NO = HD.ANN_NO                                                                      
+                                            AND ANN_COUNT = HD.ANN_COUNT
+                                            AND STATUS = 'R' 
+				                            AND FINAL_FLAG = 'Y') > 0 THEN 'Y'
+				            WHEN (SELECT COUNT(VENDOR_CODE)                                                                                                   
+                                         FROM ICOYBDAP2_ICT
+                                        WHERE HOUSE_CODE = '000'
+                                            AND VENDOR_CODE  = ${COMPANY_CODE}
+                                            AND ANN_NO = HD.ANN_NO                                                                      
+                                            AND ANN_COUNT = HD.ANN_COUNT
+                                            AND STATUS = 'R' 
+				                            AND FINAL_FLAG = 'N') > 0 THEN 'N'                                                             
+                            WHEN (SELECT COUNT(*) 
+                                          FROM ICOYBDAP2_ICT A
+				                         WHERE A.HOUSE_CODE   = HD.HOUSE_CODE
+							                  AND A.ANN_NO       = HD.ANN_NO
+							                  AND A.ANN_COUNT	  = HD.ANN_COUNT
+								              AND A.VENDOR_CODE  = ${COMPANY_CODE}
+								              AND A.STATUS IN ('C') )  > 0 THEN '진행중' 
+                             ELSE '미참가' END AS FINAL_FLAG
+                 ,(SELECT INCO_REASON  
+                     FROM ICOYBDAP2_ICT
+                    WHERE HOUSE_CODE = '000'
+                    AND VENDOR_CODE  = ${COMPANY_CODE}
+                    AND ANN_NO = HD.ANN_NO                                                                      
+                    AND ANN_COUNT = HD.ANN_COUNT
+                    AND STATUS = 'R' 
+				    AND FINAL_FLAG IN ('N','M','U')) AS INCO_REASON
+				  				  
+				  ,CASE WHEN (SELECT COUNT(VENDOR_CODE)                                                                                                   
+                                         FROM ICOYBDAP2_ICT
+                                        WHERE HOUSE_CODE = '000'
+                                            AND VENDOR_CODE  = ${COMPANY_CODE}
+                                            AND ANN_NO = HD.ANN_NO                                                                      
+                                            AND ANN_COUNT = HD.ANN_COUNT
+                                            AND STATUS IN ('C','R')
+				                            AND INP_CNF = 'Y') > 0 THEN '접수'
+				            WHEN (SELECT COUNT(VENDOR_CODE)                                                                                                   
+                                         FROM ICOYBDAP2_ICT
+                                        WHERE HOUSE_CODE = '000'
+                                            AND VENDOR_CODE  = ${COMPANY_CODE}
+                                            AND ANN_NO = HD.ANN_NO                                                                      
+                                            AND ANN_COUNT = HD.ANN_COUNT
+                                            AND STATUS IN ('C','R')
+				                            AND NVL(INP_CNF,'N') = 'N') > 0 THEN '미접수'                                                             
+                            ELSE '미참가' END AS INP_CNF_TXT  				    				                                                                                          
+              ,TO_CHAR(TO_DATE(HD.X_DOC_SUBMIT_DATE||HD.X_DOC_SUBMIT_TIME, 'YYYYMMDDHH24MISS'),'YYYY/MM/DD HH24:MI') AS X_DOC_SUBMIT_DATE_TIME
+              ,GETFILEATTCOUNT((SELECT  AT.ATTACH_NO 
+					               FROM  ICOYBDAP2_ICT AT
+					               WHERE   AT.HOUSE_CODE  = HD.HOUSE_CODE
+					               AND   AT.ANN_NO      = HD.ANN_NO
+					               AND   AT.ANN_COUNT   = HD.ANN_COUNT
+					              AND   AT.VENDOR_CODE = ${COMPANY_CODE} 
+					              GROUP BY ATTACH_NO)) ATTACH_CNT,
+		         (SELECT 	ATTACH_NO 
+		         	FROM 	ICOYBDAP2_ICT AT
+		           WHERE  	AT.HOUSE_CODE  = HD.HOUSE_CODE
+		 			 AND   AT.ANN_NO      = HD.ANN_NO
+		 			 AND   AT.ANN_COUNT   = HD.ANN_COUNT
+		 			 AND   AT.VENDOR_CODE = ${COMPANY_CODE} 
+		 			 GROUP BY ATTACH_NO) AS ATTACH_NO,
+		         (SELECT 	ATTACH_NO 
+		         	FROM 	ICOYBDAP2_ICT AT
+		           WHERE  	AT.HOUSE_CODE  = HD.HOUSE_CODE
+		 			 AND   AT.ANN_NO      = HD.ANN_NO
+		 			 AND   AT.ANN_COUNT   = HD.ANN_COUNT
+		 			 AND   AT.VENDOR_CODE = ${COMPANY_CODE} 
+		 			 GROUP BY ATTACH_NO) AS ATTACH_NO_H 
+		 	,CASE WHEN(SELECT COUNT(BID_NO)         
+		                    FROM ICOYBDDM2_ICT DM
+		                   WHERE   DM.HOUSE_CODE  = HD.HOUSE_CODE
+				 			 AND   DM.ANN_NO      = HD.ANN_NO		 			 
+				 			 AND   DM.STATUS IN ('C','R')
+				  )  > 0 THEN 'C' ELSE 'P' END AS STATUS     
+		    , GETICOMCODE2( HD.HOUSE_CODE, 'M816_ICT', HD.ANN_STATUS)									AS STATUS_TEXT	-- 공고상태	
+		    , HD.ADD_DATE
+		    , HD.ADD_TIME             
+         FROM  ICOYBDHD2_ICT HD
+         WHERE HD.HOUSE_CODE  = ${HOUSE_CODE}
+         AND   HD.ANN_NO    =  $S{ANN_NO}  
+         AND   HD.ANN_ITEM  LIKE  '%'||$S{ANN_ITEM}||'%'
+         AND   HD.ANN_STATUS IN ('AC','UC')        
+         AND   HD.SIGN_STATUS  IN ('C')
+         AND   HD.STATUS IN ('C' ,'R')
+         AND   HD.ANN_DATE BETWEEN $S{START_CHANGE_DATE} 
+         AND   $S{END_CHANGE_DATE}  
+	]]>
+
+	<if test="${bid_flag}" operator="eq" value="P"> <!---->
+		<![CDATA[
+			AND TO_NUMBER(PG.BID_BEGIN_DATE||PG.BID_BEGIN_TIME) <= TO_NUMBER(TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS'))
+            AND TO_NUMBER(TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')) < TO_NUMBER(PG.BID_END_DATE||PG.BID_END_TIME)    -- 진행중
+		]]>
+	</if>
+	
+	<if test="${bid_flag}" operator="eq" value="F"> <!---->
+		<![CDATA[
+                AND  (TO_NUMBER(TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')) < TO_NUMBER(PG.BID_BEGIN_DATE||PG.BID_BEGIN_TIME) --예정중
+                       OR PG.BID_END_DATE IS NULL)
+		]]>
+	</if>
+	
+	<if test="${bid_flag}" operator="eq" value="C"> <!---->
+		<![CDATA[
+                AND   TO_NUMBER(TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')) >= TO_NUMBER(PG.BID_END_DATE||PG.BID_END_TIME) -- 종료
+		]]>
+	</if>
+	
+	<![CDATA[
+		 UNION
+		 
+         SELECT
+                HD.ANN_VERSION 
+                ,HD.ANN_ITEM
+                ,HD.ANN_STATUS
+                ,HD.ANN_NO
+                ,HD.ANN_COUNT
+                ,CONVERT_DATE(HD.ANN_DATE) AS ANN_DATE
+                ,NVL(HD.CHANGE_USER_NAME_LOC,HD.ADD_USER_NAME_LOC)											AS CHANGE_USER_NAME
+                ,(
+       			 SELECT COUNT(*) FROM ICOYBDAP2_ICT A
+                 WHERE A.HOUSE_CODE   = HD.HOUSE_CODE
+                   AND A.ANN_NO       = HD.ANN_NO
+                   AND A.ANN_COUNT	  = HD.ANN_COUNT
+				   AND A.VENDOR_CODE  = ${COMPANY_CODE}
+				   AND A.STATUS IN ('R', 'C')                   
+                ) AS JOIN_FLAG
+                ,CASE WHEN (SELECT COUNT(*) FROM ICOYBDAP2_ICT A
+       						 WHERE A.HOUSE_CODE   = HD.HOUSE_CODE
+			                   AND A.ANN_NO       = HD.ANN_NO
+			                   AND A.ANN_COUNT	  = HD.ANN_COUNT
+							   AND A.VENDOR_CODE  = ${COMPANY_CODE}
+							   AND A.STATUS IN ('R', 'C') 
+                 )  > 0 THEN '참가' ELSE '미참가' END AS JOIN_FLAG_TEXT                                                                                                 
+                 ,CASE WHEN (SELECT COUNT(VENDOR_CODE)                                                                                                   
+                                         FROM ICOYBDAP2_ICT
+                                        WHERE HOUSE_CODE = '000'
+                                            AND VENDOR_CODE  = ${COMPANY_CODE}
+                                            AND ANN_NO = HD.ANN_NO                                                                      
+                                            AND ANN_COUNT = HD.ANN_COUNT
+                                            AND STATUS = 'R' 
+				                            AND FINAL_FLAG = 'Y') > 0 THEN 'Y'
+				            WHEN (SELECT COUNT(VENDOR_CODE)                                                                                                   
+                                         FROM ICOYBDAP2_ICT
+                                        WHERE HOUSE_CODE = '000'
+                                            AND VENDOR_CODE  = ${COMPANY_CODE}
+                                            AND ANN_NO = HD.ANN_NO                                                                      
+                                            AND ANN_COUNT = HD.ANN_COUNT
+                                            AND STATUS = 'R' 
+				                            AND FINAL_FLAG = 'N') > 0 THEN 'N'                                                             
+                            WHEN (SELECT COUNT(*) 
+                                          FROM ICOYBDAP2_ICT A
+				                         WHERE A.HOUSE_CODE   = HD.HOUSE_CODE
+							                  AND A.ANN_NO       = HD.ANN_NO
+							                  AND A.ANN_COUNT	  = HD.ANN_COUNT
+								              AND A.VENDOR_CODE  = ${COMPANY_CODE}
+								              AND A.STATUS IN ('C') )  > 0 THEN '진행중' 
+                             ELSE '미참가' END AS FINAL_FLAG
+                 ,(SELECT INCO_REASON  
+                     FROM ICOYBDAP2_ICT
+                    WHERE HOUSE_CODE = '000'
+                    AND VENDOR_CODE  = ${COMPANY_CODE}
+                    AND ANN_NO = HD.ANN_NO                                                                      
+                    AND ANN_COUNT = HD.ANN_COUNT
+                    AND STATUS = 'R' 
+				    AND FINAL_FLAG IN ('N','M','U')) AS INCO_REASON
+				  				  
+				  ,CASE WHEN (SELECT COUNT(VENDOR_CODE)                                                                                                   
+                                         FROM ICOYBDAP2_ICT
+                                        WHERE HOUSE_CODE = '000'
+                                            AND VENDOR_CODE  = ${COMPANY_CODE}
+                                            AND ANN_NO = HD.ANN_NO                                                                      
+                                            AND ANN_COUNT = HD.ANN_COUNT
+                                            AND STATUS IN ('C','R')
+				                            AND INP_CNF = 'Y') > 0 THEN '접수'
+				            WHEN (SELECT COUNT(VENDOR_CODE)                                                                                                   
+                                         FROM ICOYBDAP2_ICT
+                                        WHERE HOUSE_CODE = '000'
+                                            AND VENDOR_CODE  = ${COMPANY_CODE}
+                                            AND ANN_NO = HD.ANN_NO                                                                      
+                                            AND ANN_COUNT = HD.ANN_COUNT
+                                            AND STATUS IN ('C','R')
+				                            AND NVL(INP_CNF,'N') = 'N') > 0 THEN '미접수'                                                             
+                            ELSE '미참가' END AS INP_CNF_TXT  				    				                                                                                          
+              ,TO_CHAR(TO_DATE(HD.X_DOC_SUBMIT_DATE||HD.X_DOC_SUBMIT_TIME, 'YYYYMMDDHH24MISS'),'YYYY/MM/DD HH24:MI') AS X_DOC_SUBMIT_DATE_TIME
+              ,GETFILEATTCOUNT((SELECT  AT.ATTACH_NO 
+					               FROM  ICOYBDAP2_ICT AT
+					               WHERE   AT.HOUSE_CODE  = HD.HOUSE_CODE
+					               AND   AT.ANN_NO      = HD.ANN_NO
+					               AND   AT.ANN_COUNT   = HD.ANN_COUNT
+					              AND   AT.VENDOR_CODE = ${COMPANY_CODE} 
+					              GROUP BY ATTACH_NO)) ATTACH_CNT,
+		         (SELECT 	ATTACH_NO 
+		         	FROM 	ICOYBDAP2_ICT AT
+		           WHERE  	AT.HOUSE_CODE  = HD.HOUSE_CODE
+		 			 AND   AT.ANN_NO      = HD.ANN_NO
+		 			 AND   AT.ANN_COUNT   = HD.ANN_COUNT
+		 			 AND   AT.VENDOR_CODE = ${COMPANY_CODE} 
+		 			 GROUP BY ATTACH_NO) AS ATTACH_NO,
+		         (SELECT 	ATTACH_NO 
+		         	FROM 	ICOYBDAP2_ICT AT
+		           WHERE  	AT.HOUSE_CODE  = HD.HOUSE_CODE
+		 			 AND   AT.ANN_NO      = HD.ANN_NO
+		 			 AND   AT.ANN_COUNT   = HD.ANN_COUNT
+		 			 AND   AT.VENDOR_CODE = ${COMPANY_CODE} 
+		 			 GROUP BY ATTACH_NO) AS ATTACH_NO_H 
+		 	,CASE WHEN(SELECT COUNT(BID_NO)         
+		                    FROM ICOYBDDM2_ICT DM
+		                   WHERE   DM.HOUSE_CODE  = HD.HOUSE_CODE
+				 			 AND   DM.ANN_NO      = HD.ANN_NO		 			 
+				 			 AND   DM.STATUS IN ('C','R')
+				  )  > 0 THEN 'C' ELSE 'P' END AS STATUS     
+		    , GETICOMCODE2( HD.HOUSE_CODE, 'M816_ICT', HD.ANN_STATUS)									AS STATUS_TEXT	-- 공고상태	  
+		    , HD.ADD_DATE
+		    , HD.ADD_TIME      
+         FROM  ICOYBDHD2_ICT HD, ICOYBDAP2_ICT AP
+       	 WHERE  AP.HOUSE_CODE   = HD.HOUSE_CODE
+		 AND AP.ANN_NO       = HD.ANN_NO
+		 AND AP.ANN_COUNT	 = HD.ANN_COUNT
+		 AND AP.VENDOR_CODE  = ${COMPANY_CODE}
+		 AND AP.STATUS IN ('R', 'C') 
+         AND   HD.HOUSE_CODE  = ${HOUSE_CODE}
+         AND   HD.ANN_NO    =  $S{ANN_NO}  
+         AND   HD.ANN_ITEM  LIKE  '%'||$S{ANN_ITEM}||'%'
+         AND   HD.ANN_STATUS IN ('CC','AE','UE','CE')        
+         AND   HD.SIGN_STATUS  IN ('C')
+         AND   HD.STATUS IN ('C' ,'R')
+         AND   HD.ANN_DATE BETWEEN $S{START_CHANGE_DATE} 
+         AND   $S{END_CHANGE_DATE}  
+	]]>
+
+	<if test="${bid_flag}" operator="eq" value="P"> <!---->
+		<![CDATA[
+			AND TO_NUMBER(PG.BID_BEGIN_DATE||PG.BID_BEGIN_TIME) <= TO_NUMBER(TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS'))
+            AND TO_NUMBER(TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')) < TO_NUMBER(PG.BID_END_DATE||PG.BID_END_TIME)    -- 진행중
+		]]>
+	</if>
+	
+	<if test="${bid_flag}" operator="eq" value="F"> <!---->
+		<![CDATA[
+                AND  (TO_NUMBER(TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')) < TO_NUMBER(PG.BID_BEGIN_DATE||PG.BID_BEGIN_TIME) --예정중
+                       OR PG.BID_END_DATE IS NULL)
+		]]>
+	</if>
+	
+	<if test="${bid_flag}" operator="eq" value="C"> <!---->
+		<![CDATA[
+                AND   TO_NUMBER(TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')) >= TO_NUMBER(PG.BID_END_DATE||PG.BID_END_TIME) -- 종료
+		]]>
+	</if>
+	
+	<![CDATA[
+	   ) A        
+       ORDER BY A.ANN_DATE DESC, A.ADD_DATE DESC, A.ADD_TIME DESC, A.ANN_NO DESC
+	]]>
+	</method>
+
+
+	<!-- ICT 사용 -->  
+	<method name="getBDHeader">
+		<![CDATA[
+         SELECT
+                HD.CHANGE_USER_NAME_LOC
+               ,NULL AS CONT_TYPE1_TEXT_D
+               ,NULL AS CONT_TYPE2_TEXT_D
+               
+               ,HD.SIGN_PERSON_ID
+               ,HD.SIGN_PERSON_NAME
+               ,HD.SIGN_DATE
+               ,HD.SIGN_STATUS
+               ,HD.CHANGE_DATE
+               
+               ,NULL AS CONT_TYPE1
+               ,NULL AS CONT_TYPE2
+               ,NULL AS CONT_TYPE1_TEXT_D
+               ,NULL AS CONT_TYPE2_TEXT_D
+               
+               ,HD.ANN_DATE
+               ,HD.ANN_ITEM
+               ,HD.APP_ETC
+               ,HD.ATTACH_NO
+               ,NULL													AS ATTACH_CNT
+               ,HD.ANN_STATUS
+               ,HD.BID_JOIN_TEXT
+               ,HD.ANN_NO
+               ,HD.ANN_COUNT
+               ,GETUSERNAME_ICT(${HOUSE_CODE}, HD.ADD_USER_ID,'KO')		AS ADD_USER_NAME
+               ,0														AS BASIC_AMT   
+               ,NULL AS X_ESTM_CHECK           
+           FROM	ICOYBDHD2_ICT	HD
+          WHERE HD.HOUSE_CODE = ${HOUSE_CODE}
+            AND HD.ANN_NO     = ${ANN_NO}
+            AND HD.ANN_COUNT  = ${ANN_COUNT}
+            AND HD.STATUS IN ('C', 'R')            
+		]]>
+	</method>
+	
+
+	<!-- ICT 사용 -->
+	<method name="et_chkVendor">
+		<![CDATA[
+		SELECT DECODE(COUNT(VO.VENDOR_CODE), 0, 'N', 'Y') AS CNT
+		  FROM ICOYBDHD_ICT HD
+		     , ICOYBDPG_ICT PG
+		     , ICOYBDVO_ICT VO
+		 WHERE HD.HOUSE_CODE  = ${HOUSE_CODE}
+		   AND HD.BID_NO      = ${BID_NO}
+		   AND HD.BID_COUNT   = ${BID_COUNT}
+		   AND PG.HOUSE_CODE  = HD.HOUSE_CODE
+		   AND PG.BID_NO      = HD.BID_NO
+		   AND PG.BID_COUNT   = HD.BID_COUNT
+		   AND PG.VOTE_COUNT  = TO_NUMBER( ${VOTE_COUNT} ) - 1    -- 바로 이전 차수
+		   AND VO.HOUSE_CODE  = PG.HOUSE_CODE
+		   AND VO.BID_NO      = PG.BID_NO
+		   AND VO.BID_COUNT   = PG.BID_COUNT
+		   AND VO.VOTE_COUNT  = PG.VOTE_COUNT
+		   AND VO.BID_CANCEL  = 'N'
+		   AND VO.VENDOR_CODE = ${COMPANY_CODE}
+		   AND HD.STATUS      IN ('C', 'R')
+		]]>
+	</method>
+
+	<!--  ICT 사용: 의미없음. -->
+	<method name="et_setBidCancel_1">
+		UPDATE  ICOYBDAP__ICT 
+		   SET  BID_CANCEL 	= 'Y' 
+		 WHERE  HOUSE_CODE 	= ${HOUSE_CODE}	
+		   AND  BID_NO	 	= ${BID_NO}
+		   AND  BID_COUNT 	= ${BID_COUNT}
+		   AND  VENDOR_CODE = ${VENDOR_CODE} 
+	</method>
+
+	<!--  ICT 사용 -->
+	<method name="et_setBidCancel_2">
+		UPDATE  ICOYBDVO_ICT 
+		   SET  BID_CANCEL 	    = 'Y'
+		      , BID_CANCEL_FLAG = 'Y'  
+		 WHERE  HOUSE_CODE 	= ${HOUSE_CODE}	
+		   AND  BID_NO	 	= ${BID_NO}
+		   AND  BID_COUNT 	= ${BID_COUNT}
+		   AND  VOTE_COUNT 	= ${VOTE_COUNT}
+		   AND  VENDOR_CODE = ${VENDOR_CODE} 
+	</method>
+	
+	<method name="et_chkMagam">
+	<![CDATA[ 
+		SELECT
+				CASE WHEN substring(ANN_STATUS,2,1) = 'E' OR STATUS = 'D' THEN 'Y'
+			    	ELSE 'N'
+				END STATUS
+		FROM 	ICOYBDHD2_ICT HD		
+		WHERE 	HD.HOUSE_CODE = ${HOUSE_CODE}
+		AND 	HD.ANN_NO      = ${ANN_NO}
+		AND 	HD.ANN_COUNT   = ${ANN_COUNT}                                                      	
+		]]>
+	</method>
+	
+	<method name="et_chkBDAP2">
+		<![CDATA[
+			SELECT CASE WHEN COUNT(VENDOR_CODE) > 0 THEN DECODE(NVL(MAX(FINAL_FLAG), 'N'),'Y','Y','N') ELSE 'N' END  AS STATUS			       
+			  FROM ICOYBDAP2_ICT
+			 WHERE HOUSE_CODE  = ${HOUSE_CODE}
+			   AND ANN_NO      = ${ANN_NO}
+			   AND ANN_COUNT   = ${ANN_COUNT}
+			   AND VENDOR_CODE = ${COMPANY_CODE}
+		]]>
+	</method>
+	
+	<method name="et_chkBDAP2_1">
+		<![CDATA[
+			SELECT CASE WHEN COUNT(VENDOR_CODE) > 0 THEN DECODE(NVL(MAX(INP_CNF), 'N'),'Y','Y','N') ELSE 'N' END  AS STATUS			       
+			  FROM ICOYBDAP2_ICT
+			 WHERE HOUSE_CODE  = ${HOUSE_CODE}
+			   AND ANN_NO      = ${ANN_NO}
+			   AND ANN_COUNT   = ${ANN_COUNT}
+			   AND VENDOR_CODE = ${COMPANY_CODE}
+		]]>
+	</method>
+	
+	<method name="et_setBDAPinsert_1">
+	<![CDATA[
+			UPDATE ICOYBDAP2_ICT
+			   SET   STATUS        = 'D'
+			        ,APP_DATE      = TO_CHAR(SYSDATE,'YYYYMMDD')
+					,APP_TIME      = TO_CHAR(SYSDATE,'HH24MISS')
+	
+	]]>
+
+	<![CDATA[
+		            ,INP_CNF      = NULL
+					,UNT_FLAG     = 'N'
+					,ACHV_FLAG    = 'Y'
+					,FINAL_FLAG   = NULL
+	]]>
+	
+	
+	<![CDATA[
+			 WHERE HOUSE_CODE  = ${HOUSE_CODE}
+			   AND ANN_NO      = ${ANN_NO}
+			   AND ANN_COUNT   = ${ANN_COUNT}
+			   AND VENDOR_CODE = ${COMPANY_CODE}
+	]]>
+	</method>
+	
+	<method name="et_setBdap2">
+		UPDATE ICOYBDAP2_ICT 
+		SET STATUS = 'D'
+		   ,APP_CANCEL_FLAG = 'Y'
+		   ,APP_CANCEL_USER_ID = ${ID}
+		   ,APP_CANCEL_DATE = TO_CHAR(SYSDATE,'YYYYMMDD')
+		   ,APP_CANCEL_TIME = TO_CHAR(SYSDATE,'HH24MISS')
+		   ,APP_CANCEL_ATTACH_NO = ATTACH_NO
+		   ,ATTACH_NO = NULL
+		WHERE HOUSE_CODE  = ${HOUSE_CODE}
+		  AND ANN_NO      = ${ANN_NO}
+		  AND ANN_COUNT   = ${ANN_COUNT}
+		  AND VENDOR_CODE = ${COMPANY_CODE}
+		  AND STATUS      IN ( 'C','R')
+	</method> 
+	
+</service>

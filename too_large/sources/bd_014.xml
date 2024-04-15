@@ -1,0 +1,2693 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<service>
+	<method name="getBdOpenList">
+		<![CDATA[
+          SELECT
+                 decode(substr(HD.ANN_NO,1,2),'BD',HD.BID_NO,HD.ANN_NO) AS ANN_NO
+                ,HD.ANN_ITEM
+                ,HD.ANN_DATE
+                ,TO_CHAR(TO_DATE(PG.BID_BEGIN_DATE||PG.BID_BEGIN_TIME, 'YYYYMMDDHH24MISS'),'YYYY/MM/DD HH24:MI') AS BID_BEGIN_DATE
+                ,TO_CHAR(TO_DATE(PG.BID_END_DATE||PG.BID_END_TIME, 'YYYYMMDDHH24MISS'),'YYYY/MM/DD HH24:MI') AS BID_END_DATE
+                ,PG.BID_END_DATE||PG.BID_END_TIME AS BID_END_DATE_VALUE
+                ,TO_CHAR(TO_DATE(PG.OPEN_DATE||PG.OPEN_TIME, 'YYYYMMDDHH24MISS'),'YYYY/MM/DD HH24:MI') AS BID_OPEN_DATE
+                ,PG.OPEN_DATE||PG.OPEN_TIME AS BID_OPEN_DATE_VALUE
+                ,HD.CHANGE_USER_NAME_LOC
+                ,CASE WHEN HD.BID_STATUS IN ('SB','NB','NE') THEN '개찰  완료'
+                	  WHEN HD.BID_STATUS IN ('RR') THEN '재입찰대상'
+                      ELSE '개찰미완료'
+                  END AS STATUS_TEXT
+                ,HD.SIGN_PERSON_ID
+                ,HD.SIGN_STATUS
+                ,HD.BID_STATUS
+                ,HD.BID_NO
+                ,HD.BID_COUNT
+                ,PG.VOTE_COUNT
+                ,HD.CHANGE_USER_ID
+                ,CASE WHEN HD.BID_STATUS IN ('SB','NB','NE') THEN 'Y'
+                      ELSE 'N'
+                  END AS STATUS
+                ,HD.PR_NO
+                ,HD.CONT_TYPE2
+                ,HD.CTRL_CODE
+                ,(SELECT SUM(PR_AMT) FROM ICOYBDDT
+                  WHERE HOUSE_CODE = HD.HOUSE_CODE
+                    AND BID_NO     = HD.BID_NO
+                    AND BID_COUNT  = HD.BID_COUNT) AS SUM_AMT
+                ,(SELECT CUR FROM ICOYBDDT
+                  WHERE HOUSE_CODE = HD.HOUSE_CODE
+                    AND BID_NO     = HD.BID_NO
+                    AND BID_COUNT  = HD.BID_COUNT
+                    AND ROWNUM < 2) AS CUR
+		        , NVL (HD.COST_STATUS, 'N') AS COST_STATUS
+		        , DECODE (NVL (HD.COST_STATUS, 'N'),'EC','확정','미확정') AS COST_STATUS_TEXT
+                , DECODE(HD.EVAL_FLAG, null, '평가 미선택', 'N', '평가제외', 'T', '평가대기중', 'P', '평가진행중', 'C', '평가완료') AS EVAL_FLAG_DESC 
+		        , HD.EVAL_FLAG
+		        , HD.EVAL_REFITEM   
+--		        , (   SELECT CD.CODE /* ,CD.TEXT1 */ FROM ICOMVEVH VH, ICOMVETH TH, ICOMCODE CD 
+--                		WHERE VH.HOUSE_CODE = HD.HOUSE_CODE  AND VH.HOUSE_CODE = TH.HOUSE_CODE  AND CD.HOUSE_CODE = HD.HOUSE_CODE
+--                		AND VH.EVAL_REFITEM = HD.EVAL_REFITEM
+--                		AND VH.E_TEMPLATE_REFITEM = TH.E_TEMPLATE_REFITEM
+--                		AND CD.TYPE = 'M924' AND CD.CODE = TH.TEMPLATE_TYPE) AS EVAL_CODE
+				,''  AS EVAL_CODE
+--                ,GETICOMCODE2(HD.HOUSE_CODE, 'M974', HD.CONT_TYPE1 ) AS CONT_TYPE1_TEXT
+--                ,GETICOMCODE2(HD.HOUSE_CODE, 'M973', HD.CONT_TYPE2 ) AS CONT_TYPE2_TEXT		
+
+                ,GETICOMCODE2(HD.HOUSE_CODE, 'M974', HD.CONT_TYPE1 )
+                ||' / '||GETICOMCODE2(HD.HOUSE_CODE, 'M973', HD.CONT_TYPE2 )		
+                ||' / '||GETICOMCODE2(HD.HOUSE_CODE, 'M930', HD.PROM_CRIT ) AS CONT_TYPE1_TEXT		
+
+                ,HD.TECH_DQ
+                ,(SELECT REQ_TYPE FROM ICOYPRHD WHERE HOUSE_CODE = HD.HOUSE_CODE AND PR_NO = (SELECT PR_NO FROM ICOYBDDT WHERE HOUSE_CODE = HD.HOUSE_CODE AND BID_NO = HD.BID_NO AND BID_COUNT = HD.BID_COUNT AND ROWNUM = 1)) AS REQ_TYPE
+                ,GETICOMCODE2(HD.HOUSE_CODE, 'M164', (SELECT REQ_TYPE FROM ICOYPRHD WHERE HOUSE_CODE = HD.HOUSE_CODE AND PR_NO = (SELECT PR_NO FROM ICOYBDDT WHERE HOUSE_CODE = HD.HOUSE_CODE AND BID_NO = HD.BID_NO AND BID_COUNT = HD.BID_COUNT AND ROWNUM = 1)) ) AS REQ_TYPE_NAME
+                ,(SELECT COUNT(*) FROM ICOYBDVO WHERE HOUSE_CODE = PG.HOUSE_CODE AND BID_NO = PG.BID_NO AND BID_COUNT = PG.BID_COUNT AND VOTE_COUNT = PG.VOTE_COUNT) AS VOTE_VENDOR_COUNT
+               ,CASE WHEN HD.ANN_VERSION IS NULL THEN (SELECT CODE FROM SCODE WHERE TYPE = 'VR001')
+                ELSE HD.ANN_VERSION
+                END AS ANN_VERSION
+               ,HD.BID_TYPE     
+               ,HD.X_AUTO_FLAG AS AUTO_FLAG
+               ,CASE NVL(HD.X_AUTO_FLAG, 'N') WHEN 'N' THEN '수동' WHEN 'Y' THEN '자동' END AS AUTO_FLAG_TEXT       
+				,(
+				SELECT 	COUNT(VENDOR_CODE)                                                                                               
+               	FROM 	ICOYBDAP
+				WHERE 	HOUSE_CODE = '000'
+				AND 	BID_NO = HD.BID_NO                                                                      
+                AND 	BID_COUNT = HD.BID_COUNT
+                ) AS VENDOR_COUNT                                               
+           		,(SELECT COUNT(VENDOR_CODE)                                                                                               
+                     FROM ICOMQTEE
+                   WHERE HOUSE_CODE = '000'
+                        AND BID_NO = HD.BID_NO                                                                      
+                        AND BID_COUNT = HD.BID_COUNT) AS VENDOR_COUNT2
+               ,
+               /*(
+           		SELECT 	COUNT(VENDOR_CODE)                                                                                               
+               	FROM 	ICOYBDAP
+				WHERE 	HOUSE_CODE = '000'
+				AND 	BID_NO = HD.BID_NO                                                                      
+                AND 	BID_COUNT = HD.BID_COUNT
+				AND 	STATUS in ('R','C','D') 
+				AND 	FINAL_FLAG = 'Y'
+				) AS VENDOR_COUNT2
+				,*/
+				(
+				SELECT COUNT(VENDOR_CODE) FROM ICOYBDVO                
+				WHERE  HOUSE_CODE = PG.HOUSE_CODE            
+				AND    BID_NO     = PG.BID_NO                
+				AND    BID_COUNT  = PG.BID_COUNT             
+				AND    VOTE_COUNT = PG.VOTE_COUNT            
+				AND    BID_CANCEL = 'N'                      
+				AND    STATUS IN ('C', 'R')
+				)AS VENDOR_COUNT3               
+           FROM ICOYBDHD HD, ICOYBDPG PG
+          WHERE PG.HOUSE_CODE  = HD.HOUSE_CODE
+            AND   HD.HOUSE_CODE  = ${HOUSE_CODE}    
+            AND PG.BID_NO      = HD.BID_NO
+            AND PG.BID_COUNT   = HD.BID_COUNT
+            AND  (PG.BID_END_DATE BETWEEN  ${START_CHANGE_DATE}   
+            AND  ${END_CHANGE_DATE}  
+                OR  PG.BID_END_DATE IS NULL
+               )      
+            AND HD.BID_NO    =  $S{ANN_NO}
+            AND HD.ANN_ITEM  LIKE  '%'|| $S{ANN_ITEM} ||'%'  
+		]]>
+
+	<if test="${bid_flag}" operator="eq" value="Y">
+		<![CDATA[
+          AND HD.BID_STATUS IN ('SB','NB','NE')                                     -- 규격평가
+		]]>
+	</if>
+    
+    <if test="${auto_flag}" operator="eq" value="Y">
+		<![CDATA[
+          --AND HD.X_AUTO_FLAG = 'Y'
+		]]>
+	</if>
+	
+	<if test="${bid_flag}" operator="eq" value="N">
+		<![CDATA[
+          AND (HD.BID_STATUS IN ('RC','SC','QC','RR')
+                OR (    HD.CONT_TYPE2 = 'LP' 
+                    AND HD.BID_STATUS IN ('AC', 'UC') 
+                  --AND SYSDATE > TO_DATE(PG.BID_END_DATE||PG.BID_END_TIME, 'YYYYMMDDHH24MISS')))
+                    AND SYSDATE > TO_DATE(PG.BID_BEGIN_DATE||PG.BID_BEGIN_TIME, 'YYYYMMDDHH24MISS')))
+		]]>
+	</if>
+
+		<![CDATA[
+          AND (HD.BID_STATUS IN ('RC', 'SC', 'QC', 'SB', 'NB', 'NE','RR')
+                OR (    HD.CONT_TYPE2 = 'LP' 
+                    AND HD.BID_STATUS IN ('AC', 'UC') 
+                  --AND SYSDATE > TO_DATE(PG.BID_END_DATE||PG.BID_END_TIME, 'YYYYMMDDHH24MISS')))
+                    AND SYSDATE > TO_DATE(PG.BID_BEGIN_DATE||PG.BID_BEGIN_TIME, 'YYYYMMDDHH24MISS')))
+          AND HD.SIGN_STATUS  IN ('C')
+          AND HD.STATUS IN ('C' ,'R')
+          AND PG.STATUS IN ('C' ,'R')                
+          AND HD.BID_TYPE = $S{BID_TYPE_C}
+          AND HD.BID_STATUS = $S{bid_status}
+          
+          AND   HD.ADD_USER_DEPT = ${session.DEPARTMENT}          
+          AND   HD.CHANGE_USER_ID = $S{contact_user}
+          AND   HD.CHANGE_USER_NAME_LOC LIKE '%'|| $S{contact_user_name} ||'%'
+        --ORDER BY HD.ANN_NO DESC
+        ORDER BY PG.OPEN_DATE||PG.OPEN_TIME DESC, PG.BID_END_DATE||PG.BID_END_TIME DESC
+		]]>
+	</method>
+   
+	<method name="getBdOpen">
+		<![CDATA[
+		SELECT  ROWNUM      AS NO
+               ,A.*
+		FROM(
+         SELECT
+                VN.VENDOR_NAME_LOC AS VENDOR_NAME
+               ,AD.CEO_NAME_LOC
+               ,GETICOMCODE2(VO.HOUSE_CODE, 'M001' , VN.COUNTRY ) AS COUNTRY
+               ,AD.PHONE_NO1 AS TEL
+               ,VO.ATTACH_NO
+               ,(SELECT COUNT(*) FROM ICOMATCH
+                  WHERE DOC_NO = VO.ATTACH_NO)  AS ATTACH_CNT
+               ,'Y' AS SPEC_FLAG
+               ,VO.VENDOR_CODE
+               ,VO.BID_CANCEL
+               ,(SELECT CASE COUNT(VENDOR_CODE) WHEN 0 THEN 'N'ELSE 'Y' END
+                   FROM ICOYBDCR
+                  WHERE HOUSE_CODE  =${HOUSE_CODE}
+                    AND HOUSE_CODE  = VO.HOUSE_CODE
+                    AND BID_NO      = VO.BID_NO
+                    AND BID_COUNT   = VO.BID_COUNT
+                    AND VENDOR_CODE = VO.VENDOR_CODE) AS ANNOUNCE_YN
+               ,SP.AMT_POINT
+               ,SP.TECH_POINT
+               ,SP.TEST_POINT
+               ,SP.TECHNICAL_SCORE   
+         FROM ICOYBDVO VO, ICOMVNGL VN ,ICOMADDR AD, ICOYBDSP SP
+        WHERE VO.HOUSE_CODE  = ${HOUSE_CODE}
+          AND VO.BID_NO      = ${BID_NO}
+          AND VO.BID_COUNT   = ${BID_COUNT}
+          AND VO.HOUSE_CODE  = VN.HOUSE_CODE
+          AND VO.VENDOR_CODE = VN.VENDOR_CODE
+          AND VO.BID_CANCEL  = 'N'
+          --AND VO.STATUS IN ('C', 'R')
+          AND NVL(VN.DEL_FLAG,'N') = 'N'
+          AND VN.HOUSE_CODE  = AD.HOUSE_CODE
+          AND VN.VENDOR_CODE = AD.CODE_NO
+          AND AD.CODE_TYPE   = '2'          
+          AND VO.HOUSE_CODE	= SP.HOUSE_CODE(+)
+          AND VO.BID_NO 	= SP.BID_NO(+)
+          AND VO.BID_COUNT 	= SP.BID_COUNT(+)
+          AND VO.VOTE_COUNT = SP.VOTE_COUNT(+)
+          AND VO.VENDOR_CODE= SP.VENDOR_CODE (+)         
+          AND (SELECT FINAL_FLAG FROM ICOYBDAP
+                WHERE HOUSE_CODE  =${HOUSE_CODE}
+                  AND HOUSE_CODE  = VO.HOUSE_CODE
+                  AND BID_NO      = VO.BID_NO
+                  AND BID_COUNT   = VO.BID_COUNT
+                  AND VENDOR_CODE = VO.VENDOR_CODE) = 'Y'
+		  GROUP BY   VN.VENDOR_NAME_LOC, AD.CEO_NAME_LOC, VO.HOUSE_CODE, VN.COUNTRY, AD.PHONE_NO1, VO.ATTACH_NO, VO.VENDOR_CODE
+					,VO.BID_CANCEL,VO.BID_NO,VO.BID_COUNT,VO.VENDOR_CODE,SP.AMT_POINT,SP.TECH_POINT,SP.TEST_POINT,SP.TECHNICAL_SCORE        
+         )A         
+                  
+		]]>
+	</method>
+	
+	<method name="et_setBidProcess">
+		<![CDATA[
+         UPDATE ICOYBDVO
+            SET STATUS     = 'R'
+               
+          WHERE HOUSE_CODE     =  ${HOUSE_CODE}
+            AND BID_NO         = ${BID_NO}
+            AND BID_COUNT      = ${BID_COUNT} 	
+            AND VOTE_COUNT     = ${VOTE_COUNT}
+            AND VENDOR_CODE    = ${VENDOR_CODE} 	
+		]]>
+	</method>
+
+	<method name="et_setBidBDSP">
+		<![CDATA[ 
+        MERGE INTO ICOYBDSP BDSP
+		USING DUAL
+		ON  (    BDSP.HOUSE_CODE =  ${HOUSE_CODE}
+		     AND BDSP.BID_NO 		= ${BID_NO}
+		     AND BDSP.BID_COUNT 	= ${BID_COUNT} 	
+		     AND BDSP.VOTE_COUNT 	= ${VOTE_COUNT}
+		     AND BDSP.VENDOR_CODE 	= ${VENDOR_CODE} 	
+		    )
+		WHEN     MATCHED THEN   UPDATE 
+		                        SET      TECHNICAL_SCORE = $S{TECHNICAL_SCORE}
+		                                ,STATUS = 'R'
+		WHEN NOT MATCHED THEN   INSERT (
+		                                     HOUSE_CODE
+		                                    ,BID_NO 
+		                                    ,BID_COUNT
+		                                    ,VOTE_COUNT
+		                                    ,VENDOR_CODE
+		                                    ,TECHNICAL_SCORE
+		                                    ,STATUS
+		                                    ,ADD_DATE
+		                                    ,ADD_TIME
+		                                    ,ADD_USER_ID
+		                                    ,ADD_USER_NAME_LOC
+		                                    ,ADD_USER_NAME_ENG
+		                                    ,ADD_USER_DEPT
+		                                    ,SPEC_FLAG
+		                                )
+		                        VALUES  (
+		                                     ${HOUSE_CODE}								--HOUSE_CODE
+		                                    ,${BID_NO}													--BID_NO 
+		                                    ,${BID_COUNT} 													--BID_COUNT
+		                                    ,${VOTE_COUNT} 													--VOTE_COUNT
+		                                    ,${VENDOR_CODE} 													--VENDOR_CODE
+		                                    ,${TECHNICAL_SCORE} 													--TECHNICAL_SCORE
+		                                    ,'C' 												--STATUS
+		                                    ,TO_CHAR(SYSDATE, 'YYYYMMDD')						--ADD_DATE
+		                                    ,TO_CHAR(SYSDATE, 'HH24MISS') 						--ADD_TIME
+		                                    ,${session.ID}
+		                                    ,GETUSERINFO( ${HOUSE_CODE}
+																	, ${session.ID}, 'NAME') 		--ADD_USER_NAME_LOC
+		                                    ,GETUSERINFO( ${HOUSE_CODE}
+		                                    						, ${session.ID}, 'NAME_ENG') 	--ADD_USER_NAME_ENG
+		                                    ,GETUSERINFO( ${HOUSE_CODE}
+		                                    						, ${session.ID}, 'DEPT') 		-- ADD_USER_DEPT
+		                                    ,'Y' 													--SPEC_FLAG                        
+		                                 )                            
+            
+		]]>
+	</method>
+	
+	<method name="et_setBidVEVH">
+		<![CDATA[
+		UPDATE ICOMVEVH
+            SET PROPOSAL_RESULT	= ${PROPOSAL_RESULT}
+          WHERE HOUSE_CODE     	= ${HOUSE_CODE}
+            AND EVAL_REFITEM   	= ${EVAL_REFITEM}
+		]]>
+	</method>
+	
+	<method name="getBdOpenProcess">
+		<![CDATA[
+             SELECT
+             		/*기술제안서점수 + 가격점수가 가장 높은것.*/
+                    RANK() OVER ( ORDER BY  TOTAL_SCORE DESC) AS  NO
+                   ,RANDOM
+                   ,DECODE(RANK() OVER ( ORDER BY  TOTAL_SCORE DESC, RANDOM), 1, 'SB', 'NB') AS T_FLAG
+                   ,T_VENDOR_CODE
+                   ,T_VENDOR_CODE AS VENDOR_CODE
+                   ,VENDOR_NAME
+                   ,CEO_NAME_LOC
+                   ,ADDRESS_LOC
+                   ,BID_AMT_1
+                   ,BID_AMT_2
+                   ,BID_AMT_3
+                   ,BID_AMT_4
+                   ,BID_AMT_5
+                   ,BID_AMT_6
+                   ,BID_AMT_7
+                   ,BID_AMT_8
+                   ,BID_AMT_9
+                   ,BID_AMT_10
+                   ,NE_ORDER_1
+                   ,NE_ORDER_2
+                   ,NE_ORDER_3
+                   ,NE_ORDER_4
+                   ,NE_ORDER_5
+                   --,'' AS T_FLAG
+                   ,VOTE_CNT_AMT
+                   ,VOTE_CNT_AMT_ENC
+                   ,USER_NAME
+                   ,USER_MOBILE
+                   ,USER_EMAIL
+                   ,CERTV_1
+                   ,CERTV_2
+                   ,CERTV_3
+                   ,CERTV_4
+                   ,CERTV_5
+                   ,VOTE_CNT_CERTV
+                   ,TECHNICAL_SCORE
+                   ,PRICE_SCORE
+                   ,TOTAL_SCORE
+                   ,BID_AMT_1_ENC
+                   ,BID_AMT_2_ENC
+                   ,BID_AMT_3_ENC
+                   ,BID_AMT_4_ENC
+                   ,BID_AMT_5_ENC
+                   ,BID_AMT_6_ENC
+                   ,BID_AMT_7_ENC
+                   ,BID_AMT_8_ENC
+                   ,BID_AMT_9_ENC
+                   ,BID_AMT_10_ENC
+                   ,ESTM_USER_ID     
+                   ,FINAL_ESTM_PRICE
+                   ,FINAL_ESTM_PRICE_ENC
+                   ,BASIC_AMT
+                   ,FROM_LOWER_BND
+              FROM
+             (
+              SELECT
+                     VO.VENDOR_CODE AS T_VENDOR_CODE
+                    ,MAX(VN.VENDOR_NAME_LOC) AS VENDOR_NAME
+                    ,MAX(AD.CEO_NAME_LOC) AS CEO_NAME_LOC
+                    ,MAX(AD.ZIP_CODE||' '||AD.ADDRESS_LOC) AS ADDRESS_LOC
+                    ,(SELECT BID_AMT FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 1) AS BID_AMT_1
+                    ,(SELECT NE_ORDER FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 1) AS NE_ORDER_1
+                    ,(SELECT BID_AMT FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 2) AS BID_AMT_2
+                    ,(SELECT NE_ORDER FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 2) AS NE_ORDER_2
+                    ,(SELECT BID_AMT FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 3) AS BID_AMT_3
+                    ,(SELECT NE_ORDER FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 3) AS NE_ORDER_3
+                    ,(SELECT BID_AMT FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 4) AS BID_AMT_4
+                    ,(SELECT NE_ORDER FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 4) AS NE_ORDER_4
+                   ,(SELECT BID_AMT FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 5) AS BID_AMT_5
+                    ,(SELECT NE_ORDER FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 5) AS NE_ORDER_5
+
+                    ,(SELECT BID_AMT FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 6) AS BID_AMT_6
+                    ,(SELECT BID_AMT FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 7) AS BID_AMT_7
+                    ,(SELECT BID_AMT FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 8) AS BID_AMT_8
+                    ,(SELECT BID_AMT FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 9) AS BID_AMT_9
+                    ,(SELECT BID_AMT FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 10) AS BID_AMT_10
+                    ,VO.BID_AMT   		AS VOTE_CNT_AMT     
+                    ,VO.BID_AMT_ENC   	AS VOTE_CNT_AMT_ENC
+                    ,VO.CERTV   AS VOTE_CNT_CERTV
+
+--                    ,(SELECT BID_AMT_ENC FROM ICOYBDVO
+--                       WHERE HOUSE_CODE  = VO.HOUSE_CODE
+--                         AND VENDOR_CODE = VO.VENDOR_CODE
+--                         AND BID_NO      = VO.BID_NO
+--                         AND BID_COUNT   = VO.BID_COUNT
+--                         AND BID_CANCEL  = 'N'
+--                         AND VOTE_COUNT  = '"+VOTE_COUNT+"') AS VOTE_CNT_AMT
+--                    ,VO.CERTV
+--                    ,VO.TIMESTAMP
+--                    ,VO.SIGN_CERT
+
+                   ,AP.USER_NAME
+                   ,AP.USER_MOBILE
+                   ,AP.USER_EMAIL
+                    ,(SELECT CERTV FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 1) AS CERTV_1
+                    ,(SELECT CERTV FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 2) AS CERTV_2
+                    ,(SELECT CERTV FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 3) AS CERTV_3
+                    ,(SELECT CERTV FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 4) AS CERTV_4
+                    ,(SELECT CERTV FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 5) AS CERTV_5
+                    ,SP.TECHNICAL_SCORE     
+                    ,SP.PRICE_SCORE
+                    ,NVL(SP.TECHNICAL_SCORE,0) + NVL(SP.PRICE_SCORE,0) AS TOTAL_SCORE     
+                    ,ES.ESTM_USER_ID     
+                    ,ES.FINAL_ESTM_PRICE
+                    ,ES.FINAL_ESTM_PRICE_ENC
+                    ,(SELECT BID_AMT_ENC FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 1) AS BID_AMT_1_ENC
+                    ,(SELECT BID_AMT_ENC FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 2) AS BID_AMT_2_ENC
+                    ,(SELECT BID_AMT_ENC FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 3) AS BID_AMT_3_ENC
+                    ,(SELECT BID_AMT_ENC FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 4) AS BID_AMT_4_ENC
+                    ,(SELECT BID_AMT_ENC FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 5) AS BID_AMT_5_ENC
+                    ,(SELECT BID_AMT_ENC FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 6) AS BID_AMT_6_ENC
+                    ,(SELECT BID_AMT_ENC FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 7) AS BID_AMT_7_ENC
+                    ,(SELECT BID_AMT_ENC FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 8) AS BID_AMT_8_ENC
+                    ,(SELECT BID_AMT_ENC FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 9) AS BID_AMT_9_ENC
+                    ,(SELECT BID_AMT_ENC FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 10) AS BID_AMT_10_ENC
+                    ,ES.BASIC_AMT      
+                    ,HD.FROM_LOWER_BND     
+                    ,DBMS_RANDOM.VALUE AS RANDOM
+                FROM  ICOYBDHD HD, ICOYBDVO VO, ICOMVNGL VN, ICOYBDAP AP, ICOMADDR AD, ICOYBDSP SP, ICOYBDES ES
+               WHERE 1=1
+               	 AND HD.HOUSE_CODE	= VO.HOUSE_CODE
+                 AND HD.BID_NO		= VO.BID_NO	
+                 AND HD.BID_COUNT	= VO.BID_COUNT                 
+                 AND VO.HOUSE_CODE  = VN.HOUSE_CODE
+                 AND VO.VENDOR_CODE = VN.VENDOR_CODE
+                 AND VN.HOUSE_CODE = AD.HOUSE_CODE
+                 AND VN.VENDOR_CODE = AD.CODE_NO
+                 AND AD.CODE_TYPE = '2'
+                 AND AP.HOUSE_CODE  = ${HOUSE_CODE}
+                 AND VO.VENDOR_CODE = AP.VENDOR_CODE
+                 AND VO.BID_NO      = AP.BID_NO
+                 AND VO.BID_COUNT   = AP.BID_COUNT
+                 AND AP.FINAL_FLAG  = 'Y'
+                 AND VO.HOUSE_CODE  = SP.HOUSE_CODE(+)
+                 AND VO.BID_NO      = SP.BID_NO(+)
+                 AND VO.BID_COUNT   = SP.BID_COUNT(+)
+                 AND VO.VOTE_COUNT  = SP.VOTE_COUNT(+)
+                 AND VO.VENDOR_CODE = SP.VENDOR_CODE(+)
+                 AND VO.HOUSE_CODE  = ES.HOUSE_CODE
+                 AND VO.BID_NO      = ES.BID_NO
+                 AND VO.BID_COUNT   = ES.BID_COUNT
+				 AND VO.HOUSE_CODE  = ${HOUSE_CODE}
+                 AND VO.BID_NO      = ${BID_NO}
+                 AND VO.BID_COUNT   = ${BID_COUNT}
+                 AND VO.STATUS IN ('C', 'R')
+                 AND VO.BID_CANCEL  = 'N'
+	]]>
+
+	<if test="${announce_flag}" operator="eq" value="Y">
+		<![CDATA[
+             AND VO.VENDOR_CODE IN (SELECT VENDOR_CODE
+                    FROM ICOYBDCR
+                    WHERE HOUSE_CODE = ${HOUSE_CODE}
+                      AND HOUSE_CODE = VO.HOUSE_CODE
+                      AND BID_NO = VO.BID_NO
+                      AND BID_COUNT = VO.BID_COUNT
+                      AND VENDOR_CODE = VO.VENDOR_CODE)
+		]]>
+	</if>
+
+	<![CDATA[
+               GROUP BY VO.HOUSE_CODE, VO.BID_NO, VO.BID_COUNT, VO.VENDOR_CODE
+                        ,VO.BID_AMT, VO.BID_AMT_ENC,AP.USER_NAME,AP.USER_MOBILE,AP.USER_EMAIL,VO.CERTV
+                        ,SP.TECHNICAL_SCORE, SP.PRICE_SCORE, NVL(SP.TECHNICAL_SCORE,0) + NVL(SP.PRICE_SCORE,0)
+                        ,ES.ESTM_USER_ID, ES.FINAL_ESTM_PRICE, ES.FINAL_ESTM_PRICE_ENC, ES.BASIC_AMT 
+                        ,HD.FROM_LOWER_BND
+                        )  TMP
+             ORDER BY TOTAL_SCORE DESC, RANDOM, BID_AMT_5,  BID_AMT_4, BID_AMT_3, BID_AMT_2,BID_AMT_1
+		]]>
+	</method>
+	
+	<method name="getBdHeaderCompare">
+		<![CDATA[
+         SELECT
+                HD.CHANGE_USER_NAME_LOC
+               ,HD.SIGN_PERSON_ID
+               ,HD.SIGN_PERSON_NAME
+               ,HD.SIGN_DATE
+               ,HD.SIGN_STATUS
+               ,HD.CHANGE_DATE
+               ,HD.BID_TYPE
+               ,HD.CONT_TYPE1
+               ,HD.CONT_TYPE2
+               ,GETICOMCODE2(HD.HOUSE_CODE, 'M974', HD.CONT_TYPE1 ) AS CONT_TYPE1_TEXT_D
+               ,GETICOMCODE2(HD.HOUSE_CODE, 'M973', HD.CONT_TYPE2 ) AS CONT_TYPE2_TEXT_D
+               ,GETICOMCODE2(HD.HOUSE_CODE, 'M984', HD.CONT_TYPE1 ) AS CONT_TYPE1_TEXT_O
+               ,GETICOMCODE2(HD.HOUSE_CODE, 'M983', HD.CONT_TYPE2 ) AS CONT_TYPE2_TEXT_O
+               ,GETICOMCODE2(HD.HOUSE_CODE, 'M991', HD.CONT_TYPE1 ) AS CONT_TYPE1_TEXT_CS
+               ,GETICOMCODE2(HD.HOUSE_CODE, 'M990', HD.CONT_TYPE2 ) AS CONT_TYPE2_TEXT_C
+               ,HD.ANN_TITLE
+               --,HD.ANN_NO
+               ,HD.BID_NO AS ANN_NO
+               ,HD.ANN_DATE
+               ,HD.ANN_ITEM
+               ,HD.RD_DATE
+               ,HD.DELY_PLACE
+               ,HD.LIMIT_CRIT
+               ,HD.PROM_CRIT
+               ,GETICOMCODE2(HD.HOUSE_CODE, 'M930', HD.PROM_CRIT ) AS PROM_CRIT_NAME
+               ,HD.APP_BEGIN_DATE
+               ,HD.APP_BEGIN_TIME
+               ,SUBSTR(HD.APP_BEGIN_TIME, 0, 2) AS APP_BEGIN_TIME_HOUR
+               ,SUBSTR(HD.APP_BEGIN_TIME, 3, 2) AS APP_BEGIN_TIME_MINUTE
+               ,HD.APP_END_DATE
+               ,HD.APP_END_TIME
+               ,SUBSTR(HD.APP_END_TIME, 0, 2) AS APP_END_TIME_HOUR
+               ,SUBSTR(HD.APP_END_TIME, 3, 2) AS APP_END_TIME_MINUTE
+               ,HD.APP_PLACE
+               ,HD.APP_ETC
+               ,HD.ATTACH_NO
+               ,(SELECT NVL(COUNT(*),0) FROM ICOMATCH WHERE DOC_NO = HD.ATTACH_NO) AS ATTACH_CNT
+               ,(SELECT COUNT(*) FROM ICOYBDAP
+                  WHERE HOUSE_CODE = PG.HOUSE_CODE
+                    AND BID_NO     = PG.BID_NO
+                    AND BID_COUNT  = PG.BID_COUNT
+                    AND BID_CANCEL = 'N'
+                    AND STATUS IN ('C', 'R')) AS VENDOR_CNT
+               ,GETVENDORS(HD.HOUSE_CODE, HD.BID_NO, HD.BID_COUNT) AS VENDOR_VALUES
+               ,HD.ANNOUNCE_DATE
+               ,HD.ANNOUNCE_TIME_FROM
+               ,HD.ANNOUNCE_TIME_TO
+               ,HD.ANNOUNCE_AREA
+               ,HD.ANNOUNCE_PLACE
+               ,HD.ANNOUNCE_NOTIFIER
+               ,HD.ANNOUNCE_RESP
+               ,HD.DOC_FRW_DATE
+               ,HD.ANNOUNCE_COMMENT
+               ,HD.ANNOUNCE_FLAG
+               ,HD.ANNOUNCE_TEL
+               ,HD.BID_STATUS
+               ,HD.ESTM_FLAG
+               ,HD.COST_STATUS
+               ,HD.PR_NO
+               ,HD.CTRL_CODE
+               ,HD.ANN_TIME
+               ,PG.VOTE_COUNT
+               ,PG.BID_BEGIN_DATE
+               ,PG.BID_BEGIN_TIME
+               ,SUBSTR(PG.BID_BEGIN_TIME, 0, 2) AS BID_BEGIN_TIME_HOUR
+               ,SUBSTR(PG.BID_BEGIN_TIME, 3, 2) AS BID_BEGIN_TIME_MINUTE
+               ,PG.BID_END_DATE
+               ,PG.BID_END_TIME
+               ,SUBSTR(PG.BID_END_TIME, 0, 2) AS BID_END_TIME_HOUR
+               ,SUBSTR(PG.BID_END_TIME, 3, 2) AS BID_END_TIME_MINUTE
+               ,PG.BID_PLACE
+               ,PG.BID_ETC
+               ,CONVERT_DATE(PG.OPEN_DATE) AS OPEN_DATE
+               ,PG.OPEN_TIME
+               ,SUBSTR(PG.OPEN_TIME, 0, 2) AS OPEN_TIME_HOUR
+               ,SUBSTR(PG.OPEN_TIME, 3, 2) AS OPEN_TIME_MINUTE
+               ,HD.CTRL_AMT
+               ,CERTV
+               ,TIMESTAMP
+               ,SIGN_CERT
+               ,CRYP_CERT
+               ,(SELECT COUNT(*)
+                   FROM ICOYBDRC
+                  WHERE HOUSE_CODE = PG.HOUSE_CODE
+                    AND BID_NO     = PG.BID_NO
+                    AND BID_COUNT  = PG.BID_COUNT) AS LOCATION_CNT
+               ,GETLOCATIONS(HD.HOUSE_CODE, HD.BID_NO, HD.BID_COUNT) AS LOCATION_VALUES
+               ,HD.ESTM_KIND
+               ,HD.ESTM_RATE
+               ,HD.ESTM_MAX
+               ,HD.ESTM_VOTE
+               ,HD.FROM_CONT
+               ,GETICOMCODE2(HD.HOUSE_CODE,'M958', HD.FROM_CONT ) AS FROM_CONT_TEXT
+               ,NVL(HD.FROM_LOWER_BND, 0) AS FROM_LOWER_BND
+               ,HD.ASUMTN_OPEN_YN
+               ,HD.CONT_TYPE_TEXT
+               ,HD.CONT_PLACE
+               ,HD.BID_PAY_TEXT
+               ,HD.BID_CANCEL_TEXT
+               ,HD.BID_JOIN_TEXT
+               ,HD.REMARK
+               ,HD.ESTM_MAX_VOTE
+               ,HD.STANDARD_POINT
+               ,HD.TECH_DQ
+               ,HD.AMT_DQ
+               ,HD.BID_NO
+               ,HD.BID_COUNT
+               ,GETUSERNAME(HD.HOUSE_CODE, HD.ADD_USER_ID, 'LOC') AS ADD_USER_NAME       
+               ,(SELECT COUNT(*) FROM ICOYBDDT WHERE HOUSE_CODE = HD.HOUSE_CODE AND BID_NO = HD.BID_NO AND BID_COUNT = HD.BID_COUNT) AS ITEM_COUNT        
+               ,(SELECT SUM(NVL(PR_AMT, 0)) FROM ICOYBDDT WHERE HOUSE_CODE = HD.HOUSE_CODE AND BID_NO = HD.BID_NO AND BID_COUNT = HD.BID_COUNT) AS BASIC_AMT
+               ,HD.BID_EVAL_SCORE
+               ,HD.REPORT_ETC
+               ,GETVENDORS(HD.HOUSE_CODE,HD.BID_NO,HD.BID_COUNT) VENDORS
+               ,HD.BID_INPUT_TYPE
+           FROM ICOYBDHD HD, ICOYBDPG PG
+          WHERE HD.HOUSE_CODE = ${HOUSE_CODE}
+            AND (HD.BID_NO     = ${BID_NO} 
+            			OR HD.ANN_NO = ${BID_NO})  -- 결재시 DOC_NO가 ANN_NO로 들어가므로
+            AND HD.BID_COUNT  = ${BID_COUNT}
+            AND HD.HOUSE_CODE = PG.HOUSE_CODE
+            AND HD.BID_NO     = PG.BID_NO
+            AND HD.BID_COUNT  = PG.BID_COUNT
+            AND HD.STATUS IN ('C', 'R')
+            AND PG.STATUS IN ('C', 'R')
+		]]>
+	</method>
+	<method name="et_getEstmInfo_ENC">
+		<![CDATA[
+SELECT                                                                        
+       TO_CHAR(BH.CTRL_AMT, 'FM999,999,999,999,999,999,999') AS CTRL_AMT_TEXT 
+      ,ES.ESTM_PRICE1_ENC                                                     
+      ,ES.ESTM_PRICE2_ENC                                                     
+      ,ES.ESTM_PRICE3_ENC                                                     
+      ,ES.ESTM_PRICE4_ENC                                                     
+      ,ES.ESTM_PRICE5_ENC                                                     
+      ,ES.ESTM_PRICE6_ENC                                                     
+      ,ES.ESTM_PRICE7_ENC                                                     
+      ,ES.ESTM_PRICE8_ENC                                                     
+      ,ES.ESTM_PRICE9_ENC                                                     
+      ,ES.ESTM_PRICE10_ENC                                                    
+      ,ES.CERTV                                                               
+      ,ES.TIMESTAMP                                                           
+      ,ES.SIGN_CERT           
+      --,ES.ESTM_PRICE1_ENC    --암호화적용후 변경필요.
+      ,ES.ESTM_PRICE1 AS ESTM_PRICE1_ENC                                                
+      ,ES.FINAL_ESTM_PRICE                                                               
+      ,ES.FINAL_ESTM_PRICE_ENC                                                
+      ,ES.BASIC_AMT                                                           
+      ,ES.ESTM_USER_ID                                                        
+  FROM ICOYBDHD BH, ICOYBDES ES                                               
+ WHERE BH.HOUSE_CODE = ${HOUSE_CODE}                  
+   AND BH.BID_NO     = ${BID_NO}                                           
+   AND BH.BID_COUNT  = ${BID_COUNT}                                        
+   AND BH.STATUS    != 'D'                                                    
+   AND ES.HOUSE_CODE = BH.HOUSE_CODE                                          
+   AND ES.BID_NO     = BH.BID_NO                                              
+   AND ES.BID_COUNT  = BH.BID_COUNT                                           
+   AND ES.STATUS    != 'D'                                                    
+	
+		]]>
+	</method>
+	
+	<method name="et_getSettleVendor"> 
+	<if test="${FLAG}" operator="eq" value="C">
+		<![CDATA[
+        -- 비교표
+                         SELECT                                                                                                               
+                                 VO.VENDOR_CODE,                                                                                              
+                                 MAX(VN.VENDOR_NAME_LOC)  AS VENDOR_NAME,                                                                     
+                                 MAX(AD.CEO_NAME_LOC)  AS CEO_NAME_LOC,                                                                       
+                                 MAX(AD.ZIP_CODE||' '||AD.ADDRESS_LOC)  AS ADDRESS_LOC                                                        
+                         FROM ICOYBDVO VO, (SELECT MAX(VOTE_COUNT) AS MAX_CNT ,                                                               
+                                                   MIN(BID_AMT_ENC) AS MIN_BID_AMT                                                            
+                                            FROM  ICOYBDVO                                                                                    
+                                            WHERE HOUSE_CODE =${HOUSE_CODE}                                            
+                                            AND   BID_NO     = ${BID_NO}                                                                   
+                                            AND   BID_COUNT  = ${BID_COUNT}                                                                
+                                            AND   BID_CANCEL = 'N'                                                                  
+                                            AND   STATUS IN ('C', 'R')                                                                        
+                                            ) TMP, ICOMVNGL VN ,ICOMADDR AD                                                                   
+                         WHERE VO.HOUSE_CODE =${HOUSE_CODE}                                                            
+                         AND   VO.BID_NO     = ${BID_NO}                                                                                   
+                         AND   VO.BID_COUNT  = ${BID_COUNT}                                                                                
+                         AND   VO.BID_CANCEL = 'N'                                                                                            
+                         AND   VN.HOUSE_CODE  = AD.HOUSE_CODE                                                                                 
+                         AND   VN.VENDOR_CODE = AD.CODE_NO                                                                                    
+                         AND   AD.CODE_TYPE   = '2'                                                                                    
+                         AND   VO.STATUS IN ('C', 'R')                                                                                        
+                         AND   VO.VOTE_COUNT = TMP.MAX_CNT                                                                                    
+                         AND   VO.BID_AMT_ENC= TMP.MIN_BID_AMT                                                                                
+                         AND   VO.HOUSE_CODE = VN.HOUSE_CODE                                                                                  
+                         AND   VO.VENDOR_CODE = VN.VENDOR_CODE                                                                                
+                         GROUP BY VO.VENDOR_CODE   
+		]]>
+	</if>
+	<if test="${FLAG}" operator="ne" value="C">   
+		<![CDATA[                                                                                        
+        -- 상세조회                                                                                                                  
+                        SELECT                                                                                                                
+                                VO.VENDOR_CODE,                                                                                               
+                                VN.VENDOR_NAME_LOC  AS VENDOR_NAME,                                                                           
+                                AD.CEO_NAME_LOC  AS CEO_NAME_LOC,                                                                             
+                                AD.ZIP_CODE||' '||AD.ADDRESS_LOC  AS ADDRESS_LOC,                                                             
+                                AP.USER_NAME AS CHARGE_NAME,                                                                                  
+                                AP.USER_MOBILE AS CHARGE_MOBILE,                                                                              
+                                AP.USER_EMAIL AS CHARGE_EMAIL                                                                                 
+                          FROM                                                                                                                
+                                ICOYBDVO VO,                                                                                                  
+                                ICOMVNGL VN,                                                                                                  
+                                ICOYBDAP AP,ICOMADDR AD                                                                               
+                         WHERE  1= 1                                                                                                          
+                                AND   VO.HOUSE_CODE = VN.HOUSE_CODE                                                                           
+                                AND   VO.VENDOR_CODE = VN.VENDOR_CODE                                                                         
+                                AND   VO.HOUSE_CODE = AP.HOUSE_CODE                                                                           
+                         AND   VN.HOUSE_CODE  = AD.HOUSE_CODE                                                                                 
+                         AND   VN.VENDOR_CODE = AD.CODE_NO            
+                         AND   AD.CODE_TYPE   = '2'                       
+                                AND   VO.VENDOR_CODE = AP.VENDOR_CODE                                 
+                                AND   VO.BID_NO = AP.BID_NO                                           
+                                AND   VO.BID_COUNT = AP.BID_COUNT                                     
+                                AND   VO.HOUSE_CODE = ${HOUSE_CODE}                        
+                                AND   VO.BID_NO     = ${BID_NO}                                    
+                                AND   VO.BID_COUNT  = ${BID_COUNT}                                 
+                                AND   VO.BID_CANCEL = 'N'                                             
+                                AND   VO.BID_STATUS = 'SB'   
+		]]>
+	</if>     
+	</method>
+	<method name="et_getAmtInfo">
+		<![CDATA[
+      SELECT                                                                       
+             BD.BID_STATUS                                                         
+            ,BD.BASIC_AMT              AS BASIC_AMT                                
+            ,BD.BID_AMT                AS SETTLE_AMT                               
+            ,BD.FINAL_ESTM_PRICE_ENC   AS ESTM_PRICE_ENC                
+            ,BD.CERTV                                                              
+        FROM (SELECT                                                               
+                     ES.BASIC_AMT                                                  
+                    ,ES.FINAL_ESTM_PRICE_ENC                                       
+                  ,ES.CERTV                                                        
+                    ,NVL((SELECT BID_AMT                                           
+                            FROM ICOYBDVO                                          
+                           WHERE HOUSE_CODE = BH.HOUSE_CODE                        
+                             AND BID_NO     = BH.BID_NO                            
+                             AND BID_COUNT  = BH.BID_COUNT                         
+                             AND STATUS IN ('C', 'R')                              
+                             AND BID_CANCEL = 'N'                                  
+                             AND BID_STATUS = 'SB'                                 
+                         ), 0) AS BID_AMT                                          
+                     , BH.BID_STATUS                                               
+              FROM  ICOYBDHD BH, ICOYBDES ES                                       
+            WHERE BH.HOUSE_CODE = ${HOUSE_CODE}              
+            AND   BH.BID_NO     = ${BID_NO}                                     
+            AND   BH.BID_COUNT  = ${BID_COUNT}                                  
+            AND   BH.HOUSE_CODE = ES.HOUSE_CODE                                    
+            AND   BH.BID_NO     = ES.BID_NO                                        
+            AND   BH.BID_COUNT  = ES.BID_COUNT                                     
+            AND   BH.STATUS IN ('C', 'R')                                          
+            AND   ES.STATUS IN ('C', 'R')                                          
+           ) BD                                                                    
+		
+		]]>
+	</method>
+	<method name="et_getDispBDVO">
+		<![CDATA[
+                                                                                                                                                 
+       SELECT                                                                                                                              
+                        A.*,                                                                                                               
+                                                                                                                                           
+                 DECODE(VOTE_COUNT, '1', BID_AMT_1,                                                                                        
+                                    '2', BID_AMT_2,                                                                                        
+                                    '3', BID_AMT_3,                                                                                        
+                                    '4', BID_AMT_4,                                                                                        
+                                    '5', BID_AMT_5,                                                                                        
+                                    '6', BID_AMT_6,                                                                                        
+                                    '7', BID_AMT_7,                                                                                        
+                                    '8', BID_AMT_8,                                                                                        
+                                    '9', BID_AMT_9,                                                                                        
+                                    '10', BID_AMT_10                                                                                       
+                 ) AS SUM_AMT                                                                                                              
+         FROM                                                                                                                              
+          (                                                                                                                                
+       SELECT                                                                                                                              
+               MAX(VO.NE_ORDER)       AS NO,                                                                                               
+               MAX(VN.VENDOR_NAME_LOC) AS VENDOR_NAME,                                                                                     
+               MAX(AD.CEO_NAME_LOC) AS CEO_NAME_LOC,                                                                                       
+               MAX(AD.ZIP_CODE||' '||AD.ADDRESS_LOC) AS ADDRESS_LOC,                                                                       
+               NVL((SELECT BID_AMT FROM ICOYBDVO                                                                                           
+                WHERE HOUSE_CODE = VO.HOUSE_CODE                                                                                           
+                AND   VENDOR_CODE = VO.VENDOR_CODE                                                                                         
+                AND   BID_NO      = VO.BID_NO                                                                                              
+                AND   BID_COUNT   = VO.BID_COUNT                                                                                           
+                AND   BID_CANCEL  = 'N'                                                                                                    
+                AND   VOTE_COUNT  = 1), 0) AS BID_AMT_1,                                                                                   
+               NVL((SELECT BID_AMT FROM ICOYBDVO                                                                                           
+                WHERE HOUSE_CODE = VO.HOUSE_CODE                                                                                           
+                AND   VENDOR_CODE = VO.VENDOR_CODE                                                                                         
+                AND   BID_NO      = VO.BID_NO                                                                                              
+                AND   BID_COUNT   = VO.BID_COUNT                                                                                           
+                AND   BID_CANCEL  = 'N'                                                                                                    
+                AND   VOTE_COUNT  = 2), 0) AS BID_AMT_2,                                                                                   
+               NVL((SELECT BID_AMT FROM ICOYBDVO                                                                                           
+                WHERE HOUSE_CODE = VO.HOUSE_CODE                                                                                           
+                AND   VENDOR_CODE = VO.VENDOR_CODE                                                                                         
+                AND   BID_NO      = VO.BID_NO                                                                                              
+                AND   BID_COUNT   = VO.BID_COUNT                                                                                           
+                AND   BID_CANCEL  = 'N'                                                                                                    
+                AND   VOTE_COUNT  = 3), 0) AS BID_AMT_3,                                                                                   
+               NVL((SELECT BID_AMT FROM ICOYBDVO                                                                                           
+                WHERE HOUSE_CODE = VO.HOUSE_CODE                                                                                           
+                AND   VENDOR_CODE = VO.VENDOR_CODE                                                                                         
+                AND   BID_NO      = VO.BID_NO                                                                                              
+                AND   BID_COUNT   = VO.BID_COUNT                                                                                           
+                AND   BID_CANCEL  = 'N'                                                                                                    
+                AND   VOTE_COUNT  = 4), 0) AS BID_AMT_4,                                                                                   
+               NVL((SELECT BID_AMT FROM ICOYBDVO                                                                                           
+                WHERE HOUSE_CODE = VO.HOUSE_CODE                                                                                           
+                AND   VENDOR_CODE = VO.VENDOR_CODE                                                                                         
+                AND   BID_NO      = VO.BID_NO                                                                                              
+                AND   BID_COUNT   = VO.BID_COUNT                                                                                           
+                AND   BID_CANCEL  = 'N'                                                                                                    
+                AND   VOTE_COUNT  = 5), 0) AS BID_AMT_5,                                                                                   
+               NVL((SELECT BID_AMT FROM ICOYBDVO                                                                                           
+                WHERE HOUSE_CODE = VO.HOUSE_CODE                                                                                           
+                AND   VENDOR_CODE = VO.VENDOR_CODE                                                                                         
+                AND   BID_NO      = VO.BID_NO                                                                                              
+                AND   BID_COUNT   = VO.BID_COUNT                                                                                           
+                AND   BID_CANCEL  = 'N'                                                                                                    
+                AND   VOTE_COUNT  = 6), 0) AS BID_AMT_6,                                                                                   
+               NVL((SELECT BID_AMT FROM ICOYBDVO                                                                                           
+                WHERE HOUSE_CODE = VO.HOUSE_CODE                                                                                           
+                AND   VENDOR_CODE = VO.VENDOR_CODE                                                                                         
+                AND   BID_NO      = VO.BID_NO                                                                                              
+                AND   BID_COUNT   = VO.BID_COUNT                                                                                           
+                AND   BID_CANCEL  = 'N'                                                                                                    
+                AND   VOTE_COUNT  = 7), 0) AS BID_AMT_7,                                                                                   
+               NVL((SELECT BID_AMT FROM ICOYBDVO                                                                                           
+                WHERE HOUSE_CODE = VO.HOUSE_CODE                                                                                           
+                AND   VENDOR_CODE = VO.VENDOR_CODE                                                                                         
+                AND   BID_NO      = VO.BID_NO                                                                                              
+                AND   BID_COUNT   = VO.BID_COUNT                                                                                           
+                AND   BID_CANCEL  = 'N'                                                                                                    
+                AND   VOTE_COUNT  = 8), 0) AS BID_AMT_8,                                                                                   
+               NVL((SELECT BID_AMT FROM ICOYBDVO                                                                                           
+                WHERE HOUSE_CODE = VO.HOUSE_CODE                                                                                           
+                AND   VENDOR_CODE = VO.VENDOR_CODE                                                                                         
+                AND   BID_NO      = VO.BID_NO                                                                                              
+                AND   BID_COUNT   = VO.BID_COUNT                                                                                           
+                AND   BID_CANCEL  = 'N'                                                                                                    
+                AND   VOTE_COUNT  = 9), 0) AS BID_AMT_9,                                                                                   
+               NVL((SELECT BID_AMT FROM ICOYBDVO                                                                                           
+                WHERE HOUSE_CODE = VO.HOUSE_CODE                                                                                           
+                AND   VENDOR_CODE = VO.VENDOR_CODE                                                                                         
+                AND   BID_NO      = VO.BID_NO                                                                                              
+                AND   BID_COUNT   = VO.BID_COUNT                                                                                           
+                AND   BID_CANCEL  = 'N'                                                                                                    
+                AND   VOTE_COUNT  = 10), 0) AS BID_AMT_10                                                                                  
+       		, VO.VOTE_COUNT                                                                                                   
+       		, DECODE(AP.FINAL_FLAG, 'N', '참가자격부적합',                                                                    
+       		         DECODE( SP.SPEC_FLAG, 'N', '규격부적합', DECODE( VO.BID_COUNT, null, '가격 미제출', 'Y'))                
+       		) AS REMARK                                                                                                       
+        FROM ICOYBDVO VO, ICOMVNGL VN, ICOYBDAP AP, ICOYBDSP SP ,ICOMADDR AD                                             
+        WHERE AP.HOUSE_CODE  = VN.HOUSE_CODE                                                                                      
+        AND   AP.VENDOR_CODE = VN.VENDOR_CODE                                                                                     
+        AND   AP.HOUSE_CODE  = ${HOUSE_CODE}                                                       
+        AND   AP.BID_NO      = ${BID_NO}                                                                                       
+        AND   AP.BID_COUNT   = ${BID_COUNT}                                                                                    
+                                                                                                                                  
+       AND   VN.HOUSE_CODE  = AD.HOUSE_CODE                                                                                        
+       AND   VN.VENDOR_CODE = AD.CODE_NO                                                                                           
+       AND   AD.CODE_TYPE   = '2'                                                                                               
+        AND   VO.HOUSE_CODE(+)  = AP.HOUSE_CODE                                                                                    
+        AND   VO.VENDOR_CODE(+) = AP.VENDOR_CODE                                                                                  
+        AND   VO.BID_NO(+)      = AP.BID_NO                                                                                       
+        AND   VO.BID_COUNT(+)   = AP.BID_COUNT                                                                                    
+        AND   AP.HOUSE_CODE  = SP.HOUSE_CODE(+)                                                                                   
+        AND   AP.VENDOR_CODE = SP.VENDOR_CODE(+)                                                                                  
+        AND   AP.BID_NO      = SP.BID_NO(+)                                                                                       
+        AND   AP.BID_COUNT   = SP.BID_COUNT(+)                                                                                    
+        AND   VO.BID_CANCEL(+)  = 'N'                                                                                             
+        AND   AP.BID_CANCEL(+)  = 'N'                                                                                             
+        AND   AP.STATUS(+) != 'D'                                                                                                 
+        AND   SP.STATUS(+) != 'D'                                                                                                 
+        AND   VO.STATUS(+) != 'D'                                                                                                 
+        GROUP BY VO.HOUSE_CODE, VO.BID_NO, VO.BID_COUNT, VO.VENDOR_CODE, VO.VOTE_COUNT,                                           
+                       AP.FINAL_FLAG, SP.SPEC_FLAG                                                                                
+        ORDER BY MAX(VO.NE_ORDER)                                                                                                 
+        )  A                                                                                                                      
+		
+		]]>
+	</method>
+	
+	<method name="getBdDetailCompare">
+		<![CDATA[
+             SELECT
+             		/*기술제안서점수 + 가격점수가 가장 높은것.*/
+                    RANK() OVER ( ORDER BY  TOTAL_SCORE DESC) AS  NO
+                   ,RANDOM
+                   ,DECODE(RANK() OVER ( ORDER BY  TOTAL_SCORE DESC, RANDOM), 1, 'SB', 'NB') AS T_FLAG
+                   ,T_VENDOR_CODE
+                   ,BID_NO
+                   ,BID_COUNT
+                   ,VOTE_COUNT
+                   ,T_VENDOR_CODE AS VENDOR_CODE
+                   ,VENDOR_NAME
+                   ,CEO_NAME_LOC
+                   ,ADDRESS_LOC
+                   ,BID_AMT_1
+                   ,BID_AMT_2
+                   ,BID_AMT_3
+                   ,BID_AMT_4
+                   ,BID_AMT_5
+                   ,BID_AMT_6
+                   ,BID_AMT_7
+                   ,BID_AMT_8
+                   ,BID_AMT_9
+                   ,BID_AMT_10
+                   ,NE_ORDER_1
+                   ,NE_ORDER_2
+                   ,NE_ORDER_3
+                   ,NE_ORDER_4
+                   ,NE_ORDER_5
+                   --,'' AS T_FLAG
+                   ,VOTE_CNT_AMT
+                   ,VOTE_CNT_AMT_ENC
+                   ,USER_NAME
+                   ,USER_MOBILE
+                   ,USER_EMAIL
+                   ,CERTV_1
+                   ,CERTV_2
+                   ,CERTV_3
+                   ,CERTV_4
+                   ,CERTV_5
+                   ,VOTE_CNT_CERTV
+                   ,TECHNICAL_SCORE
+                   ,PRICE_SCORE
+                   ,TOTAL_SCORE
+                   ,BID_AMT_1_ENC
+                   ,BID_AMT_2_ENC
+                   ,BID_AMT_3_ENC
+                   ,BID_AMT_4_ENC
+                   ,BID_AMT_5_ENC
+                   ,BID_AMT_6_ENC
+                   ,BID_AMT_7_ENC
+                   ,BID_AMT_8_ENC
+                   ,BID_AMT_9_ENC
+                   ,BID_AMT_10_ENC
+                   ,ESTM_USER_ID     
+                   ,FINAL_ESTM_PRICE
+                   ,FINAL_ESTM_PRICE_ENC
+                   ,BASIC_AMT
+                   ,FROM_LOWER_BND
+              FROM
+             (
+              SELECT
+                     VO.VENDOR_CODE AS T_VENDOR_CODE
+					,VO.BID_NO        
+					,VO.BID_COUNT     
+                    ,VO.VOTE_COUNT   
+                    ,MAX(VN.VENDOR_NAME_LOC) AS VENDOR_NAME
+                    ,MAX(AD.CEO_NAME_LOC) AS CEO_NAME_LOC
+                    ,MAX(AD.ZIP_CODE||' '||AD.ADDRESS_LOC) AS ADDRESS_LOC
+                    ,(SELECT BID_AMT FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 1) AS BID_AMT_1
+                    ,(SELECT NE_ORDER FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 1) AS NE_ORDER_1
+                    ,(SELECT BID_AMT FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 2) AS BID_AMT_2
+                    ,(SELECT NE_ORDER FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 2) AS NE_ORDER_2
+                    ,(SELECT BID_AMT FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 3) AS BID_AMT_3
+                    ,(SELECT NE_ORDER FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 3) AS NE_ORDER_3
+                    ,(SELECT BID_AMT FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 4) AS BID_AMT_4
+                    ,(SELECT NE_ORDER FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 4) AS NE_ORDER_4
+                   ,(SELECT BID_AMT FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 5) AS BID_AMT_5
+                    ,(SELECT NE_ORDER FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 5) AS NE_ORDER_5
+
+                    ,(SELECT BID_AMT FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 6) AS BID_AMT_6
+                    ,(SELECT BID_AMT FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 7) AS BID_AMT_7
+                    ,(SELECT BID_AMT FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 8) AS BID_AMT_8
+                    ,(SELECT BID_AMT FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 9) AS BID_AMT_9
+                    ,(SELECT BID_AMT FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 10) AS BID_AMT_10
+                    ,VO.BID_AMT   		AS VOTE_CNT_AMT     
+                    ,VO.BID_AMT_ENC   	AS VOTE_CNT_AMT_ENC
+                    ,VO.CERTV   AS VOTE_CNT_CERTV
+
+--                    ,(SELECT BID_AMT_ENC FROM ICOYBDVO
+--                       WHERE HOUSE_CODE  = VO.HOUSE_CODE
+--                         AND VENDOR_CODE = VO.VENDOR_CODE
+--                         AND BID_NO      = VO.BID_NO
+--                         AND BID_COUNT   = VO.BID_COUNT
+--                         AND BID_CANCEL  = 'N'
+--                         AND VOTE_COUNT  = '"+VOTE_COUNT+"') AS VOTE_CNT_AMT
+--                    ,VO.CERTV
+--                    ,VO.TIMESTAMP
+--                    ,VO.SIGN_CERT
+
+                   ,AP.USER_NAME
+                   ,AP.USER_MOBILE
+                   ,AP.USER_EMAIL
+                    ,(SELECT CERTV FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 1) AS CERTV_1
+                    ,(SELECT CERTV FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 2) AS CERTV_2
+                    ,(SELECT CERTV FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 3) AS CERTV_3
+                    ,(SELECT CERTV FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 4) AS CERTV_4
+                    ,(SELECT CERTV FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 5) AS CERTV_5
+                    ,SP.TECHNICAL_SCORE     
+                    ,SP.PRICE_SCORE
+                    ,NVL(SP.TECHNICAL_SCORE,0) + NVL(SP.PRICE_SCORE,0) AS TOTAL_SCORE     
+                    ,ES.ESTM_USER_ID     
+                    ,ES.FINAL_ESTM_PRICE
+                    ,ES.FINAL_ESTM_PRICE_ENC
+                    ,(SELECT BID_AMT_ENC FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 1) AS BID_AMT_1_ENC
+                    ,(SELECT BID_AMT_ENC FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 2) AS BID_AMT_2_ENC
+                    ,(SELECT BID_AMT_ENC FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 3) AS BID_AMT_3_ENC
+                    ,(SELECT BID_AMT_ENC FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 4) AS BID_AMT_4_ENC
+                    ,(SELECT BID_AMT_ENC FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 5) AS BID_AMT_5_ENC
+                    ,(SELECT BID_AMT_ENC FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 6) AS BID_AMT_6_ENC
+                    ,(SELECT BID_AMT_ENC FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 7) AS BID_AMT_7_ENC
+                    ,(SELECT BID_AMT_ENC FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 8) AS BID_AMT_8_ENC
+                    ,(SELECT BID_AMT_ENC FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 9) AS BID_AMT_9_ENC
+                    ,(SELECT BID_AMT_ENC FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 10) AS BID_AMT_10_ENC
+                    ,ES.BASIC_AMT      
+                    ,HD.FROM_LOWER_BND     
+                    ,DBMS_RANDOM.VALUE AS RANDOM
+                FROM  ICOYBDHD HD, ICOYBDVO VO, ICOMVNGL VN, ICOYBDAP AP, ICOMADDR AD, ICOYBDSP SP, ICOYBDES ES
+               WHERE 1=1
+               	 AND HD.HOUSE_CODE	= VO.HOUSE_CODE
+                 AND HD.BID_NO		= VO.BID_NO	
+                 AND HD.BID_COUNT	= VO.BID_COUNT                 
+                 AND VO.HOUSE_CODE  = VN.HOUSE_CODE
+                 AND VO.VENDOR_CODE = VN.VENDOR_CODE
+                 AND VN.HOUSE_CODE = AD.HOUSE_CODE
+                 AND VN.VENDOR_CODE = AD.CODE_NO
+                 AND AD.CODE_TYPE = '2'
+                 AND AP.HOUSE_CODE  = ${HOUSE_CODE}
+                 AND VO.VENDOR_CODE = AP.VENDOR_CODE
+                 AND VO.BID_NO      = AP.BID_NO
+                 AND VO.BID_COUNT   = AP.BID_COUNT
+                 AND AP.FINAL_FLAG  = 'Y'
+                 AND VO.HOUSE_CODE  = SP.HOUSE_CODE(+)
+                 AND VO.BID_NO      = SP.BID_NO(+)
+                 AND VO.BID_COUNT   = SP.BID_COUNT(+)
+                 AND VO.VOTE_COUNT  = SP.VOTE_COUNT(+)
+                 AND VO.VENDOR_CODE = SP.VENDOR_CODE(+)
+                 AND VO.HOUSE_CODE  = ES.HOUSE_CODE
+                 AND VO.BID_NO      = ES.BID_NO
+                 AND VO.BID_COUNT   = ES.BID_COUNT
+				 AND VO.HOUSE_CODE  = ${HOUSE_CODE}
+                 AND VO.BID_NO      = ${BID_NO}
+                 AND VO.BID_COUNT   = ${BID_COUNT}
+                 AND VO.STATUS IN ('C', 'R')
+                 AND VO.BID_CANCEL  = 'N'
+	]]>
+
+	<if test="${announce_flag}" operator="eq" value="Y">
+		<![CDATA[
+             AND VO.VENDOR_CODE IN (SELECT VENDOR_CODE
+                    FROM ICOYBDCR
+                    WHERE HOUSE_CODE = '#house_code#'
+                      AND HOUSE_CODE = VO.HOUSE_CODE
+                      AND BID_NO = VO.BID_NO
+                      AND BID_COUNT = VO.BID_COUNT
+                      AND VENDOR_CODE = VO.VENDOR_CODE)
+		]]>
+	</if>
+
+	<![CDATA[
+               GROUP BY VO.HOUSE_CODE, VO.BID_NO, VO.BID_COUNT, VO.VENDOR_CODE, VO.VOTE_COUNT 
+                        ,VO.BID_AMT, VO.BID_AMT_ENC,AP.USER_NAME,AP.USER_MOBILE,AP.USER_EMAIL,VO.CERTV
+                        ,SP.TECHNICAL_SCORE, SP.PRICE_SCORE, NVL(SP.TECHNICAL_SCORE,0) + NVL(SP.PRICE_SCORE,0)
+                        ,ES.ESTM_USER_ID, ES.FINAL_ESTM_PRICE, ES.FINAL_ESTM_PRICE_ENC, ES.BASIC_AMT 
+                        ,HD.FROM_LOWER_BND
+                        )  TMP
+             ORDER BY TOTAL_SCORE DESC, RANDOM, BID_AMT_5,  BID_AMT_4, BID_AMT_3, BID_AMT_2,BID_AMT_1
+		]]>
+	</method>
+	<method name="setOrder">
+		<![CDATA[
+		SELECT	RANK() OVER ( ORDER BY VOTE_COUNT DESC, TOTAL_SCORE DESC, VOTE_CNT_AMT, RANDOM) AS  NO
+		,		TOTAL_SCORE
+		,		VOTE_COUNT
+		,		RANDOM
+		,		DECODE(RANK() OVER ( ORDER BY  VOTE_COUNT DESC, TOTAL_SCORE DESC, VOTE_CNT_AMT, RANDOM), 1, 'SB', 'NB') AS T_FLAG
+		,		T_VENDOR_CODE
+		,		T_VENDOR_CODE AS VENDOR_CODE
+		,		VENDOR_NAME
+		,		CEO_NAME_LOC
+		,		ADDRESS_LOC
+		,		BID_AMT_1
+		,		BID_AMT_2
+		,		BID_AMT_3
+		,		BID_AMT_4
+		,		BID_AMT_5
+		,		BID_AMT_6
+		,		BID_AMT_7
+		,		BID_AMT_8
+		,		BID_AMT_9
+		,		BID_AMT_10
+		,		NE_ORDER_1
+		,		NE_ORDER_2
+		,		NE_ORDER_3
+		,		NE_ORDER_4
+		,		NE_ORDER_5
+		,		VOTE_CNT_AMT
+		,		VOTE_CNT_AMT_ENC
+		,		USER_NAME
+		,		USER_MOBILE
+		,		USER_EMAIL
+		,		CERTV_1
+		,		CERTV_2
+		,		CERTV_3
+		,		CERTV_4
+		,		CERTV_5
+		,		VOTE_CNT_CERTV
+		,		TECHNICAL_SCORE
+		,		PRICE_SCORE
+		,		TOTAL_SCORE
+		,		BID_AMT_1_ENC
+		,		BID_AMT_2_ENC
+		,		BID_AMT_3_ENC
+		,		BID_AMT_4_ENC
+		,		BID_AMT_5_ENC
+		,		BID_AMT_6_ENC
+		,		BID_AMT_7_ENC
+		,		BID_AMT_8_ENC
+		,		BID_AMT_9_ENC
+		,		BID_AMT_10_ENC
+		,		ESTM_USER_ID     
+		,		FINAL_ESTM_PRICE
+		,		FINAL_ESTM_PRICE_ENC
+		,		BASIC_AMT
+		,		FROM_LOWER_BND
+		FROM
+		(
+		SELECT 	A.*
+		,		VN.VENDOR_CODE AS T_VENDOR_CODE
+		,		ES.ESTM_USER_ID     
+		,		ES.FINAL_ESTM_PRICE
+		,		ES.FINAL_ESTM_PRICE_ENC
+		,		VN.VENDOR_NAME_LOC AS VENDOR_NAME
+		,		AD.CEO_NAME_LOC
+		,		AD.ZIP_CODE||' '||AD.ADDRESS_LOC AS ADDRESS_LOC
+		,		AP.USER_NAME
+		,		AP.USER_MOBILE
+		,		AP.USER_EMAIL
+		,		ES.BASIC_AMT
+		,		HD.FROM_LOWER_BND
+		,		DBMS_RANDOM.VALUE AS RANDOM
+		, 		CASE
+					WHEN (${VOTE_COUNT} = 1)  THEN BID_AMT_1
+					WHEN (${VOTE_COUNT} = 2)  THEN BID_AMT_2
+					WHEN (${VOTE_COUNT} = 3)  THEN BID_AMT_3
+					WHEN (${VOTE_COUNT} = 4)  THEN BID_AMT_4
+					WHEN (${VOTE_COUNT} = 5)  THEN BID_AMT_5
+					WHEN (${VOTE_COUNT} = 6)  THEN BID_AMT_6
+					WHEN (${VOTE_COUNT} = 7)  THEN BID_AMT_7
+					WHEN (${VOTE_COUNT} = 8)  THEN BID_AMT_8
+					WHEN (${VOTE_COUNT} = 9)  THEN BID_AMT_9
+					WHEN (${VOTE_COUNT} = 10) THEN BID_AMT_10
+				END AS VOTE_CNT_AMT	
+		, 		CASE
+					WHEN (${VOTE_COUNT} = 1)  THEN BID_AMT_1_ENC 
+					WHEN (${VOTE_COUNT} = 2)  THEN BID_AMT_2_ENC
+					WHEN (${VOTE_COUNT} = 3)  THEN BID_AMT_3_ENC
+					WHEN (${VOTE_COUNT} = 4)  THEN BID_AMT_4_ENC
+					WHEN (${VOTE_COUNT} = 5)  THEN BID_AMT_5_ENC
+					WHEN (${VOTE_COUNT} = 6)  THEN BID_AMT_6_ENC
+					WHEN (${VOTE_COUNT} = 7)  THEN BID_AMT_7_ENC
+					WHEN (${VOTE_COUNT} = 8)  THEN BID_AMT_8_ENC
+					WHEN (${VOTE_COUNT} = 9)  THEN BID_AMT_9_ENC
+					WHEN (${VOTE_COUNT} = 10) THEN BID_AMT_10_ENC
+				END AS VOTE_CNT_AMT_ENC			
+		, 		CASE
+					WHEN (${VOTE_COUNT} = 1)  THEN CERTV_1 
+					WHEN (${VOTE_COUNT} = 2)  THEN CERTV_2
+					WHEN (${VOTE_COUNT} = 3)  THEN CERTV_3
+					WHEN (${VOTE_COUNT} = 4)  THEN CERTV_4
+					WHEN (${VOTE_COUNT} = 5)  THEN CERTV_5
+				END AS VOTE_CNT_CERTV				
+		FROM	
+			(
+			SELECT	BID_NO
+			,		BID_COUNT
+			,		VENDOR_CODE
+			,		MAX(VOTE_COUNT) AS VOTE_COUNT
+			,		SUM(BID_AMT_1     ) AS BID_AMT_1     
+			,		SUM(BID_AMT_2     ) AS BID_AMT_2     
+			,		SUM(BID_AMT_3     ) AS BID_AMT_3     
+			,		SUM(BID_AMT_4     ) AS BID_AMT_4     
+			,		SUM(BID_AMT_5     ) AS BID_AMT_5     
+			,		SUM(BID_AMT_6     ) AS BID_AMT_6     
+			,		SUM(BID_AMT_7     ) AS BID_AMT_7     
+			,		SUM(BID_AMT_8     ) AS BID_AMT_8     
+			,		SUM(BID_AMT_9     ) AS BID_AMT_9     
+			,		SUM(BID_AMT_10    ) AS BID_AMT_10    
+			,		SUM(BID_AMT_1_ENC ) AS BID_AMT_1_ENC 
+			,		SUM(BID_AMT_2_ENC ) AS BID_AMT_2_ENC 
+			,		SUM(BID_AMT_3_ENC ) AS BID_AMT_3_ENC 
+			,		SUM(BID_AMT_4_ENC ) AS BID_AMT_4_ENC 
+			,		SUM(BID_AMT_5_ENC ) AS BID_AMT_5_ENC
+			,		SUM(BID_AMT_6_ENC ) AS BID_AMT_6_ENC
+			,		SUM(BID_AMT_7_ENC ) AS BID_AMT_7_ENC 
+			,		SUM(BID_AMT_8_ENC ) AS BID_AMT_8_ENC 
+			,		SUM(BID_AMT_9_ENC ) AS BID_AMT_9_ENC 
+			,		SUM(BID_AMT_10_ENC) AS BID_AMT_10_ENC
+			,		SUM(CERTV_1       ) AS CERTV_1       
+			,		SUM(CERTV_2       ) AS CERTV_2       
+			,		SUM(CERTV_3       ) AS CERTV_3       
+			,		SUM(CERTV_4       ) AS CERTV_4       
+			,		SUM(CERTV_5       ) AS CERTV_5       
+			,		SUM(NE_ORDER_1    ) AS NE_ORDER_1    
+			,		SUM(NE_ORDER_2    ) AS NE_ORDER_2    
+			,		SUM(NE_ORDER_3    ) AS NE_ORDER_3    
+			,		SUM(NE_ORDER_4    ) AS NE_ORDER_4    
+			,		SUM(NE_ORDER_5	  ) AS NE_ORDER_5	  
+			,		MAX(TECHNICAL_SCORE) AS TECHNICAL_SCORE
+			,		MAX(PRICE_SCORE) AS PRICE_SCORE
+			,		MAX(TOTAL_SCORE) AS TOTAL_SCORE	
+			FROM	(
+					SELECT 	VO.BID_NO
+					, 		VO.BID_COUNT
+					, 		VO.VENDOR_CODE
+					,		VO.VOTE_COUNT
+					,		DECODE(VO.VOTE_COUNT , 1  , BID_AMT,  		'') AS BID_AMT_1
+					,		DECODE(VO.VOTE_COUNT , 2  , BID_AMT,  		'') AS BID_AMT_2
+					,		DECODE(VO.VOTE_COUNT , 3  , BID_AMT,  		'') AS BID_AMT_3
+					,		DECODE(VO.VOTE_COUNT , 4  , BID_AMT,  		'') AS BID_AMT_4
+					,		DECODE(VO.VOTE_COUNT , 5  , BID_AMT,  		'') AS BID_AMT_5
+					,		DECODE(VO.VOTE_COUNT , 6  , BID_AMT,  		'') AS BID_AMT_6
+					,		DECODE(VO.VOTE_COUNT , 7  , BID_AMT,  		'') AS BID_AMT_7
+					,		DECODE(VO.VOTE_COUNT , 8  , BID_AMT,  		'') AS BID_AMT_8
+					,		DECODE(VO.VOTE_COUNT , 9  , BID_AMT,  		'') AS BID_AMT_9
+					,		DECODE(VO.VOTE_COUNT , 10 , BID_AMT,  		'') AS BID_AMT_10
+					,		DECODE(VO.VOTE_COUNT , 1  , BID_AMT_ENC,  	'') AS BID_AMT_1_ENC
+					,		DECODE(VO.VOTE_COUNT , 2  , BID_AMT_ENC,  	'') AS BID_AMT_2_ENC
+					,		DECODE(VO.VOTE_COUNT , 3  , BID_AMT_ENC,  	'') AS BID_AMT_3_ENC
+					,		DECODE(VO.VOTE_COUNT , 4  , BID_AMT_ENC,  	'') AS BID_AMT_4_ENC
+					,		DECODE(VO.VOTE_COUNT , 5  , BID_AMT_ENC,  	'') AS BID_AMT_5_ENC
+					,		DECODE(VO.VOTE_COUNT , 6  , BID_AMT_ENC,  	'') AS BID_AMT_6_ENC
+					,		DECODE(VO.VOTE_COUNT , 7  , BID_AMT_ENC,  	'') AS BID_AMT_7_ENC
+					,		DECODE(VO.VOTE_COUNT , 8  , BID_AMT_ENC,  	'') AS BID_AMT_8_ENC
+					,		DECODE(VO.VOTE_COUNT , 9  , BID_AMT_ENC,  	'') AS BID_AMT_9_ENC
+					,		DECODE(VO.VOTE_COUNT , 10 , BID_AMT_ENC,  	'') AS BID_AMT_10_ENC		
+					,		DECODE(VO.VOTE_COUNT , 1  , CERTV,  		'') AS CERTV_1
+					,		DECODE(VO.VOTE_COUNT , 2  , CERTV,  		'') AS CERTV_2
+					,		DECODE(VO.VOTE_COUNT , 3  , CERTV,  		'') AS CERTV_3
+					,		DECODE(VO.VOTE_COUNT , 4  , CERTV,  		'') AS CERTV_4
+					,		DECODE(VO.VOTE_COUNT , 5  , CERTV,  		'') AS CERTV_5
+					,		DECODE(VO.VOTE_COUNT , 1  , NE_ORDER,  		'') AS NE_ORDER_1
+					,		DECODE(VO.VOTE_COUNT , 2  , NE_ORDER,  		'') AS NE_ORDER_2
+					,		DECODE(VO.VOTE_COUNT , 3  , NE_ORDER,  		'') AS NE_ORDER_3
+					,		DECODE(VO.VOTE_COUNT , 4  , NE_ORDER,  		'') AS NE_ORDER_4
+					,		DECODE(VO.VOTE_COUNT , 5  , NE_ORDER,  		'') AS NE_ORDER_5		
+					,		SP.TECHNICAL_SCORE     
+					,		SP.PRICE_SCORE
+					,		NVL(SP.TECHNICAL_SCORE,0) + NVL(SP.PRICE_SCORE,0) AS TOTAL_SCORE     			
+					FROM 	ICOYBDVO VO
+					,		ICOYBDSP SP 
+					WHERE 	VO.BID_NO 		= ${BID_NO}
+					AND 	VO.BID_COUNT 	= ${BID_COUNT}
+					AND 	VO.BID_CANCEL  	= 'N'
+					AND 	VO.BID_NO      	= SP.BID_NO(+)
+					AND 	VO.BID_COUNT   	= SP.BID_COUNT(+)
+					AND 	VO.VOTE_COUNT  	= SP.VOTE_COUNT(+)
+					AND 	VO.VENDOR_CODE 	= SP.VENDOR_CODE(+)			
+					ORDER BY VENDOR_CODE		
+					)
+			GROUP BY BID_NO, BID_COUNT, VENDOR_CODE
+			)A
+		,	ICOYBDHD HD
+		,	ICOMVNGL VN
+		,	ICOYBDAP AP
+		,	ICOMADDR AD
+		,	ICOYBDES ES
+		WHERE 	A.BID_NO 		= HD.BID_NO
+		AND 	A.BID_COUNT 	= HD.BID_COUNT
+		AND 	A.VENDOR_CODE	= VN.VENDOR_CODE
+		AND 	A.BID_NO 		= AP.BID_NO
+		AND 	A.BID_COUNT 	= AP.BID_COUNT
+		AND 	A.VENDOR_CODE 	= AP.VENDOR_CODE
+		AND 	A.VENDOR_CODE 	= AD.CODE_NO
+		AND 	AD.CODE_TYPE 	= '2'
+		AND 	A.BID_NO      	= ES.BID_NO
+		AND 	A.BID_COUNT   	= ES.BID_COUNT
+		)AA
+		ORDER BY AA.VOTE_COUNT DESC, AA.TOTAL_SCORE DESC , AA.VOTE_CNT_AMT, AA.RANDOM  
+		]]>
+	</method>
+	<method name="getBidResult">
+		<![CDATA[
+		SELECT	NVL(BID_STATUS, 'NB') AS BID_STATUS
+	  	,       TOTAL_SCORE
+	  	,       VOTE_COUNT
+	  	,       T_VENDOR_CODE
+	  	,       T_VENDOR_CODE AS VENDOR_CODE
+	  	,       VENDOR_NAME
+	  	,       CEO_NAME_LOC
+	  	,       ADDRESS_LOC
+	  	,       BID_AMT_1
+	  	,       BID_AMT_2
+	  	,       BID_AMT_3
+	  	,       BID_AMT_4
+	  	,       BID_AMT_5
+	 	,       BID_AMT_6
+	  	,       BID_AMT_7
+	  	,       BID_AMT_8
+	  	,       BID_AMT_9
+	  	,       BID_AMT_10
+	  	,       NE_ORDER_1
+	  	,       NE_ORDER_2
+	  	,       NE_ORDER_3
+	  	,       NE_ORDER_4
+	  	,       NE_ORDER_5
+	  	,       NE_ORDER_6
+	  	,       NE_ORDER_7
+	  	,       NE_ORDER_8
+	  	,       NE_ORDER_9
+	  	,       NE_ORDER_10  
+	  	,       USER_NAME
+	  	,       USER_MOBILE
+	  	,       USER_EMAIL
+	  	,       TECHNICAL_SCORE
+	  	,       PRICE_SCORE
+	  	,       TOTAL_SCORE
+	  	,       ESTM_USER_ID     
+	  	,       FINAL_ESTM_PRICE
+	  	,       FINAL_ESTM_PRICE_ENC
+	  	,       BASIC_AMT
+	  	,       FROM_LOWER_BND
+	    ,       BID_CANCEL_1
+	    ,       BID_CANCEL_2
+	    ,       BID_CANCEL_3
+	    ,       BID_CANCEL_4
+	    ,       BID_CANCEL_5
+	   	,       BID_CANCEL_6
+	    ,       BID_CANCEL_7
+	    ,       BID_CANCEL_8
+	    ,       BID_CANCEL_9
+	    ,       BID_CANCEL_10
+     	,       TCO_PRICE_1      
+        ,       TCO_PRICE_2      
+        ,       TCO_PRICE_3      
+        ,       TCO_PRICE_4      
+        ,       TCO_PRICE_5      
+        ,       TCO_PRICE_6      
+        ,       TCO_PRICE_7      
+        ,       TCO_PRICE_8      
+        ,       TCO_PRICE_9      
+        ,       TCO_PRICE_10     
+        ,       PRODUCT_PRICE_1        
+        ,       PRODUCT_PRICE_2        
+        ,       PRODUCT_PRICE_3        
+        ,       PRODUCT_PRICE_4        
+        ,       PRODUCT_PRICE_5        
+        ,       PRODUCT_PRICE_6        
+        ,       PRODUCT_PRICE_7        
+        ,       PRODUCT_PRICE_8        
+        ,       PRODUCT_PRICE_9        
+        ,       PRODUCT_PRICE_10      	        	  	
+		FROM
+		(
+		SELECT 	A.*
+		,		VN.VENDOR_CODE AS T_VENDOR_CODE
+		,		ES.ESTM_USER_ID     
+		,		ES.FINAL_ESTM_PRICE
+		,		ES.FINAL_ESTM_PRICE_ENC
+		,		VN.VENDOR_NAME_LOC AS VENDOR_NAME
+		,		AD.CEO_NAME_LOC
+		,		AD.ZIP_CODE||' '||AD.ADDRESS_LOC AS ADDRESS_LOC
+		,		AP.USER_NAME
+		,		AP.USER_MOBILE
+		,		AP.USER_EMAIL
+		,		ES.BASIC_AMT
+		,		HD.FROM_LOWER_BND
+		,		DBMS_RANDOM.VALUE AS RANDOM
+		, 		CASE
+					WHEN (${VOTE_COUNT} = 1)  THEN BID_STATUS_1
+					WHEN (${VOTE_COUNT} = 2)  THEN BID_STATUS_2
+					WHEN (${VOTE_COUNT} = 3)  THEN BID_STATUS_3
+					WHEN (${VOTE_COUNT} = 4)  THEN BID_STATUS_4
+					WHEN (${VOTE_COUNT} = 5)  THEN BID_STATUS_5
+					WHEN (${VOTE_COUNT} = 6)  THEN BID_STATUS_6
+					WHEN (${VOTE_COUNT} = 7)  THEN BID_STATUS_7
+					WHEN (${VOTE_COUNT} = 8)  THEN BID_STATUS_8
+					WHEN (${VOTE_COUNT} = 9)  THEN BID_STATUS_9
+					WHEN (${VOTE_COUNT} = 10) THEN BID_STATUS_10
+				END AS BID_STATUS	
+		FROM	
+			(
+			SELECT	BID_NO
+			,		BID_COUNT
+			,		VENDOR_CODE
+			,		MAX(VOTE_COUNT) AS VOTE_COUNT
+			,		SUM(BID_AMT_1     ) AS BID_AMT_1     
+			,		SUM(BID_AMT_2     ) AS BID_AMT_2     
+			,		SUM(BID_AMT_3     ) AS BID_AMT_3     
+			,		SUM(BID_AMT_4     ) AS BID_AMT_4     
+			,		SUM(BID_AMT_5     ) AS BID_AMT_5     
+			,		SUM(BID_AMT_6     ) AS BID_AMT_6     
+			,		SUM(BID_AMT_7     ) AS BID_AMT_7     
+			,		SUM(BID_AMT_8     ) AS BID_AMT_8     
+			,		SUM(BID_AMT_9     ) AS BID_AMT_9     
+			,		SUM(BID_AMT_10    ) AS BID_AMT_10    
+			,		SUM(NE_ORDER_1    ) AS NE_ORDER_1    
+			,		SUM(NE_ORDER_2    ) AS NE_ORDER_2    
+			,		SUM(NE_ORDER_3    ) AS NE_ORDER_3    
+			,		SUM(NE_ORDER_4    ) AS NE_ORDER_4    
+			,		SUM(NE_ORDER_5	  ) AS NE_ORDER_5	  
+			,		SUM(NE_ORDER_6    ) AS NE_ORDER_6    
+			,		SUM(NE_ORDER_7    ) AS NE_ORDER_7    
+			,		SUM(NE_ORDER_8    ) AS NE_ORDER_8    
+			,		SUM(NE_ORDER_9    ) AS NE_ORDER_9    
+			,		SUM(NE_ORDER_10	  ) AS NE_ORDER_10	  
+			,		MAX(BID_STATUS_1    ) AS BID_STATUS_1    
+			,		MAX(BID_STATUS_2    ) AS BID_STATUS_2    
+			,		MAX(BID_STATUS_3    ) AS BID_STATUS_3    
+			,		MAX(BID_STATUS_4    ) AS BID_STATUS_4    
+			,		MAX(BID_STATUS_5	) AS BID_STATUS_5	  
+			,		MAX(BID_STATUS_6    ) AS BID_STATUS_6    
+			,		MAX(BID_STATUS_7    ) AS BID_STATUS_7    
+			,		MAX(BID_STATUS_8    ) AS BID_STATUS_8    
+			,		MAX(BID_STATUS_9    ) AS BID_STATUS_9    
+			,		MAX(BID_STATUS_10	) AS BID_STATUS_10	 
+		    ,       MAX(BID_CANCEL_1    ) AS BID_CANCEL_1    
+		    ,       MAX(BID_CANCEL_2    ) AS BID_CANCEL_2    
+		    ,       MAX(BID_CANCEL_3    ) AS BID_CANCEL_3    
+		    ,       MAX(BID_CANCEL_4    ) AS BID_CANCEL_4    
+		    ,       MAX(BID_CANCEL_5 	) AS BID_CANCEL_5   
+		    ,       MAX(BID_CANCEL_6    ) AS BID_CANCEL_6    
+		    ,       MAX(BID_CANCEL_7    ) AS BID_CANCEL_7    
+		    ,       MAX(BID_CANCEL_8    ) AS BID_CANCEL_8    
+		    ,       MAX(BID_CANCEL_9    ) AS BID_CANCEL_9    
+		    ,       MAX(BID_CANCEL_10 	) AS BID_CANCEL_10    
+		    
+		    ,       SUM(PRODUCT_PRICE_1 ) AS PRODUCT_PRICE_1      
+		    ,       SUM(PRODUCT_PRICE_2 ) AS PRODUCT_PRICE_2      
+		    ,       SUM(PRODUCT_PRICE_3 ) AS PRODUCT_PRICE_3      
+		    ,       SUM(PRODUCT_PRICE_4 ) AS PRODUCT_PRICE_4      
+		    ,       SUM(PRODUCT_PRICE_5 ) AS PRODUCT_PRICE_5      
+		    ,       SUM(PRODUCT_PRICE_6 ) AS PRODUCT_PRICE_6      
+		    ,       SUM(PRODUCT_PRICE_7 ) AS PRODUCT_PRICE_7      
+		    ,       SUM(PRODUCT_PRICE_8 ) AS PRODUCT_PRICE_8      
+		    ,       SUM(PRODUCT_PRICE_9 ) AS PRODUCT_PRICE_9      
+		    ,       SUM(PRODUCT_PRICE_10) AS PRODUCT_PRICE_10     
+		            
+		    ,       SUM(TCO_PRICE_1  ) AS TCO_PRICE_1        
+		    ,       SUM(TCO_PRICE_2  ) AS TCO_PRICE_2        
+		    ,       SUM(TCO_PRICE_3  ) AS TCO_PRICE_3        
+		    ,       SUM(TCO_PRICE_4  ) AS TCO_PRICE_4        
+		    ,       SUM(TCO_PRICE_5  ) AS TCO_PRICE_5        
+		    ,       SUM(TCO_PRICE_6  ) AS TCO_PRICE_6        
+		    ,       SUM(TCO_PRICE_7  ) AS TCO_PRICE_7        
+		    ,       SUM(TCO_PRICE_8  ) AS TCO_PRICE_8        
+		    ,       SUM(TCO_PRICE_9  ) AS TCO_PRICE_9        
+		    ,       SUM(TCO_PRICE_10 ) AS TCO_PRICE_10    		    
+		    			
+			 
+			,		MAX(TECHNICAL_SCORE) AS TECHNICAL_SCORE
+			,		MAX(PRICE_SCORE) AS PRICE_SCORE
+			,		MAX(TOTAL_SCORE) AS TOTAL_SCORE	
+			FROM	(
+					SELECT 	AP1.BID_NO
+					, 		AP1.BID_COUNT
+					, 		AP1.VENDOR_CODE
+					,		NVL(VO.VOTE_COUNT, 0) AS VOTE_COUNT 
+					,		DECODE(VO.VOTE_COUNT , 1  , VO.BID_AMT,  		'') AS BID_AMT_1
+					,		DECODE(VO.VOTE_COUNT , 2  , VO.BID_AMT,  		'') AS BID_AMT_2
+					,		DECODE(VO.VOTE_COUNT , 3  , VO.BID_AMT,  		'') AS BID_AMT_3
+					,		DECODE(VO.VOTE_COUNT , 4  , VO.BID_AMT,  		'') AS BID_AMT_4
+					,		DECODE(VO.VOTE_COUNT , 5  , VO.BID_AMT,  		'') AS BID_AMT_5
+					,		DECODE(VO.VOTE_COUNT , 6  , VO.BID_AMT,  		'') AS BID_AMT_6
+					,		DECODE(VO.VOTE_COUNT , 7  , VO.BID_AMT,  		'') AS BID_AMT_7
+					,		DECODE(VO.VOTE_COUNT , 8  , VO.BID_AMT,  		'') AS BID_AMT_8
+					,		DECODE(VO.VOTE_COUNT , 9  , VO.BID_AMT,  		'') AS BID_AMT_9
+					,		DECODE(VO.VOTE_COUNT , 10 , VO.BID_AMT,  		'') AS BID_AMT_10
+					,		DECODE(VO.VOTE_COUNT , 1  , VO.NE_ORDER,  		'') AS NE_ORDER_1
+					,		DECODE(VO.VOTE_COUNT , 2  , VO.NE_ORDER,  		'') AS NE_ORDER_2
+					,		DECODE(VO.VOTE_COUNT , 3  , VO.NE_ORDER,  		'') AS NE_ORDER_3
+					,		DECODE(VO.VOTE_COUNT , 4  , VO.NE_ORDER,  		'') AS NE_ORDER_4
+					,		DECODE(VO.VOTE_COUNT , 5  , VO.NE_ORDER,  		'') AS NE_ORDER_5		
+					,		DECODE(VO.VOTE_COUNT , 6  , VO.NE_ORDER,  		'') AS NE_ORDER_6
+					,		DECODE(VO.VOTE_COUNT , 7  , VO.NE_ORDER,  		'') AS NE_ORDER_7
+					,		DECODE(VO.VOTE_COUNT , 8  , VO.NE_ORDER,  		'') AS NE_ORDER_8
+					,		DECODE(VO.VOTE_COUNT , 9  , VO.NE_ORDER,  		'') AS NE_ORDER_9
+					,		DECODE(VO.VOTE_COUNT , 10 , VO.NE_ORDER,  		'') AS NE_ORDER_10		
+					,		DECODE(VO.VOTE_COUNT , 1  , VO.BID_STATUS,  	'') AS BID_STATUS_1
+					,		DECODE(VO.VOTE_COUNT , 2  , VO.BID_STATUS,  	'') AS BID_STATUS_2
+					,		DECODE(VO.VOTE_COUNT , 3  , VO.BID_STATUS,  	'') AS BID_STATUS_3
+					,		DECODE(VO.VOTE_COUNT , 4  , VO.BID_STATUS,  	'') AS BID_STATUS_4
+					,		DECODE(VO.VOTE_COUNT , 5  , VO.BID_STATUS,  	'') AS BID_STATUS_5		
+					,		DECODE(VO.VOTE_COUNT , 6  , VO.BID_STATUS,  	'') AS BID_STATUS_6
+					,		DECODE(VO.VOTE_COUNT , 7  , VO.BID_STATUS,  	'') AS BID_STATUS_7
+					,		DECODE(VO.VOTE_COUNT , 8  , VO.BID_STATUS,  	'') AS BID_STATUS_8
+					,		DECODE(VO.VOTE_COUNT , 9  , VO.BID_STATUS,  	'') AS BID_STATUS_9
+					,		DECODE(VO.VOTE_COUNT , 10 , VO.BID_STATUS,  	'') AS BID_STATUS_10		
+				    ,       DECODE(VO.VOTE_COUNT , 1  , VO.BID_CANCEL,      '') AS BID_CANCEL_1
+				    ,       DECODE(VO.VOTE_COUNT , 2  , VO.BID_CANCEL,      '') AS BID_CANCEL_2
+				    ,       DECODE(VO.VOTE_COUNT , 3  , VO.BID_CANCEL,      '') AS BID_CANCEL_3
+				    ,       DECODE(VO.VOTE_COUNT , 4  , VO.BID_CANCEL,      '') AS BID_CANCEL_4
+				    ,       DECODE(VO.VOTE_COUNT , 5  , VO.BID_CANCEL,      '') AS BID_CANCEL_5  
+				    ,       DECODE(VO.VOTE_COUNT , 6  , VO.BID_CANCEL,      '') AS BID_CANCEL_6
+				    ,       DECODE(VO.VOTE_COUNT , 7  , VO.BID_CANCEL,      '') AS BID_CANCEL_7
+				    ,       DECODE(VO.VOTE_COUNT , 8  , VO.BID_CANCEL,      '') AS BID_CANCEL_8
+				    ,       DECODE(VO.VOTE_COUNT , 9  , VO.BID_CANCEL,      '') AS BID_CANCEL_9
+				    ,       DECODE(VO.VOTE_COUNT , 10 , VO.BID_CANCEL,      '') AS BID_CANCEL_10     
+				    
+				    ,       DECODE(VO.VOTE_COUNT , 1  , VO.PRODUCT_PRICE,    '') AS PRODUCT_PRICE_1
+				    ,       DECODE(VO.VOTE_COUNT , 2  , VO.PRODUCT_PRICE,    '') AS PRODUCT_PRICE_2
+				    ,       DECODE(VO.VOTE_COUNT , 3  , VO.PRODUCT_PRICE,    '') AS PRODUCT_PRICE_3
+				    ,       DECODE(VO.VOTE_COUNT , 4  , VO.PRODUCT_PRICE,    '') AS PRODUCT_PRICE_4
+				    ,       DECODE(VO.VOTE_COUNT , 5  , VO.PRODUCT_PRICE,    '') AS PRODUCT_PRICE_5
+				    ,       DECODE(VO.VOTE_COUNT , 6  , VO.PRODUCT_PRICE,    '') AS PRODUCT_PRICE_6
+				    ,       DECODE(VO.VOTE_COUNT , 7  , VO.PRODUCT_PRICE,    '') AS PRODUCT_PRICE_7
+				    ,       DECODE(VO.VOTE_COUNT , 8  , VO.PRODUCT_PRICE,    '') AS PRODUCT_PRICE_8
+				    ,       DECODE(VO.VOTE_COUNT , 9  , VO.PRODUCT_PRICE,    '') AS PRODUCT_PRICE_9
+				    ,       DECODE(VO.VOTE_COUNT , 10 , VO.PRODUCT_PRICE,    '') AS PRODUCT_PRICE_10   
+				            
+				    ,       DECODE(VO.VOTE_COUNT , 1  , VO.TCO_PRICE,    '') AS TCO_PRICE_1      
+				    ,       DECODE(VO.VOTE_COUNT , 2  , VO.TCO_PRICE,    '') AS TCO_PRICE_2 
+				    ,       DECODE(VO.VOTE_COUNT , 3  , VO.TCO_PRICE,    '') AS TCO_PRICE_3 
+				    ,       DECODE(VO.VOTE_COUNT , 4  , VO.TCO_PRICE,    '') AS TCO_PRICE_4 
+				    ,       DECODE(VO.VOTE_COUNT , 5  , VO.TCO_PRICE,    '') AS TCO_PRICE_5 
+				    ,       DECODE(VO.VOTE_COUNT , 6  , VO.TCO_PRICE,    '') AS TCO_PRICE_6 
+				    ,       DECODE(VO.VOTE_COUNT , 7  , VO.TCO_PRICE,    '') AS TCO_PRICE_7 
+				    ,       DECODE(VO.VOTE_COUNT , 8  , VO.TCO_PRICE,    '') AS TCO_PRICE_8 
+				    ,       DECODE(VO.VOTE_COUNT , 9  , VO.TCO_PRICE,    '') AS TCO_PRICE_9 
+				    ,       DECODE(VO.VOTE_COUNT , 10 , VO.TCO_PRICE,    '') AS TCO_PRICE_10  				    
+				    					
+					,		SP.TECHNICAL_SCORE     
+					,		SP.PRICE_SCORE
+					,		NVL(SP.TECHNICAL_SCORE,0) + NVL(SP.PRICE_SCORE,0) AS TOTAL_SCORE     			
+					FROM 	ICOYBDAP AP1
+					,		
+					(
+							SELECT DISTINCT VO.*
+							FROM ICOYBDHD HD, (
+							SELECT BDVO.HOUSE_CODE,
+								        BDVO.BID_NO,
+								        BDVO.BID_COUNT,
+								        BDVO.VOTE_COUNT,
+								        BDVO.VENDOR_CODE,
+								        BDVO.BID_CANCEL_FLAG,
+								        BDVO.BID_CANCEL,
+								        BDVO.STATUS,
+								        BDVO.NE_ORDER, 
+								        BDVO.BID_STATUS,
+								        SUM(CASE NVL(MTGL.TCO_FLAG,'N') WHEN 'Y' THEN BDDT.PR_QTY*BDVT.BID_PRICE_ENC ELSE 0 END) TCO_PRICE, 
+								        SUM(CASE NVL(MTGL.TCO_FLAG,'N') WHEN 'N' THEN BDDT.PR_QTY*BDVT.BID_PRICE_ENC ELSE 0 END) PRODUCT_PRICE,
+								        decode(
+						                	SUM(BDDT.PR_QTY*NVL(BDVT.BID_PRICE_ENC,0)),0,BDVO.BID_AMT_ENC,
+						                	SUM(BDDT.PR_QTY*NVL(BDVT.BID_PRICE_ENC,0))) BID_AMT,
+						                BDVO.BID_AMT_ENC
+								   FROM ICOYBDVO BDVO,ICOYBDVT BDVT,ICOYBDDT BDDT,ICOMMTGL MTGL
+								  WHERE BDVO.HOUSE_CODE = BDVT.HOUSE_CODE
+								    AND BDVO.BID_NO = BDVT.BID_NO
+								    AND BDVO.BID_COUNT = BDVT.BID_COUNT
+								    AND BDVO.VOTE_COUNT = BDVT.VOTE_COUNT
+								    AND BDVO.VENDOR_CODE = BDVT.VENDOR_CODE
+								    AND BDVT.HOUSE_CODE = BDDT.HOUSE_CODE
+								    AND BDVT.BID_NO = BDDT.BID_NO
+								    AND BDVT.BID_COUNT = BDDT.BID_COUNT
+								    AND BDVT.ITEM_SEQ = BDDT.ITEM_SEQ
+								    AND BDDT.HOUSE_CODE = MTGL.HOUSE_CODE(+)
+								    AND BDDT.BUYER_ITEM_NO = MTGL.ITEM_NO(+)
+								GROUP BY BDVO.HOUSE_CODE,
+								        BDVO.BID_NO,
+								        BDVO.BID_COUNT,
+								        BDVO.VOTE_COUNT,
+								        BDVO.VENDOR_CODE,
+								        BDVO.BID_CANCEL_FLAG,
+								        BDVO.BID_CANCEL,
+								        BDVO.STATUS,
+								        BDVO.BID_AMT_ENC,
+								        BDVO.NE_ORDER,
+								        BDVO.BID_STATUS
+								        ) VO       
+					     ) VO					
+					,		ICOYBDSP SP 
+					WHERE 	AP1.BID_NO 		= ${BID_NO}
+					AND 	AP1.BID_COUNT 	= ${BID_COUNT}
+					AND 	AP1.BID_NO 		= VO.BID_NO(+)
+					AND 	AP1.BID_COUNT	= VO.BID_COUNT(+)
+					AND 	AP1.VENDOR_CODE = VO.VENDOR_CODE(+)
+					--AND 	VO.BID_CANCEL  	= 'N'
+					AND 	VO.BID_NO      	= SP.BID_NO(+)
+					AND 	VO.BID_COUNT   	= SP.BID_COUNT(+)
+					AND 	VO.VOTE_COUNT  	= SP.VOTE_COUNT(+)
+					AND 	VO.VENDOR_CODE 	= SP.VENDOR_CODE(+)			
+					ORDER BY VENDOR_CODE		
+					)
+			GROUP BY BID_NO, BID_COUNT, VENDOR_CODE
+			)A
+		,	ICOYBDHD HD
+		,	ICOMVNGL VN
+		,	ICOYBDAP AP
+		,	ICOMADDR AD
+		,	ICOYBDES ES
+		WHERE 	A.BID_NO 		= HD.BID_NO
+		AND 	A.BID_COUNT 	= HD.BID_COUNT
+		AND 	A.VENDOR_CODE	= VN.VENDOR_CODE
+		AND 	A.BID_NO 		= AP.BID_NO
+		AND 	A.BID_COUNT 	= AP.BID_COUNT
+		AND 	A.VENDOR_CODE 	= AP.VENDOR_CODE
+		AND 	A.VENDOR_CODE 	= AD.CODE_NO
+		AND 	AD.CODE_TYPE 	= '2'
+		AND 	A.BID_NO      	= ES.BID_NO
+		AND 	A.BID_COUNT   	= ES.BID_COUNT
+		)AA
+  		ORDER BY NVL(AA.BID_STATUS, 'NB') DESC, 	AA.VOTE_COUNT DESC, AA.TOTAL_SCORE DESC ,
+  		AA.NE_ORDER_10,   				AA.NE_ORDER_9,   	AA.NE_ORDER_8,   	AA.NE_ORDER_7,   AA.NE_ORDER_6,   
+  		AA.NE_ORDER_5,					AA.NE_ORDER_4,   	AA.NE_ORDER_3,   	AA.NE_ORDER_2,   AA.NE_ORDER_1 
+		]]>
+	</method>
+	
+	<method name="setOrder_org">
+		<![CDATA[
+		
+             SELECT 
+                    RANK() OVER ( ORDER BY  MAX(TOTAL_SCORE) DESC, MAX(VOTE_CNT_AMT)) AS  NO
+                   ,MAX(RANDOM) AS RANDOM
+                   ,DECODE(RANK() OVER ( ORDER BY  MAX(TOTAL_SCORE) DESC, MAX(VOTE_CNT_AMT), MAX(RANDOM)), 1, 'SB', 'NB') AS T_FLAG
+                   ,T_VENDOR_CODE
+                   ,T_VENDOR_CODE AS VENDOR_CODE
+                   ,MAX(VENDOR_NAME         )AS VENDOR_NAME         
+                   ,MAX(CEO_NAME_LOC        )AS CEO_NAME_LOC        
+                   ,MAX(ADDRESS_LOC         )AS ADDRESS_LOC         
+                   ,MAX(BID_AMT_1           )AS BID_AMT_1           
+                   ,MAX(BID_AMT_2           )AS BID_AMT_2           
+                   ,MAX(BID_AMT_3           )AS BID_AMT_3           
+                   ,MAX(BID_AMT_4           )AS BID_AMT_4           
+                   ,MAX(BID_AMT_5           )AS BID_AMT_5           
+                   ,MAX(BID_AMT_6           )AS BID_AMT_6           
+                   ,MAX(BID_AMT_7           )AS BID_AMT_7           
+                   ,MAX(BID_AMT_8           )AS BID_AMT_8           
+                   ,MAX(BID_AMT_9           )AS BID_AMT_9           
+                   ,MAX(BID_AMT_10          )AS BID_AMT_10          
+                   ,MAX(NE_ORDER_1          )AS NE_ORDER_1          
+                   ,MAX(NE_ORDER_2          )AS NE_ORDER_2          
+                   ,MAX(NE_ORDER_3          )AS NE_ORDER_3          
+                   ,MAX(NE_ORDER_4          )AS NE_ORDER_4          
+                   ,MAX(NE_ORDER_5          )AS NE_ORDER_5          
+                   ,MAX(VOTE_CNT_AMT        )AS VOTE_CNT_AMT        
+                   ,MAX(VOTE_CNT_AMT_ENC    )AS VOTE_CNT_AMT_ENC    
+                   ,MAX(USER_NAME           )AS USER_NAME           
+                   ,MAX(USER_MOBILE         )AS USER_MOBILE         
+                   ,MAX(USER_EMAIL          )AS USER_EMAIL          
+                   ,MAX(CERTV_1             )AS CERTV_1             
+                   ,MAX(CERTV_2             )AS CERTV_2             
+                   ,MAX(CERTV_3             )AS CERTV_3             
+                   ,MAX(CERTV_4             )AS CERTV_4             
+                   ,MAX(CERTV_5             )AS CERTV_5             
+                   ,MAX(VOTE_CNT_CERTV      )AS VOTE_CNT_CERTV      
+                   ,MAX(TECHNICAL_SCORE     )AS TECHNICAL_SCORE     
+                   ,MAX(PRICE_SCORE         )AS PRICE_SCORE         
+                   ,MAX(TOTAL_SCORE         )AS TOTAL_SCORE         
+                   ,MAX(BID_AMT_1_ENC       )AS BID_AMT_1_ENC       
+                   ,MAX(BID_AMT_2_ENC       )AS BID_AMT_2_ENC       
+                   ,MAX(BID_AMT_3_ENC       )AS BID_AMT_3_ENC       
+                   ,MAX(BID_AMT_4_ENC       )AS BID_AMT_4_ENC       
+                   ,MAX(BID_AMT_5_ENC       )AS BID_AMT_5_ENC       
+                   ,MAX(BID_AMT_6_ENC       )AS BID_AMT_6_ENC       
+                   ,MAX(BID_AMT_7_ENC       )AS BID_AMT_7_ENC       
+                   ,MAX(BID_AMT_8_ENC       )AS BID_AMT_8_ENC       
+                   ,MAX(BID_AMT_9_ENC       )AS BID_AMT_9_ENC       
+                   ,MAX(BID_AMT_10_ENC      )AS BID_AMT_10_ENC      
+                   ,MAX(ESTM_USER_ID        )AS ESTM_USER_ID        
+                   ,MAX(FINAL_ESTM_PRICE    )AS FINAL_ESTM_PRICE    
+                   ,MAX(FINAL_ESTM_PRICE_ENC)AS FINAL_ESTM_PRICE_ENC
+                   ,MAX(BASIC_AMT           )AS BASIC_AMT           
+                   ,MAX(FROM_LOWER_BND      )AS FROM_LOWER_BND      
+              FROM
+             (
+              SELECT
+                     VO.VENDOR_CODE AS T_VENDOR_CODE
+                    ,MAX(VN.VENDOR_NAME_LOC) AS VENDOR_NAME
+                    ,MAX(AD.CEO_NAME_LOC) AS CEO_NAME_LOC
+                    ,MAX(AD.ZIP_CODE||' '||AD.ADDRESS_LOC) AS ADDRESS_LOC
+                    ,(SELECT BID_AMT FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 1) AS BID_AMT_1
+                    ,(SELECT NE_ORDER FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 1) AS NE_ORDER_1
+                    ,(SELECT BID_AMT FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 2) AS BID_AMT_2
+                    ,(SELECT NE_ORDER FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 2) AS NE_ORDER_2
+                    ,(SELECT BID_AMT FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 3) AS BID_AMT_3
+                    ,(SELECT NE_ORDER FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 3) AS NE_ORDER_3
+                    ,(SELECT BID_AMT FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 4) AS BID_AMT_4
+                    ,(SELECT NE_ORDER FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 4) AS NE_ORDER_4
+                   ,(SELECT BID_AMT FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 5) AS BID_AMT_5
+                    ,(SELECT NE_ORDER FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 5) AS NE_ORDER_5
+
+                    ,(SELECT BID_AMT FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 6) AS BID_AMT_6
+                    ,(SELECT BID_AMT FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 7) AS BID_AMT_7
+                    ,(SELECT BID_AMT FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 8) AS BID_AMT_8
+                    ,(SELECT BID_AMT FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 9) AS BID_AMT_9
+                    ,(SELECT BID_AMT FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 10) AS BID_AMT_10
+                    ,VO.BID_AMT   		AS VOTE_CNT_AMT     
+                    ,VO.BID_AMT_ENC   	AS VOTE_CNT_AMT_ENC
+                    ,VO.CERTV   AS VOTE_CNT_CERTV
+
+--                    ,(SELECT BID_AMT_ENC FROM ICOYBDVO
+--                       WHERE HOUSE_CODE  = VO.HOUSE_CODE
+--                         AND VENDOR_CODE = VO.VENDOR_CODE
+--                         AND BID_NO      = VO.BID_NO
+--                         AND BID_COUNT   = VO.BID_COUNT
+--                         AND BID_CANCEL  = 'N'
+--                         AND VOTE_COUNT  = '"+VOTE_COUNT+"') AS VOTE_CNT_AMT
+--                    ,VO.CERTV
+--                    ,VO.TIMESTAMP
+--                    ,VO.SIGN_CERT
+
+                   ,AP.USER_NAME
+                   ,AP.USER_MOBILE
+                   ,AP.USER_EMAIL
+                    ,(SELECT CERTV FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 1) AS CERTV_1
+                    ,(SELECT CERTV FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 2) AS CERTV_2
+                    ,(SELECT CERTV FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 3) AS CERTV_3
+                    ,(SELECT CERTV FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 4) AS CERTV_4
+                    ,(SELECT CERTV FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 5) AS CERTV_5
+                    ,SP.TECHNICAL_SCORE     
+                    ,SP.PRICE_SCORE
+                    ,NVL(SP.TECHNICAL_SCORE,0) + NVL(SP.PRICE_SCORE,0) AS TOTAL_SCORE     
+                    ,ES.ESTM_USER_ID     
+                    ,ES.FINAL_ESTM_PRICE
+                    ,ES.FINAL_ESTM_PRICE_ENC
+                    ,(SELECT BID_AMT_ENC FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 1) AS BID_AMT_1_ENC
+                    ,(SELECT BID_AMT_ENC FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 2) AS BID_AMT_2_ENC
+                    ,(SELECT BID_AMT_ENC FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 3) AS BID_AMT_3_ENC
+                    ,(SELECT BID_AMT_ENC FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 4) AS BID_AMT_4_ENC
+                    ,(SELECT BID_AMT_ENC FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 5) AS BID_AMT_5_ENC
+                    ,(SELECT BID_AMT_ENC FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 6) AS BID_AMT_6_ENC
+                    ,(SELECT BID_AMT_ENC FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 7) AS BID_AMT_7_ENC
+                    ,(SELECT BID_AMT_ENC FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 8) AS BID_AMT_8_ENC
+                    ,(SELECT BID_AMT_ENC FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 9) AS BID_AMT_9_ENC
+                    ,(SELECT BID_AMT_ENC FROM ICOYBDVO
+                       WHERE HOUSE_CODE = VO.HOUSE_CODE
+                         AND VENDOR_CODE = VO.VENDOR_CODE
+                         AND BID_NO      = VO.BID_NO
+                         AND BID_COUNT   = VO.BID_COUNT
+                         AND BID_CANCEL  = 'N'
+                         AND VOTE_COUNT  = 10) AS BID_AMT_10_ENC
+                    ,ES.BASIC_AMT      
+                    ,HD.FROM_LOWER_BND     
+                    ,DBMS_RANDOM.VALUE AS RANDOM
+                FROM  ICOYBDHD HD, ICOYBDVO VO, ICOMVNGL VN, ICOYBDAP AP, ICOMADDR AD, ICOYBDSP SP, ICOYBDES ES
+               WHERE 1=1
+               	 AND HD.HOUSE_CODE	= VO.HOUSE_CODE
+                 AND HD.BID_NO		= VO.BID_NO	
+                 AND HD.BID_COUNT	= VO.BID_COUNT                 
+                 AND VO.HOUSE_CODE  = VN.HOUSE_CODE
+                 AND VO.VENDOR_CODE = VN.VENDOR_CODE
+                 AND VN.HOUSE_CODE = AD.HOUSE_CODE
+                 AND VN.VENDOR_CODE = AD.CODE_NO
+                 AND AD.CODE_TYPE = '2'
+                 AND AP.HOUSE_CODE  = ${HOUSE_CODE}
+                 AND VO.VENDOR_CODE = AP.VENDOR_CODE
+                 AND VO.BID_NO      = AP.BID_NO
+                 AND VO.BID_COUNT   = AP.BID_COUNT
+                 AND AP.FINAL_FLAG  = 'Y'
+                 AND VO.HOUSE_CODE  = SP.HOUSE_CODE(+)
+                 AND VO.BID_NO      = SP.BID_NO(+)
+                 AND VO.BID_COUNT   = SP.BID_COUNT(+)
+                 AND VO.VOTE_COUNT  = SP.VOTE_COUNT(+)
+                 AND VO.VENDOR_CODE = SP.VENDOR_CODE(+)
+                 AND VO.HOUSE_CODE  = ES.HOUSE_CODE
+                 AND VO.BID_NO      = ES.BID_NO
+                 AND VO.BID_COUNT   = ES.BID_COUNT
+				 AND VO.HOUSE_CODE  = ${HOUSE_CODE}
+                 AND VO.BID_NO      = ${BID_NO}
+                 AND VO.BID_COUNT   = ${BID_COUNT}
+                 --AND VO.STATUS IN ('C', 'R')
+                 AND VO.BID_CANCEL  = 'N'
+	 
+               GROUP BY VO.HOUSE_CODE, VO.BID_NO, VO.BID_COUNT, VO.VENDOR_CODE
+                        ,VO.BID_AMT, VO.BID_AMT_ENC,AP.USER_NAME,AP.USER_MOBILE,AP.USER_EMAIL,VO.CERTV
+                        ,SP.TECHNICAL_SCORE, SP.PRICE_SCORE, NVL(SP.TECHNICAL_SCORE,0) + NVL(SP.PRICE_SCORE,0)
+                        ,ES.ESTM_USER_ID, ES.FINAL_ESTM_PRICE, ES.FINAL_ESTM_PRICE_ENC, ES.BASIC_AMT 
+                        ,HD.FROM_LOWER_BND
+                        )  TMP
+	         GROUP BY T_VENDOR_CODE                        
+             ORDER BY MAX(TOTAL_SCORE) DESC , MAX(VOTE_CNT_AMT), MAX(RANDOM) 
+		]]>
+	</method>
+	
+	<method name="et_setBidStatus">
+		<![CDATA[
+        UPDATE ICOYBDHD SET                                                 
+              PREFERRED_BIDDER      = ${PREFERRED_BIDDER},                                                     
+              BID_STATUS            = ${BID_STATUS},                                                   
+              NB_REASON             = ${NB_REASON} ,                                                                                  
+              STATUS                =  'R',                                                                     
+              CHANGE_USER_ID        = ${ID} ,                                                                                          
+              CHANGE_USER_DEPT      = ${DEPT} ,                                                                                          
+              CHANGE_USER_NAME_ENG  = ${NAME_ENG} ,                                                                                          
+              CHANGE_USER_NAME_LOC  = ${NAME_LOC} ,                                                                                          
+              CHANGE_DATE           = TO_CHAR(SYSDATE,'YYYYMMDD'),                                                                
+              CHANGE_TIME           = TO_CHAR(SYSDATE,'HH24MISS'),                                                                
+              SR_ATTACH_NO          = $S{R_ATTACH_NO},                                                                                          
+              SB_REASON          	 = ${SB_REASON}                                                                                       
+         WHERE HOUSE_CODE           = ${HOUSE_CODE}                                                                                         
+           AND BID_NO               = ${BID_NO}                                                                                          
+           AND BID_COUNT            = ${BID_COUNT}  
+		]]>
+	</method> 
+	<method name="et_setStatusPRDT">
+		<![CDATA[
+        UPDATE  ICOYPRDT  PRDT                                                     
+           SET 
+				PR_PROCEEDING_FLAG  = DECODE(${BID_STATUS}, 'SB', 'E', 'NB', 'P', 'PB', 'E')   -- 낙찰, 우선협상선정이면 품의대기, 유찰이면 접수현황으로 백.
+         WHERE  HOUSE_CODE          = ${HOUSE_CODE}                                                        
+           AND ( PR_NO, PR_SEQ)  IN (                                                      
+                   SELECT  PR_NO, PR_SEQ  FROM  ICOYBDDT                                   
+                    WHERE  HOUSE_CODE= PRDT.HOUSE_CODE                                     
+                      AND  BID_NO    = ${BID_NO}                                                      
+                      AND  BID_COUNT = ${BID_COUNT}                                                    
+                   ) 
+		]]>
+	</method> 
+	<method name="et_setBDVO">
+		<![CDATA[                                                                                                                            
+          UPDATE ICOYBDVO                                                                                       
+          SET    BID_STATUS = ${T_FLAG} ,   
+                 NE_ORDER   = ${NO} ,   
+                 BID_RANK   =  ${NO} ,   
+                 BID_AMT    = ${VOTE_CNT_AMT}                                                                                      
+         WHERE HOUSE_CODE           = ${HOUSE_CODE}                                                                                         
+           AND BID_NO               = ${BID_NO}                                                                                          
+           AND BID_COUNT            = ${BID_COUNT}  
+		   AND	VOTE_COUNT	= ${VOTE_COUNT}	 
+		   AND	VENDOR_CODE	= ${T_VENDOR_CODE}	 
+		]]>
+	</method>   
+	<method name="et_setBDVT_1">
+		<![CDATA[ 
+		SELECT   
+				 HOUSE_CODE
+				,BID_NO
+				,BID_COUNT
+				,VOTE_COUNT
+				,VENDOR_CODE
+				,ITEM_SEQ
+				,BID_PRICE_ENC
+		FROM	ICOYBDVT                                                                               
+         WHERE HOUSE_CODE           = ${HOUSE_CODE}                                                                                         
+           AND BID_NO               = ${BID_NO}                                                                                          
+           AND BID_COUNT            = ${BID_COUNT}  
+		   AND	VOTE_COUNT	= ${VOTE_COUNT}	 
+		]]>
+	</method> 
+	<method name="et_setBDVT_2">
+		<![CDATA[
+		UPDATE	ICOYBDVT
+		  SET	BID_PRICE 	= ${BID_PRICE}                                                                                   
+         WHERE HOUSE_CODE           = ${HOUSE_CODE}                                                                                         
+           AND BID_NO               = ${BID_NO}                                                                                          
+           AND BID_COUNT            = ${BID_COUNT}  
+		  AND 	VOTE_COUNT	= ${VOTE_COUNT}
+		  AND  	VENDOR_CODE	= ${VENDOR_CODE}
+		  AND 	ITEM_SEQ	= ${ITEM_SEQ}
+		]]>
+	</method> 
+	<method name="et_setBDES">
+		<![CDATA[
+       UPDATE ICOYBDES                                                   
+       SET    ESTM_PRICE1          = ${ESTM_PRICE}                  ,               
+              FINAL_ESTM_PRICE     = ${ESTM_PRICE}                   ,               
+              STATUS               = 'R'                  ,               
+              CHANGE_DATE = TO_CHAR(SYSDATE,'YYYYMMDD')  ,               
+              CHANGE_TIME = TO_CHAR(SYSDATE,'HH24MISS')  ,               
+              CHANGE_USER_ID       = ${ID}                   ,               
+              CHANGE_USER_NAME_LOC = ${NAME_LOC}                   ,               
+              CHANGE_USER_NAME_ENG = ${NAME_ENG}                   ,               
+              CHANGE_USER_DEPT     = ${DEPT}                                                                                      
+         WHERE HOUSE_CODE           = ${HOUSE_CODE}                                                                                         
+           AND BID_NO               = ${BID_NO}                                                                                          
+           AND BID_COUNT            = ${BID_COUNT}  
+		]]>
+	</method>     
+	 
+	<method name="et_setReBDPGCreate">
+		<![CDATA[   
+        INSERT INTO ICOYBDPG (                                                                        
+                                HOUSE_CODE              ,                                             
+                                BID_NO                  ,                                             
+                                BID_COUNT               ,                                             
+                                VOTE_COUNT              ,                                             
+                                STATUS                  ,                                             
+                                ADD_DATE                ,                                             
+                                ADD_TIME                ,                                             
+                                ADD_USER_ID             ,                                             
+                                ADD_USER_NAME_LOC       ,                                             
+                                ADD_USER_NAME_ENG       ,                                             
+                                ADD_USER_DEPT           ,                                             
+                                BID_BEGIN_DATE          ,                                             
+                                BID_BEGIN_TIME          ,                                             
+                                BID_END_DATE            ,                                             
+                                BID_END_TIME            ,                                             
+                                BID_PLACE               ,                                             
+                                BID_ETC                 ,                                             
+                                OPEN_DATE               ,                                             
+                                OPEN_TIME                                                             
+        )  (                                                                                          
+        SELECT                                                                                        
+                                ${HOUSE_CODE}   ,                                                                    
+                                ${BID_NO    }   ,                                                                        
+                                ${BID_COUNT    }   ,                                                                    
+                                ${VOTE_COUNT } +1  ,                                                                
+                                'C'           ,                                                       
+                                TO_CHAR(SYSDATE,'YYYYMMDD'),                                          
+                                TO_CHAR(SYSDATE,'HH24MISS'),                                          
+                                ${ID             }     ,                                                       
+                                ${NAME_LOC       }     ,                                                       
+                                ${NAME_ENG       }     ,                                                       
+                                ${DEPT           }     ,                                                       
+                                ${BID_BEGIN_DATE }            ,                                                       
+                                ${BID_BEGIN_TIME }            ,                                                       
+                                ${BID_END_DATE   }            ,                                                       
+                                ${BID_END_TIME   }            ,                                                       
+                                BID_PLACE     ,                                                       
+                                BID_ETC       ,                                                       
+                                ${OPEN_DATE    }         ,                                                       
+                                ${OPEN_TIME    }                                                                 
+        FROM ICOYBDPG                                                                                 
+        WHERE HOUSE_CODE = ${HOUSE_CODE}                                                                          
+        AND   BID_NO     = ${BID_NO    }                                                                          
+        AND   BID_COUNT  = ${BID_COUNT }                                                                          
+        AND   VOTE_COUNT = ${VOTE_COUNT}                                                                          
+        )                                                                 
+		]]>
+	</method>   
+	<method name="et_setReBDSPCreate">
+		<![CDATA[   
+             INSERT INTO ICOYBDSP (                                                        
+                                 HOUSE_CODE                                                
+                                 ,BID_NO                                                    
+                                 ,BID_COUNT                                                 
+                                 ,VOTE_COUNT                                                
+                                 ,VENDOR_CODE                                               
+                                 ,STATUS                                                    
+                                 ,ADD_DATE                                                  
+                                 ,ADD_TIME                                                  
+                                 ,ADD_USER_ID                                               
+                                 ,ADD_USER_NAME_LOC                                         
+                                 ,ADD_USER_NAME_ENG                                         
+                                 ,ADD_USER_DEPT                                             
+                                 ,PRICE_SCORE                                               
+                                 ,TECHNICAL_SCORE                                           
+                                 ,SPEC_RANK                                                 
+                                 ,SPEC_FLAG                                                 
+                                 ,TECH_POINT                                               
+                                 ,AMT_POINT                                                
+                                 ,REASON                                  	                
+                                 ,TEST_POINT                                               
+             )        (                                                                    
+             SELECT                                                                        
+                                 ${HOUSE_CODE}                                                            
+                                 ,${BID_NO    }                                                                                
+                                 ,${BID_COUNT    }                                                                      
+                                 ,${VOTE_COUNT } +1                                                       
+                                 ,VENDOR_CODE                                               
+                                 ,'C'                                                       
+                                 ,TO_CHAR(SYSDATE,'YYYYMMDD')                               
+                                 ,TO_CHAR(SYSDATE,'HH24MISS')                               
+                                 ,${ID             }                              
+                                 ,${NAME_LOC       }                              
+                                 ,${NAME_ENG       }                              
+                                 ,${DEPT           }                              
+                                 ,PRICE_SCORE                                               
+                                 ,TECHNICAL_SCORE                                           
+                                 ,SPEC_RANK                                                 
+                                 ,SPEC_FLAG                                                 
+                                 ,TECH_POINT                                               
+                                 ,AMT_POINT                                                
+                                 ,REASON                                  	                
+                                 ,TEST_POINT                                               
+             FROM ICOYBDSP                                                                 
+             WHERE HOUSE_CODE = ${HOUSE_CODE}                                                          
+             AND   BID_NO     = ${BID_NO    }                                                          
+             AND   BID_COUNT  = ${BID_COUNT }                                                          
+             AND   VOTE_COUNT = ${VOTE_COUNT}                                                          
+             )                                                   
+		]]>
+	</method>   
+	<method name="et_delBDPG">
+		<![CDATA[                                     
+                     UPDATE ICOYBDPG            
+                     SET   STATUS = 'D'         
+                     WHERE HOUSE_CODE = ${HOUSE_CODE}       
+                     AND   BID_NO     = ${BID_NO    }       
+                     AND   BID_COUNT  = ${BID_COUNT }       
+                     AND   VOTE_COUNT = ${VOTE_COUNT}       
+		]]>
+	</method>  
+	<method name="et_delBDSP">
+		<![CDATA[   
+                     UPDATE ICOYBDSP            
+                     SET   STATUS = 'D'         
+                     WHERE HOUSE_CODE = ${HOUSE_CODE}       
+                     AND   BID_NO     = ${BID_NO    }       
+                     AND   BID_COUNT  = ${BID_COUNT }       
+                     AND   VOTE_COUNT = ${VOTE_COUNT}       
+		]]>
+	</method>        
+	<method name="et_delBDVO">
+		<![CDATA[   
+                     UPDATE ICOYBDVO            
+                     SET   	STATUS = 'D'         
+                     ,		BID_STATUS = 'NB'         
+                     WHERE HOUSE_CODE = ${HOUSE_CODE}        
+                     AND   BID_NO     = ${BID_NO    }        
+                     AND   BID_COUNT  = ${BID_COUNT }        
+                     AND   VOTE_COUNT = ${VOTE_COUNT}        
+		]]>
+	</method>
+	
+	<method name="et_setPriceScore">
+	<![CDATA[	
+		UPDATE 	ICOYBDSP
+			SET	PRICE_SCORE = ${PRICE_SCORE}
+		WHERE	HOUSE_CODE 	= ${HOUSE_CODE}
+		  AND   BID_NO 		= ${BID_NO}
+		  AND   BID_COUNT 	= ${BID_COUNT}
+		  AND	VOTE_COUNT 	= ${VOTE_COUNT}
+		  AND	VENDOR_CODE = ${VENDOR_CODE}
+	]]>
+	</method>
+		
+	<method name="getVendor">
+	<![CDATA[ 
+		SELECT  GETCOMPANYNAMELOC('000', STATUS1.VENDOR_CODE, 'S') 	AS VENDOR_NAME
+		,		DECODE(STATUS2.VENDOR_CODE, NULL , 'X', 'O') 		AS BID_VEN_STATUS2
+		,		DECODE(STATUS3.VENDOR_CODE, NULL , 'X', 'O') 		AS BID_VEN_STATUS3
+		,		DECODE(STATUS4.VENDOR_CODE, NULL , 'X', 'O') 		AS BID_VEN_STATUS4
+		FROM	( 
+				SELECT 	VENDOR_CODE
+				,		BID_NO
+				,		BID_COUNT
+				,		${VOTE_COUNT} AS VOTE_COUNT
+		        FROM 	ICOYBDAP
+				WHERE 	BID_NO 		= ${BID_NO}                                                                   
+		        AND 	BID_COUNT 	= ${BID_COUNT}
+		        ) AS STATUS1
+		,		(
+				SELECT  VENDOR_CODE
+		        ,		BID_NO
+		        ,		BID_COUNT
+		        FROM  	ICOYBDAP
+			    WHERE  	BID_NO 		= ${BID_NO}                                    
+		        AND  	BID_COUNT 	= ${BID_COUNT}
+		    	AND  	STATUS 		in ('R','D')
+		    	AND  	FINAL_FLAG 	= 'Y'
+		    	) AS STATUS2             
+		,		(
+				SELECT 	VENDOR_CODE 
+				,		BID_NO
+				,		BID_COUNT	
+				,		VOTE_COUNT
+				FROM 	ICOYBDVO                                     
+		        WHERE  	BID_NO     = ${BID_NO}                              
+		        AND    	BID_COUNT  = ${BID_COUNT} 
+		        AND    	VOTE_COUNT = ${VOTE_COUNT}
+		        AND    	BID_CANCEL = 'N'                                              
+		        AND    	STATUS IN ('C', 'R')                                          
+		        ) AS STATUS3    
+		,		(
+				SELECT 	VENDOR_CODE
+				,		BID_NO
+				,		BID_COUNT
+				,		VOTE_COUNT
+				FROM
+				(
+					SELECT	CASE WHEN PROM_CRIT = 'A' OR PROM_CRIT = 'C' THEN
+				         		(CASE WHEN FINAL_ESTM_PRICE >= BID_AMT THEN VENDOR_CODE ELSE ''END )
+								 WHEN PROM_CRIT = 'B' THEN  
+								(CASE WHEN FINAL_ESTM_PRICE >= BID_AMT AND TRUNC((FINAL_ESTM_PRICE * FROM_LOWER_BND) / 100) <= BID_AMT THEN VENDOR_CODE ELSE '' END )
+								 WHEN PROM_CRIT = 'D' THEN	
+								(CASE WHEN FINAL_ESTM_PRICE >= PRODUCT_PRICE THEN VENDOR_CODE ELSE ''END )
+							END AS VENDOR_CODE
+					,		BID_NO
+				    ,		BID_COUNT
+				    ,		VOTE_COUNT
+					FROM
+					(	
+						SELECT  (SELECT PROM_CRIT FROM ICOYBDHD WHERE BID_NO = VO.BID_NO AND BID_COUNT = VO.BID_COUNT) AS PROM_CRIT
+						,		VO.VENDOR_CODE
+				     	,		VO.BID_NO
+				     	,		VO.BID_COUNT
+				     	,		VO.VOTE_COUNT   
+				     	,		FINAL_ESTM_PRICE     
+				     	,		BID_AMT
+				     	,		FROM_LOWER_BND
+				     	,		PRODUCT_PRICE
+				     	FROM   	(
+									SELECT	DISTINCT VO.*
+									FROM 	ICOYBDHD HD, (
+															SELECT 	BDVO.HOUSE_CODE
+															,		BDVO.BID_NO
+															,		BDVO.BID_COUNT
+															,		BDVO.VOTE_COUNT
+							        						,		BDVO.VENDOR_CODE
+													        ,		BDVO.BID_CANCEL_FLAG
+													        ,		BDVO.BID_CANCEL
+													        ,		BDVO.STATUS
+													        ,		SUM(CASE NVL(MTGL.TCO_FLAG,'N') WHEN 'Y' THEN BDDT.PR_QTY*BDVT.BID_PRICE_ENC ELSE 0 END) TCO_PRICE
+													        ,		SUM(CASE NVL(MTGL.TCO_FLAG,'N') WHEN 'N' THEN BDDT.PR_QTY*BDVT.BID_PRICE_ENC ELSE 0 END) PRODUCT_PRICE
+													        ,		decode(
+												                	SUM(BDDT.PR_QTY*NVL(BDVT.BID_PRICE_ENC,0)),0,BDVO.BID_AMT_ENC,
+											                     	SUM(BDDT.PR_QTY*NVL(BDVT.BID_PRICE_ENC,0))) BID_AMT
+													        ,		BDVO.BID_AMT_ENC
+							   								FROM 	ICOYBDVO BDVO
+							   								,		ICOYBDVT BDVT
+							   								,		ICOYBDDT BDDT
+							   								,		ICOMMTGL MTGL
+							  								WHERE 	BDVO.HOUSE_CODE 	= BDVT.HOUSE_CODE
+							    							AND		BDVO.BID_NO 		= BDVT.BID_NO
+							    							AND 	BDVO.BID_COUNT 		= BDVT.BID_COUNT
+														    AND 	BDVO.VOTE_COUNT 	= BDVT.VOTE_COUNT
+														    AND	 	BDVO.VENDOR_CODE	= BDVT.VENDOR_CODE
+														    AND 	BDVT.HOUSE_CODE 	= BDDT.HOUSE_CODE
+														    AND 	BDVT.BID_NO 		= BDDT.BID_NO
+														    AND 	BDVT.BID_COUNT 		= BDDT.BID_COUNT
+														    AND 	BDVT.ITEM_SEQ	 	= BDDT.ITEM_SEQ
+														    AND 	BDDT.HOUSE_CODE	 	= MTGL.HOUSE_CODE(+)
+														    AND 	BDDT.BUYER_ITEM_NO 	= MTGL.ITEM_NO(+)
+															GROUP BY 
+																	BDVO.HOUSE_CODE
+															,		BDVO.BID_NO
+															,		BDVO.BID_COUNT
+							        						,		BDVO.VOTE_COUNT
+													        ,		BDVO.VENDOR_CODE
+													        ,		BDVO.BID_CANCEL_FLAG
+													        ,		BDVO.BID_CANCEL
+													        ,		BDVO.STATUS
+													        ,		BDVO.BID_AMT_ENC
+							        						) VO				     	
+				     	) VO              
+				     	,    	ICOYBDES ES   
+				     	,		ICOYBDHD HD                  
+				     	WHERE   VO.BID_NO     = ${BID_NO}
+				     	AND     VO.BID_COUNT  = ${BID_COUNT}
+				     	AND     VO.VOTE_COUNT = ${VOTE_COUNT}
+				     	AND 	HD.BID_NO = VO.BID_NO
+						AND 	HD.BID_COUNT = VO.BID_COUNT
+				     	AND     VO.BID_CANCEL = 'N'                                              
+				     	AND     VO.STATUS IN ('C', 'R')  
+				     	AND   	VO.BID_NO = ES.BID_NO
+				     	AND  	VO.BID_COUNT = ES.BID_COUNT  
+					)
+				)     
+				WHERE VENDOR_CODE IS NOT NULL
+				)STATUS4		        
+		WHERE 	STATUS1.BID_NO 		= STATUS2.BID_NO(+)
+		AND 	STATUS1.BID_COUNT 	= STATUS2.BID_COUNT(+)
+		AND 	STATUS1.VENDOR_CODE = STATUS2.VENDOR_CODE(+) 
+		AND 	STATUS1.BID_NO 		= STATUS3.BID_NO(+)
+		AND 	STATUS1.BID_COUNT 	= STATUS3.BID_COUNT(+)
+		AND 	STATUS1.VOTE_COUNT 	= STATUS3.VOTE_COUNT(+)
+		AND 	STATUS1.VENDOR_CODE = STATUS3.VENDOR_CODE(+)
+		AND 	STATUS1.BID_NO 		= STATUS4.BID_NO(+)
+		AND 	STATUS1.BID_COUNT 	= STATUS4.BID_COUNT(+)
+		AND 	STATUS1.VOTE_COUNT 	= STATUS4.VOTE_COUNT(+)
+		AND 	STATUS1.VENDOR_CODE = STATUS4.VENDOR_CODE(+)
+		ORDER BY STATUS1.VENDOR_CODE
+	]]>	
+	</method>
+	<method name="et_setBDHD">
+	UPDATE 	ICOYBDHD SET 
+	BID_STATUS = 'AC' 
+	WHERE BID_NO 	= ${BID_NO}
+	AND BID_COUNT	= ${BID_COUNT}
+	
+	</method>
+	
+	
+	<method name="getBdUnitDetail">
+		<![CDATA[ 
+         SELECT 
+         	   A.BID_NO BID_NO,
+         	   A.BID_COUNT BID_COUNT,
+         	   A.VOTE_COUNT VOTE_COUNT,         
+		       A.VENDOR_CODE VENDOR_CODE,
+		       D.VENDOR_NAME_LOC VENDOR_NAME_LOC,
+		       C.ITEM_NO ITEM_NO,
+		       B.DESCRIPTION_LOC ITEM_NM,
+		       B.PR_QTY QTY,
+		       TO_CHAR(A.BID_PRICE_ENC,'999,999,999,999,999.99') UNIT_PRICE
+		FROM ICOYBDVT A, ICOYBDDT B, ICOYPRDT C, ICOMVNGL D
+		WHERE A.HOUSE_CODE = B.HOUSE_CODE
+		AND A.BID_NO = B.BID_NO
+		AND A.BID_COUNT = B.BID_COUNT
+		AND A.ITEM_SEQ = B.ITEM_SEQ
+		AND B.PR_NO = C.PR_NO
+		AND B.PR_SEQ = C.PR_SEQ
+		AND A.VENDOR_CODE = D.VENDOR_CODE
+		AND A.BID_NO = ${BID_NO}
+		AND A.BID_COUNT = ${BID_COUNT}		
+		AND A.VOTE_COUNT = ${VOTE_COUNT}		
+		AND A.VENDOR_CODE = ${VENDOR_CODE}		
+		ORDER BY 1,2,3,4,6
+		]]>
+	</method>	
+</service>

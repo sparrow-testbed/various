@@ -1,0 +1,752 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<service> 	 
+	<method name="getBdReqPrepareList">
+		<![CDATA[  
+           SELECT
+                  DECODE(SUBSTR(HD.ANN_NO,1,2),'BD',HD.BID_NO,HD.ANN_NO) AS ANN_NO           
+                 ,HD.ANN_ITEM         
+                 ,GETICOMCODE2(HD.HOUSE_CODE, 'M974', HD.CONT_TYPE1 )
+                 ||' / '|| GETICOMCODE2(HD.HOUSE_CODE, 'M973', HD.CONT_TYPE2 ) 
+                 ||' / '|| GETICOMCODE2(HD.HOUSE_CODE, 'M930', HD.PROM_CRIT ) 
+                 AS CONT_TYPE
+                 ,TO_CHAR(TO_DATE(HD.APP_BEGIN_DATE||HD.APP_BEGIN_TIME, 'YYYYMMDDHH24MISS'),'YYYYMMDDHH24MISS') AS CHK_DATE
+                 ,TO_CHAR(TO_DATE(HD.APP_BEGIN_DATE||HD.APP_BEGIN_TIME, 'YYYYMMDDHH24MISS'),'YYYY/MM/DD HH24:MI') ||' ~ '||
+                  TO_CHAR(TO_DATE(PG.BID_END_DATE||PG.BID_END_TIME, 'YYYYMMDDHH24MISS'),'YYYY/MM/DD HH24:MI') AS BID_DATE_TIME
+                 ,HD.CHANGE_USER_NAME_LOC
+                 ,CASE WHEN NVL((SELECT NVL(REQ_YN, 'N')
+                                   FROM ICOYBDES
+                                  WHERE HOUSE_CODE = ${HOUSE_CODE}   
+                                    AND HOUSE_CODE = HD.HOUSE_CODE
+                                    AND BID_NO = HD.BID_NO
+                                    AND BID_COUNT = HD.BID_COUNT),'N') = 'N' THEN 'N'
+                       ELSE (CASE HD.COST_STATUS WHEN 'EC' THEN 'C'
+                                                 ELSE 'R' END) END AS STATUS
+                 ,GETICOMCODE2(HD.HOUSE_CODE, 'M975' , CASE WHEN NVL((SELECT NVL(REQ_YN, 'N')
+                                                                        FROM ICOYBDES
+                                                                       WHERE HOUSE_CODE = ${HOUSE_CODE}
+                                                                         AND HOUSE_CODE = HD.HOUSE_CODE
+                                                                         AND BID_NO     = HD.BID_NO
+                                                                         AND BID_COUNT  = HD.BID_COUNT),'N') = 'N' THEN 'N'
+                                                            ELSE (CASE HD.COST_STATUS WHEN 'EC' THEN 'C'
+                                                                                      ELSE 'R' END) END  ) AS STATUS_TEXT
+                 ,HD.BID_NO
+                 ,HD.BID_COUNT
+                 ,PG.VOTE_COUNT
+                 ,HD.CHANGE_USER_ID
+                 ,HD.ESTM_FLAG
+                 ,HD.COST_STATUS
+                 ,HD.BID_STATUS
+                 ,HD.CTRL_CODE
+   --              ,(SELECT ESTM_USER_ID 
+   --                  FROM ICOMBACO
+   --                 WHERE HOUSE_CODE   = HD.HOUSE_CODE
+   --                   AND COMPANY_CODE = HD.COMPANY_CODE
+   --                   AND CTRL_CODE    = HD.CTRL_CODE
+   --                   AND CTRL_TYPE    = 'P') AS ESTM_USER_ID
+                 ,'' as ESTM_USER_ID
+                 ,HD.BID_TYPE
+                 ,GETICOMCODE2(HD.HOUSE_CODE, 'M968', HD.BID_TYPE ) AS BID_TYPE_TEXT
+                 ,CASE WHEN HD.ANN_VERSION IS NULL THEN (SELECT CODE FROM SCODE WHERE TYPE = 'VR001')
+                ELSE HD.ANN_VERSION
+                END AS ANN_VERSION
+               ,HD.BID_TYPE 
+            FROM ICOYBDHD HD, ICOYBDPG PG
+           WHERE PG.HOUSE_CODE  = HD.HOUSE_CODE
+             AND HD.HOUSE_CODE  = ${HOUSE_CODE}      
+             AND PG.BID_NO      = HD.BID_NO
+             AND PG.BID_COUNT   = HD.BID_COUNT
+             AND (HD.APP_BEGIN_DATE BETWEEN  ${START_CHANGE_DATE}  
+             					AND ${END_CHANGE_DATE}  
+                  OR  (PG.BID_END_DATE BETWEEN  ${START_CHANGE_DATE} 
+                              AND ${END_CHANGE_DATE} 
+                           OR PG.BID_END_DATE IS NULL
+                          )
+                         )  
+             AND HD.ANN_NO    = $S{ANN_NO}           
+             AND HD.ANN_ITEM  LIKE  '%'|| $S{ANN_ITEM} ||'%'  
+		]]> 
+	<if test="${BID_FLAG}" operator="ne" value="">    
+		<![CDATA[  
+             AND CASE WHEN NVL((SELECT NVL(REQ_YN, 'N')
+                                          FROM ICOYBDES
+                                         WHERE HOUSE_CODE = ${HOUSE_CODE}
+                                           AND HOUSE_CODE = HD.HOUSE_CODE
+                                           AND BID_NO = HD.BID_NO
+                                           AND BID_COUNT = HD.BID_COUNT),'N') = 'N' THEN 'N'
+                              ELSE (CASE HD.COST_STATUS WHEN 'EC' THEN 'C'
+                                    ELSE 'R' END) END = $S{BID_FLAG}  
+		]]>  
+         </if> 
+		<![CDATA[      
+             AND HD.SIGN_STATUS = 'C'
+             AND HD.BID_STATUS IN ('AC', 'UC', 'RC', 'SR', 'SC', 'SB', 'NB')
+             AND HD.SIGN_STATUS  IN ('C')
+             AND HD.STATUS IN ('C' ,'R')
+             AND PG.STATUS IN ('C' ,'R')
+             AND HD.ESTM_KIND IN ('U','M')               
+             AND HD.BID_TYPE    =  $S{BID_TYPE}     
+             AND HD.CHANGE_USER_NAME_LOC  LIKE  '%'|| $S{CHANGE_USER_NAME} ||'%'    
+			 AND HD.BID_TYPE = $S{BID_TYPE}
+             AND HD.ADD_USER_DEPT = ${session.DEPARTMENT}
+           ORDER BY HD.ANN_DATE DESC, HD.ADD_DATE DESC, HD.ADD_TIME DESC, HD.ANN_NO DESC
+		]]>
+	</method>
+	 
+	<method name="getBdReqPrepareHeader_BDHD">
+		<![CDATA[
+         SELECT
+                HD.CHANGE_USER_NAME_LOC
+               ,HD.SIGN_PERSON_ID
+               ,HD.SIGN_PERSON_NAME
+               ,HD.SIGN_DATE
+               ,HD.SIGN_STATUS
+               ,HD.CHANGE_DATE
+               ,HD.BID_TYPE
+               ,HD.CONT_TYPE1
+               ,HD.CONT_TYPE2
+               ,GETICOMCODE2(HD.HOUSE_CODE, 'M974', HD.CONT_TYPE1 ) AS CONT_TYPE1_TEXT_D
+               ,GETICOMCODE2(HD.HOUSE_CODE, 'M973', HD.CONT_TYPE2 ) AS CONT_TYPE2_TEXT_D
+               ,GETICOMCODE2(HD.HOUSE_CODE, 'M984', HD.CONT_TYPE1 ) AS CONT_TYPE1_TEXT_O
+               ,GETICOMCODE2(HD.HOUSE_CODE, 'M983', HD.CONT_TYPE2 ) AS CONT_TYPE2_TEXT_O
+               ,GETICOMCODE2(HD.HOUSE_CODE, 'M991', HD.CONT_TYPE1 ) AS CONT_TYPE1_TEXT_CS
+               ,GETICOMCODE2(HD.HOUSE_CODE, 'M990', HD.CONT_TYPE2 ) AS CONT_TYPE2_TEXT_CS 
+               ,HD.ANN_TITLE
+               --,HD.ANN_NO
+               ,HD.BID_NO AS ANN_NO
+               ,HD.ANN_DATE
+               ,HD.ANN_ITEM
+               ,HD.RD_DATE
+               ,HD.DELY_PLACE
+               ,HD.LIMIT_CRIT
+               ,HD.PROM_CRIT
+               ,GETICOMCODE2(HD.HOUSE_CODE, 'M930', HD.PROM_CRIT ) AS PROM_CRIT_NAME
+               ,HD.APP_BEGIN_DATE
+               ,HD.APP_BEGIN_TIME
+               ,SUBSTR(HD.APP_BEGIN_TIME, 0, 2) AS APP_BEGIN_TIME_HOUR
+               ,SUBSTR(HD.APP_BEGIN_TIME, 3, 2) AS APP_BEGIN_TIME_MINUTE
+               ,HD.APP_END_DATE
+               ,HD.APP_END_TIME
+               ,SUBSTR(HD.APP_END_TIME, 0, 2) AS APP_END_TIME_HOUR
+               ,SUBSTR(HD.APP_END_TIME, 3, 2) AS APP_END_TIME_MINUTE
+               ,HD.APP_PLACE
+               ,HD.APP_ETC
+               ,HD.ATTACH_NO
+               ,(SELECT NVL(COUNT(*),0) FROM ICOMATCH WHERE DOC_NO = HD.ATTACH_NO) AS ATTACH_CNT
+               ,(SELECT COUNT(*) FROM ICOYBDAP
+                  WHERE HOUSE_CODE = PG.HOUSE_CODE
+                    AND BID_NO     = PG.BID_NO
+                    AND BID_COUNT  = PG.BID_COUNT
+                    AND BID_CANCEL = 'N'
+                    AND STATUS IN ('C', 'R')) AS VENDOR_CNT
+               ,GETVENDORS(HD.HOUSE_CODE, HD.BID_NO, HD.BID_COUNT) AS VENDOR_VALUES
+               ,HD.ANNOUNCE_DATE
+               ,HD.ANNOUNCE_TIME_FROM
+               ,HD.ANNOUNCE_TIME_TO
+               ,HD.ANNOUNCE_AREA
+               ,HD.ANNOUNCE_PLACE
+               ,HD.ANNOUNCE_NOTIFIER
+               ,HD.ANNOUNCE_RESP
+               ,HD.DOC_FRW_DATE
+               ,HD.ANNOUNCE_COMMENT
+               ,HD.ANNOUNCE_FLAG
+               ,HD.ANNOUNCE_TEL
+               ,HD.BID_STATUS
+               ,HD.ESTM_FLAG
+               ,HD.COST_STATUS
+               ,HD.PR_NO
+               ,HD.CTRL_CODE
+               ,HD.ANN_TIME
+               ,PG.VOTE_COUNT
+               ,PG.BID_BEGIN_DATE
+               ,PG.BID_BEGIN_TIME
+               ,SUBSTR(PG.BID_BEGIN_TIME, 0, 2) AS BID_BEGIN_TIME_HOUR
+               ,SUBSTR(PG.BID_BEGIN_TIME, 3, 2) AS BID_BEGIN_TIME_MINUTE
+               ,PG.BID_END_DATE
+               ,PG.BID_END_TIME
+               ,SUBSTR(PG.BID_END_TIME, 0, 2) AS BID_END_TIME_HOUR
+               ,SUBSTR(PG.BID_END_TIME, 3, 2) AS BID_END_TIME_MINUTE
+               ,PG.BID_PLACE
+               ,PG.BID_ETC
+               ,PG.OPEN_DATE
+               ,PG.OPEN_TIME
+               ,SUBSTR(PG.OPEN_TIME, 0, 2) AS OPEN_TIME_HOUR
+               ,SUBSTR(PG.OPEN_TIME, 3, 2) AS OPEN_TIME_MINUTE
+               ,HD.CTRL_AMT
+               ,CERTV
+               ,TIMESTAMP
+               ,SIGN_CERT
+               ,CRYP_CERT
+               ,(SELECT COUNT(*)
+                   FROM ICOYBDRC
+                  WHERE HOUSE_CODE = PG.HOUSE_CODE
+                    AND BID_NO     = PG.BID_NO
+                    AND BID_COUNT  = PG.BID_COUNT) AS LOCATION_CNT
+               ,GETLOCATIONS(HD.HOUSE_CODE, HD.BID_NO, HD.BID_COUNT) AS LOCATION_VALUES
+               ,HD.ESTM_KIND
+               ,HD.ESTM_RATE
+               ,HD.ESTM_MAX
+               ,HD.ESTM_VOTE
+               ,HD.FROM_CONT
+               ,GETICOMCODE2(HD.HOUSE_CODE,'M958', HD.FROM_CONT ) AS FROM_CONT_TEXT
+               ,NVL(HD.FROM_LOWER_BND, 0) AS FROM_LOWER_BND
+               ,HD.ASUMTN_OPEN_YN
+               ,HD.CONT_TYPE_TEXT
+               ,HD.CONT_PLACE
+               ,HD.BID_PAY_TEXT
+               ,HD.BID_CANCEL_TEXT
+               ,HD.BID_JOIN_TEXT
+               ,HD.REMARK
+               ,HD.ESTM_MAX_VOTE
+               ,HD.STANDARD_POINT
+               ,HD.TECH_DQ
+               ,HD.AMT_DQ
+               ,HD.BID_NO
+               ,HD.BID_COUNT
+               ,GETUSERNAME(HD.HOUSE_CODE, HD.ADD_USER_ID, 'LOC' ) AS ADD_USER_NAME       
+               ,(SELECT COUNT(*) FROM ICOYBDDT WHERE HOUSE_CODE = HD.HOUSE_CODE AND BID_NO = HD.BID_NO AND BID_COUNT = HD.BID_COUNT) AS ITEM_COUNT        
+               ,(SELECT SUM(NVL(PR_AMT, 0)) FROM ICOYBDDT WHERE HOUSE_CODE = HD.HOUSE_CODE AND BID_NO = HD.BID_NO AND BID_COUNT = HD.BID_COUNT) AS BASIC_AMT
+               ,HD.BID_EVAL_SCORE
+               ,HD.REPORT_ETC
+           FROM ICOYBDHD HD, ICOYBDPG PG
+          WHERE HD.HOUSE_CODE = ${HOUSE_CODE}
+            AND (HD.BID_NO     = ${BID_NO} 
+            			OR HD.ANN_NO = ${BID_NO})  -- 결재시 DOC_NO가 ANN_NO로 들어가므로
+            AND HD.BID_COUNT  = ${BID_COUNT}
+            AND HD.HOUSE_CODE = PG.HOUSE_CODE
+            AND HD.BID_NO     = PG.BID_NO
+            AND HD.BID_COUNT  = PG.BID_COUNT
+            AND HD.STATUS IN ('C', 'R')
+            AND PG.STATUS IN ('C', 'R')
+		]]>
+	</method>
+	<method name="getBdReqPrepareHeader_BDSE">
+		<![CDATA[
+         SELECT
+                 ADD_DATE
+                 ,ADD_TIME
+                 ,ADD_USER_ID
+                 ,ADD_USER_NAME_LOC
+                 ,ADD_USER_NAME_ENG
+                 ,ADD_USER_DEPT
+                 ,CHANGE_DATE
+                 ,CHANGE_TIME
+                 ,CHANGE_USER_ID
+                 ,CHANGE_USER_NAME_LOC
+                 ,CHANGE_USER_NAME_ENG
+                 ,CHANGE_USER_DEPT
+                 ,ESTM_USER_ID
+                 ,ESTM_PRICE1_ENC
+                 ,ESTM_PRICE2_ENC
+                 ,ESTM_PRICE3_ENC
+                 ,ESTM_PRICE4_ENC
+                 ,ESTM_PRICE5_ENC
+                 ,ESTM_PRICE6_ENC
+                 ,ESTM_PRICE7_ENC
+                 ,ESTM_PRICE8_ENC
+                 ,ESTM_PRICE9_ENC
+                 ,ESTM_PRICE10_ENC
+                 ,ESTM_PRICE11_ENC
+                 ,ESTM_PRICE12_ENC
+                 ,ESTM_PRICE13_ENC
+                 ,ESTM_PRICE14_ENC
+                 ,ESTM_PRICE15_ENC
+                 ,ESTM_CONFIRM_DATE
+                 ,ESTM_CONFIRM_TIME
+                 ,ESTM_PRICE1
+                 ,ESTM_PRICE2
+                 ,ESTM_PRICE3
+                 ,ESTM_PRICE4
+                 ,ESTM_PRICE5
+                 ,ESTM_PRICE6
+                 ,ESTM_PRICE7
+                 ,ESTM_PRICE8
+                 ,ESTM_PRICE9
+                 ,ESTM_PRICE10
+                 ,ESTM_PRICE11
+                 ,ESTM_PRICE12
+                 ,ESTM_PRICE13
+                 ,ESTM_PRICE14
+                 ,ESTM_PRICE15
+                 ,CHOIC_ESTM_PRICE1
+                 ,CHOIC_ESTM_PRICE2
+                 ,CHOIC_ESTM_PRICE3
+                 ,CHOIC_ESTM_PRICE4
+                 ,FINAL_ESTM_PRICE
+                 ,FINAL_ESTM_PRICE_ENC
+                 ,CERTV
+                 ,TIMESTAMP
+                 ,SIGN_CERT
+                 ,BASIC_AMT
+                 ,REQ_COMMENT
+                 ,ATTACH_NO
+                 ,(SELECT NVL(COUNT(*),0) FROM ICOMATCH WHERE DOC_NO = ICOYBDES.ATTACH_NO) AS ATTACH_CNT
+                 ,(SELECT USER_NAME_LOC
+                     FROM ICOMLUSR
+                    WHERE HOUSE_CODE = ${HOUSE_CODE}
+                      AND STATUS IN ('C', 'R')
+                      AND HOUSE_CODE = ICOYBDES.HOUSE_CODE
+                      AND USER_ID = ICOYBDES.ESTM_USER_ID) AS ESTM_USER_NAME
+         FROM ICOYBDES
+         WHERE HOUSE_CODE = ${HOUSE_CODE}
+           AND BID_NO     = ${BID_NO}
+           AND BID_COUNT  = ${BID_COUNT}
+           AND STATUS IN ('C', 'R')
+		]]>
+	</method>
+	<method name="getBdReqPrepareHeader_BDDT">
+		<![CDATA[
+         SELECT
+                 HOUSE_CODE
+                 ,BID_NO
+                 ,BID_COUNT
+                 ,ITEM_SEQ
+                 ,STATUS
+                 ,ADD_DATE
+                 ,ADD_TIME
+                 ,ADD_USER_ID
+                 ,ADD_USER_NAME_LOC
+                 ,ADD_USER_NAME_ENG
+                 ,ADD_USER_DEPT
+                 ,CHANGE_DATE
+                 ,CHANGE_TIME
+                 ,CHANGE_USER_ID
+                 ,CHANGE_USER_NAME_LOC
+                 ,CHANGE_USER_NAME_ENG
+                 ,CHANGE_USER_DEPT
+                 ,BUYER_ITEM_NO
+                 ,DESCRIPTION_LOC
+                 ,UNIT_MEASURE
+                 ,PR_QTY
+                 ,CUR
+                 ,UNIT_PRICE
+                 ,PR_AMT
+                 ,SBID_PRICE
+                 ,SBID_AMT
+                 ,PR_NO
+                 ,PR_SEQ
+                 ,CUR_EXCH_RATE
+                 ,(SELECT SUM(PR_AMT)
+                     FROM ICOYBDDT
+                    WHERE HOUSE_CODE = BDDT.HOUSE_CODE
+                      AND BID_NO     = BDDT.BID_NO
+                      AND BID_COUNT  = BDDT.BID_COUNT
+                      AND STATUS IN ('C', 'R')) AS PR_AMT_NOVAT
+          FROM ICOYBDDT BDDT
+         WHERE HOUSE_CODE = ${HOUSE_CODE}
+           AND BID_NO     = ${BID_NO}
+           AND BID_COUNT  = ${BID_COUNT}
+         AND   STATUS IN ('C', 'R')
+		]]>
+	</method>
+
+	<method name="getBdReqPrepareHeader_BDVO">
+		<![CDATA[
+         SELECT
+                 HOUSE_CODE
+                ,BID_NO
+                ,BID_COUNT
+                ,VOTE_COUNT
+                ,VENDOR_CODE
+                ,STATUS
+                ,ADD_DATE
+                ,ADD_TIME
+                ,ADD_USER_ID
+                ,ADD_USER_NAME_LOC
+                ,ADD_USER_NAME_ENG
+                ,ADD_USER_DEPT
+                ,BID_STATUS
+                ,BID_RANK
+                ,BID_AMT
+                ,VOTE_DATE
+                ,VOTE_TIME
+                ,BID_CANCEL_FLAG
+                ,BID_AMT_ENC
+                ,CHOICE_ESTM_NUM1
+                ,CHOICE_ESTM_NUM2
+                ,CHOICE_ESTM_NUM3
+                ,ATTACH_NO
+                ,BID_AMT1
+                ,BID_AMT_ENC1
+                ,CUR1
+                ,BID_AMT2
+                ,BID_AMT_ENC2
+                ,CUR2
+                ,CUR_RATE1
+                ,CUR_RATE2
+                ,CERTV
+                ,TIMESTAMP
+                ,SIGN_CERT
+                ,BID_AMT3
+                ,BID_AMT_ENC3
+                ,CUR3
+                ,CUR_RATE3
+                ,BID_CANCEL
+                ,CHOICE_ESTM_NUM4
+                ,NE_ORDER
+                ,NE_RESULT
+          FROM ICOYBDVO
+         WHERE HOUSE_CODE = ${HOUSE_CODE}
+           AND BID_NO     = ${BID_NO}
+           AND BID_COUNT  = ${BID_COUNT}
+           AND STATUS IN ('C', 'R')
+		]]>
+	</method>
+	
+	<method name="getBdReqPrepareInsert">
+		<![CDATA[ 
+	   SELECT                                                                
+	          ITEM_SEQ                ,                                      
+	          TO_NUMBER(ITEM_SEQ) AS NO,                                     
+	          STATUS                  ,                                      
+	          ADD_DATE                ,                                      
+	          ADD_TIME                ,                                      
+	          ADD_USER_ID             ,                                      
+	          ADD_USER_NAME_LOC       ,                                      
+	          ADD_USER_NAME_ENG       ,                                      
+	          ADD_USER_DEPT           ,                                      
+	          CHANGE_DATE             ,                                      
+	          CHANGE_TIME             ,                                      
+	          CHANGE_USER_ID          ,                                      
+	          CHANGE_USER_NAME_LOC    ,                                      
+	          CHANGE_USER_NAME_ENG    ,                                      
+	          CHANGE_USER_DEPT        ,                                      
+	          BUYER_ITEM_NO           ,                                      
+	          DESCRIPTION_LOC         ,                                      
+	          UNIT_MEASURE            ,                                      
+	          PR_QTY     AS QTY             ,                                      
+	          CUR                     ,                                      
+	          UNIT_PRICE              ,                                      
+	          PR_AMT              ,                                      
+	          SBID_PRICE              ,                                      
+	          SBID_AMT                                                       
+	          ,PR_NO                                                         
+	          ,PR_SEQ                                   
+	   FROM ICOYBDDT  BDDT                    
+         WHERE HOUSE_CODE = ${HOUSE_CODE}
+           AND BID_NO     = ${BID_NO}
+           AND BID_COUNT  = ${BID_COUNT}                                    
+	   AND   STATUS IN ('C', 'R')                                            
+		]]>
+	</method>
+	
+	<method name="et_getBDES_Basic">
+		<![CDATA[
+         SELECT
+                COUNT(*)
+           FROM ICOYBDES
+         WHERE HOUSE_CODE = ${HOUSE_CODE}
+           AND BID_NO     = ${BID_NO}
+           AND BID_COUNT  = ${BID_COUNT}  
+           AND STATUS IN ('C', 'R')
+		]]>
+	</method>
+	<method name="et_setBDES_Basic_Ins">
+		<![CDATA[
+             INSERT INTO ICOYBDES (
+                                  HOUSE_CODE
+                                 ,BID_NO
+                                 ,BID_COUNT
+                                 ,STATUS
+                                 ,ADD_DATE
+                                 ,ADD_TIME
+                                 ,ADD_USER_ID
+                                 ,ADD_USER_NAME_LOC
+                                 ,ADD_USER_NAME_ENG
+                                 ,ADD_USER_DEPT
+                                 ,CHANGE_DATE
+                                 ,CHANGE_TIME
+                                 ,CHANGE_USER_ID
+                                 ,CHANGE_USER_NAME_LOC
+                                 ,CHANGE_USER_NAME_ENG
+                                 ,CHANGE_USER_DEPT
+                                 ,BASIC_AMT
+                                 ,REQ_COMMENT
+                                 ,ATTACH_NO
+                                 ,ESTM_USER_ID
+                                 ,REQ_YN
+             ) VALUES (
+                                ${HOUSE_CODE}
+                                 ,${BID_NO    }
+                                 ,${BID_COUNT }
+                                 ,'C'
+                                 ,TO_CHAR(SYSDATE,'YYYYMMDD')
+                                 ,TO_CHAR(SYSDATE,'HH24MISS')
+                                 ,${session.ID}
+                                 ,${NAME_LOC}
+                                 ,${NAME_ENG}
+                                 ,${DEPT    }
+                                 ,TO_CHAR(SYSDATE,'YYYYMMDD')
+                                 ,TO_CHAR(SYSDATE,'HH24MISS')
+                                 ,${session.ID}
+                                 ,${NAME_LOC}
+                                 ,${NAME_ENG}
+                                 ,${DEPT    }
+                                 ,$S{BASIC_AMT   }	
+                                 ,$S{REQ_COMMENT }
+                                 ,$S{attach_no   }
+                                 ,$S{ESTM_USER_ID}
+                                 , CASE WHEN ${FLAG}='C' THEN 'Y' ELSE 'N' END 
+                                 )
+		]]>
+	</method>
+	
+	<method name="et_setBDES_Basic_Upd">
+		<![CDATA[
+             UPDATE ICOYBDES
+                SET BASIC_AMT                = ${BASIC_AMT} --BASIC_AMT
+                   ,REQ_COMMENT              =$S{REQ_COMMENT} --REQ_COMMENT
+                   ,ATTACH_NO                = $S{attach_no} --ATTACH_NO
+                   ,ESTM_USER_ID             = ${ESTM_USER_ID} --ESTM_USER_ID
+		]]>
+	<if test="${FLAG}" operator="eq" value="P">
+		<![CDATA[
+                   ,REQ_YN                   = 'N'
+		]]>
+	</if>
+
+	<if test="${FLAG}" operator="eq" value="C">
+		<![CDATA[
+                   ,REQ_YN                   = 'Y'
+		]]>
+	</if>
+
+		<![CDATA[
+                   ,STATUS                   = 'R'
+                   ,CHANGE_DATE              = TO_CHAR(SYSDATE,'YYYYMMDD')
+                   ,CHANGE_TIME              = TO_CHAR(SYSDATE,'HH24MISS')
+                   ,CHANGE_USER_ID           = ${session.ID} --USER_ID
+                   ,CHANGE_USER_NAME_LOC     = ${NAME_LOC} --NAME_LOC
+                   ,CHANGE_USER_NAME_ENG     = ${NAME_ENG} --NAME_ENG
+                   ,CHANGE_USER_DEPT         = ${DEPT}
+         WHERE HOUSE_CODE = ${HOUSE_CODE}
+           AND BID_NO     = ${BID_NO}
+           AND BID_COUNT  = ${BID_COUNT}  
+		]]>
+	</method>
+	<method name="et_DelBDEB">
+		<![CDATA[
+		 DELETE FROM ICOYBDEB
+         WHERE HOUSE_CODE = ${HOUSE_CODE}
+           AND BID_NO     = ${BID_NO}
+           AND BID_COUNT  = ${BID_COUNT}  
+		]]>
+	</method>
+
+	<method name="sel_chk_bdhd_bdes">
+		<![CDATA[
+		SELECT NVL(A.COST_STATUS,'NULL') A_COST_STATUS,NVL(A.STATUS,'NULL') A_STATUS,
+                     NVL(B.REQ_YN,'NULL') B_REQ_YN,NVL(B.STATUS,'NULL') B_STATUS 
+		FROM ICOYBDHD A,ICOYBDES B
+		WHERE A.HOUSE_CODE = B.HOUSE_CODE(+)
+		AND A.BID_NO = B.BID_NO(+)
+		AND A.BID_COUNT = B.BID_COUNT(+)
+		AND A.HOUSE_CODE = ${HOUSE_CODE}
+		AND A.BID_NO = ${BID_NO}
+		AND A.BID_COUNT = ${BID_COUNT}
+		]]>
+	</method>
+		
+	<method name="sel_chk_dttm">
+		<![CDATA[
+		SELECT TO_NUMBER(APP_BEGIN_DATE||APP_BEGIN_TIME)-TO_NUMBER(TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')) 
+		FROM ICOYBDHD 
+		WHERE HOUSE_CODE = ${HOUSE_CODE}
+		AND     BID_NO = ${BID_NO}
+		AND     BID_COUNT = ${BID_COUNT}
+		]]>
+	</method>
+	
+	<method name="in_can_ICOYBDES_H">
+	<![CDATA[
+	INSERT INTO ICOYBDES_H (                                            
+		    HOUSE_CODE,
+			BID_NO,
+			BID_COUNT,
+						
+			ESTM_COUNT,
+			
+			ADD_DATE,
+			ADD_TIME,
+			ADD_USER_ID,
+			ADD_USER_NAME_LOC,
+			ADD_USER_NAME_ENG,
+			ADD_USER_DEPT,
+			CHANGE_DATE,
+			CHANGE_TIME,
+			CHANGE_USER_ID,
+			CHANGE_USER_NAME_LOC,
+			CHANGE_USER_NAME_ENG,
+			CHANGE_USER_DEPT,
+			ESTM_USER_ID,
+			ESTM_PRICE1_ENC,
+			ESTM_PRICE2_ENC,
+			ESTM_PRICE3_ENC,
+			ESTM_PRICE4_ENC,
+			ESTM_PRICE5_ENC,
+			ESTM_PRICE6_ENC,
+			ESTM_PRICE7_ENC,
+			ESTM_PRICE8_ENC,
+			ESTM_PRICE9_ENC,
+			ESTM_PRICE10_ENC,
+			ESTM_CONFIRM_DATE,
+			ESTM_CONFIRM_TIME,
+			ESTM_PRICE1,
+			ESTM_PRICE2,
+			ESTM_PRICE3,
+			ESTM_PRICE4,
+			ESTM_PRICE5,
+			ESTM_PRICE6,
+			ESTM_PRICE7,
+			ESTM_PRICE8,
+			ESTM_PRICE9,
+			ESTM_PRICE10,
+			CHOIC_ESTM_PRICE1,
+			CHOIC_ESTM_PRICE2,
+			CHOIC_ESTM_PRICE3,
+			FINAL_ESTM_PRICE,
+			CERTV,
+			TIMESTAMP,
+			SIGN_CERT,
+			ESTM_PRICE11_ENC,
+			ESTM_PRICE12_ENC,
+			ESTM_PRICE13_ENC,
+			ESTM_PRICE14_ENC,
+			ESTM_PRICE15_ENC,
+			ESTM_PRICE11,
+			ESTM_PRICE12,
+			ESTM_PRICE13,
+			ESTM_PRICE14,
+			ESTM_PRICE15,
+			REQ_YN,
+			BASIC_AMT,
+			REQ_COMMENT,
+			FINAL_ESTM_PRICE_ENC,
+			ATTACH_NO,
+			CHOIC_ESTM_PRICE4,
+			CHOIC_ESTM_PRICE5,
+			INPUT_ESTM_PRICE,
+			ESTM_H_PRICE,
+			ESTM_L_PRICE,
+			ESTM_C_PRICE,
+			
+			CAN_REQ_DATE,
+			CAN_REQ_TIME,
+			CAN_REQ_USER_ID,
+			
+			ICOYBDHD_COST_STATUS	
+	)         
+	SELECT
+            A.HOUSE_CODE,
+			A.BID_NO,
+			A.BID_COUNT,						
+			(SELECT NVL(MAX(ESTM_COUNT)+1,1)
+			   FROM ICOYBDES_H 
+			  WHERE HOUSE_CODE = A.HOUSE_CODE 
+			    AND BID_NO = A.BID_NO
+			    AND BID_COUNT = A.BID_COUNT) ESTM_COUNT,			
+			A.ADD_DATE,
+			A.ADD_TIME,
+			A.ADD_USER_ID,
+			A.ADD_USER_NAME_LOC,
+			A.ADD_USER_NAME_ENG,
+			A.ADD_USER_DEPT,
+			A.CHANGE_DATE,
+			A.CHANGE_TIME,
+			A.CHANGE_USER_ID,
+			A.CHANGE_USER_NAME_LOC,
+			A.CHANGE_USER_NAME_ENG,
+			A.CHANGE_USER_DEPT,
+			A.ESTM_USER_ID,
+			A.ESTM_PRICE1_ENC,
+			A.ESTM_PRICE2_ENC,
+			A.ESTM_PRICE3_ENC,
+			A.ESTM_PRICE4_ENC,
+			A.ESTM_PRICE5_ENC,
+			A.ESTM_PRICE6_ENC,
+			A.ESTM_PRICE7_ENC,
+			A.ESTM_PRICE8_ENC,
+			A.ESTM_PRICE9_ENC,
+			A.ESTM_PRICE10_ENC,
+			A.ESTM_CONFIRM_DATE,
+			A.ESTM_CONFIRM_TIME,
+			A.ESTM_PRICE1,
+			A.ESTM_PRICE2,
+			A.ESTM_PRICE3,
+			A.ESTM_PRICE4,
+			A.ESTM_PRICE5,
+			A.ESTM_PRICE6,
+			A.ESTM_PRICE7,
+			A.ESTM_PRICE8,
+			A.ESTM_PRICE9,
+			A.ESTM_PRICE10,
+			A.CHOIC_ESTM_PRICE1,
+			A.CHOIC_ESTM_PRICE2,
+			A.CHOIC_ESTM_PRICE3,
+			A.FINAL_ESTM_PRICE,
+			A.CERTV,
+			A.TIMESTAMP,
+			A.SIGN_CERT,
+			A.ESTM_PRICE11_ENC,
+			A.ESTM_PRICE12_ENC,
+			A.ESTM_PRICE13_ENC,
+			A.ESTM_PRICE14_ENC,
+			A.ESTM_PRICE15_ENC,
+			A.ESTM_PRICE11,
+			A.ESTM_PRICE12,
+			A.ESTM_PRICE13,
+			A.ESTM_PRICE14,
+			A.ESTM_PRICE15,
+			A.REQ_YN,
+			A.BASIC_AMT,
+			A.REQ_COMMENT,
+			A.FINAL_ESTM_PRICE_ENC,
+			A.ATTACH_NO,
+			A.CHOIC_ESTM_PRICE4,
+			A.CHOIC_ESTM_PRICE5,
+			A.INPUT_ESTM_PRICE,
+			A.ESTM_H_PRICE,
+			A.ESTM_L_PRICE,
+			A.ESTM_C_PRICE,
+			
+			${current.date} CAN_REQ_DATE,
+			${current.time} CAN_REQ_TIME,
+			${session.ID} CAN_REQ_USER_ID,
+			
+			(SELECT COST_STATUS 
+			 FROM ICOYBDHD 
+			 WHERE HOUSE_CODE = A.HOUSE_CODE 
+			   AND BID_NO = A.BID_NO
+			   AND BID_COUNT = A.BID_COUNT) ICOYBDHD_COST_STATUS
+	FROM ICOYBDES A			
+	WHERE A.HOUSE_CODE = ${HOUSE_CODE}
+	AND A.BID_NO = ${BID_NO}
+	AND A.BID_COUNT = ${BID_COUNT}                                                
+	]]>                                                             
+	</method>
+	
+	<method name="upd_can_BDES">
+		<![CDATA[
+		UPDATE ICOYBDES
+		SET  STATUS = 'C', REQ_YN = 'N' ,ESTM_CONFIRM_DATE = NULL , ESTM_CONFIRM_TIME = NULL,
+				ESTM_PRICE1 = NULL,ESTM_PRICE2 = NULL,ESTM_PRICE3 = NULL,ESTM_PRICE4 = NULL,
+				ESTM_PRICE5 = NULL,ESTM_PRICE6 = NULL,ESTM_PRICE7 = NULL,ESTM_PRICE8 = NULL,ESTM_PRICE9 = NULL,
+				ESTM_PRICE10 = NULL,CHOIC_ESTM_PRICE1 = NULL,CHOIC_ESTM_PRICE2 = NULL,CHOIC_ESTM_PRICE3 = NULL,
+				CHOIC_ESTM_PRICE4 = NULL,CHOIC_ESTM_PRICE5 = NULL,FINAL_ESTM_PRICE = NULL,
+				INPUT_ESTM_PRICE = NULL,ESTM_H_PRICE = NULL,ESTM_L_PRICE = NULL,ESTM_C_PRICE = NULL
+		WHERE HOUSE_CODE = ${HOUSE_CODE}
+		AND     BID_NO = ${BID_NO}
+		AND     BID_COUNT = ${BID_COUNT}
+		]]>
+	</method>
+	
+	<method name="upd_can_BDHD">
+		<![CDATA[
+		UPDATE ICOYBDHD
+		SET COST_STATUS = NULL
+		WHERE HOUSE_CODE = ${HOUSE_CODE}
+		AND BID_NO = ${BID_NO}
+		AND BID_COUNT = ${BID_COUNT}
+		]]>
+	</method>
+	
+</service>

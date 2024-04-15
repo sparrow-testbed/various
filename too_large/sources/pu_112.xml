@@ -1,0 +1,1476 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+<service>
+	<method name="getRfqList">
+	<![CDATA[
+    	SELECT GL.RFQ_NUMBER              --RFQ번호           
+                 , GL.COMPANY_CODE AS  COMPANY_CODE		 --회사코드 
+                 , GETCOMPANYNAMELOC(GL.COMPANY_CODE ,'') AS  COMPANY_NAME_LOC	 --회사이름	
+                 , '' AS  PLANT_NAME_LOC	
+                 , GL.RFQ_COUNT                   --RFQ차수
+                 , GL.RFQ_STATUS                  --RFQ상태코드       
+                 , GETCODETEXT1('M427',GL.REQ_TYPE,'KO') REQ_TYPE_TEXT       --RFQ타입                 
+            	 , GETCODETEXT1('M639',(CASE WHEN GL.RFQ_STATUS = 'T' THEN 'T'                    				
+            		      	 				WHEN GL.RFQ_STATUS = 'P' THEN  (CASE WHEN TO_NUMBER(GL.RFQ_CLOSE_DATE || GL.RFQ_CLOSE_TIME) - ${CURRENT_DATE}  < 0  THEN 'P' ELSE 'G' END)   
+            		      	 				WHEN GL.RFQ_STATUS = 'U' THEN 'U'         											
+            		        	 			ELSE 'C' END ) , ${LANGUAGE} ) AS  RFQ_STATUS_TEXT --진행상태
+                 , GL.SUBJECT                            --제목
+             		, DATEFORMAT(GL.CHANGE_DATE,'YYYY-MM-DD')     AS CHANGE_DATE     --RFQ 요청일
+             		, DATEFORMAT(GL.RFQ_CLOSE_DATE,'YYYY-MM-DD') || ' ' || SUBSTR(GL.RFQ_CLOSE_DATE||GL.RFQ_CLOSE_TIME,9,2)  || ':'|| SUBSTR(GL.RFQ_CLOSE_DATE||GL.RFQ_CLOSE_TIME,11,2) AS RFQ_CLOSE_TIME  --RFQ마감일                                               
+             		, GL.PURCHASE_USER_ID	  --구매담당자                                                                         
+             		, GL.PURCHASE_USER_NAME   --구매담당자이름                                                                                                     
+             		, COUNT(DISTINCT SELLER_CODE ) AS VENDOR_CNT  --입찰업체수                                                                                                 
+             		, GL.BID_COUNT                   --참여업체수                                                                                     
+             		, GL.REQ_TYPE                     --RFQ타입                                                                              
+             		, NVL((SELECT COUNT(DISTINCT SELLER_CODE) FROM SRQSE WHERE HOUSE_CODE=GL.HOUSE_CODE AND RFQ_NUMBER=GL.RFQ_NUMBER AND RFQ_COUNT=GL.RFQ_COUNT AND CONFIRM_FLAG= 'Y' ),0)  AS SEARCH_COUNT   --참여업체수
+              FROM SRQGL GL JOIN SRQLN LN                
+                ON GL.HOUSE_CODE = LN.HOUSE_CODE           
+               AND GL.COMPANY_CODE = LN.COMPANY_CODE                                     
+               AND GL.RFQ_NUMBER   = LN.RFQ_NUMBER                                     
+               AND GL.RFQ_COUNT    = LN.RFQ_COUNT   
+              JOIN SRQSE SE                
+                ON GL.HOUSE_CODE = SE.HOUSE_CODE 
+               AND GL.COMPANY_CODE = SE.COMPANY_CODE                                     
+               AND GL.RFQ_NUMBER   = SE.RFQ_NUMBER                                     
+               AND GL.RFQ_COUNT    = SE.RFQ_COUNT       
+               WHERE GL.RFQ_DATE BETWEEN ${FROM_RFQ_DATE}    		 
+                                   AND ${TO_RFQ_DATE} 
+ 				AND GL.RFQ_NUMBER LIKE  '%' || $S{RFQ_NUMBER_S}  || '%' 
+   				AND GL.PURCHASE_USER_ID = $S{PURCHASER_ID}               
+	]]>                                                             
+	     <choose> 
+              <when test="${RFQ_STATUS}" operator="eq" value="A">
+    			<![CDATA[	AND 1 = 1    	]]>  
+              </when>   
+              <when test="${RFQ_STATUS}" operator="eq" value="T">
+    			<![CDATA[	AND GL.RFQ_STATUS = ${RFQ_STATUS}    	]]>  
+              </when>            
+              <otherwise>
+    			<![CDATA[	AND (CASE WHEN GL.RFQ_STATUS = 'T' THEN 'T'                    				
+            		      	 		WHEN GL.RFQ_STATUS = 'P' THEN  (CASE WHEN TO_NUMBER(GL.RFQ_CLOSE_DATE || GL.RFQ_CLOSE_TIME) - ${CURRENT_DATE}  < 0  THEN 'P' ELSE 'G' END)            											
+            		        	 	ELSE 'C' END ) = ${RFQ_STATUS}    	]]>  
+              </otherwise>
+              
+          </choose>                                                                
+      
+	<![CDATA[
+           GROUP BY GL.HOUSE_CODE, GL.COMPANY_CODE, GL.PLANT_CODE, GL.RFQ_NUMBER , GL.RFQ_COUNT , GL.RFQ_STATUS, GL.SUBJECT
+           			, GL.CHANGE_DATE, GL.RFQ_CLOSE_DATE, GL.RFQ_CLOSE_TIME, GL.PURCHASE_USER_ID, GL.PURCHASE_USER_NAME                 
+                 	, GL.BID_COUNT  ,GL.REQ_TYPE               
+            ORDER BY RFQ_NUMBER DESC                
+	]]>
+	</method>
+ 
+	<method name="et_setPrGLUpdateList">
+    <![CDATA[
+	    SELECT PR_NUMBER, PR_SEQ                                 
+		FROM SRQLN                                        
+		WHERE RFQ_NUMBER = ${RFQ_NUMBER}
+		AND RFQ_COUNT = ${RFQ_COUNT} 
+    ]]>
+	</method>
+	<method name="et_setPrGLUpdate">
+    <![CDATA[
+	    UPDATE SPRLN                                 
+		SET PR_STATUS	= 'P'                          
+		WHERE PR_NUMBER  = ${PR_NUMBER}
+		AND PR_SEQ  = ${PR_SEQ} 
+    ]]>
+	</method> 
+	<method name="et_setRfqHDDelete">
+    <![CDATA[
+	    DELETE FROM SRQGL                            
+		WHERE RFQ_NUMBER = ${RFQ_NUMBER}
+		AND RFQ_COUNT = ${RFQ_COUNT} 
+    ]]>
+	</method>
+	<method name="et_setRfqDTDelete">
+    <![CDATA[
+	    DELETE FROM SRQLN                            
+		WHERE RFQ_NUMBER = ${RFQ_NUMBER}
+		AND RFQ_COUNT = ${RFQ_COUNT} 
+    ]]>
+	</method>
+	<method name="et_setRfqSEDelete">
+    <![CDATA[
+	    DELETE FROM SRQSE                            
+		WHERE RFQ_NUMBER = ${RFQ_NUMBER}
+		AND RFQ_COUNT = ${RFQ_COUNT} 
+    ]]>
+	</method>
+	
+	<method name="setRFQClose">
+    <![CDATA[
+	    UPDATE SRQGL
+	    SET RFQ_STATUS        = 'P'
+	    , RFQ_CLOSE_DATE    = ${current.date}
+	    , RFQ_CLOSE_TIME    = ${current.time}                             
+		WHERE RFQ_NUMBER = ${RFQ_NUMBER}
+		AND RFQ_COUNT = ${RFQ_COUNT} 
+    ]]>
+	</method>
+	 
+	<method name="getRfqLNDisplay">
+    <![CDATA[
+    	     SELECT                                              		                                                  
+	      	     ''  AS RFQ_SEQ  -- 견적요청항번                 	                                                  
+	              ,LN.COMPANY_CODE    AS T_COMPANY_CODE --회사코드                                                          
+	              ,LN.PLANT_CODE     --플랜트                                                                               
+	              ,LN.PLANT_NAME_LOC    --플랜트명                                                                          
+	      	      ,LN.PR_NUMBER  -- 구매요청번호                 	                                                  
+	       	      ,LN.PR_SEQ        -- 구매요청항번                                    
+	       	      ,LN.MATERIAL_NUMBER  -- 품목코드                                     
+	       	      ,LN.DESCRIPTION_LOC	-- 품목                                    
+	       	      ,LN.SPECIFICATION	as SPEC-- Spec                                     
+	       	      ,LN.UNIT_MEASURE      -- 단위                                        
+                      ,LN.REMARK            -- 비고                                      
+	       	      ,NVL(LN.PR_QTY, 0) AS PR_QTY 			-- 수량	               
+	       	      ,NVL(LN.PR_QTY, 0) AS RFQ_QTY 			-- 수량	               
+	       	      ,NVL(LN.UNIT_PRICE, 0) AS UNIT_PRICE   -- 추정단가   						            
+	       	      ,LN.RD_DATE       -- 요청납기                  							            
+	     	      ,NVL(LN.ATTACH_NO, 'N') AS ATTACH_NO		--첨부파일						            
+	     		,(SELECT COUNT (*) FROM SFILE WHERE DOC_NO = LN.ATTACH_NO) AS ATTACH_NO_CNT		--첨부파일갯수	            
+	          	  ,LN.SERVICE_SOURCE AS SOURCING_GROUP                                                                      
+	                ,(SELECT COUNT(PR_NUMBER) FROM SPRSE							                    
+	                  WHERE  COMPANY_CODE = LN.COMPANY_CODE							                    
+	                  AND PR_NUMBER = LN.PR_NUMBER AND PR_SEQ = LN.PR_SEQ AND DEL_FLAG = 'N') AS SERVICE_CNT                    
+	                ,(SELECT COUNT(PR_NUMBER) FROM SPRSE							                    
+	                  WHERE  COMPANY_CODE = LN.COMPANY_CODE							                    
+	                  AND PR_NUMBER = LN.PR_NUMBER AND PR_SEQ = LN.PR_SEQ AND DEL_FLAG = 'N') AS SERVICE	                    
+	      		  ,LN.COMPANY_CODE  -- 회사코드                 								
+	      	      ,LN.PURCHASE_DEPT  AS DEMAND_DEPT     --의뢰부서              								
+	      	      ,LN.PURCHASER_ID AS CTRL_PERSON_ID    --구매담당자이름               								
+	       	      ,LN.CTRL_CODE        -- 구매그룹                			 						
+	       	      ,LN.MAKER        		-- 메이커                 								
+	       	      ,LN.MAKER_NAME        -- 메이커이름                				 				
+	       	      ,LN.CUR        		-- 통화	                				 				
+	       	      ,LN.REC_SELLER_CODE   -- 추천업체코드	                				 			
+                        ,GETCOMPANYNAMELOC(LN.REC_SELLER_CODE,'S') AS REC_SELLER_NAME -- 추천업체  
+	       		  ,LN.SERVICE_SOURCE AS SOURCING_GROUP										
+	       	      ,(NVL(LN.UNIT_PRICE, 0) * NVL(LN.PR_QTY, 0) ) AS RFQ_AMT      -- 추정금액	 
+	       		  ,LN.CONTRACT_FROM_DATE																		
+	       		  ,LN.CONTRACT_TO_DATE																			
+	       		  ,LN.CATALOG_MATERIAL_NUMBER		--품번																
+                  ,(SELECT UNIT_PRICE FROM                                                
+                   (SELECT A.MATERIAL_NUMBER, A.UNIT_PRICE                                
+                   FROM SPOLN A                               		                      
+                   ORDER BY TO_NUMBER(A.ADD_DATE || A.ADD_TIME) DESC                      
+                   ) WHERE MATERIAL_NUMBER=LN.MATERIAL_NUMBER AND ROWNUM =1) AS PO_UNIT_PRICE  --기발주단가
+                  ,GETVENDORNAME((SELECT SELLER_CODE FROM                                           
+                   (SELECT A.MATERIAL_NUMBER, B.SELLER_CODE                                         
+                   FROM SPOLN A, SPOGL B                                                            
+                   WHERE A.PO_NUMBER=B.PO_NUMBER                                                    
+                   AND A.PO_COUNT=B.PO_COUNT                                                        
+                   ORDER BY TO_NUMBER(A.ADD_DATE || A.ADD_TIME) DESC                                
+                   ) WHERE MATERIAL_NUMBER=LN.MATERIAL_NUMBER AND ROWNUM =1)) AS PO_SELLER_NAME  --기발주업체
+	        FROM SPRLN LN								 
+	        WHERE NVL(LN.DEL_FLAG, 'N') = 'N'    
+	        AND LN.PR_NUMBER = ${PR_NUMBER}   
+	        AND LN.PR_SEQ IN ( $IN{ PR_SEQ } )
+	        ORDER BY LN.PR_NUMBER, TO_NUMBER(LN.PR_SEQ)  
+    ]]>
+	</method>
+	
+	<method name="getRfqVedorList_selectSSUGL">
+    <![CDATA[  
+    SELECT 	DISTINCT
+    		A.* 
+    FROM(
+		SELECT UGL.VENDOR_CODE     AS SELLER_CODE,
+			UGL.VENDOR_NAME_LOC AS SELLER_NAME_LOC,
+			UGL.PURCHASE_BLOCK_FLAG,
+			SUPU.PHONE_NO AS PHONE_NO1,
+			IRS_NO,
+			RANK() OVER( PARTITION BY UGL.VENDOR_CODE ORDER BY SUPU.SEQ) AS ORDER_SEQ,
+			DECODE(NVL(C.TEXT1,'-'),'-','','부도') AS BANKRUPTCY_NM,
+			GETICOMCODE2(UGL.HOUSE_CODE, 'M213', UGL.PURCHASE_BLOCK_FLAG) PURCHASE_BLOCK_FLAG_NAME 		
+		FROM
+			ICOMVNGL UGL,
+			ICOMVNCP SUPU,
+			(
+				SELECT
+					A.PSBZ_NO,
+					B.TEXT1
+				FROM
+					EPSBADINFO A,
+					(
+						SELECT
+							CODE,
+							TEXT1
+						FROM
+							SCODE
+						WHERE
+							HOUSE_CODE           = '000'
+						AND
+							TYPE                 = 'M1014'
+						AND
+							NVL(DEL_FLAG,'N')   != 'Y'
+					) B
+				WHERE
+					A.ASOC_RGRSN_CD = B.CODE
+			) C
+		WHERE
+			UGL.VENDOR_CODE = SUPU.VENDOR_CODE
+		AND
+			NVL(UGL.DEL_FLAG, 'N') = 'N'  	
+		AND
+			UGL.IRS_NO = C.PSBZ_NO(+)
+		AND SUPU.COMPANY_CODE = ${company_code}	
+		
+		--AND UGL.SIGN_STATUS IN ('AE','CE')
+		AND  UGL.JOB_STATUS = 'E'    
+		AND  ( UPPER(UGL.VENDOR_CODE) LIKE  '%' || UPPER( $S{seller_code} )|| '%' )
+		AND  ( UPPER(UGL.VENDOR_NAME_LOC) LIKE  '%' || UPPER( $S{name_loc} )|| '%' )   
+		)A
+		WHERE ORDER_SEQ = 1
+		ORDER BY A.SELLER_CODE, A.SELLER_NAME_LOC
+    ]]>
+	</method>
+	<method name="getRfqVedorList_selectSPOGL">
+    <![CDATA[  
+		SELECT /* PU_112.getRfqVedorList(SPOGL) */                                                 
+			VENDOR_CODE AS SELLER_CODE,                                                                          
+			VENDOR_NAME_LOC AS SELLER_NAME_LOC,
+			DECODE(NVL(C.TEXT1,'-'),'-','','부도') AS BANKRUPTCY_NM,
+			PURCHASE_BLOCK_FLAG,
+			GETICOMCODE2(HOUSE_CODE, 'M213', PURCHASE_BLOCK_FLAG) PURCHASE_BLOCK_FLAG_NAME 		           
+		FROM
+			ICOMVNGL,
+			(
+				SELECT
+					A.PSBZ_NO, B.TEXT1
+				FROM
+					EPSBADINFO A,
+					(
+						SELECT
+							CODE,
+							TEXT1
+						FROM
+							SCODE
+						WHERE
+							HOUSE_CODE           = '000'
+						AND
+							TYPE                 = 'M1014'
+						AND
+							NVL(DEL_FLAG,'N')   != 'Y'
+					) B
+				WHERE
+					A.ASOC_RGRSN_CD = B.CODE
+			) C                                                                                
+		WHERE
+			VENDOR_CODE IN (                                                                    
+				SELECT
+					VENDOR_CODE                                                                    
+					--FROM SPOGL                                                                            
+				FROM
+					ICOYPOHD                                                                            
+				--WHERE NVL(DEL_FLAG, 'N') = 'N'                                                     
+				GROUP BY
+					VENDOR_CODE
+			)
+		AND
+			ICOMVNGL.IRS_NO = C.PSBZ_NO(+)
+		AND ( UPPER(VENDOR_CODE)  LIKE  '%' || UPPER( $S{seller_code} ) || '%'     )
+		AND UPPER(VENDOR_NAME_LOC) LIKE UPPER( '%' || $S{name_loc} || '%') 
+		ORDER BY
+			SELLER_CODE ASC
+    ]]>
+<!-- 		AND UPPER( getCompanyNameLoc(SELLER_CODE,'S')) LIKE UPPER( '%' || $S{name_loc} || '%')  -->
+	</method>
+	<method name="getRfqVedorList_selectSSGSL">
+    <![CDATA[  
+		SELECT DISTINCT 
+ 			VNGL.VENDOR_CODE AS SELLER_CODE,
+        	VNGL.VENDOR_NAME_LOC AS SELLER_NAME_LOC,
+        	DECODE(NVL(C.TEXT1, '-'), '-', '', '부도') AS BANKRUPTCY_NM,
+        	VNGL.PURCHASE_BLOCK_FLAG,
+			GETICOMCODE2(VNGL.HOUSE_CODE, 'M213', VNGL.PURCHASE_BLOCK_FLAG) PURCHASE_BLOCK_FLAG_NAME 		              
+ 		FROM (
+   			SELECT (
+     			SELECT
+     				DISTINCT PARENT_SG_REFITEM                                                      
+     			FROM SSGGL                                                             
+     			WHERE HOUSE_CODE = B.HOUSE_CODE
+     			AND SG_REFITEM = B.PARENT_SG_REFITEM
+			    AND USE_FLAG = 'Y'
+			    AND NVL(DEL_FLAG, 'N') = 'N'
+     		) AS PARENT1,                          
+     		B.PARENT_SG_REFITEM AS PARENT2,                                                
+     		A.SG_REFITEM AS SG,                                                            
+     		A.VENDOR_CODE,
+     		A.HOUSE_CODE                                                      
+   		FROM SSGVN A,
+    			SSGGL B                                     
+   		WHERE A.HOUSE_CODE = B.HOUSE_CODE                             
+   		AND A.SG_REFITEM = B.SG_REFITEM                                                
+   		AND A.HOUSE_CODE = ${house_code}
+   		AND B.LEVEL_COUNT = '3'                                                        
+   		AND A.REGISTRY_FLAG = 'Y'                                               
+   		AND A.APPLY_FLAG = 'Y'                                                           
+  	) A,
+  	ICOMVNGL VNGL, 
+  	(
+	SELECT 
+		A.PSBZ_NO
+		, B.TEXT1
+    FROM EPSBADINFO A, 
+    	(SELECT CODE, TEXT1
+      	FROM SCODE
+      	WHERE HOUSE_CODE = ${house_code}
+        AND TYPE = 'M1014'
+        AND NVL(DEL_FLAG,'N') != 'Y'
+        ) B
+    WHERE A.ASOC_RGRSN_CD = B.CODE
+   	) C
+ WHERE VNGL.STATUS IN ('C', 'R')
+ AND VNGL.HOUSE_CODE = ${house_code}
+ AND VNGL.VENDOR_CODE = $S{seller_code}
+ AND UPPER(VNGL.VENDOR_NAME_LOC) like '%' || $S{name_loc} || '%'
+ AND A.HOUSE_CODE(+) = VNGL.HOUSE_CODE
+ AND A.VENDOR_CODE(+) = VNGL.VENDOR_CODE
+ AND VNGL.IRS_NO = C.PSBZ_NO(+)
+ AND A.PARENT1 = $S{sg_code1}
+ AND A.PARENT2 = $S{sg_code2}
+ AND A.SG = $S{sg_code3}
+ AND VNGL.PURCHASE_BLOCK_FLAG IN ('N','K')
+ AND VNGL.JOB_STATUS = 'E'
+    ]]>
+	</method>
+	<method name="getRfqVedorList_selectSGGSL">
+    <![CDATA[  
+		SELECT DISTINCT 
+ 			VNGL.VENDOR_CODE AS SELLER_CODE,
+        	VNGL.VENDOR_NAME_LOC AS SELLER_NAME_LOC,
+        	DECODE(NVL(C.TEXT1, '-'), '-', '', '부도') AS BANKRUPTCY_NM,
+        	VNGL.PURCHASE_BLOCK_FLAG,
+			GETICOMCODE2(VNGL.HOUSE_CODE, 'M213', VNGL.PURCHASE_BLOCK_FLAG) PURCHASE_BLOCK_FLAG_NAME 		                 
+ 		FROM ICOMUVEN A,
+  	ICOMVNGL VNGL, 
+  	(
+	SELECT 
+		A.PSBZ_NO
+		, B.TEXT1
+    FROM EPSBADINFO A, 
+    	(SELECT CODE, TEXT1
+      	FROM SCODE
+      	WHERE HOUSE_CODE = ${house_code}
+        AND TYPE = 'M1014'
+        AND NVL(DEL_FLAG,'N') != 'Y'
+        ) B
+    WHERE A.ASOC_RGRSN_CD = B.CODE
+   	) C
+ WHERE VNGL.STATUS IN ('C', 'R')
+ AND VNGL.HOUSE_CODE = ${house_code}
+ AND VNGL.VENDOR_CODE = $S{seller_code}
+ AND UPPER(VNGL.VENDOR_NAME_LOC) like '%' || $S{name_loc} || '%'
+ AND A.HOUSE_CODE(+) = VNGL.HOUSE_CODE
+ AND A.VENDOR_CODE(+) = VNGL.VENDOR_CODE
+ AND VNGL.IRS_NO = C.PSBZ_NO(+)
+ AND A.GROUP_CODE LIKE  '%' || $S{gp_code} || '%'
+ AND VNGL.PURCHASE_BLOCK_FLAG IN ('N','K')
+ AND VNGL.JOB_STATUS = 'E'
+    ]]>
+	</method>
+	<method name="getRfqVedorList_selectSRQGL">
+    <![CDATA[
+    	SELECT
+    		  distinct
+    		  seller_code,
+    		  SELLER_NAME_LOC,
+    		  DECODE(NVL(C.TEXT1,'-'),'-','','부도') AS BANKRUPTCY_NM,
+    		  E.PURCHASE_BLOCK_FLAG,
+			  GETICOMCODE2(E.HOUSE_CODE, 'M213', E.PURCHASE_BLOCK_FLAG) PURCHASE_BLOCK_FLAG_NAME 		
+		FROM
+			(
+				SELECT /* PU_112.getRfqVedorList(SRQGL) */                                                                       
+					SE.VENDOR_CODE as seller_code,
+					GETCOMPANYNAMELOC('000', SE.VENDOR_CODE,'S') AS  SELLER_NAME_LOC 
+				FROM
+					ICOYRQSE SE,
+					ICOYRQHD LN                                                                                         
+				WHERE
+					1=1                                                                                                       
+				AND
+					SE.COMPANY_CODE = LN.COMPANY_CODE
+				AND SE.VENDOR_CODE  LIKE  '%' || $S{seller_code} || '%'
+				AND UPPER( getCompanyNameLoc('000', VENDOR_CODE,'S')) LIKE UPPER( '%' || $S{name_loc} || '%') 
+				GROUP BY
+					SE.VENDOR_CODE                                                                                           
+				ORDER BY
+					MAX(SE.CHANGE_DATE),MAX(SE.CHANGE_TIME) DESC
+			) D,
+			ICOMVNGL E,
+			(
+				SELECT
+					A.PSBZ_NO, B.TEXT1
+				FROM
+					EPSBADINFO A,
+					(
+						SELECT
+							CODE,
+							TEXT1
+						FROM
+							SCODE
+						WHERE
+							HOUSE_CODE           = '000'
+						AND
+							TYPE                 = 'M1014'
+						AND
+							NVL(DEL_FLAG,'N')   != 'Y'
+					) B
+				WHERE
+					A.ASOC_RGRSN_CD = B.CODE
+			) C   
+		WHERE
+			1=1
+		AND
+			D.seller_code = E.VENDOR_CODE
+		AND
+			E.IRS_NO = C.PSBZ_NO(+)
+		ORDER BY seller_code
+    ]]>
+	</method>
+	
+	<method name="et_setPRLNUpdate">
+    <![CDATA[  
+    	UPDATE SPRLN SET PR_STATUS = 'C'
+    	WHERE 1 = 1 
+    	AND PR_NUMBER      = ${PR_NUMBER}
+    	AND PR_SEQ         = ${PR_SEQ} 
+    ]]>
+	</method>
+    
+	<method name="et_setRfqHDCreate_deleteHD">
+    <![CDATA[  
+    	DELETE FROM SRQGL
+    	WHERE RFQ_NUMBER   = ${RFQ_NUMBER}
+		AND RFQ_COUNT = ${RFQ_COUNT} 
+    ]]>
+	</method> 
+	<method name="et_setRfqHDCreate">
+    <![CDATA[  
+    INSERT INTO SRQGL ( /* PU_112.et_setRfqHDCreate */                                         
+                  HOUSE_CODE                                                                
+                , COMPANY_CODE                                                             
+                , PLANT_CODE                 
+                , RFQ_NUMBER                 
+                , RFQ_COUNT                  
+                , SUBJECT                    
+                , RFQ_DATE                   
+                , RP_NUMBER                  
+                , RP_OPEN_DATE               
+                , RFQ_CLOSE_DATE             
+                , RFQ_CLOSE_TIME             
+                , RFQ_TYPE                   
+                , SETTLE_TYPE                
+                , RFQ_STATUS                    
+                , PAY_TERMS                  
+                , DELY_TERMS                     
+                , TERM_CHANGE_FLAG                   
+                , PAY_METHOD                 
+                , CUR                        
+                , CTRL_CODE                  
+                , VALID_FROM_DATE            
+                , VALID_TO_DATE              
+                , ADD_USER_ID                
+                , ADD_DATE                   
+                , ADD_TIME                   
+                , CHANGE_DATE                
+                , CHANGE_TIME                
+                , CHANGE_USER_ID             
+                , REMARK                     
+                , PURCHASE_USER_ID           
+                , PURCHASE_USER_NAME         
+                , PURCHASE_USER_TEL          
+                , PURCHASE_USER_EMAIL        
+                , DEL_FLAG                   
+                , ATTACH_NO                  
+                , SETTLE_DATE                
+                , BID_TYPE                   
+                , CONTRACT_FLAG                      
+                , SETTLE_REASON              
+                , TBE_FLAG                   
+                , DELY_TERMS2                
+                , TRADESIGN_FLAG             
+                , SIGN_DATE                  
+                , SIGN_PERSON_ID             
+                , SIGN_PERSON_NAME           
+                , SIGN_STATUS                
+                , CREATE_TYPE                
+                , SHIPPING_METHOD            
+                , DEPART_PORT                
+                , BD_TYPE                    
+                , BD_TYPE_TEXT               
+                , Z_SETTLE_COND              
+                , TECHNICAL_EVAL             
+                , PRICE_EVAL                 
+                , Z_GUARANTEE_COND           
+                , PARITY_FLAG                
+                , PARITY_TYPE                
+                , Z_SMS_SEND_FLAG            
+                , Z_RESULT_OPEN_FLAG         
+                , DOM_EXP_FLAG               
+                , ARRIVAL_PORT               
+                , ARRIVAL_PORT_NAME          
+                , DEPART_PORT_NAME           
+                , PRICE_TYPE                 
+                , ADD_TAX_FLAG               
+                , DETAIL_REQ                 
+                , BIDDING_FAIL_REMARK        
+                , PR_NUMBER                  
+                , RP_COUNT                   
+                , ADMIN_RATE                 
+                , BID_COUNT                  
+                , SETTLE_COUNT               
+                , RESERVE_PRICE              
+                , CURRENT_PRICE              
+                , BID_DEC_AMT                
+                , MIN_AMT                    
+                , MAX_AMT                    
+                , USANCE_DAYS                
+                , NEGO_COUNT                 
+                , REQ_TYPE             	                 
+                , MANUAL_TYPE                                
+                , BID_TYPE_OUTER                             
+                , ADJ_TERMS         		    	             
+    		)
+    		VALUES (   
+                  ${ session.HOUSE_CODE      }  --서비스코드    
+	            , ${ company_code    }      --회사코드
+	            , ${ plant_code      }      -- PLANT_CODE                                     
+	            , ${ rfq_number      }      -- RFQ번호                                        
+	            , ${ rfq_count       }      -- RFQ차수                                        
+	            , ${ subject         }      -- 견적요청제목                                   
+	            , ${ rfq_date        }      -- 견적요청일자                                   
+	            , $s{ rp_number       }     -- 현설번호                                        
+	            , $s{ rp_open_date    }     -- 현설개설날짜                                    
+	            , ${ close_date  }          -- 견적마감일자                                   
+	            , ${ close_time  }          -- 견적마감시간                                   
+	            , ${ rfq_type        }      --                                                
+	            , ${ settle_type     }      -- 비교방식                                       
+	            , ${ rfq_status      }      -- RFQ상태                                        
+	            , ${ pay_terms       }      -- 지급조건                                       
+	            , $s{ dely_terms      }     -- 인도조건                                        
+	            , $s{ term_change_flag}     -- 조견변경가능                                    
+	            , ${ pay_method      }      -- 지급방법                                       
+	            , ${ CUR             }      -- 통화                                           
+	            , $s{ ctrl_code       }     -- 직무코드                                        
+	            , $s{ valid_from_date }     --                                                 
+	            , $s{ valid_to_date   }     --                                                 
+	            , ${ session.ID     }       -- 입력자ID                                       
+	            , ${ current.date        }  -- 입력날짜                                           
+	            , ${ current.time        }  -- 입력시간                                           
+	            , ${ current.date     }     -- 수정날짜                                        
+	            , ${ current.time     }     -- 수정시간                                        
+	            , ${ session.ID   }         -- 수정자ID                                       
+	            , ${ remark          }      -- 특기사항                                       
+	            , ${ purchase_user_id   }   -- 구매자ID                                       
+	            , ${ purchase_user_name }   -- 구매자이름                                     
+	            , ${ purchase_user_tel  }   -- 구매자전화번호                                 
+	            , ${ purchase_user_email}   -- 구매자이메일                                   
+	            , ${ del_flag           }   -- 삭제여부                                       
+	            , ${ attach_no          }   -- 첨부파일번호                                   
+	            , ${ settle_date        }   -- 업체선택일자                                   
+	            , ${ bid_type           }   --                                                
+	            , $s{ contract_flag      }  -- 전자계약여부                                    
+	            , $s{ settle_reason      }  -- 업체선택이유                                    
+	            , $s{ tbe_flag           }  -- TBE                                             
+	            , $s{ dely_terms2        }  --                                                 
+	            , $s{ tradesign_flag     }  --                                                 
+	            , $s{ sign_date          }  --                                                 
+	            , $s{ sign_person_id     }  --                                                 
+	            , $s{ sign_person_name   }  --                                                 
+	            , ${ sign_status        }   --                                                
+	            , ${ create_type        }   -- 소싱생성형태(M113_MA매뉴얼_PR청구_PS프로젝트)  
+	            , $s{ shipping_method    }  --                                                 
+	            , $s{ depart_port        }  --                                                 
+	            , ${ bd_type            }   -- BD_TYPE                                        
+	            , ${ bd_type_text       }   --                                                
+	            , $s{ z_settle_cond      }  --                                                 
+	            , ${ technical_eval     }   --                                                
+	            , ${ price_eval         }   --                                                
+	            , $s{ z_guarantee_cond   }  --                                                 
+	            , $s{ parity_flag        }  --                                                 
+	            , $s{ parity_type        }  --                                                 
+	            , $s{ z_sms_send_flag    }  -- SMS(Y/N)                                        
+	            , $s{ z_result_open_flag }  -- (Y/N)                                           
+	            , $s{ dom_exp_flag       }  --                                                 
+	            , $s{ arrival_port       }  --                                                 
+	            , $s{ arrival_port_name  }  --                                                 
+	            , $s{ depart_port_name   }  --                                                 
+	            , $s{ price_type         }  --                                                 
+	            , $s{ add_tax_flag       }  -- (M227)                                          
+	            , $s{ detail_req         }  -- (M553)                                          
+	            , $s{ bidding_fail_remark}  --                                                 
+	            , ${ pr_number          }   -- PR번호                                         
+	            , $s{ rp_count           }  -- 현설차수                                        
+	            , $s{ admin_rate         }  --                                                 
+	            , $s{ bid_count          }  --                                                 
+	            , $s{ settle_count       }  --                                                 
+	            , $s{ reserve_price      }  --                                                 
+	            , $s{ current_price      }  --                                                 
+	            , $s{ bid_dec_amt        }  -- PRICEDOWN                                       
+	            , $s{ min_amt            }  --                                                 
+	            , $s{ max_amt            }  --                                                 
+	            , $s{ usance_days        }  --                                                 
+	            , $s{ nego_count         }  -- Nego                                            
+	            , ${ req_type           }   -- 의뢰형태(type=M427)        
+	            , ${ manual_type        }   -- 견적요청타입(type=M2005)   
+	            , ${ bid_type_outer     }   -- 업체선정기준 기타 TEXT     
+	            , ${ adj_terms         }	-- 대금정산조건		                      
+    		)
+    ]]>
+	</method>  
+	<method name="et_setRfqDTCreate_deleteDT">
+    <![CDATA[  
+    	DELETE FROM SRQLN
+    	WHERE RFQ_NUMBER   = ${rfq_number}
+		AND RFQ_COUNT = ${rfq_count} 
+    ]]>
+	</method>  
+	<method name="et_setRfqDTCreate">
+    <![CDATA[  
+    INSERT INTO SRQLN ( /* PU_112.et_setRfqDTCreate */      
+                   HOUSE_CODE                    
+                  , COMPANY_CODE                        
+                  , RFQ_NUMBER                          
+                  , RFQ_SEQ                             
+                  , MATERIAL_NUMBER                     
+                  , DESCRIPTION_LOC                     
+                  , DESCRIPTION_ENG                     
+                  , SPECIFICATION                       
+                  , PLANT_CODE                          
+                  , PLANT_NAME_LOC                      
+                  , RFQ_STATUS                          
+                  , UNIT_MEASURE                        
+                  , RD_DATE                             
+                  , PR_NUMBER                           
+                  , PR_SEQ                              
+                  , SETTLE_FLAG                         
+                  , PR_USER_NAME                        
+                  , PR_USER_TEL                         
+                  , DEL_FLAG                            
+                  , ADD_DATE                            
+                  , ADD_TIME                            
+                  , ADD_USER_ID                         
+                  , CHANGE_DATE                         
+                  , CHANGE_TIME                         
+                  , CHANGE_USER_ID                      
+                  , CUR                                 
+                  , ATTACH_NO                           
+                  , REMARK                              
+                  , COST_FLAG                           
+                  , DELY_TO_ADDRESS                     
+                  , RP_NUMBER                           
+                  , RP_SEQ                              
+                  , TBE_STATUS                          
+                  , TBE_REMARK                          
+                  , TBE_FLAG                            
+                  , TBE_REQ_DATE                        
+                  , SERVICE_TYPE                        
+                  , TBE_COMPLETE_DATE                   
+                  , TBE_REAL_DATE                       
+                  , SIGN_PERSON_ID                      
+                  , SIGN_STATUS                         
+                  , SIGN_DATE                           
+                  , PURCHASING_CODE                     
+                  , TBE_ATTACH_NO                       
+                  , BUR_ATTACH_NO                       
+                  , TBE_DEPT                            
+                  , WBS_CODE                            
+                  , TBE_COMPLETE_FLAG                   
+                  , VALID_FROM_DATE                     
+                  , VALID_TO_DATE                       
+                  , STR_FLAG                            
+                  , AUTO_PO_FLAG                        
+                  , TBE_NO                              
+                  , TBE_DATE                            
+                  , PRICE_TYPE                          
+                  , SAMPLE_FLAG                         
+                  , DELY_TO_LOCATION                    
+                  , SHIPPER_TYPE                        
+                  , CONTRACT_FLAG                       
+                  , CLEAR_FLAG                          
+                  , CLEAR_REMARK                        
+                  , TBE_EVAL_USER_ID                    
+                  , OPERATING_CODE                      
+                  , ORDER_TYPE                          
+                  , SETTLE_REMARK                       
+                  , SAP_SEND_FLAG                       
+                  , EXEC_FLAG                           
+                  , RFQ_COUNT                           
+                  , RFQ_QTY                             
+                  , SETTLE_QTY                          
+                  , PRICE_UNIT                          
+                  , RFQ_AMT                             
+                  , BID_COUNT                           
+                  , RP_COUNT                            
+                  , MIN_PRICE                           
+                  , MAX_PRICE                           
+                  , COST_COUNT                          
+                  , YEAR_QTY                            
+                  , PURCHASE_PRE_PRICE                  
+                  )                                     
+           VALUES (                                     
+                      ${ session.HOUSE_CODE }--서비스코드 
+                    , ${ COMPANY_CODE       }--회사코드   
+                    , ${ RFQ_NUMBER         }--RFQ번호   
+                    , ${ RFQ_SEQ            }--RFQ차수   
+                    , $S{ MATERIAL_NUMBER   }--품번  
+                    , $S{ DESCRIPTION_LOC   }--품명  
+                    , $S{ DESCRIPTION_ENG   }--품명영문  
+                    , $S{ SPECIFICATION     }--규격  
+                    , $S{ PLANT_CODE        }  
+                    , $S{ PLANT_NAME_LOC    }  
+                    , $S{ RFQ_STATUS        }--RFQ상태  
+                    , $S{ UNIT_MEASURE      }--단위  
+                    , $S{ RD_DATE           }--납기요청일  
+                    , $S{ PR_NUMBER         }--구매요청번호  
+                    , $S{ PR_SEQ            }--구매요청항번  
+                    , $S{ SETTLE_FLAG       }--선정여부  
+                    , $S{ PR_USER_NAME      }--구매의뢰자  
+                    , $S{ PR_USER_TEL       }--구매의뢰자 전화번호  
+                    , $S{ DEL_FLAG          }--삭제여부  
+	            	, ${ current.date       }--생성일 
+	            	, ${ current.time       }--생성시간      
+	            	, ${ session.ID         }--생성자       
+	            	, ${ current.date       }--생성일      
+	            	, ${ current.time       }--생성시간        
+	            	, ${ session.ID         }--생성자       
+                    , $S{ CUR               }--통화  
+                    , $S{ ATTACH_NO         }--첨부파일키  
+                    , $S{ REMARK            }--비고  
+                    , $S{ COST_FLAG         }  
+                    , $S{ DELY_TO_ADDRESS   }  
+                    , $S{ RP_NUMBER         }--사양설명회번호  
+                    , $S{ RP_SEQ            }  
+                    , $S{ TBE_STATUS        }--TBE상태  
+                    , $S{ TBE_REMARK        }  
+                    , $S{ TBE_FLAG          }--TBE여부  
+                    , $S{ TBE_REQ_DATE      }--TBE요청일  
+                    , $S{ SERVICE_TYPE      }  
+                    , $S{ TBE_COMPLETE_DATE }--TBE완료요청일  
+                    , $S{ TBE_REAL_DATE     }--TBE완료일  
+                    , $S{ SIGN_PERSON_ID    }  
+                    , $S{ SIGN_STATUS       }  
+                    , $S{ SIGN_DATE         }  
+                    , $S{ PURCHASING_CODE   }  
+                    , $S{ TBE_ATTACH_NO     }  
+                    , $S{ BUR_ATTACH_NO     }  
+                    , $S{ TBE_DEPT          }  
+                    , $S{ WBS_CODE          }  
+                    , $S{ TBE_COMPLETE_FLAG }  
+                    , $S{ VALID_FROM_DATE   }  
+                    , $S{ VALID_TO_DATE     }  
+                    , $S{ STR_FLAG          }  
+                    , $S{ AUTO_PO_FLAG      }  
+                    , $S{ TBE_NO            }  
+                    , $S{ TBE_DATE          }  
+                    , $S{ PRICE_TYPE        }  
+                    , $S{ SAMPLE_FLAG       }  
+                    , $S{ DELY_TO_LOCATION  }--인도장소  
+                    , $S{ SHIPPER_TYPE      }  
+                    , $S{ CONTRACT_FLAG     }  
+                    , $S{ CLEAR_FLAG        }  
+                    , $S{ CLEAR_REMARK      }  
+                    , $S{ TBE_EVAL_USER_ID  }  
+                    , $S{ OPERATING_CODE    }  
+                    , $S{ ORDER_TYPE        }  
+                    , $S{ SETTLE_REMARK     }  
+                    , $S{ SAP_SEND_FLAG     }  
+                    , $S{ EXEC_FLAG         }  
+                    , $S{ RFQ_COUNT         }--RFQ차수  
+                    , $S{ RFQ_QTY           }--RFQ항번  
+                    , $S{ SETTLE_QTY        }--선정수량  
+                    , $S{ PRICE_UNIT        }  
+                    , $S{ RFQ_AMT           }  
+                    , $S{ BID_COUNT         }  
+                    , $S{ RP_COUNT          }  
+                    , $S{ MIN_PRICE         }  
+                    , $S{ MAX_PRICE         }  
+                    , $S{ COST_COUNT        }  
+                    , $S{ YEAR_QTY          }  
+                    , $S{ PURCHASE_PRE_PRICE}  	             
+    		)
+    ]]>
+	</method>   
+	<method name="et_setRfqSECreate_deleteSE">
+    <![CDATA[  
+    	DELETE FROM SRQSE
+    	WHERE RFQ_NUMBER   = ${RFQ_NUMBER}
+		AND RFQ_COUNT = ${RFQ_COUNT} 
+    ]]>
+	</method>   
+	<method name="et_setRfqSECreate_selectQT">
+    <![CDATA[  
+		SELECT COUNT(*) CNT FROM SQTLN LN, SQTGL GL                                                 
+        WHERE LN.QTA_NUMBER = GL.QTA_NUMBER                                                           
+        AND LN.SELLER_CODE = GL.SELLER_CODE                                                           
+        AND LN.MATERIAL_NUMBER = (SELECT MATERIAL_NUMBER 		                                    
+                               		FROM SRQLN             		                                    
+                               		WHERE RFQ_NUMBER = ${RFQ_NUMBER}     
+                               		AND RFQ_COUNT = ${RFQ_COUNT}         
+                               		AND RFQ_SEQ = ${RFQ_SEQ} 		)           
+                          AND GL.SELLER_CODE = ${SELLER_CODE}       
+                          AND GL.QTA_VAL_DATE_FROM < ${CURRENT_DATE}
+                          AND GL.QTA_VAL_DATE_TO > ${CURRENT_DATE}  
+    ]]>
+	</method>   
+	<method name="et_setRfqSECreate">
+    <![CDATA[  
+    INSERT INTO SRQSE (                    
+                   HOUSE_CODE          
+                  ,COMPANY_CODE        
+                  , PLANT_CODE         
+                  , RFQ_NUMBER         
+                  , RFQ_COUNT          
+                  , RFQ_SEQ            
+                  , SELLER_CODE        
+                  , CONFIRM_FLAG       
+                  , CONFIRM_DATE       
+                  , CONFIRM_TIME       
+                  , CONFIRM_USER_ID    
+                  , BID_FLAG           
+                  , ADD_DATE           
+                  , ADD_USER_ID        
+                  , ADD_TIME           
+                  , CHANGE_DATE        
+                  , CHANGE_USER_ID     
+                  , CHANGE_TIME        
+                  , DEL_FLAG           
+                  , TBE_RESULT_FLAG    
+                  , REMARK             
+                  , TBE_REMARK         
+                  , ATTACH_NO          
+                  , TBE_ATTACH_NO      
+                  , TBE_COMMENT        
+                  , TBE_FLAG           
+                  , SUPI_ID            
+                  )                    
+           VALUES (                    
+                ${session.HOUSE_CODE }   --서비스코드   
+	          , ${COMPANY_CODE       }   --회사코드
+	          , ${PLANT_CODE         }   
+	          , ${RFQ_NUMBER         }   --RFQ번호
+	          , ${RFQ_COUNT          }   --RFQ차수
+	          , ${RFQ_SEQ            }   --RFQ항번
+	          , ${SELLER_CODE        }   --업체코드
+	          , $S{CONFIRM_FLAG      }   --확인여부
+	          , $S{CONFIRM_DATE      }   --확인일자
+	          , $S{CONFIRM_TIME      }   --확인시간
+	          , $S{CONFIRM_USER_ID   }   --확인자
+	          , $S{BID_FLAG          }   --참여여부
+	          , ${ current.date      }   --생성일자  
+	          , ${ session.ID        }   --생성시간  
+	          , ${ current.time      }   --생성자
+	          , ${ current.date      }   --생성일자  
+	          , ${ session.ID        }   --생성시간    
+	          , ${ current.time      }   --생성자
+	          , $S{DEL_FLAG          }   --삭제여부
+	          , $S{TBE_RESULT_FLAG   }   --TBE결과
+	          , $S{REMARK            }   --비고
+	          , $S{TBE_REMARK        }   
+	          , $S{ATTACH_NO         }   --첨부파일
+	          , $S{TBE_ATTACH_NO     }   
+	          , $S{TBE_COMMENT       }   
+	          , $S{TBE_FLAG          }   
+	          , $S{SUPI_ID           }   
+          )                   
+    ]]>
+	</method>     
+	<method name="et_setRfqANCreate">
+    <![CDATA[           
+ INSERT INTO SRQAN ( /* PU_112.et_setRfqANCreate */    
+ 					HOUSE_CODE           
+                  , RFQ_NUMBER                                   
+                  , RFQ_COUNT                                    
+                  , COMPANY_CODE                                 
+                  , ANNOUNCE_DATE                                
+                  , ANNOUNCE_TIME_FROM                           
+                  , ANNOUNCE_TIME_TO                             
+                  , ANNOUNCE_HOST                                
+                  , ANNOUNCE_AREA                                
+                  , ANNOUNCE_PLACE                               
+                  , ANNOUNCE_NOTIFIER                            
+                  , ANNOUNCE_RESP                                
+                  , DOC_FRW_DATE                                 
+                  , ADD_USER_ID                                  
+                  , ADD_DATE                                     
+                  , ADD_TIME                                     
+                  , CHANGE_USER_ID                               
+                  , CHANGE_DATE                                  
+                  , CHANGE_TIME                                  
+                  , ANNOUNCE_COMMENT                             
+                  , DEL_FLAG                                     
+                  )                                              
+           VALUES (                                              
+              ${session.HOUSE_CODE }--서비스코드
+             , $S{rfq_number       }--RFQ번호
+             , $S{rfq_count        }--RFQ차수
+             , $S{t_company_code   }--회사코드
+             , $S{pro_szdate       }--개최일자
+             , $S{pro_start_time   }--시간
+             , $S{pro_end_time     }--시간
+             , $S{pro_host         }--주관사
+             , $S{pro_area         }--지역
+             , $S{pro_place        }--장소
+             , $S{pro_notifier     }--공고자
+             , $S{pro_resp         }--담당자/문의처
+             , $S{pro_doc_frw_date }--문서발송일자
+             , $S{session_user_id  }--생성자
+             , $S{current_date     }--생성일자
+             , $S{current_time     }--생성시간 
+             , $S{session_user_id  }--생성자
+             , $S{current_date     }--생성일자 
+             , $S{current_time     }--생성시간 
+             , $S{pro_comment      }--특기사항
+             , $S{del_flag         }--삭제여부   
+          )           
+    ]]>
+	</method> 
+	
+	<method name="getSelectUserData">
+    <![CDATA[    
+		 SELECT DISTINCT REPLACE( SUPI_ID , '!' , '|@|' ) AS SUPI_ID                                                
+		   FROM SRQSE SE                                                                                            
+		      , SRQLN LN                                                                                            
+		  WHERE 1 = 1                                                                                               
+		    AND SE.RFQ_NUMBER   = LN.RFQ_NUMBER                                                                     
+		    AND SE.RFQ_COUNT    = LN.RFQ_COUNT                                                                      
+		    AND SE.RFQ_SEQ      = LN.RFQ_SEQ                                                                        
+		    AND SE.COMPANY_CODE = LN.COMPANY_CODE                                                                   
+		    AND SE.RFQ_NUMBER   = ${RFQ_NUMBER}                                                                                 
+		    AND SE.RFQ_COUNT    = ${RFQ_COUNT}      
+    ]]>
+	</method> 
+	<method name="getRfqHDDisplay">
+    <![CDATA[   
+	   SELECT																										 
+	   	  QGL.RFQ_NUMBER                                                                        -- 견적요청번호
+	   	 ,QGL.RFQ_COUNT                                                                         -- 차수
+	   	 ,QGL.RFQ_CLOSE_DATE                                                                    --견적마감일
+	         ,QGL.RFQ_CLOSE_TIME                                                                 --견적마감시간           
+	   	 ,QGL.SUBJECT                                                                            -- 견적명
+	   	 ,(SELECT COUNT(DISTINCT SELLER_CODE) FROM SRQSE WHERE RFQ_NUMBER = QGL.RFQ_NUMBER AND RFQ_COUNT = QGL.RFQ_COUNT ) AS SELLER_CNT               -- 업체지정
+	   	 ,(SELECT COUNT(*) FROM SQTGL WHERE RFQ_NUMBER = QGL.RFQ_NUMBER AND RFQ_COUNT = QGL.RFQ_COUNT AND DEL_FLAG= 'N' ) AS BD_COUNT	   -- 견적제출업체수
+	   	 ,QGL.REMARK                                                                                     -- 특기사항
+	   	 ,QGL.ATTACH_NO                                                                                  -- 첨부파일
+	         ,GETFILENAMES( QGL.ATTACH_NO )         ATTACH_NO_TEXT                                          
+	   	 ,(SELECT COUNT(*) FROM SFILE WHERE DOC_NO = QGL.ATTACH_NO) AS ATTACH_CNT                      
+	         ,QGL.RFQ_DATE                                                                                  -- 요청일자 
+	         ,QGL.PAY_TERMS        										                            --지급조건
+	         ,QGL.SETTLE_TYPE      										                            --선정타입
+	         ,QGL.DELY_TERMS      										                            --인도조건
+	         ,QGL.TERM_CHANGE_FLAG     									                            --조건변경가능 여부     
+	         ,QGL.ADJ_TERMS                                                                                  
+	         ,GETCODETEXT1('M010',QGL.PAY_TERMS, 'KO') AS PAY_TERMS_TEXT   		                        
+	         ,GETCODETEXT1('M154',QGL.SETTLE_TYPE, 'KO') AS SETTLE_TYPE_TEXT   		                
+	         ,GETCODETEXT1('M009',QGL.DELY_TERMS, 'KO') AS DELY_TERMS_TEXT   		                
+	         ,NVL(QGL.CUR, 'KRW') AS CUR                                                                    
+	   	 ,QGL.PAY_METHOD							                 -- 지급방법
+	   	 ,QGL.BID_TYPE								                 -- 공급업체 선정기준
+	         ,QGL.BD_TYPE_TEXT                                                 	-- 공급업체 선정기준
+	   	 ,QGL.BD_TYPE										--입찰기준
+	   	 ,QGL.TECHNICAL_EVAL									--기술평가배점
+	   	 ,QGL.PRICE_EVAL										--가격평가배점
+	         ,QGL.BID_TYPE_OUTER                                                -- 가격평가배점
+	         ,(SELECT DISTINCT(PR_TYPE) FROM SPRGL WHERE PR_NUMBER = QLN.PR_NUMBER)	AS PR_TYPE	--구매유형
+	   	 ,QGL.REQ_TYPE											-- 사전견적구분(P : 일반견적 / B : 사전견적)
+	   	 ,QGL.MANUAL_TYPE										-- 견적요청타입
+	   	 ,QGL.ADJ_TERMS								
+	   	 ,QGL.PLANT_CODE							
+	   	 ,SMT.USER_NAME_LOC || '(' || SMT.COTEL || ')' AS ADD_USER_INFO		
+	   	 ,ISMT.USER_NAME_LOC || '(' || ISMT.COTEL || ')' AS INSPECTOR_INFO	
+	     FROM SRQGL QGL                                                          
+	     LEFT JOIN SRQLN QLN 								
+	       ON QGL.COMPANY_CODE = QLN.COMPANY_CODE 					
+	      AND QGL.RFQ_NUMBER =  QLN.RFQ_NUMBER						
+	      AND  QGL.RFQ_COUNT =  QLN.RFQ_COUNT						
+	      	LEFT JOIN SPRGL RGL							
+	      	ON QLN.PR_NUMBER = RGL.PR_NUMBER					
+	      		LEFT JOIN SUSMT SMT						
+	      		ON RGL.PR_USER_ID = SMT.USER_ID	
+	      		AND RGL.COMPANY_CODE = SMT.COMPANY_CODE				
+	      			LEFT JOIN SUSMT ISMT					
+	      			ON RGL.INSPECTOR_ID = ISMT.USER_ID	
+	      		AND RGL.COMPANY_CODE = ISMT.COMPANY_CODE		
+	    WHERE NVL(QGL.DEL_FLAG, 'N') = 'N'     
+	    AND QGL.RFQ_NUMBER = ${RFQ_NUMBER}  
+	    AND QGL.RFQ_COUNT =  ${RFQ_COUNT}    
+    ]]>
+	</method>  
+	    
+	<method name="getRfqDTDisplay">
+    <![CDATA[                   
+    		SELECT                                                                                          
+                    D.RFQ_SEQ  -- RFQ항번         			                                            
+                   ,LN.PR_NUMBER  -- 구매요청번호                 	                                            
+                   ,LN.COMPANY_CODE  -- 회사코드                 		                                            
+                   ,getCompanyNameLoc(LN.COMPANY_CODE , '') as COMPANY_NAME_LOC  --구매회사  	 
+                   ,LN.ADD_DATE                                                          
+                   ,LN.ADD_USER_ID                                                       
+                   ,LN.PURCHASE_DEPT  AS DEMAND_DEPT                                     
+                   ,LN.PURCHASER_ID AS CTRL_PERSON_ID                                    
+                   ,LN.PR_SEQ        -- 구매요청항번                                     
+                   ,LN.CTRL_CODE AS CTRL_NAME_LOC       -- 구매그룹   
+                   ,LN.MATERIAL_NUMBER 					-- 품목코드          
+                   ,LN.DESCRIPTION_LOC	-- 품목                                               
+                   ,LN.CUR				-- 통화                               
+                   ,LN.UNIT_MEASURE      -- 단위                                              
+                   ,LN.CONTRACT_FROM_DATE      -- 계약시작일                                  
+                   ,LN.CONTRACT_TO_DATE      -- 계약종료일                                    
+                   ,GETCODETEXT1('M007', LN.UNIT_MEASURE, 'KO') AS UNIT_MEASURE_TEXT      -- 단위   
+                   ,LN.SPECIFICATION	AS SPEC  -- 규격                                      
+                   ,LN.CATALOG_MATERIAL_NUMBER	                                              
+                   ,D.SPECIFICATION	-- Spec(상세)                                         
+                   ,D.RD_DATE       -- 요청납기                  	                           
+                   ,NVL(LN.PR_QTY, 0) AS PR_QTY 			-- 수량	                
+                   ,NVL(D.RFQ_QTY, 0) AS RFQ_QTY 			-- 수량	                
+                   ,NVL(LN.UNIT_PRICE, 0) AS UNIT_PRICE   -- 추정단가  
+                   ,(NVL(LN.UNIT_PRICE, 0) * NVL(LN.PR_QTY, 0) ) AS RFQ_AMT      -- 추정금액                            
+                   ,LN.PLANT_CODE  AS PLANT_NAME_LOC --플랜트                                                           
+                   ,LN.PLANT_CODE   --플랜트                                                                            
+                   ,(SELECT COUNT(PR_NUMBER) FROM SPRSE						                            				                          
+                     WHERE  COMPANY_CODE = LN.COMPANY_CODE					                            		                                          
+                     AND PR_NUMBER = LN.PR_NUMBER AND PR_SEQ = LN.PR_SEQ AND DEL_FLAG = 'N') AS SERVICE_CNT	                                                                  
+                   ,(SELECT COUNT(PR_NUMBER) FROM SPRSE							                				                          
+                     WHERE  COMPANY_CODE = LN.COMPANY_CODE						                		                                          
+                     AND PR_NUMBER = LN.PR_NUMBER AND PR_SEQ = LN.PR_SEQ AND DEL_FLAG = 'N') AS SERVICE	                		
+                   ,LN.PR_USER_NAME                                   --PR요청자
+                   ,LN.PR_USER_TEL                                     --PR요청자전화번호  
+                   ,NVL(D.ATTACH_NO, 'N') AS ATTACH_NO										             
+                   ,(SELECT COUNT (*) FROM SFILE WHERE DOC_NO = D.ATTACH_NO) AS ATTACH_NO_CNT					             			
+                   ,(select COUNT(*) from SRQSE WHERE COMPANY_CODE=D.COMPANY_CODE AND RFQ_NUMBER=D.RFQ_NUMBER AND RFQ_COUNT = D.RFQ_COUNT AND RFQ_SEQ=D.RFQ_SEQ) AS SELLER_SELECTED_CNT	 
+                   ,getSelRqse(D.RFQ_NUMBER,D.RFQ_COUNT,D.RFQ_SEQ) AS SELLER_SELECTED											                                       
+                   ,LN.MAKER																		                                       
+                   ,LN.MAKER_NAME																		                                       
+                   ,LN.REC_SELLER_CODE																	                                       
+                   ,LN.REC_SELLER_NAME																	                                       
+                   ,D.REMARK                                                                                                                                                                                      
+                   ,H.PAY_TERMS																		                                       
+                   ,H.ADJ_TERMS																		                                       
+                   ,(SELECT UNIT_PRICE FROM                                                                                                                                                                       
+                    (SELECT A.MATERIAL_NUMBER, A.UNIT_PRICE                                   
+                    FROM SPOLN A                               		                      
+                    ORDER BY TO_NUMBER(A.ADD_DATE || A.ADD_TIME) DESC                         
+                    ) WHERE MATERIAL_NUMBER=LN.MATERIAL_NUMBER AND ROWNUM =1) AS PO_UNIT_PRICE --기발주단가
+                   ,GETVENDORNAME((SELECT SELLER_CODE FROM                                          
+                    (SELECT A.MATERIAL_NUMBER, B.SELLER_CODE                                        
+                    FROM SPOLN A, SPOGL B                                                           
+                    WHERE A.PO_NUMBER=B.PO_NUMBER                                                   
+                    AND A.PO_COUNT=B.PO_COUNT                                                       
+                    ORDER BY TO_NUMBER(A.ADD_DATE || A.ADD_TIME) DESC                               
+                    ) WHERE MATERIAL_NUMBER=LN.MATERIAL_NUMBER AND ROWNUM =1)) AS PO_SELLER_NAME  --기발주업체                             
+                  FROM SRQLN D 	                                                                                            
+                 INNER JOIN SPRLN LN								                               			 
+                    ON  D.COMPANY_CODE = LN.COMPANY_CODE                                                                    
+                    AND D.PR_NUMBER = LN.PR_NUMBER                                                                          
+                    AND D.PR_SEQ = LN.PR_SEQ                                                                                
+                                                                                                                            
+                 INNER JOIN SRQGL H								                               						 
+                    ON D.COMPANY_CODE	= H.COMPANY_CODE                                                                             
+                   AND D.RFQ_NUMBER		= H.RFQ_NUMBER                                                                       
+                   AND D.RFQ_COUNT		= H.RFQ_COUNT     ]]>                                                                      
+                                             
+		<if test="${USER_TYPE}" operator="eq" value="S">                                                                      
+	       <![CDATA[             INNER JOIN SRQSE S				                                                                   							 
+	                    ON D.COMPANY_CODE = S.COMPANY_CODE                                                                       
+	                   AND D.RFQ_NUMBER = S.RFQ_NUMBER                                                                           
+	                   AND D.RFQ_COUNT  = S.RFQ_COUNT                                                                            
+	                   AND D.RFQ_SEQ    = S.RFQ_SEQ                                                                              
+	                   AND S.SELLER_CODE = $S{SELLER_CODE} 	]]>   
+		</if>
+  	<![CDATA[  
+                WHERE NVL(D.DEL_FLAG, 'N') = 'N'                                                   
+                  AND NVL(H.DEL_FLAG, 'N') = 'N'   
+                  AND D.RFQ_NUMBER = ${RFQ_NUMBER}  
+                  AND D.RFQ_COUNT = ${RFQ_COUNT}        
+    ]]>
+	</method>   
+	      
+	<method name="getBottomSupiList"> 
+	<![CDATA[ 
+	SELECT * FROM  ( SELECT PI.VENDOR_CODE AS SELLER_CODE
+	             , GETCOMPANYNAMELOC( PI.HOUSE_CODE,PI.VENDOR_CODE, 'S' ) AS SELLER_NAME
+	             , PI.COMPANY_CODE || '*' || PI.VENDOR_CODE || '*' || TO_CHAR(PI.SEQ) AS USER_SEQ
+	             , PI.USER_NAME
+	             , PI.MOBILE_NO
+	             , PI.EMAIL    
+                 , RANK() OVER( PARTITION BY PI.VENDOR_CODE ORDER BY PI.SEQ) AS ORDER_SEQ
+	]]>                                                            
+	<choose> 
+		<when test="${RFQ_NUMBER}" operator="ne" value="">
+    			<![CDATA[	, SE.SUPI_ID AS SUPI_ID    	]]>  
+		</when> 
+		<otherwise>
+    			<![CDATA[	, NULL AS SUPI_ID   	]]>  
+		</otherwise>
+	</choose>     
+    			<![CDATA[	FROM ICOMVNCP  PI  	]]>                               
+	<choose> 
+		<when test="${RFQ_NUMBER}" operator="ne" value="">
+				<![CDATA[	                                                                            
+			        LEFT OUTER JOIN SRQSE SE                                                                  
+			            ON 1 = 1                                                                              
+			            AND PI.SELLER_CODE = SE.SELLER_CODE                                                    
+			      WHERE 1 = 1 
+			      AND SE.RFQ_NUMBER = ${RFQ_NUMBER}  
+			      AND SE.RFQ_COUNT  = ${RFQ_COUNT}     
+			      AND SE.SELLER_CODE IN ( $IN{ SELLER_CODE } )	
+			      AND PI.STATUS IN ('C','R')
+			      ]]>  
+		</when>
+		<when test="${SELLER_CODE}" operator="ne" value="N">
+	    			<![CDATA[	WHERE PI.VENDOR_CODE IN ( $IN{ SELLER_CODE } ) 	
+	    			            AND PI.STATUS IN ('C','R')
+	    			]]>  
+		</when>
+		<otherwise>
+    			<![CDATA[	 WHERE PI.VENDOR_CODE IN (  ''  )   	
+    			             AND PI.STATUS IN ('C','R')
+    			]]>  
+		</otherwise>
+	</choose>     
+	<![CDATA[          
+				) A 
+			WHERE ORDER_SEQ = 1	
+			GROUP BY A.SELLER_CODE, A.SELLER_NAME, A.USER_SEQ, A.USER_NAME, A.MOBILE_NO, A.EMAIL, A.SUPI_ID, ORDER_SEQ ORDER BY A.SELLER_CODE 
+	]]>   
+	</method>        
+	  
+	<method name="getBottomSupiList2"> 
+	<![CDATA[ 
+		SELECT * FROM  ( SELECT PI.VENDOR_CODE AS SELLER_CODE                             
+				         , GETCOMPANYNAMELOC( PI.HOUSE_CODE, PI.VENDOR_CODE, 'S' ) AS SELLER_NAME                              
+				         , PI.COMPANY_CODE || '*' || PI.VENDOR_CODE || '*' || TO_CHAR(PI.SEQ) AS USER_SEQ              
+				         , PI.USER_NAME                                                                          
+				         , PI.MOBILE_NO                                                                          
+				         , PI.EMAIL    
+				         , RANK() OVER( PARTITION BY PI.VENDOR_CODE ORDER BY PI.SEQ) AS ORDER_SEQ
+	]]>                                                            
+	<choose> 
+		<when test="${RFQ_NUMBER}" operator="ne" value="">
+    			<![CDATA[	, SE.SUPI_ID    	]]>  
+		</when> 
+		<otherwise>
+    			<![CDATA[	, NULL AS SUPI_ID   	]]>  
+		</otherwise>
+	</choose>     
+    			<![CDATA[	FROM ICOMVNCP  PI  	]]>                               
+	<choose> 
+		<when test="${RFQ_NUMBER}" operator="ne" value="">
+				<![CDATA[	                                                                            
+			        LEFT OUTER JOIN ICOYBDAP SE                                                                  
+			            ON 1 = 1                                                                              
+			            AND PI.VENDOR_CODE = SE.VENDOR_CODE                                                    
+			      WHERE 1 = 1 
+			      AND SE.BID_NO = ${RFQ_NUMBER}  
+			      AND SE.BID_COUNT  = ${RFQ_COUNT}     
+			      AND SE.VENDOR_CODE IN ( $IN{ SELLER_CODE } )	]]> 
+			      AND PI.STATUS IN ('C','R') 
+		</when>
+		<when test="${SELLER_CODE}" operator="ne" value="N">
+	    			<![CDATA[	WHERE PI.VENDOR_CODE IN ( $IN{ SELLER_CODE } ) 	
+	    			            AND PI.STATUS IN ('C','R')
+	    			]]>  
+		</when>
+		<otherwise>
+    			<![CDATA[	 WHERE PI.VENDOR_CODE IN (  ''  )   	
+    			             AND PI.STATUS IN ('C','R')
+    			]]>  
+		</otherwise>
+	</choose>     
+	<![CDATA[          
+				) A 
+			WHERE A.ORDER_SEQ = 1
+			GROUP BY A.SELLER_CODE, A.SELLER_NAME, A.USER_SEQ, A.USER_NAME, A.MOBILE_NO, A.EMAIL, A.SUPI_ID, A.ORDER_SEQ ORDER BY A.SELLER_CODE 
+	]]>   
+	</method>        
+	<method name="et_setRfqHDUpdate">
+    <![CDATA[  
+                UPDATE SRQGL                                
+                     SET SUBJECT                = ${subject} --제목
+                       , ADJ_TERMS              = $S{adj_terms} --대금산정조건     
+                       , RFQ_DATE               = ${current_date} --견적요청일         
+                       , RP_NUMBER              = '' 
+                       , RP_COUNT               = ''       
+                       , RP_OPEN_DATE           = ''       
+                       , RFQ_CLOSE_DATE         = ${rfq_close_date } --견적마감일자     
+                       , RFQ_CLOSE_TIME         = ${rfq_close_time } --견적마감시간     
+                       , RFQ_TYPE               = ${rfq_type} --           
+                       , SETTLE_TYPE            = ${settle_type} --업체선정기준 (SCODE.TYPE=M149 DOC:문서별 ITEM:품목별)        
+                       , RFQ_STATUS             = ${rfq_status} --견적상태    
+                       , PAY_TERMS              = ${pay_terms} --지급조건          
+                       , DELY_TERMS             = '' --인도조건  
+                       , TERM_CHANGE_FLAG       = '' --조건변경여부  
+                       , PAY_METHOD             = ${pay_method} --지급방법
+                       , CUR                    = ${CUR} --통화                
+                       , CTRL_CODE              = ''  
+                       , VALID_FROM_DATE        = ''  
+                       , VALID_TO_DATE          = ''  
+                       , CHANGE_DATE            = ${current_date} -- 수정일자    
+                       , CHANGE_TIME            = ${current_time} -- 수정시간    
+                       , CHANGE_USER_ID         = ${session_user_id} -- 수정자   
+                       , REMARK                 = ${remark} --특기사항
+                       , PURCHASE_USER_ID       = ${purchase_user_id} --구매담당자ID 
+                       , PURCHASE_USER_NAME     = ${purchase_user_name} --구매담당자이름
+                       , PURCHASE_USER_TEL      = ${purchase_user_tel} --구매담당자연락처  
+                       , PURCHASE_USER_EMAIL    = ${purchase_user_email} --구매담당자이메일
+                       , DEL_FLAG               = ${del_flag} --삭제여부           
+                       , ATTACH_NO              = ${attach_no} --첨부파일          
+                       , SETTLE_DATE            = ${settle_date} --선정일자        
+                       , BID_TYPE               = ${bid_type}--업체선정방식     (SCODE.TYPE=M993 HD:문서별 DT:품목별)     
+                       , ADMIN_RATE             = '0' --일반관리비율    
+                       , BID_COUNT              = '0' --참여업체수 
+                       , CONTRACT_FLAG          = ''  --전자계약여부    
+                       , SETTLE_REASON          = ''  --선정사유    
+                       , TBE_FLAG               = ''  --TBE여부    
+                       , DELY_TERMS2            = ''    
+                       , TRADESIGN_FLAG         = ''    
+                       , SIGN_DATE              = ''    
+                       , SIGN_PERSON_ID         = ''
+                       , SIGN_PERSON_NAME       = ''  
+                       , SIGN_STATUS            = ${sign_status}       
+                       , CREATE_TYPE            = ${create_type} --생성타입  (PR)  
+                       , SHIPPING_METHOD        = ''     --내/외자구분  
+                       , DEPART_PORT            = ''    
+                       , SETTLE_COUNT           = '0'   
+                       , RESERVE_PRICE          = '0'  
+                       , CURRENT_PRICE          = '0'    
+                       , BID_DEC_AMT            = '0'   
+                       , BD_TYPE                = ${bd_type}           
+                       , Z_SETTLE_COND          = ''  --      
+                       , TECHNICAL_EVAL         = ${technical_eval} --기술평가점수     
+                       , PRICE_EVAL             = ${price_eval} --가격평가점수         
+                       , MIN_AMT                = '0'          
+                       , MAX_AMT                = '0'          
+                       , Z_GUARANTEE_COND       = '' 
+                       , PARITY_FLAG            = '' 
+                       , PARITY_TYPE            = '' 
+                       , Z_SMS_SEND_FLAG        = '' 
+                       , Z_RESULT_OPEN_FLAG     = ''  
+                       , USANCE_DAYS            = '0'        
+                       , NEGO_COUNT             = '0'        
+                       , DOM_EXP_FLAG           = '' 
+                       , ARRIVAL_PORT           = '' 
+                       , ARRIVAL_PORT_NAME      = '' 
+                       , DEPART_PORT_NAME       = '' 
+                       , PRICE_TYPE             = '' 
+                       , ADD_TAX_FLAG           = '' 
+                       , DETAIL_REQ             = '' 
+                       , BIDDING_FAIL_REMARK    = '' 
+                       , MANUAL_TYPE	    = ${manual_type}  
+                   WHERE COMPANY_CODE           = ${t_company_code} 
+                     AND RFQ_NUMBER             = ${rfq_number} 
+                     AND RFQ_COUNT              = ${rfq_count} 
+    ]]>
+	</method>         
+	<method name="et_setRfqDTUpdate">
+    <![CDATA[   
+    INSERT INTO SRQLN ( /* PU_112.et_setRfqDTUpdate */
+    			  HOUSE_CODE
+                  , COMPANY_CODE                  
+                  , RFQ_NUMBER                    
+                  , RFQ_SEQ                       
+                  , MATERIAL_NUMBER               
+                  , DESCRIPTION_LOC               
+                  , DESCRIPTION_ENG               
+                  , SPECIFICATION                 
+                  , PLANT_CODE                    
+                  , PLANT_NAME_LOC                
+                  , RFQ_STATUS                    
+                  , UNIT_MEASURE                  
+                  , RD_DATE                       
+                  , PR_NUMBER                     
+                  , PR_SEQ                        
+                  , SETTLE_FLAG                   
+                  , SG_CODE1                      
+                  , SG_CODE2                      
+                  , SG_CODE3                      
+                  , SG_CODE4                      
+                  , SG_NAME1                      
+                  , SG_NAME2                      
+                  , SG_NAME3                      
+                  , SG_NAME4                      
+                  , PR_USER_NAME                  
+                  , PR_USER_TEL                   
+                  , DEL_FLAG                  
+                  , ADD_DATE                   
+                  , ADD_TIME                   
+                  , ADD_USER_ID                       
+                  , CHANGE_DATE                   
+                  , CHANGE_TIME                   
+                  , CHANGE_USER_ID                
+                  , CUR                           
+                  , ATTACH_NO                     
+                  , REMARK                        
+                  , COST_FLAG                     
+                  , DELY_TO_ADDRESS               
+                  , RP_NUMBER                     
+                  , RP_SEQ                        
+                  , TBE_STATUS                    
+                  , TBE_REMARK                    
+                  , TBE_FLAG                      
+                  , TBE_REQ_DATE                  
+                  , SERVICE_TYPE                  
+                  , TBE_COMPLETE_DATE             
+                  , TBE_REAL_DATE                 
+                  , SIGN_PERSON_ID                
+                  , SIGN_STATUS                   
+                  , SIGN_DATE                     
+                  , PURCHASING_CODE               
+                  , TBE_ATTACH_NO                 
+                  , BUR_ATTACH_NO                 
+                  , TBE_DEPT                      
+                  , WBS_CODE                      
+                  , TBE_COMPLETE_FLAG             
+                  , VALID_FROM_DATE               
+                  , VALID_TO_DATE                 
+                  , STR_FLAG                      
+                  , AUTO_PO_FLAG                  
+                  , TBE_NO                        
+                  , TBE_DATE                      
+                  , PRICE_TYPE                    
+                  , SAMPLE_FLAG                   
+                  , DELY_TO_LOCATION              
+                  , SHIPPER_TYPE                  
+                  , CONTRACT_FLAG                 
+                  , CLEAR_FLAG                    
+                  , CLEAR_REMARK                  
+                  , TBE_EVAL_USER_ID              
+                  , OPERATING_CODE                
+                  , ORDER_TYPE                    
+                  , SETTLE_REMARK                 
+                  , SAP_SEND_FLAG                 
+                  , EXEC_FLAG                     
+                  , RFQ_COUNT                     
+                  , RFQ_QTY                       
+                  , SETTLE_QTY                    
+                  , PRICE_UNIT                    
+                  , RFQ_AMT                       
+                  , BID_COUNT                     
+                  , RP_COUNT                      
+                  , MIN_PRICE                     
+                  , MAX_PRICE                     
+                  , COST_COUNT                    
+                  , YEAR_QTY                      
+                  , PURCHASE_PRE_PRICE            
+                  )                               
+           VALUES (         
+                  ${ session.HOUSE_CODE     }  --서비스코드                   
+                  ,${COMPANY_CODE			} -- 회사코드                      
+                  , ${RFQ_NUMBER			} -- 견적요청번호                            
+                  , ${RFQ_SEQ				} --견적요청항번                                            
+                  , ${MATERIAL_NUMBER		} -- 품목                  
+                  , $S{DESCRIPTION_LOC		} -- 품명                 
+                  , $S{DESCRIPTION_ENG		} -- 품명(영문)                 
+                  , $S{SPECIFICATION 		} -- 규격                    
+                  , $S{PLANT_CODE			} -- 공장코드                           
+                  , $S{PLANT_NAME_LOC		} -- 공장명        
+                  , $S{RFQ_STATUS			} -- 견적상태                           
+                  , $S{UNIT_MEASURE			} -- 단위                       
+                  , $S{RD_DATE				} -- 납기요청일                                 
+                  , $S{PR_NUMBER            } -- 구매요청번호                 
+                  , $S{PR_SEQ               } -- 구매요청항번                    
+                  , $S{SETTLE_FLAG          } -- 선정여부               
+                  , $S{SG_CODE1             } -- 소싱그룹 대분류                  
+                  , $S{SG_CODE2             } -- 소싱그룹 중분류                    
+                  , $S{SG_CODE3             } -- 소싱그룹 소분류                    
+                  , $S{SG_CODE4             } -- 소싱그룹 세분류                   
+                  , $S{SG_NAME1             } -- 소싱그룹 대분류                  
+                  , $S{SG_NAME2             } -- 소싱그룹 중분류                  
+                  , $S{SG_NAME3             } -- 소싱그룹 소분류                  
+                  , $S{SG_NAME4             } -- 소싱그룹 세분류                  
+                  , $S{PR_USER_NAME			} -- 구매요청자                 
+                  , $S{PR_USER_TEL          } -- 구매요청자연락처            
+                  , $S{DEL_FLAG             } -- 삭제여부                
+                  , $S{CURRENT_DATE	    } -- 생성일자                      
+                  , $S{CURRENT_TIME	    } -- 생성시간                     
+                  , $S{SESSION_USER_ID      } -- 생성자          
+                  , $S{CURRENT_DATE	    } -- 생성일자                     
+                  , $S{CURRENT_TIME	    } -- 생성시간                     
+                  , $S{SESSION_USER_ID      } -- 생성자              
+                  , $S{CUR                  } -- 통화                       
+                  , $S{ATTACH_NO            } -- 첨부파일                 
+                  , $S{REMARK               } -- 특기사항                    
+                  , $S{COST_FLAG            }               
+                  , $S{DELY_TO_ADDRESS      } -- 인도장소           
+                  , $S{RP_NUMBER            }              
+                  , $S{RP_SEQ               }              
+                  , $S{TBE_STATUS	    } -- TBE상태                           
+                  , $S{TBE_REMARK	    } -- TBE특기사항                           
+                  , $S{TBE_FLAG}            } -- TBE여부                  
+                  , $S{TBE_REQ_DATE	    } -- TBE요청일자                     
+                  , $S{SERVICE_TYPE	    }                       
+                  , $S{TBE_COMPLETE_DATE    } -- TBE 완료요청일자       
+                  , $S{TBE_REAL_DATE        } -- TBE완료일          
+                  , $S{SIGN_PERSON_ID       }       
+                  , $S{SIGN_STATUS          }             
+                  , $S{SIGN_DATE            }              
+                  , $S{PURCHASING_CODE      }         
+                  , $S{TBE_ATTACH_NO        } -- TBE첨부파일            
+                  , $S{BUR_ATTACH_NO        } --             
+                  , $S{TBE_DEPT             } -- TBE부서                  
+                  , $S{WBS_CODE             } -- WBS CODE                  
+                  , $S{TBE_COMPLETE_FLAG    } -- TBE완료여부    
+                  , $S{VALID_FROM_DATE      }         
+                  , $S{VALID_TO_DATE        }            
+                  , $S{STR_FLAG             }                
+                  , $S{AUTO_PO_FLAG         } -- 자동발주여부                      
+                  , $S{TBE_NO               } -- TBE번호                  
+                  , $S{TBE_DATE             } -- TBE일자                
+                  , $S{PRICE_TYPE           }                       
+                  , $S{SAMPLE_FLAG          }             
+                  , $S{DELY_TO_LOCATION     } -- 인도장소        
+                  , $S{SHIPPER_TYPE         } -- 내/외자                    
+                  , $S{CONTRACT_FLAG        } -- 전자계약여부        
+                  , $S{CLEAR_FLAG           }                         
+                  , $S{CLEAR_REMARK         }                      
+                  , $S{TBE_EVAL_USER_ID     } -- TBE평가자ID         
+                  , $S{OPERATING_CODE       }            
+                  , $S{ORDER_TYPE           }                          
+                  , $S{SETTLE_REMARK        } -- 선정사유          
+                  , $S{SAP_SEND_FLAG        } -- SAP전송여부          
+                  , $S{EXEC_FLAG            }               
+                  , $S{RFQ_COUNT            } -- 견적요청차수    
+                  , $S{RFQ_QTY  	    } -- 견적요청수량
+                  , $S{SETTLE_QTY 	    } -- 선정수량
+                  , $S{PRICE_UNIT 	    } -- 가격단위
+                  , $S{RFQ_AMT              } -- 견적금액
+                  , $S{BID_COUNT  	    } -- 참여업체수
+                  , $S{RP_COUNT  	} 
+                  , $S{MIN_PRICE 	} 
+                  , $S{MAX_PRICE 	} 
+                  , $S{COST_COUNT 	} 
+                  , $S{YEAR_QTY  	} -- 년간수량
+                  , $S{PURCHASE_PRE_PRICE } -- 기존구매단가
+         )
+    ]]>
+	</method>         
+	<method name="getReRfqcount"> 
+		    <![CDATA[  
+				SELECT  TO_NUMBER(MAX(RFQ_COUNT))+1 AS RFQ_COUNT    				
+					FROM SRQGL 															
+					WHERE 1=1 
+					AND COMPANY_CODE	=	${t_company_code}
+					AND RFQ_NUMBER		=   ${rfq_number}
+		    ]]> 
+	</method>              
+	<method name="setRfqcomplete_updateSRQGL"> 
+		    <![CDATA[  
+				 UPDATE  SRQGL SET RFQ_STATUS = 'C'    	
+				 WHERE RFQ_NUMBER		=    ${rfq_number}    	
+				 AND   RFQ_COUNT		=    ${rfq_count}           
+		    ]]> 
+	</method>                
+	<method name="setRfqcomplete_updateSRQLN"> 
+		    <![CDATA[  
+				 UPDATE  SRQLN                         
+				 SET     SETTLE_FLAG	= 'D',        
+				         RFQ_STATUS		= 'D'     	  
+				 WHERE RFQ_NUMBER		=  ${rfq_number}    
+				 AND   RFQ_COUNT		=  ${rfq_count}        
+				 AND   SETTLE_FLAG 	!= 'Y'            
+		    ]]> 
+	</method>                         
+     
+</service>

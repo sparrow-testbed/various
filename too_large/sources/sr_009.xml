@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+<service>
+	 	<method name = "getTempList">
+	<![CDATA[
+		select distinct a.s_template_refitem, a.template_name, a.change_date, b.user_name_loc, 
+			(DECODE((SELECT apply_flag
+			            FROM SSGVN
+			            WHERE HOUSE_CODE = a.house_code
+			              AND S_TEMPLATE_REFITEM = a.s_template_refitem
+			              AND APPLY_FLAG = 'N'
+			              AND ROWNUM = 1 ),
+			             'N','N',(SELECT apply_flag
+			            FROM SSGVN
+			            WHERE HOUSE_CODE = a.house_code
+			              AND S_TEMPLATE_REFITEM = a.s_template_refitem
+			              AND APPLY_FLAG = 'Y'
+			              AND ROWNUM = 1 )) 
+    			) as  apply_flag       					
+			from icomvsth a, icomlusr b 																							
+    		where a.house_code = b.house_code
+    		  and a.add_user_id = b.user_id 
+    		  and a.add_user_id = b.user_id 
+    		  and b.house_code=${session.HOUSE_CODE}
+    		  and a.use_flag = 'Y' 	
+    		  and a.template_name  LIKE '%' || $S{item_name}  || '%'
+
+  	   			and b.user_name_loc  LIKE '%' || $S{operator}  || '%'	
+    		  	  	
+	]]>
+	
+	
+	
+	
+	
+		order by a.change_date
+    </method>
+    
+    
+     <method name = "setTempDelete">
+    <![CDATA[
+		update icomvsth set use_flag = 'N'			
+  		where house_code = ${session.HOUSE_CODE}		
+    	and s_template_refitem in ( ${s_template_refitem} ) 
+    ]]>
+    </method>
+    
+   
+
+</service>

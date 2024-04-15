@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+<service>
+	 
+<method name ="getTempDetail">
+    <![CDATA[
+		SELECT 	A.C_FACTOR_REFITEM, A.FACTOR_NAME, B.C_FACTOR_ITEM_REFITEM, B.ITEM_NAME , 					
+    			C.C_TEMPLATE_REFITEM, C.TEMPLATE_NAME , C.REQUIRE_SCORE	, C.C_TEMPLATE_ITEM_REFITEM				
+    	FROM ICOMVCFH A , ICOMVCFD B ,																				
+   					(SELECT A.C_TEMPLATE_REFITEM, A.TEMPLATE_NAME , B.C_TEMPLATE_ITEM_REFITEM, B.C_FACTOR_REFITEM, A.REQUIRE_SCORE	
+    					FROM icomvcth A, icomvctd B 																	
+    					WHERE A.HOUSE_CODE = B.HOUSE_CODE AND A.HOUSE_CODE = ${session.HOUSE_CODE} 				
+    					AND A.C_TEMPLATE_REFITEM = B.C_TEMPLATE_REFITEM AND A.C_TEMPLATE_REFITEM = ${c_template_refitem} ) C				
+		WHERE A.HOUSE_CODE = B.HOUSE_CODE 
+		 AND A.HOUSE_CODE = ${session.HOUSE_CODE}				
+		 AND A.C_FACTOR_REFITEM = B.C_FACTOR_REFITEM 
+		 AND A.use_flag = 'Y' 
+		 AND B.use_flag = 'Y' 
+		 AND A.C_FACTOR_REFITEM = C.C_FACTOR_REFITEM	
+        ORDER BY A.C_FACTOR_REFITEM , B.C_FACTOR_ITEM_REFITEM ASC
+    ]]>
+    </method>
+    
+      <method name ="getChkDetail">
+    <![CDATA[
+    	SELECT A.C_FACTOR_REFITEM, A.FACTOR_NAME, B.C_FACTOR_ITEM_REFITEM, B.ITEM_NAME , B.ITEM_SCORE 	
+    				FROM ICOMVCFH A , ICOMVCFD B 						   															
+    	WHERE A.C_FACTOR_REFITEM = B.C_FACTOR_REFITEM 
+    	AND A.USE_FLAG = 'Y' 
+    	AND B.USE_FLAG = 'Y' 								
+    	AND A.HOUSE_CODE = ${session.HOUSE_CODE} 
+    	AND A.HOUSE_CODE = B.HOUSE_CODE			
+    	ORDER BY A.C_FACTOR_REFITEM, B.C_FACTOR_ITEM_REFITEM 																				
+    ]]>
+    </method>
+    
+        
+     <method name ="setTempInsert_1">
+    <![CDATA[
+		insert into icomvcth ( 				
+    				house_code,							
+    				status,								
+    			    c_template_refitem, 				
+    			    template_name,    					
+    			    require_score,    					
+    			    add_date,							
+    			    change_date,						
+    			    add_user_id)						
+   		select ${session.HOUSE_CODE}, 
+   				'C', 
+   				${c_template_refitem}, 
+   				${chkTempName},									
+   			    ${require_score}, 
+   			    TO_CHAR(SYSDATE,'YYYYMMDD'), 
+   			    TO_CHAR(SYSDATE,'YYYYMMDD'), 
+   			    ${session.ID} 
+   		from dual					
+    ]]>
+    </method>
+    
+    <method name ="setTempInsert_2">
+    <![CDATA[
+		insert into icomvctd ( 				
+        			house_code,							
+    				status,								
+    			   	c_template_item_refitem, 			
+    			   	c_template_refitem, 				
+    			   	c_factor_refitem) 					
+   		select ${session.HOUSE_CODE},	
+   				'C', 
+   			 	NVL(max(c_template_item_refitem),0) + 1, 
+   			 	${c_template_refitem}, 
+   			 	${c_factor_refitem}
+   		from icomvctd 									
+    ]]>
+    </method>
+    
+    
+     <method name ="setTempUpdate">
+    <![CDATA[
+		UPDATE ICOMVCTH SET  									
+		        TEMPLATE_NAME = ${chkTempName},    							
+		        REQUIRE_SCORE = ${require_score},    							
+		        CHANGE_DATE = TO_CHAR(SYSDATE,'YYYYMMDD') 	
+		WHERE  HOUSE_CODE = ${session.HOUSE_CODE} 
+		AND C_TEMPLATE_REFITEM = ${c_template_refitem}	
+   ]]>
+    </method>
+    
+    
+    
+    <method name="currvalForMssql">
+    <![CDATA[
+		select NVL(max(c_template_refitem),0) + 1 as currVal
+			from icomvcth
+    ]]>
+    </method>
+    
+    
+    <method name = "chkUpdateChkTemp">
+    <![CDATA[
+		SELECT * FROM ICOMVCTH A,SSGVN B	
+		WHERE A.HOUSE_CODE = ${session.HOUSE_CODE}
+		  AND A.HOUSE_CODE = B.HOUSE_CODE	
+          AND A.C_TEMPLATE_REFITEM = B.C_TEMPLATE_REFITEM 
+          AND B.C_TEMPLATE_REFITEM = ${s_template_refitem}	
+    ]]>
+    </method>
+    
+    
+    
+</service>

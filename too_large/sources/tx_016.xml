@@ -1,0 +1,400 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+<service>
+	<method name="bl_getPayAuditList">
+		SELECT	*
+			FROM
+			(
+				SELECT 	'자본예산' AS EXCD
+				,		'S' AS PAY_TYPE
+				,		B.PAY_SEND_NO||B.PAY_SEND_SEQ AS PAY_NO
+				,		CONVERT_DATE(A.CHANGE_DATE) AS PAY_DATE
+				, 		B.APPAPPAM AS PAY_AMT
+				, 		A.VENDOR_CODE
+				,		GETVENDORNAME(A.HOUSE_CODE, A.VENDOR_CODE) AS VENDOR_NAME	
+				, 		A.BANK_CODE
+				,		GETCODETEXT1('M349',A.BANK_CODE,'KO') AS BANK_NAME 
+				, 		A.BANK_ACCT  
+				,		C.TAX_NO
+				,		CASE	
+							WHEN C1.TAX_APP_NO IS NULL THEN 'RP'
+           					ELSE 'P'
+          					END AS TAX_GUBUN
+				,		C1.PROGRESS_CODE    
+				,		C2.PUBCODE      					
+				,		C.INV_NO
+				,		C.INV_SEQ
+				,		D.ITEM_NO
+				,		F.CONT_NO
+				,		F.CONT_GL_SEQ
+				,		G.PURCHASER_ID AS PURCHASER_ID 
+				,		GETUSERNAMELOC(A.HOUSE_CODE, G.PURCHASER_ID) AS PURCHASER_NAME 
+				,		GETUSERNAMELOC(A.HOUSE_CODE, B.AUDIT_USER_ID) AS AUDIT_USER_ID
+				,		G.PR_NO
+				,		G.PR_SEQ
+				,       G.GW_INF_NO
+				,		DECODE(G.GW_STATUS, NULL, 'X', 'O') AS GW_STATUS
+				,       G.GW_INF_NO2
+				,		DECODE(G.GW_STATUS2, NULL, 'X', 'O') AS GW_STATUS2
+				,		D.PO_NO
+				,		NVL(B.AUDIT_STATUS, 'N') AS AUDIT_STATUS
+				,		B.PAY_SEND_NO AS PAY_SEND_NO
+				,		GETUSERNAME(B.HOUSE_CODE, B.ADD_USER_ID, 'LOC') AS ADD_USER_NAME
+				,		B.ADD_DATE AS ADD_DATE
+				,		getDocSubject(B.HOUSE_CODE, B.PAY_SEND_NO, 'PSB', 0) AS SUBJECT
+				,		G.GW_INF_NO AS GW_INF_NO_H
+				,		G.GW_INF_NO2 AS GW_INF_NO2_H
+				FROM 	SPY1GL A
+				,		SPY1LN B
+				,		ICOYTRDT C
+				,		ICOYTXHD C1
+				,		SALEEBILL C2
+				,		ICOYIVDT D
+				,		ICOYPODT E
+				,      ( SELECT * 
+						 FROM SCPGL 
+					 	 WHERE (CONT_NO,CONT_GL_SEQ) IN (SELECT A.CONT_NO,MAX(A.CONT_GL_SEQ) FROM SCPGL A
+					 	                                  WHERE A.SIGN_STATUS = 'E'
+                                                            AND A.CT_FLAG = 'CD'      
+		                                                  GROUP BY A.COMPANY_CODE,A.CONT_NO) ) F			                
+				,		ICOYPRDT G
+				WHERE 	A.STATUS_CD = '30'
+				AND 	A.PAY_SEND_NO = B.PAY_SEND_NO
+				AND 	B.TAX_NO = C.TAX_NO
+				AND 	B.TAX_SEQ = C.TAX_SEQ
+				
+				
+				AND 	C.TAX_NO = C1.TAX_NO
+				AND 	C.TAX_NO = C2.RESSEQ
+				AND 	C.INV_NO = D.INV_NO
+				AND 	C.INV_SEQ = D.INV_SEQ
+				AND 	D.PO_NO = E.PO_NO
+				AND 	D.PO_SEQ = E.PO_SEQ
+				AND 	E.EXEC_NO = F.EXEC_NO(+)
+				AND 	E.PR_NO = G.PR_NO
+				AND 	E.PR_SEQ = G.PR_SEQ
+/*
+				UNION ALL
+				SELECT 	GETCODETEXT1('M810',A.EXPENSECD,'KO') AS EXCD 
+				,		'A' AS PAY_TYPE
+				,		B.PAY_ACT_NO||B.PAY_ACT_SEQ AS PAY_NO
+				,		CONVERT_DATE(A.COMPLATE_DATE)
+				, 		B.APPAPPAM -- A.TOT_AMT
+				, 		A.VENDOR_CODE 
+				,		GETVENDORNAME(A.HOUSE_CODE, A.VENDOR_CODE) AS VENDOR_NAME
+				, 		A.BANK_CODE
+				,		GETCODETEXT1('M349',A.BANK_CODE,'KO') AS BANK_NAME 	
+				, 		A.BANK_ACCT 
+				,		C.TAX_NO
+				,		CASE	
+							WHEN C1.TAX_APP_NO IS NULL THEN 'RP'
+           					ELSE 'P'
+          					END AS TAX_GUBUN
+          		,		C1.PROGRESS_CODE	
+          		,		C2.PUBCODE		
+				,		C.INV_NO
+				,		C.INV_SEQ
+				,		D.ITEM_NO
+				,		F.CONT_NO
+				,		F.CONT_GL_SEQ
+				,		G.PURCHASER_ID AS PURCHASER_ID 
+				,		GETUSERNAMELOC(A.HOUSE_CODE, G.PURCHASER_ID) AS PURCHASER_NAME
+				,		GETUSERNAMELOC(A.HOUSE_CODE, B.AUDIT_USER_ID) AS AUDIT_USER_ID
+				,		G.PR_NO
+				,		G.PR_SEQ
+				,       G.GW_INF_NO
+				,		DECODE(G.GW_STATUS, NULL, 'X', 'O') AS GW_STATUS
+				,       G.GW_INF_NO2
+				,		DECODE(G.GW_STATUS2, NULL, 'X', 'O') AS GW_STATUS2
+				,		D.PO_NO
+				,		NVL(B.AUDIT_STATUS, 'N') AS AUDIT_STATUS
+				,       B.PAY_ACT_NO AS PAY_SEND_NO
+				,		''
+				,		''
+				,		''
+				,		''
+				,		''
+				FROM 	SPY2GL A
+				,		SPY2LN B
+				,		ICOYTRDT C
+				,		ICOYTXHD C1
+				,		SALEEBILL C2
+				,		ICOYIVDT D
+				,		ICOYPODT E
+				,      ( SELECT * 
+						 FROM SCPGL 
+					 	 WHERE (CONT_NO,CONT_GL_SEQ) IN (SELECT A.CONT_NO,MAX(A.CONT_GL_SEQ) FROM SCPGL A					 	                                       
+		                                                 GROUP BY A.COMPANY_CODE,A.CONT_NO) ) F
+				,		ICOYPRDT G
+				WHERE 	A.APP_STATUS_CD = 'A'
+				AND 	A.PAY_ACT_NO = B.PAY_ACT_NO
+				AND 	A.TAX_NO = C.TAX_NO
+				
+				AND  B.PMKPMKCD = C.ITEM_NO     -- 조인관계 불확실
+				AND  B.CNT = C.ITEM_QTY		          -- 조인관계 불확실	
+				AND  B.PAY_ACT_SEQ = C.PAY_SEQ -- 조인관계 불확실
+				
+				AND 	C.TAX_NO = C1.TAX_NO
+				AND 	C.TAX_NO = C2.RESSEQ
+				AND 	C.INV_NO = D.INV_NO
+				AND 	C.INV_SEQ = D.INV_SEQ
+				AND 	D.PO_NO = E.PO_NO
+				AND 	D.PO_SEQ = E.PO_SEQ
+				AND 	E.EXEC_NO = F.EXEC_NO(+)
+				AND 	E.PR_NO = G.PR_NO
+				AND 	E.PR_SEQ = G.PR_SEQ
+*/
+			)A
+			WHERE 	1 = 1
+			AND 	A.AUDIT_STATUS = ${audit_status}
+			AND	  	TO_DATE(A.PAY_DATE) BETWEEN TO_DATE($S{act_from_date})  
+			AND 	TO_DATE($S{act_to_date})	
+			AND 	A.PURCHASER_ID LIKE  '%'|| $S{purchaser_id} || '%'
+			AND 	A.PURCHASER_NAME LIKE  '%'|| $S{purchaser_name} || '%'
+			AND 	A.VENDOR_CODE LIKE  '%'|| $S{vendor_code} || '%'
+			AND 	A.VENDOR_NAME LIKE  '%'|| $S{vendor_name} || '%'
+			ORDER BY PAY_DATE DESC, TAX_NO DESC
+	</method>
+	
+	<method name="doAudit_PY1LN">
+		UPDATE SPY1LN SET 
+			AUDIT_STATUS = 'E'
+		,	AUDIT_USER_ID = ${session.ID}	 
+		WHERE PAY_SEND_NO||PAY_SEND_SEQ = ${PAY_NO}
+	</method>
+	
+	<method name="doAudit_PY2LN">
+		UPDATE SPY2LN SET 
+			AUDIT_STATUS = 'E'
+		,	AUDIT_USER_ID = ${session.ID}	 
+		WHERE PAY_ACT_NO||PAY_ACT_SEQ = ${PAY_NO}	
+	</method>
+
+	<method name="bl_getPayCostList">
+		SELECT	*
+			FROM
+			(
+				SELECT 	GETCODETEXT1('M810',A.EXPENSECD,'KO') AS EXCD 
+				,		'A' AS PAY_TYPE
+				,		B.PAY_ACT_NO||B.PAY_ACT_SEQ AS PAY_NO
+				,		CONVERT_DATE(A.ACT_DATE) AS PAY_DATE
+				, 		B.APPAPPAM AS PAY_AMT
+				, 		A.VENDOR_CODE 
+				,		GETVENDORNAME(A.HOUSE_CODE, A.VENDOR_CODE) AS VENDOR_NAME
+				, 		A.BANK_CODE
+				,		GETCODETEXT1('M349',A.BANK_CODE,'KO') AS BANK_NAME 	
+				, 		A.BANK_ACCT 
+				,		C.TAX_NO
+				,		CASE	
+							WHEN C1.TAX_APP_NO IS NULL THEN 'RP'
+           					ELSE 'P'
+          					END AS TAX_GUBUN
+          		,		C1.PROGRESS_CODE	
+          		,		C2.PUBCODE		
+				,		C.INV_NO
+				,		C.INV_SEQ
+				,		D.ITEM_NO
+				,		F.CONT_NO
+				,		F.CONT_GL_SEQ
+				,		G.PURCHASER_ID AS PURCHASER_ID 
+				,		GETUSERNAMELOC(A.HOUSE_CODE, G.PURCHASER_ID) AS PURCHASER_NAME
+				,		GETUSERNAMELOC(A.HOUSE_CODE, B.COST_USER_ID) AS COST_USER_ID
+				,		G.PR_NO
+				,		G.PR_SEQ
+				,		G.GW_INF_NO
+				,		DECODE(G.GW_STATUS, NULL, 'X', 'O') AS GW_STATUS
+				,		G.GW_INF_NO2
+				,		DECODE(G.GW_STATUS2, NULL, 'X', 'O') AS GW_STATUS2
+				,		D.PO_NO
+				,		NVL(B.COST_STATUS, 'N') AS COST_STATUS
+				,		A.BUGUMCD
+				,		(SELECT DEPT_NAME_LOC FROM ICOMOGDP WHERE HOUSE_CODE = A.HOUSE_CODE AND DEPT = A.BUGUMCD AND ROWNUM = 1) AS DEPT_NAME_LOC
+				,		G.GW_INF_NO AS GW_INF_NO_H
+				,		G.GW_INF_NO2 AS GW_INF_NO2_H
+				FROM 	SPY2GL A
+				,		SPY2LN B
+				,		ICOYTRDT C
+				,		ICOYTXHD C1
+				,		SALEEBILL C2
+				,		ICOYIVDT D
+				,		ICOYPODT E
+				,      ( SELECT * 
+						 FROM SCPGL 
+					 	 WHERE (CONT_NO,CONT_GL_SEQ) IN (SELECT A.CONT_NO,MAX(A.CONT_GL_SEQ) FROM SCPGL A
+					 	                                  WHERE A.SIGN_STATUS = 'E'
+                                                            AND A.CT_FLAG = 'CD' 
+		                                                   GROUP BY A.COMPANY_CODE,A.CONT_NO) ) F			                
+				,		ICOYPRDT G
+				WHERE 	A.APP_STATUS_CD = 'F'
+				AND 	A.PAY_ACT_NO = B.PAY_ACT_NO
+				AND 	A.TAX_NO = C.TAX_NO
+				
+				AND  B.PMKPMKCD = C.ITEM_NO     -- 조인관계 불확실
+				AND  B.CNT = C.ITEM_QTY		          -- 조인관계 불확실	
+				AND  B.PAY_ACT_SEQ = C.PAY_SEQ -- 조인관계 불확실
+				
+				AND 	C.TAX_NO = C1.TAX_NO
+				AND 	C.TAX_NO = C2.RESSEQ
+				AND 	C.INV_NO = D.INV_NO
+				AND 	C.INV_SEQ = D.INV_SEQ
+				AND 	D.PO_NO = E.PO_NO
+				AND 	D.PO_SEQ = E.PO_SEQ
+				AND 	E.EXEC_NO = F.EXEC_NO(+)
+				AND 	E.PR_NO = G.PR_NO
+				AND 	E.PR_SEQ = G.PR_SEQ
+			)A
+			WHERE 	1 = 1
+			AND 	A.COST_STATUS = ${audit_status}
+			AND	  	TO_DATE(A.PAY_DATE) BETWEEN TO_DATE($S{act_from_date})  
+			AND 	TO_DATE($S{act_to_date})	
+			AND 	A.PURCHASER_ID LIKE  '%'|| $S{purchaser_id} || '%'
+			AND 	A.PURCHASER_NAME LIKE  '%'|| $S{purchaser_name} || '%'
+			AND 	A.VENDOR_CODE LIKE  '%'|| $S{vendor_code} || '%'
+			AND 	A.VENDOR_NAME LIKE  '%'|| $S{vendor_name} || '%'
+			AND 	A.BUGUMCD LIKE  '%'|| $S{demand_dept} || '%'
+			AND 	A.DEPT_NAME_LOC LIKE  '%'|| $S{demand_dept_name} || '%'
+			ORDER BY PAY_DATE DESC, TAX_NO DESC
+	</method>	
+	
+	<method name="doCost">
+		UPDATE SPY2LN SET 
+			COST_STATUS = 'E'
+		,	COST_USER_ID = ${session.ID}	 
+		WHERE PAY_ACT_NO||PAY_ACT_SEQ = ${PAY_NO}	
+	</method>
+	
+	<method name="bl_getPayAuditListPop">
+		SELECT  *
+			FROM
+			(
+				SELECT  '자본예산' AS EXCD
+				,		'S' AS PAY_TYPE
+				,		B.PAY_SEND_NO||B.PAY_SEND_SEQ AS PAY_NO
+				,		CONVERT_DATE(A.ADD_DATE) AS PAY_DATE
+				, 		B.APPAPPAM AS PAY_AMT
+				, 		A.VENDOR_CODE
+				,		GETVENDORNAME(A.HOUSE_CODE, A.VENDOR_CODE) AS VENDOR_NAME	
+				, 		A.BANK_CODE
+				,		GETCODETEXT1('M349',A.BANK_CODE,'KO') AS BANK_NAME 
+				, 		A.BANK_ACCT  
+				,		C.TAX_NO
+				,		CASE	
+							WHEN C1.TAX_APP_NO IS NULL THEN 'RP'
+           					ELSE 'P'
+          					END AS TAX_GUBUN
+				,		C1.PROGRESS_CODE    
+				,		C2.PUBCODE      					
+				,		C.INV_NO
+				,		C.INV_SEQ
+				,		D.ITEM_NO
+				,		F.CONT_NO
+				,		F.CONT_GL_SEQ
+				,		G.PURCHASER_ID AS PURCHASER_ID 
+				,		GETUSERNAMELOC(A.HOUSE_CODE, G.PURCHASER_ID) AS PURCHASER_NAME 
+				,		GETUSERNAMELOC(A.HOUSE_CODE, B.AUDIT_USER_ID) AS AUDIT_USER_ID
+				,		G.PR_NO
+				,		G.PR_SEQ
+				,       G.GW_INF_NO
+				,		DECODE(G.GW_STATUS, NULL, 'X', 'O') AS GW_STATUS
+				,       G.GW_INF_NO2
+				,		DECODE(G.GW_STATUS2, NULL, 'X', 'O') AS GW_STATUS2
+				,		D.PO_NO
+				,		NVL(B.AUDIT_STATUS, 'N') AS AUDIT_STATUS
+				,		B.PAY_SEND_NO AS DOC_NO
+				FROM 	SPY1GL A
+				,		SPY1LN B
+				,		ICOYTRDT C
+				,		ICOYTXHD C1
+				,		SALEEBILL C2
+				,		ICOYIVDT D
+				,		ICOYPODT E
+				,      ( SELECT * 
+						 FROM SCPGL 
+					 	 WHERE (CONT_NO,CONT_GL_SEQ) IN (SELECT A.CONT_NO,MAX(A.CONT_GL_SEQ) FROM SCPGL A
+					 	                                  WHERE A.SIGN_STATUS = 'E'
+                                                            AND A.CT_FLAG = 'CD'      
+		                                                  GROUP BY A.COMPANY_CODE,A.CONT_NO) ) F			                
+				,		ICOYPRDT G
+				WHERE 	A.PAY_SEND_NO = B.PAY_SEND_NO
+				AND 	B.TAX_NO = C.TAX_NO
+				AND 	B.TAX_SEQ = C.TAX_SEQ
+				AND 	C.TAX_NO = C1.TAX_NO
+				AND 	C.TAX_NO = C2.RESSEQ
+				AND 	C.INV_NO = D.INV_NO
+				AND 	C.INV_SEQ = D.INV_SEQ
+				AND 	D.PO_NO = E.PO_NO
+				AND 	D.PO_SEQ = E.PO_SEQ
+				AND 	E.EXEC_NO = F.EXEC_NO(+)
+				AND 	E.PR_NO = G.PR_NO
+				AND 	E.PR_SEQ = G.PR_SEQ
+				UNION ALL
+				SELECT GETCODETEXT1('M810',A.EXPENSECD,'KO') AS EXCD
+				,		'A' AS PAY_TYPE
+				,		B.PAY_ACT_NO||B.PAY_ACT_SEQ AS PAY_NO
+				,		CONVERT_DATE(A.ACT_DATE)
+				, 		B.APPAPPAM -- A.TOT_AMT
+				, 		A.VENDOR_CODE 
+				,		GETVENDORNAME(A.HOUSE_CODE, A.VENDOR_CODE) AS VENDOR_NAME
+				, 		A.BANK_CODE
+				,		GETCODETEXT1('M349',A.BANK_CODE,'KO') AS BANK_NAME 	
+				, 		A.BANK_ACCT 
+				,		C.TAX_NO
+				,		CASE	
+							WHEN C1.TAX_APP_NO IS NULL THEN 'RP'
+           					ELSE 'P'
+          					END AS TAX_GUBUN
+          		,		C1.PROGRESS_CODE	
+          		,		C2.PUBCODE		
+				,		C.INV_NO
+				,		C.INV_SEQ
+				,		D.ITEM_NO
+				,		F.CONT_NO
+				,		F.CONT_GL_SEQ
+				,		G.PURCHASER_ID AS PURCHASER_ID 
+				,		GETUSERNAMELOC(A.HOUSE_CODE, G.PURCHASER_ID) AS PURCHASER_NAME
+				,		GETUSERNAMELOC(A.HOUSE_CODE, B.AUDIT_USER_ID) AS AUDIT_USER_ID
+				,		G.PR_NO
+				,		G.PR_SEQ
+				,       G.GW_INF_NO
+				,		DECODE(G.GW_STATUS, NULL, 'X', 'O') AS GW_STATUS
+				,       G.GW_INF_NO2
+				,		DECODE(G.GW_STATUS2, NULL, 'X', 'O') AS GW_STATUS2
+				,		D.PO_NO
+				,		NVL(B.AUDIT_STATUS, 'N') AS AUDIT_STATUS
+				,		B.PAY_ACT_NO AS DOC_NO
+				FROM 	SPY2GL A
+				,		SPY2LN B
+				,		ICOYTRDT C
+				,		ICOYTXHD C1
+				,		SALEEBILL C2
+				,		ICOYIVDT D
+				,		ICOYPODT E
+				,      ( SELECT * 
+						 FROM SCPGL 
+					 	 WHERE (CONT_NO,CONT_GL_SEQ) IN (SELECT A.CONT_NO,MAX(A.CONT_GL_SEQ) FROM SCPGL A
+					 	                                  WHERE A.SIGN_STATUS = 'E'
+                                                            AND A.CT_FLAG = 'CD' 
+		                                                  GROUP BY A.COMPANY_CODE,A.CONT_NO) ) F			                
+				,		ICOYPRDT G
+				WHERE A.PAY_ACT_NO = B.PAY_ACT_NO
+				AND 	A.TAX_NO = C.TAX_NO
+				
+				AND  B.PMKPMKCD = C.ITEM_NO     -- 조인관계 불확실
+				AND  B.CNT = C.ITEM_QTY		          -- 조인관계 불확실	
+				AND  B.PAY_ACT_SEQ = C.PAY_SEQ -- 조인관계 불확실
+				
+				AND 	C.TAX_NO = C1.TAX_NO
+				AND 	C.TAX_NO = C2.RESSEQ
+				AND 	C.INV_NO = D.INV_NO
+				AND 	C.INV_SEQ = D.INV_SEQ
+				AND 	D.PO_NO = E.PO_NO
+				AND 	D.PO_SEQ = E.PO_SEQ
+				AND 	E.EXEC_NO = F.EXEC_NO(+)
+				AND 	E.PR_NO = G.PR_NO
+				AND 	E.PR_SEQ = G.PR_SEQ
+			)A
+			WHERE 	1 = 1
+			AND 	A.DOC_NO = ${doc_no}			
+			ORDER BY PAY_DATE DESC, TAX_NO DESC
+	</method>
+	
+</service>

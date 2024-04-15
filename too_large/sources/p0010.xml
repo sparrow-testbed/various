@@ -1,0 +1,1180 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+<service>
+
+	<method name="et_setInsert_icomvngl_vngl">
+	<![CDATA[
+	 	 	INSERT INTO ICOMVNGL(
+									HOUSE_CODE
+								  , VENDOR_CODE
+								  , STATUS
+								  , ADD_USER_ID
+								  , ADD_USER_DEPT
+								  , ADD_DATE
+								  , ADD_TIME
+								  , JOB_STATUS
+								  , BP_FLAG
+								  , VENDOR_NAME_LOC
+								  , SOLE_PROPRIETOR_FLAG
+								  , SHIPPER_TYPE
+								  , VENDOR_TYPE
+								  , IRS_NO
+								  , IRS_NO_OLD
+								  , BUSINESS_TYPE
+								  , INDUSTRY_TYPE
+								  , START_DATE
+								  , CAPITAL
+								  , RESIDENT_NO
+								  , ENTRY_DEPT_NAME
+								  , ENTRY_USER_NAME
+								  , COUNTRY
+								  , CITY_CODE
+								  , BIZ_CLASS1
+								  , BIZ_CLASS2
+								  , BIZ_CLASS3
+								  , BIZ_CLASS4
+								  , BIZ_CLASS5
+								  , BANK_CODE
+								  , DEPOSITOR_NAME
+								  , BANK_ACCT
+								  , CREDIT_RATING
+								  , CREDIT_DATE
+								  , IRS_NO_MAIN
+								  , COMPANY_REG_NO
+								  , ATTACH_NO
+								  , SEARCH_KEY
+								  , AKONT
+								  , ZTERM
+								  , ZWELS
+								  , BANK_KEY
+								  , LANGUAGE
+								  , EMP_COUNT1
+								  , EMP_COUNT2
+								  , VENDOR_ID
+								  , VENDOR_PASSWORD
+								  , HOME_URL
+								  , ENGINEER_COUNT
+								  , TAX_DIV
+								  , ENTRY_TEL
+							      , ENTRY_EMAIL
+							      , CLASS_GRADE
+							      , SUPPLY_ETHICS_VOW
+						)VALUES(
+								   ? --HOUSE_CODE
+						          ,? --VENDOR_CODE
+								  ,? --STATUS
+	                			  ,? --ADD_USER_ID
+	                			  ,? --ADD_USER_DEPT
+	                			  ,TO_CHAR(SYSDATE,'YYYYMMDD')
+	                			  ,SUBSTR(TO_CHAR(SYSDATE, 'HH24MISS'), 1, 6)
+	                			  ,? --JOB_STATUS
+	                			  ,? --BP_FLAG
+						          ,? --VENDOR_NAME_LOC
+						          ,? --SOLE_PROPRIETOR_FLAG
+						          ,? --SHIPPER_TYPE
+						          ,? --VENDOR_TYPE
+						          ,? --IRS_NO
+						          ,? --IRS_NO_OLD
+						          ,? --BUSINESS_TYPE
+						          ,? --INDUSTRY_TYPE
+						          ,? --START_DATE
+						          ,NVL(?,0) --CAPITAL
+						          ,? --RESIDENT_NO
+						          ,? --ENTRY_DEPT_NAME
+						          ,? --ENTRY_USER_NAME
+						          ,? --COUNTRY
+						          ,? --CITY_CODE
+						          ,? --BIZ_CLASS1
+						          ,? --BIZ_CLASS2
+						          ,? --BIZ_CLASS3
+						          ,? --BIZ_CLASS4
+						          ,? --BIZ_CLASS5
+						          ,? --BANK_acct  -- HBKID 지급은행(uni)
+						          ,? --DEPOSITOR_NAME
+						          ,? --BANK_code ----계좌번호
+						          ,? --CREDIT_RATING
+						          ,? --CREDIT_DATE
+						          ,? --IRS_NO_MAIN
+						          ,? --COMPANY_REG_NO
+						          ,? --ATTACH_NO
+						          ,? --search_key
+						          ,? --akont
+						          ,? --zterm
+						          ,? --zwels
+						          ,? --bank_key 은행코드
+						          ,'KO'
+						          ,NVL(?,0)
+						          ,NVL(?,0)
+						          ,? --VENDOR_ID
+						          ,? --VENDOR_PASSWORD
+						          ,? --HOME_URL
+						          ,? --ENGINEER_COUNT
+								  ,? --TAX_DIV
+								  ,? --ENTRY_TEL
+							      ,? --ENTRY_EMAIL
+							      ,'D' -- CLASS_GRADE
+							      ,'당사는 투명하고 공정한 거래관계가 기업의 가치를 제고하고 상호발전을 이룬다는 것을 깊이 인식하고, 다음 사항을 준수할 것을 서약합니다.'
+						)
+
+		]]>
+
+	</method>
+
+	<method name="et_setInsert_icomvngl_addr">
+	<![CDATA[
+	 	 	 INSERT INTO ICOMADDR
+					 (
+					   HOUSE_CODE
+					 , CODE_NO
+					 , CODE_TYPE
+					 , ZIP_CODE
+					 , PHONE_NO1
+					 , PHONE_NO2
+					 , FAX_NO
+					 , ADDRESS_LOC
+					 , CEO_NAME_LOC
+					 , EMAIL
+					 , HOUSE_NUM1
+					 ) VALUES (
+					   ? -- HOUSE_CODE
+					 , ? -- CODE_NO
+					 , ? -- CODE_TYPE
+					 , ? -- ZIP_CODE
+					 , ? -- PHONE_NO1
+					 , ? -- PHONE_NO2
+					 , ? -- FAX_NO
+					 , ? -- ADDRESS_LOC
+					 , ? -- CEO_NAME_LOC
+					 , ? -- EMAIL
+					 , ? -- house_num1
+					 )
+		]]>
+
+	</method>
+
+	<method name="et_setUpdate_vngl_adm">
+		<![CDATA[
+
+			    UPDATE ICOMVNGL SET -- ?
+				     BANK_CODE = '#BANK_CODE#'
+				  ,  AKONT = '#AKONT#'
+				  ,  ZTERM = '#ZTERM#'
+				  ,  ZWELS = '#ZWELS#'
+				  ,  CHANGE_USER_ID = '#user_id#'
+				  ,  CHANGE_DATE = '#change_date#'
+				  ,  CHANGE_TIME = '#change_time#'
+				 WHERE HOUSE_CODE = '#house_code#'
+				   AND VENDOR_CODE  = '#vendor_code#'
+			]]>
+	</method>
+
+	<method name="et_setUpdate_vngl_vngl">
+		<![CDATA[
+
+
+		 UPDATE ICOMVNGL SET
+				     VENDOR_NAME_LOC                         = ?
+				  ,  BP_FLAG                        		 = ?
+				  ,  SOLE_PROPRIETOR_FLAG                    = ?
+				  ,  SHIPPER_TYPE                            = ?
+				  ,  VENDOR_TYPE                             = ?
+				  ,  IRS_NO				                     = ?
+				  ,  IRS_NO_OLD						         = ?
+				  ,  BUSINESS_TYPE                           = ?
+				  ,  INDUSTRY_TYPE                           = ?
+				  ,  START_DATE                              = ?
+				  ,  CAPITAL                                 = ?
+				  ,  RESIDENT_NO				             = ?
+				  ,  ENTRY_DEPT_NAME                         = ?
+				  ,  ENTRY_USER_NAME                         = ?
+				  ,  COUNTRY                                 = ?
+				  ,  CITY_CODE                               = ?
+				  ,  BIZ_CLASS1                              = ?
+				  ,  BIZ_CLASS2                              = ?
+				  ,  BIZ_CLASS3                              = ?
+				  ,  BIZ_CLASS4                              = ?
+				  ,  BIZ_CLASS5                              = ?
+				  ,  BANK_CODE                               = ?
+				  ,  DEPOSITOR_NAME                          = ?
+				  ,  BANK_ACCT                               = ?
+				  ,  CREDIT_RATING                           = ?
+				  ,  CREDIT_DATE                             = ?
+				  ,  IRS_NO_MAIN							 = ?
+				  ,  COMPANY_REG_NO				             = ?
+				  ,  ATTACH_NO						         = ?
+				  ,  SEARCH_KEY					             = ?
+				  ,  AKONT					                 = ?
+				  ,  ZTERM					                 = ?
+				  ,  ZWELS					                 = ?
+				  ,  BANK_KEY					             = ?
+				  ,  EMP_COUNT1					             = ?			  
+				  ,  EMP_COUNT2					             = ?
+				  ,  HOME_URL					             = ?
+				  ,  ENGINEER_COUNT					         = ?
+				  ,  TAX_DIV					             = ?
+				  ,  ENTRY_TEL					             = ?
+				  ,  ENTRY_EMAIL					         = ?	  
+				  , CHANGE_USER_ID              = '#user_id#'
+				  , CHANGE_DATE                 = '#change_date#'
+				  , CHANGE_TIME                 = '#change_time#'
+				  , LANGUAGE					= 'KO'
+				 WHERE HOUSE_CODE = ?
+				 AND VENDOR_CODE  = ?
+
+		]]>
+	</method>
+
+	<method name="et_setUpdate_vngl_addr">
+		<![CDATA[
+		 UPDATE ICOMADDR SET
+				     ZIP_CODE      = ?
+				   , PHONE_NO1     = ?
+				   , PHONE_NO2     = ?
+				   , FAX_NO        = ?
+				   , ADDRESS_LOC   = ?
+				   , CEO_NAME_LOC  = ?
+				   , EMAIL         = ?
+				   , HOUSE_NUM1    = ?
+				 WHERE  HOUSE_CODE = ?
+				 AND CODE_NO       = ?
+				 AND CODE_TYPE     = ?
+
+		]]>
+	</method>
+
+	<method name="et_getVendorProject">
+		<![CDATA[
+
+					SELECT  PROJECT_NAME
+								   ,PROJECT_YEAR
+								   ,convert_date(ENT_FROM_DATE) AS ENT_FROM_DATE
+								   ,convert_date(ENT_TO_DATE) AS ENT_TO_DATE
+								   ,CUSTOMER_NAME
+								   ,MAIN_CONT_NAME
+								   ,CUR
+								   ,PROJECT_AMT
+								   ,HOUSE_CODE
+								   ,VENDOR_CODE
+								   ,SEQ
+								   ,PROJECT_TYPE
+								   ,REMARK
+							FROM ICOMVNPJ
+							WHERE HOUSE_CODE   = ${house_code}
+							  AND VENDOR_CODE  = ${vendor_code} 
+							ORDER BY ENT_FROM_DATE DESC
+		]]>
+	</method>
+
+	<method name="et_setVendorProject_insert">
+		<![CDATA[
+
+		 INSERT INTO ICOMVNPJ
+	    		 (
+	    		   HOUSE_CODE
+	    		 , VENDOR_CODE
+	    		 , SEQ
+	    		 , PROJECT_NAME
+	    		 , PROJECT_YEAR
+	    		 , ENT_FROM_DATE
+	    		 , ENT_TO_DATE
+	    		 , CUSTOMER_NAME
+	    		 , MAIN_CONT_NAME
+	    		 , CUR
+	    		 , PROJECT_AMT
+	    		 , PROJECT_TYPE
+	    		 , REMARK
+	    		 , STATUS
+	    		 , ADD_DATE
+	    		 , ADD_TIME
+	    		 , ADD_USER_ID
+	    		 , CHANGE_DATE
+	    		 , CHANGE_TIME
+	    		 , CHANGE_USER_ID
+	    		 )
+	    		 SELECT
+	    		   ${house_code}
+	    		 , ${vendor_code}
+	    		 , (SELECT NVL(MAX(TO_NUMBER(SEQ)),0) + 1 FROM ICOMVNPJ
+	    		           WHERE HOUSE_CODE = '#house_code#'
+	    		           AND VENDOR_CODE  = '#vendor_code#'
+	    		           AND STATUS != 'D')
+	    		 , ${PROJECT_NAME}
+	    		 , ${PROJECT_YEAR}
+	    		 , ${ENT_FROM_DATE}
+	    		 , ${ENT_TO_DATE}
+	    		 , ${CUSTOMER_NAME}
+	    		 , ${MAIN_CONT_NAME}
+	    		 , ${CUR}
+	    		 , ${PROJECT_AMT}
+	    		 , ${PROJECT_TYPE}
+	    		 , ${REMARK}
+	    		 , 'C'
+	    		 , '#add_date#'
+	    		 , '#add_time#'
+	    		 , '#user_id#'
+	    		 , '#add_date#'
+	    		 , '#add_time#'
+	    		 , '#user_id#' from dual
+
+		]]>
+	</method>
+
+	<method name="et_setVendorProject_update">
+		<![CDATA[
+		 UPDATE ICOMVNPJ SET
+    		   PROJECT_NAME	 	= ${PROJECT_NAME}
+    		 , PROJECT_YEAR	 	= ${PROJECT_YEAR}
+    		 , ENT_FROM_DATE    = ${ENT_FROM_DATE}
+    		 , ENT_TO_DATE	    = ${ENT_TO_DATE}
+    		 , CUSTOMER_NAME    = ${CUSTOMER_NAME}
+    		 , MAIN_CONT_NAME   = ${MAIN_CONT_NAME}
+    		 , CUR			    = ${CUR}
+    		 , PROJECT_AMT	    = ${PROJECT_AMT}
+    		 , PROJECT_TYPE	 	= ${PROJECT_TYPE}
+    		 , REMARK	        = ${REMARK}
+    		 , STATUS           = 'R'
+    		 , ADD_DATE         = '#add_date#'
+    		 , ADD_TIME         = '#add_time#'
+    		 , ADD_USER_ID      = '#user_id#'
+    		 , CHANGE_DATE      = '#add_date#'
+    		 , CHANGE_TIME      = '#add_time#'
+    		 , CHANGE_USER_ID   = '#user_id#'
+    		 WHERE HOUSE_CODE   = ${house_code}
+    		 AND VENDOR_CODE    = ${vendor_code}
+    		 AND SEQ            = ${SEQ}
+		]]>
+	</method>
+
+	<method name="et_delVendorProject">
+		<![CDATA[
+
+		 DELETE FROM ICOMVNPJ
+	    		 WHERE HOUSE_CODE = ${house_code}
+	    		 AND VENDOR_CODE  = ${vendor_code}
+	    		 AND SEQ          = ${SEQ}
+
+		]]>
+	</method>
+
+	<method name="et_getMainternace_icomvncp">
+		<![CDATA[
+			 SELECT
+				     USER_NAME
+				   , DIVISION
+				   , GETICOMCODE2(HOUSE_CODE,'M106',POSITION) AS TEXT_POSITION
+				   , PHONE_NO
+				   , EMAIL
+				   , MOBILE_NO
+				   , FAX_NO
+				   , POSITION
+				   , HOUSE_CODE
+				   , COMPANY_CODE
+				   , VENDOR_CODE
+				   , SEQ
+				 FROM  ICOMVNCP
+				 WHERE HOUSE_CODE = ${house_code}
+				 AND VENDOR_CODE = ${vendor_code}
+				 AND STATUS != 'D'
+				 ORDER BY  USER_NAME
+
+		]]>
+	</method>
+
+	<method name="getCode">
+	<![CDATA[
+
+		SELECT CODE, TEXT1
+					FROM SCODE
+					WHERE TYPE		 ='#code#'
+					AND   HOUSE_CODE ='#house_code#'
+					AND   NVL(DEL_FLAG, 'N') = 'N'
+					AND   USE_FLAG   =  'Y'
+
+	]]>
+	</method>
+	<method name="et_setSave_icomvncp_insert">
+	<![CDATA[
+		 INSERT INTO ICOMVNCP
+	    		 (
+	    		   HOUSE_CODE
+	    		 , COMPANY_CODE
+	    		 , VENDOR_CODE
+	    		 , SEQ
+	    		 , PHONE_NO
+	    		 , USER_NAME
+	    		 , DIVISION
+	    		 , FAX_NO
+	    		 , MOBILE_NO
+	    		 , EMAIL
+	    		 , POSITION
+	    		 , STATUS
+	    		 , ADD_DATE
+	    		 , ADD_TIME
+	    		 , ADD_USER_ID
+	    		 , CHANGE_DATE
+	    		 , CHANGE_TIME
+	    		 , CHANGE_USER_ID
+	    		 )
+	    		 SELECT
+	    		   ${house_code}
+	    		 , ${company_code}
+	    		 , ${vendor_code}
+	    		 , NVL((SELECT NVL(MAX(SEQ),0) + 1 FROM ICOMVNCP
+	    		           WHERE HOUSE_CODE = '#house_code#'
+	    		           AND COMPANY_CODE = '#company_code#'
+	    		           AND VENDOR_CODE  = '#vendor_code#'
+	    		           ),1)
+	    		 , ${PHONE_NO}
+	    		 , ${USER_NAME}
+	    		 , ${DIVISION}
+	    		 , ${FAX_NO}
+	    		 , ${MOBILE_NO}
+	    		 , ${EMAIL}
+	    		 , ${POSITION}
+	    		 , 'C'
+	    		 , '#add_date#'
+	    		 , '#add_time#'
+	    		 , '#user_id#'
+	    		 , '#add_date#'
+	    		 , '#add_time#'
+	    		 , '#user_id#' from dual
+
+	]]>
+	</method>
+	<method name="et_setSave_icomvncp_update">
+	<![CDATA[
+
+	 UPDATE ICOMVNCP SET
+	    		   PHONE_NO         = ${PHONE_NO}       
+	    		 , USER_NAME        = ${USER_NAME}      
+	    		 , DIVISION         = ${DIVISION}       
+	    		 , FAX_NO           = ${FAX_NO}         
+	    		 , MOBILE_NO        = ${MOBILE_NO}      
+	    		 , EMAIL            = ${EMAIL}          
+	    		 , POSITION         = ${POSITION}       
+	    		 , STATUS           = 'R'
+	    		 , ADD_DATE         = '#add_date#'
+	    		 , ADD_TIME         = '#add_time#'
+	    		 , ADD_USER_ID      = '#user_id#'
+	    		 , CHANGE_DATE      = '#add_date#'
+	    		 , CHANGE_TIME      = '#add_time#'
+	    		 , CHANGE_USER_ID   = '#user_id#'
+	    		 WHERE HOUSE_CODE   = ${house_code}   
+	    		 AND COMPANY_CODE   = ${company_code} 
+	    		 AND VENDOR_CODE    = ${vendor_code}  
+	    		 AND SEQ            = ${SEQ} 
+	]]>
+	</method>
+	<method name="et_setDelete_icomvncp">
+	<![CDATA[
+		 DELETE FROM ICOMVNCP
+	    		 WHERE HOUSE_CODE = ${house_code}
+	    		 AND COMPANY_CODE = ${company_code}
+	    		 AND VENDOR_CODE  = ${vendor_code}
+	    		 AND SEQ          = ${SEQ}
+
+	]]>
+	</method>
+	<method name="et_doConfirm">
+	<![CDATA[
+		 UPDATE ICOMVNGL SET
+	    		   JOB_STATUS	 	 = 'P'
+	    		 , SIGN_STATUS      = ''
+	    		 , CHANGE_DATE      = TO_CHAR(SYSDATE,'YYYYMMDD')
+	    		 , CHANGE_TIME      = SUBSTR(TO_CHAR(SYSDATE, 'HH24MISS'), 1, 6)
+	    		 , CHANGE_USER_ID   = '#user_id#'
+	    		 WHERE HOUSE_CODE   = '#house_code#'
+	    		 AND VENDOR_CODE    = '#vendor_code#'
+
+	]]>
+	</method>
+
+	<method name="et_doConfirm_sgvn">
+	<![CDATA[
+		 UPDATE SSGVN SET
+	    		   REGISTRY_FLAG	= 'N'
+	    		 WHERE HOUSE_CODE   = '#house_code#'
+	    		 AND VENDOR_CODE    = '#vendor_code#'
+
+	]]>
+	</method>
+		
+	<method name="et_getMainternace_vendor_list_vw">
+	<![CDATA[
+		 SELECT distinct
+				     VW.VENDOR_TYPE_NAME
+				   , VW.VENDOR_COND_NAME
+				   , VW.VENDOR_CODE
+				   , VW.VENDOR_NAME_LOC
+				   , VW.COUNTRY_NAME
+				   , VW.INDUSTRY_TYPE
+				   , VW.USER_NAME
+				   , VW.PHONE_NO
+				   , VW.EMAIL
+				   , VW.CREDIT_RATING
+				   , VW.IRS_NO
+				   , case VW.GL_BLOCK_FLAG when 'N' then '거래' else '중지' end GL_BLOCK_FLAG
+				   , VW.PU_BLOCK_FLAG
+				   , VW.CEO_NAME_LOC
+				   , VW.MOBILE_NO
+				   , getIcomcode2(VW.HOUSE_CODE,'M004',VW.COUNTRY || VW.CITY_CODE) as CITY_NAME
+				   , (SELECT BUSINESS_TYPE FROM ICOMVNGL WHERE VENDOR_CODE = VW.VENDOR_CODE) AS BUSINESS_TYPE
+				 FROM VENDOR_LIST_VW VW
+				 <OPT=F,S> WHERE VW.HOUSE_CODE = ? </OPT>
+				 <OPT=S,S>   AND VW.VENDOR_TYPE = ? </OPT>
+				 <OPT=S,S>   AND VW.VENDOR_CODE LIKE '%' || ? || '%' </OPT>
+				 <OPT=S,S>   AND VW.IRS_NO LIKE '%' || replace(?, '-', '') || '%' </OPT>
+				 <OPT=S,S>   AND VW.VENDOR_NAME_LOC LIKE '%' || ? || '%' </OPT>
+				 <OPT=S,S>   AND VW.USER_NAME LIKE '%' || ? || '%' </OPT>
+
+	]]>
+				<if test="${check}" operator = "eq" value = "Y">
+				<![CDATA[
+					             AND EXISTS (SELECT VENDOR_CODE
+					                           FROM ICOIGRDT GR, ICOMMTGL MT
+					                          WHERE GR.HOUSE_CODE  = MT.HOUSE_CODE
+					                            AND GR.ITEM_NO     = MT.ITEM_NO
+					                            AND GR.VENDOR_CODE = VW.VENDOR_CODE
+					                            AND GR.HOUSE_CODE  = VW.HOUSE_CODE
+					                            AND GR.SIGN_CLOSING_DATE IS NOT NULL
+					                <OPT=S,S>   AND MT.ITEM_GROUP  = ? </OPT>
+					                <OPT=S,S>   AND GR.SIGN_CLOSING_DATE  BETWEEN ? </OPT>
+					                <OPT=S,S>                                 AND ? </OPT>
+					                         )
+				]]>
+				</if>
+				<![CDATA[
+				 <OPT=S,S>   AND VW.SOLE_PROPRIETOR_FLAG LIKE '%' || ? || '%' </OPT>
+				]]>
+
+
+	</method>
+	<method name="getDis_icomvngl">
+	<![CDATA[
+		 SELECT
+			    GL.HOUSE_CODE
+			  , GL.VENDOR_CODE
+			  , GL.VENDOR_TYPE
+			  , GL.VENDOR_COND
+			  , GL.BP_FLAG
+			  , GL.VENDOR_NAME_LOC
+			  , GL.VENDOR_NAME_ENG
+			  , GL.COUNTRY
+			  , GL.CITY_CODE
+			  , GL.LANGUAGE
+			  , GL.DUNS_NO
+			  , GL.IRS_NO
+			  , GL.IRS_NO_OLD
+			  , GL.IRS_CHANGE_DATE
+			  , GL.COMPANY_REG_NO
+			  , GL.FOUNDATION_DATE
+			  , GL.VAT_APP_TYPE
+			  , GL.INDUSTRY_TYPE
+			  , GL.BUSINESS_TYPE
+			  , GL.GROUP_COMPANY_CODE
+			  , GL.GROUP_COMPANY_NAME
+			  , GL.TRADE_REG_NO
+			  , GL.MAIN_PRODUCT
+			  , GL.CREDIT_RATING
+			  , GL.SOLE_PROPRIETOR_FLAG
+			  , GL.RESIDENT_NO
+			  , GL.EDI_FLAG
+			  , GL.EDI_ID
+			  , GL.EDI_QUALIFIER
+			  , GL.CUSTOMS_COMPANY_CODE
+			  , GL.PAYEE_FLAG
+			  , GL.SHIPPER_FLAG
+			  , GL.PURCHASE_BLOCK_FLAG
+			  , GL.STATUS
+			  , GL.FREE_EXPORT_COMPANY
+			  , GL.DISCOUNT_FLAG
+			  , GL.PAY_TO_LOCATION
+			  , GL.SIGN_STATUS
+			  , GL.SIGN_DATE
+			  , GL.SIGN_PERSON_ID
+			  , GL.COMPANY_TYPE
+			  , GL.EVALUATION_FLAG
+			  , GL.SHIPPER_TYPE
+			  , GL.SEARCH_KEY
+			  , GL.JOB_STATUS
+			  , GL.ATTACH_NO
+			  , GL.ATTACH_NO2
+			  --, (SELECT count(*) FROM ICOMATCH WHERE DOC_NO=attach_no) as attach_count
+			  , (SELECT count(*) FROM sfile WHERE DOC_NO=attach_no) as attach_count
+			  , GL.CTRL_CODE
+			  , GL.ETAX_BILL_FLAG
+			  , GL.ENTRY_DEPT_NAME
+			  , GL.ENTRY_USER_NAME
+			  , GL.DEPOSITOR_NAME
+			  , GL.BANK_ACCT
+			  , GL.CREDIT_DATE
+			  , GL.IRS_NO_MAIN
+			  , GL.EBIZ_FLAG
+			  , CONVERT_DATE(GL.START_DATE) AS START_DATE
+			  , (SELECT NVL(Z_ECREDIT_LINK_FLAG,'N') FROM ICOMCMGL
+					WHERE HOUSE_CODE = '#house_code#' AND COMPANY_CODE = '#company_code#') AS ECREDIT_FLAG
+			  , GL.ADD_DATE
+			  , GL.ADD_USER_ID
+			  , GL.ADD_USER_DEPT
+			  , GL.CHANGE_DATE
+			  , GL.CHANGE_USER_ID
+			  , GL.CHANGE_USER_DEPT
+			  , GL.BIZ_CLASS1
+			  , GL.BIZ_CLASS2
+			  , GL.BIZ_CLASS3
+			  , GL.BIZ_CLASS4
+			  , GL.BIZ_CLASS5
+			  , DR.ZIP_CODE
+			  , DR.PHONE_NO1 AS PHONE_NO1
+			  , DR.PHONE_NO2 AS PHONE_NO2
+			  , DR.FAX_NO AS FAX_NO
+			  , DR.HOMEPAGE
+			  , DR.ADDRESS_LOC
+			  , DR.ADDRESS_ENG
+			  , DR.CEO_NAME_LOC
+			  , DR.CEO_NAME_ENG
+			  , DR.EMAIL
+			  , DR.HOUSE_NUM1
+			  , lpad(gl.BANK_CODE, 5, 0) as bank_code
+			  , gl.BANK_KEY
+			  , gl.akont
+			  , gl.zterm
+			  , gl.zwels
+			  , GETICOMCODE2(GL.HOUSE_CODE, 'M025', SHIPPER_TYPE) AS TEXT_SHIPPER_TYPE
+			  , GETICOMCODE2(GL.HOUSE_CODE, 'M001', COUNTRY) AS TEXT_COUNTRY
+			  , GETICOMCODE2(GL.HOUSE_CODE, 'M013', LANGUAGE) AS TEXT_LANGUAGE
+			  , GETICOMCODE2(GL.HOUSE_CODE, 'M082', VAT_APP_TYPE) AS TEXT_VAT_APP_TYPE
+			  , GETICOMCODE2(GL.HOUSE_CODE, 'M071', VENDOR_COND) AS TEXT_VENDOR_COND
+			  , GETICOMCODE2(GL.HOUSE_CODE, 'M076', VENDOR_TYPE) AS TEXT_VENDOR_TYPE
+			  , GETICOMCODE2(GL.HOUSE_CODE, 'M143', COMPANY_TYPE) AS TEXT_COMPANY_TYPE
+			  , GETICOMCODE2(GL.HOUSE_CODE, 'M004', CITY_CODE) AS TEXT_CITY_CODE
+			  , GL.EMP_COUNT1
+			  , GL.EMP_COUNT2
+			  , GL.CAPITAL
+			  , GL.HOME_URL
+			  , GL.ENGINEER_COUNT
+			  , GL.TAX_DIV
+			  , GL.ENTRY_TEL
+		      , GL.ENTRY_EMAIL
+			 FROM ICOMVNGL GL right outer join ICOMADDR DR
+			 on DR.HOUSE_CODE= GL.HOUSE_CODE
+			 AND DR.CODE_NO   = GL.VENDOR_CODE
+			 <OPT=F,S>WHERE GL.HOUSE_CODE = ? </OPT>
+			 ]]>
+			 <if test="${mode}" operator ="eq" value ="select">
+			 	<![CDATA[
+				 <OPT=F,S>AND GL.VENDOR_CODE  = ? </OPT>
+				 ]]>
+			</if>
+			 <if test="${mode}" operator ="eq" value ="irs_no">
+			 	<![CDATA[
+				  <OPT=F,S>AND GL.IRS_NO  = ? 	   </OPT>
+				 ]]>
+			</if>
+			<if test="${mode}" operator ="eq" value ="resident_no">
+			 	<![CDATA[
+				  <OPT=F,S>AND GL.RESIDENT_NO  = ? 	   </OPT>
+				 ]]>
+			</if>
+			 AND GL.STATUS      != 'D'
+	</method>
+	<method name = "et_getVendorList">
+	<![CDATA[
+	SELECT (CASE WHEN VG.JOB_STATUS = 'P' THEN
+											'승인대기'
+										WHEN VG.JOB_STATUS = 'R' THEN
+											'반려'
+										WHEN VG.JOB_STATUS = 'E' THEN
+											'승인'
+								   END) AS JOB_STATUS_DESC
+								  ,VG.JOB_STATUS
+								  ,VG.VENDOR_CODE
+								  ,GETVENDORNAME(VG.HOUSE_CODE, VG.VENDOR_CODE) AS VENDOR_NAME
+								  ,AR.CEO_NAME_LOC
+								  ,VG.INDUSTRY_TYPE
+								  ,VG.BUSINESS_TYPE
+								  ,VG.CREDIT_RATING
+								  ,VG.REMARK
+								  ,GETICOMCODE1(VG.HOUSE_CODE, 'M100', VG.SIGN_STATUS) AS SIGN_STATUS_DESC
+								  ,VG.SIGN_STATUS
+								  ,SP.SIGN_REMARK
+								  ,AR.ADDRESS_LOC
+								  ,VG.SHIPPER_TYPE
+								  ,VG.VENDOR_TYPE
+								  ,VG.IRS_NO
+								  ,VG.REG_REMARK
+								  ,VG.TECH_RISE
+							FROM ICOMADDR AR, ICOMVNGL VG LEFT OUTER JOIN ICOMSCTP SP
+							  ON VG.HOUSE_CODE 	    = SP.HOUSE_CODE
+	  						    AND VG.VENDOR_CODE	= SP.DOC_NO
+							WHERE VG.HOUSE_CODE  = AR.HOUSE_CODE
+							  AND VG.VENDOR_CODE = AR.CODE_NO
+							  AND AR.CODE_TYPE = '2'
+							  AND VG.STATUS <> 'D'
+	  						  AND VG.JOB_STATUS 	!= 'D'
+	  						  AND NVL(VG.SIGN_STATUS,'P') 	!= 'E'
+				<OPT=F,S>	  AND VG.HOUSE_CODE 	= ?                                               </OPT>
+				<OPT=S,S>	  AND VG.ADD_DATE BETWEEN ? </OPT><OPT=S,S> AND ?                         </OPT>
+				<OPT=S,S>	  AND VG.VENDOR_CODE 	= ?                                               </OPT>
+				<OPT=S,S>	  AND VG.VENDOR_NAME_LOC LIKE '%' || ? || '%'                               </OPT>
+				<OPT=S,S>	  AND VG.JOB_STATUS 	= ?                                               </OPT>
+				<OPT=S,S>	  AND VG.SIGN_STATUS 	= ?												  </OPT>
+
+	]]>
+	</method>
+	<method name="update_Vngl">
+	<![CDATA[
+	 UPDATE ICOMVNGL SET
+	    		   REG_REMARK	 	 = ?
+	    		 , TECH_RISE	 	 = ?
+	    		 , CUSTOMER	 	 = ?
+	    		 , SIGN_STATUS	 	 = 'P'
+	    		 , JOB_STATUS	 	 = 'P'
+	    		 , CHANGE_DATE      = TO_CHAR(SYSDATE,'YYYYMMDD')
+	    		 , CHANGE_TIME      = SUBSTR(TO_CHAR(SYSDATE, 'HH24MISS'), 1, 6)
+	    		 , CHANGE_USER_ID   = ?
+
+	    		 , AKONT   = ?	--AKONT
+	    		 , ZTERM   = ?	--ZTERM
+	    		 , ZWELS   = ?	--ZWELS
+	    		 , BANK_CODE   = ? --HBKID
+
+	    		 WHERE HOUSE_CODE   = ?
+	    		 AND VENDOR_CODE    = ?
+
+	]]>
+
+	</method>
+
+	<method name="et_getVendorList2">
+	<![CDATA[
+			SELECT (CASE WHEN VG.JOB_STATUS = 'P' THEN
+							'승인대기'
+						WHEN VG.JOB_STATUS = 'R' THEN
+							'반려'
+						WHEN VG.JOB_STATUS = 'E' THEN
+							'승인'
+				   END) AS JOB_STATUS_DESC
+				  ,VG.JOB_STATUS
+				  ,VG.VENDOR_CODE
+				  ,GETVENDORNAME(VG.HOUSE_CODE, VG.VENDOR_CODE) AS VENDOR_NAME
+				  ,AR.CEO_NAME_LOC
+				  ,VG.INDUSTRY_TYPE
+				  ,VG.BUSINESS_TYPE
+				  ,VG.CREDIT_RATING
+				  ,VG.REMARK
+				  ,GETICOMCODE1(VG.HOUSE_CODE, 'M100', VG.SIGN_STATUS) AS SIGN_STATUS_DESC
+				  ,VG.SIGN_STATUS
+				  ,SP.SIGN_REMARK
+				  ,AR.ADDRESS_LOC
+				  ,VG.SHIPPER_TYPE
+				  ,VG.VENDOR_TYPE
+				  ,VG.IRS_NO
+				  ,VN.RECOMMEND_REASON REG_REMARK
+				  ,VG.TECH_RISE
+				  /*
+				  ,(CASE WHEN VG.BIZ_CLASS1 = '1' THEN '상품' ELSE '' END)||
+				  (CASE WHEN (CASE WHEN VG.BIZ_CLASS1 = '1' THEN '상품' ELSE '' END) = '' THEN '' ELSE ', ' END)||
+				  (CASE WHEN VG.BIZ_CLASS2 = '1' THEN '용역' ELSE '' END)||
+				  (CASE WHEN (CASE WHEN VG.BIZ_CLASS2 = '1' THEN '상품' ELSE '' END) = '' THEN '' ELSE ', ' END)||
+				  (CASE WHEN VG.BIZ_CLASS3 = '1' THEN '유지보수' ELSE '' END)||
+				  (CASE WHEN (CASE WHEN VG.BIZ_CLASS3 = '1' THEN '유지보수' ELSE '' END) = '' THEN '' ELSE ', ' END)||
+				  (CASE WHEN VG.BIZ_CLASS4 = '1' THEN '공사' ELSE '' END) AS BIZ_CLASS4
+				  */
+				  ,(CASE WHEN VG.BIZ_CLASS1 = '1' THEN '상품' ELSE '' END)||
+				  (CASE WHEN (CASE WHEN VG.BIZ_CLASS2 = '1' THEN '상품' ELSE '0' END) = '0' THEN '' ELSE ' / ' END)||
+				  (CASE WHEN VG.BIZ_CLASS2 = '1' THEN '용역' ELSE '' END)||
+				  (CASE WHEN (CASE WHEN VG.BIZ_CLASS3 = '1' THEN '상품' ELSE '0' END) = '0' THEN '' ELSE ' / ' END)||
+				  (CASE WHEN VG.BIZ_CLASS3 = '1' THEN '유지보수' ELSE '' END)||
+				  (CASE WHEN (CASE WHEN VG.BIZ_CLASS4 = '1' THEN '유지보수' ELSE '0' END) = '0' THEN '' ELSE ' / ' END)||
+				  (CASE WHEN VG.BIZ_CLASS4 = '1' THEN '공사' ELSE '' END) AS BIZ_CLASS4
+				  ,GETDOCSUBJECT(SP.HOUSE_CODE, SP.DOC_NO, SP.DOC_TYPE, SP.DOC_SEQ) AS SUBJECT
+				  ,SM.ADD_DATE
+				  ,SM.ADD_USER_ID
+				  ,GETUSERNAMELOC(SM.HOUSE_CODE, SM.ADD_USER_ID) AS ADD_USER_NAME
+			FROM ICOMADDR AR, ICOMVNGL VG ,ICOMSCTP SP, ICOMSCTM SM, SSGVN VN
+			WHERE VG.HOUSE_CODE  = AR.HOUSE_CODE
+			  AND VG.VENDOR_CODE = AR.CODE_NO
+			  AND AR.CODE_TYPE = '2'
+			  AND VG.STATUS <> 'D'
+			  AND VG.HOUSE_CODE	= SP.HOUSE_CODE
+			  AND VG.VENDOR_CODE= SP.DOC_NO
+			  AND SP.HOUSE_CODE 	= SM.HOUSE_CODE
+			  AND SP.COMPANY_CODE 	= SM.COMPANY_CODE
+			  AND SP.DOC_TYPE 		= SM.DOC_TYPE
+			  AND SP.DOC_NO 		= SM.DOC_NO
+			  AND SP.DOC_SEQ 		= SM.DOC_SEQ
+			  AND VG.HOUSE_CODE = VN.HOUSE_CODE
+     		  AND VG.VENDOR_CODE = VN.VENDOR_CODE
+			  AND rownum < 2
+			  AND VG.JOB_STATUS 	!= 'D'
+<OPT=F,S>	  AND VG.HOUSE_CODE 	= ?                                               </OPT>
+<OPT=S,S>	  AND VG.ADD_DATE BETWEEN ? </OPT><OPT=S,S> AND ?                         </OPT>
+<OPT=S,S>	  AND VG.VENDOR_CODE 	= ?                                               </OPT>
+<OPT=S,S>	  AND VG.VENDOR_NAME_LOC LIKE '%' || ? || '%'                               </OPT>
+<OPT=S,S>	  AND VG.JOB_STATUS 	= ?                                               </OPT>
+<OPT=S,S>	  AND VG.SIGN_STATUS 	= ?												  </OPT>
+	]]>
+	</method>
+
+	<method name="et_getMaxVedorCode">
+	<![CDATA[
+		SELECT TO_CHAR(NVL(MAX(VENDOR_CODE),0) + 1, 'FM000000') VENDOR_CODE FROM ICOMVNGL
+		WHERE HOUSE_CODE = '#house_code#'
+		  AND LENGTH(VENDOR_CODE) != 10
+	]]>
+	</method>
+
+	<method name="et_getVendor_human_list">
+	<![CDATA[
+		 					SELECT
+								 HU.HOUSE_CODE
+								,HU.COMPANY_CODE
+								,HU.HUMAN_NO
+								,HU.STATUS
+								,HU.ADD_DATE
+								,HU.ADD_TIME
+								,HU.ADD_USER_ID
+								,HU.CHANGE_DATE
+								,HU.CHANGE_TIME
+								,HU.CHANGE_USER_ID
+								,HU.VENDOR_CODE
+								,HU.NAME_LOC
+								,HU.PHONE_NO
+								,HU.EMAIL
+								,HU.ZIP_CODE
+								,HU.ADDRESS_LOC
+								,HU.FINAL_GRADUATION
+								,GETICOMCODE1('#house_code#','M172',HU.ASSOCIATION_GRADE) AS ASSOCIATION_GRADE
+								,GETICOMCODE1('#house_code#','M174',HU.POSITION) AS POSITION
+								,HU.FIRST_PROJECT_DATE
+								,HU.REMARK
+								,HU.RESIDENT_NO AS RESIDENT_NO
+								,getTelno(HU.MOBILE_NO) AS MOBILE_NO
+								,HU.MILITARY_SERVICE
+								,NVL(HU.IT_WORK_PERIOD, '0') AS IT_WORK_PERIOD
+								,HU.VENDOR_GRADE
+								,GETICOMCODE1('#house_code#','M173',HU.REGULAR_FLAG) AS  REGULAR_FLAG
+								,HU.JOIN_DATE
+								,HU.FIRST_PROJECT_VENDOR
+								,VN.VENDOR_CODE
+								,VN.VENDOR_NAME_LOC
+								,HU.ATTACH_NO
+								,(SELECT count(*) FROM ICOMATCH WHERE DOC_NO = HU.ATTACH_NO) as ATTACH_COUNT
+							FROM ICOMHUMT HU,ICOMVNGL VN
+						   WHERE 1=1
+				<OPT=F,S>	 AND HU.HOUSE_CODE   		= ?            	 		 	</OPT>
+				<OPT=S,S>	 AND HU.VENDOR_CODE  		= ?            	 		 	</OPT>
+				<OPT=S,S>    AND HU.HUMAN_NO     		= ?            	 		 	</OPT>
+				<OPT=S,S>    AND HU.REGULAR_FLAG 		= ?            	 		 	</OPT>
+				<OPT=S,S>    AND HU.ASSOCIATION_GRADE   = ?            	  		 	</OPT>
+				<OPT=S,S>    AND HU.NAME_LOC	LIKE	'%' || ? || '%'	  		 	</OPT>			
+				         	 AND ( SELECT COUNT(*) FROM ICOMHUPC WHERE HOUSE_CODE = '#house_code#' AND HUMAN_NO = HU.HUMAN_NO AND ( UPPER(PROJECT_NAME) LIKE '%' || UPPER('#PROJECT_CAREER#') || '%' OR UPPER(CUSTOMER_NAME) LIKE '%' || UPPER('#PROJECT_CAREER#') || '%' OR GETICOMCODE1('#house_code#','M178',ROLE_CODE) LIKE '%' || '#PROJECT_CAREER#' || '%') ) > 0	
+							 AND HU.STATUS  <> 'D'
+							 AND HU.HOUSE_CODE = VN.HOUSE_CODE
+							 AND HU.VENDOR_CODE = VN.VENDOR_CODE
+	]]>
+ 				<if test="${level}" operator = "eq" value="1">
+				        	 AND ( SELECT COUNT(*) FROM ICOMHUSK WHERE HOUSE_CODE = '#house_code#' AND HUMAN_NO = HU.HUMAN_NO 
+				                   AND SKILL_TYPE = '#SKILL_TYPE#' ) > 0
+				</if>       
+				<if test="${level}" operator = "eq" value="2">
+				        	 AND ( SELECT COUNT(*) FROM ICOMHUSK WHERE HOUSE_CODE = '#house_code#' AND HUMAN_NO = HU.HUMAN_NO 
+				                   AND SKILL_TYPE = '#SKILL_TYPE#' 
+				                   AND SKILL_CODE = '#SKILL_CODE#' ) > 0
+				</if>     
+	</method>
+	
+	<method name="et_getVendor_human_list1">
+	<![CDATA[
+		 					SELECT
+								 HU.HOUSE_CODE
+								,HU.COMPANY_CODE
+								,HU.HUMAN_NO
+								,HU.STATUS
+								,HU.ADD_DATE
+								,HU.ADD_TIME
+								,HU.ADD_USER_ID
+								,HU.CHANGE_DATE
+								,HU.CHANGE_TIME
+								,HU.CHANGE_USER_ID
+								,HU.VENDOR_CODE
+								,HU.NAME_LOC
+								,HU.PHONE_NO
+								,HU.EMAIL
+								,HU.ZIP_CODE
+								,HU.ADDRESS_LOC
+								,HU.FINAL_GRADUATION
+								,GETICOMCODE1('#house_code#','M172',HU.ASSOCIATION_GRADE) AS ASSOCIATION_GRADE
+								,GETICOMCODE1('#house_code#','M174',HU.POSITION) AS POSITION
+								,HU.FIRST_PROJECT_DATE
+								,HU.REMARK
+								,HU.RESIDENT_NO AS RESIDENT_NO
+								,getTelno(HU.MOBILE_NO) AS MOBILE_NO
+								,HU.MILITARY_SERVICE
+								,HU.IT_WORK_PERIOD
+								,HU.VENDOR_GRADE
+								,GETICOMCODE1('#house_code#','M173',HU.REGULAR_FLAG) AS  REGULAR_FLAG
+								,HU.JOIN_DATE
+								,HU.FIRST_PROJECT_VENDOR
+								,VN.VENDOR_CODE
+								,VN.VENDOR_NAME_LOC
+								,HU.ATTACH_NO
+								,(SELECT count(*) FROM ICOMATCH WHERE DOC_NO = HU.ATTACH_NO) as ATTACH_COUNT
+							FROM ICOMHUMT HU,ICOMVNGL VN
+						   WHERE 1=1
+				<OPT=F,S>	 AND HU.HOUSE_CODE   		= ?            	 		 	</OPT>
+				<OPT=S,S>	 AND HU.VENDOR_CODE  		= ?            	 		 	</OPT>
+							 AND HU.STATUS  <> 'D'
+							 AND HU.HOUSE_CODE = VN.HOUSE_CODE
+							 AND HU.VENDOR_CODE = VN.VENDOR_CODE
+	]]>
+	</method>
+
+	<method name="getDis_icomvngl_2">
+	<![CDATA[
+		 SELECT
+			    GL.VENDOR_CODE
+			 FROM ICOMVNGL GL
+			 <OPT=F,S>WHERE GL.HOUSE_CODE = ? </OPT>
+			 ]]>
+			 <if test="${mode}" operator ="eq" value ="select">
+			 	<![CDATA[
+				 <OPT=F,S>AND GL.VENDOR_CODE  = ? </OPT>
+				 ]]>
+			</if>
+			 <if test="${mode}" operator ="eq" value ="irs_no">
+			 	<![CDATA[
+				  <OPT=F,S>AND GL.IRS_NO  = ? 	   </OPT>
+				 ]]>
+			</if>
+			<if test="${mode}" operator ="eq" value ="resident_no">
+			 	<![CDATA[
+				  <OPT=F,S>AND GL.RESIDENT_NO  = ? 	   </OPT>
+				 ]]>
+			</if>
+			 AND GL.STATUS      != 'D'
+	</method>
+	
+	<method name="et_getVendor_sourcing_list">
+	<![CDATA[
+			   SELECT                                                          		
+						GETSGNAME(A.PARENT1) AS S_TYPE1,                         		
+						GETSGNAME(A.PARENT2) AS S_TYPE2,                         		
+						GETSGNAME(A.SG) AS S_TYPE3,                              		
+						A.VENDOR_CODE AS VENDOR_CODE,  									
+						GETCOMPANYNAMELOC(B.HOUSE_CODE, B.VENDOR_CODE, 'S') AS NAME_LOC,
+						B.CREDIT_RATING AS CREDIT_GRADE,  								
+						B.PURCHASE_BLOCK_FLAG AS PURCHASE_BLOCK_FLAG,
+						B.IRS_NO  					
+				FROM                                                            		
+				(                                                               		
+					SELECT                                                       		
+						   (SELECT PARENT_SG_REFITEM                             		
+							   FROM SSGGL                                  			
+							  WHERE SG_REFITEM = B.PARENT_SG_REFITEM
+							    AND HOUSE_CODE = '#house_code#') AS PARENT1,		
+							B.PARENT_SG_REFITEM AS PARENT2,                      		
+							A.SG_REFITEM AS SG,                                  		
+							A.VENDOR_CODE, A.HOUSE_CODE                           		
+					FROM 	SSGVN A, SSGGL B          							
+					WHERE	A.HOUSE_CODE = B.HOUSE_CODE									
+					AND     A.SG_REFITEM = B.SG_REFITEM                          		
+					AND		A.HOUSE_CODE = '#house_code#'								
+					AND		B.LEVEL_COUNT = '3'                                  		
+					AND		A.REGISTRY_FLAG = 'Y'                      					
+					AND		A.APPLY_FLAG = 'Y'                                      	        		
+				) A, ICOMVNGL B                                                   		
+				WHERE	A.HOUSE_CODE = B.HOUSE_CODE										
+				AND	A.VENDOR_CODE = B.VENDOR_CODE									
+				AND A.HOUSE_CODE   		= ${house_code}
+				AND A.VENDOR_CODE  		= $S{vendor_code}
+ 	]]>	     
+	</method>
+	
+	<method name="et_setVendorSimple_1">
+			INSERT INTO ICOMVNGL
+			(   HOUSE_CODE
+			,   VENDOR_CODE
+			,   STATUS
+			,   ADD_DATE  
+			,   ADD_TIME	
+			,   ADD_USER_ID
+			,   VENDOR_TYPE
+			,   VENDOR_COND
+			,   VENDOR_NAME_LOC
+			,   COUNTRY	
+			,   CITY_CODE
+			,   LANGUAGE
+			,   IRS_NO
+			,   INDUSTRY_TYPE
+			,   BUSINESS_TYPE
+			,   SOLE_PROPRIETOR_FLAG
+			,   SIGN_STATUS
+			,   SIGN_DATE
+			,   SIGN_PERSON_ID
+			,   SHIPPER_TYPE	
+			,   JOB_STATUS
+			,   ENTRY_DEPT_NAME
+			,   ENTRY_USER_NAME
+			,   BIZ_CLASS1
+			,   BIZ_CLASS2
+			,   BIZ_CLASS3
+			,   BIZ_CLASS4
+			,   BIZ_CLASS5
+			,   BP_FLAG
+			,   CLASS_GRADE	
+			,   VENDOR_ID
+			,   EMP_COUNT2 ) VALUES
+			(       '#house_code#'
+			    ,   REPLACE('#vendor_no#', '-', '')
+			    ,   'C'
+			    ,   TO_CHAR(SYSDATE,'YYYYMMDD')
+			    ,   TO_CHAR(SYSDATE,'HH24MISS')
+			    ,   '#user_id#'
+			    ,   'SU'
+			    ,   'R'
+			    ,   '#vendor_name#'
+			    ,   'KR' 
+			    ,   '서울'
+			    ,   'KO'
+			    ,   REPLACE('#vendor_no#', '-', '')
+			    ,   '#industry_type#'
+			    ,   '#business_type#' 
+			    ,   1
+			    ,   'E'
+			    ,   TO_CHAR(SYSDATE,'YYYYMMDD')
+			    ,   '#user_id#'
+			    ,   'D'
+			    ,   'E'
+			    ,   '1'
+			    ,   '12'
+			    ,   '1'
+			    ,   '1'	    
+			    ,   '1'
+			    ,   '1'
+			    ,   '0'
+			    ,   '0'
+			    ,   'E'    
+			    ,   REPLACE('#vendor_no#', '-', '')
+			    ,   '0' )	
+	</method>
+	<method name="et_setVendorSimple_2">
+		INSERT INTO ICOMLUSR
+		(  HOUSE_CODE
+		 , USER_ID
+		 , STATUS
+		 , ADD_DATE
+		 , ADD_TIME
+		 , ADD_USER_ID
+		 , PASSWORD
+		 , COMPANY_CODE
+		 , DEPT
+		 , POSITION
+		 , USER_NAME_LOC
+		 , USER_NAME_ENG
+		 , LINK_DEPT
+		 , LANGUAGE
+		 , MENU_TYPE
+		 , TIME_ZONE
+		 , EMAIL
+		 , COUNTRY
+		 , CITY_CODE
+		 , STATE
+	     , PR_LOCATION
+	     , EMPLOYEE_NO
+	     , RESIDENT_NO
+	     , SIGN_STATUS
+	     , WORK_TYPE
+	     , MENU_PROFILE_CODE
+	     , USER_TYPE
+	     , MANAGER_POSITION
+	     , CTRL_CODE
+	     , PASS_CHECK_CNT
+	     , PW_RESET_FLAG
+	     , PW_RESET_DATE
+	     , PHONE_NO
+	     , LOGIN_NCY
+		) VALUES
+		   (   '#house_code#'
+		     , REPLACE('#vendor_no#', '-', '')
+		     , 'C'
+		     , TO_CHAR(SYSDATE,'YYYYMMDD')
+		     , TO_CHAR(SYSDATE,'HH24MISS')
+		     , '#user_id#'
+		     , '179F874B95284FC957FEE6C5482DA85'
+		     , REPLACE('#vendor_no#', '-', '')
+		     , ''
+		     , '00'
+		     , '#ceo_name#'
+		     , ''
+		     , ''
+		     , 'KO'
+		     , 'G'
+		     , 'G08'
+		     , '#email_no#'
+		     , 'KR'
+		     , '서울'
+		     , ''
+		     , ''
+		     , ''
+		     , ''
+		     , 'A'
+		     , 'Z'
+		     , 'MUP100300001'
+		     , 'S'
+		     , ''
+		     , ''
+		     , 0
+		     , 'Y'
+		     , TO_CHAR(SYSDATE,'YYYYMMDD')
+		     , '#tel_no#'
+		     , 'Y'
+		  )
+	</method>
+	<method name="et_setVendorSimple_3">
+	
+	/* 협력업체 기본정보 */
+		INSERT INTO ICOMADDR
+		(   HOUSE_CODE
+		,   CODE_NO
+		,   CODE_TYPE
+		,   ZIP_CODE
+		,   PHONE_NO1
+		,   ADDRESS_LOC
+		,   CEO_NAME_LOC 
+		,   EMAIL        ) VALUES
+		   (    '#house_code#'
+		    ,   REPLACE('#vendor_no#', '-', '')
+		    ,   2
+		    ,   '#zip_code#'
+		    ,   '#tel_no#'
+		    ,   '#address_loc#'
+		    ,   '#ceo_name#' 
+		    ,   '#email_no#'   )
+	</method>
+	<method name="et_setVendorSimple_4">
+	
+		/* 영업담당자 정보 */
+		INSERT INTO ICOMVNCP 
+		(   HOUSE_CODE
+		,   COMPANY_CODE
+		,   VENDOR_CODE
+		,   SEQ
+		,   STATUS
+		,   ADD_DATE
+		,   ADD_TIME
+		,   ADD_USER_ID
+		,   USER_NAME
+		,   POSITION)  VALUES
+		(       '#house_code#'
+		    ,   'WOORI'
+		    ,   REPLACE('#vendor_no#', '-', '')
+		    ,   1
+		    ,   'C'
+		    ,   TO_CHAR(SYSDATE,'YYYYMMDD')
+		    ,   TO_CHAR(SYSDATE,'HH24MISS')
+		    ,   '#user_id#'
+		    ,   '#ceo_name#'
+		    ,   '01' )
+	</method>
+</service>

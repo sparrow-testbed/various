@@ -1,0 +1,176 @@
+2023-01-11 15:48:18
+Full thread dump OpenJDK 64-Bit Server VM (25.212-b04 mixed mode):
+
+"Service Thread" #21 daemon prio=9 os_prio=0 tid=0x000000002d872800 nid=0x1a97c runnable [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"C1 CompilerThread14" #20 daemon prio=9 os_prio=2 tid=0x000000002d7a2000 nid=0x78df8 runnable [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"C1 CompilerThread13" #19 daemon prio=9 os_prio=2 tid=0x000000002d7a3800 nid=0x92054 waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"C1 CompilerThread12" #18 daemon prio=9 os_prio=2 tid=0x000000002d7a0800 nid=0x67584 waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"C1 CompilerThread11" #17 daemon prio=9 os_prio=2 tid=0x000000002d79e000 nid=0xaa160 waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"C1 CompilerThread10" #16 daemon prio=9 os_prio=2 tid=0x000000002d79d800 nid=0x6794 runnable [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"C2 CompilerThread9" #15 daemon prio=9 os_prio=2 tid=0x000000002d79c800 nid=0x13abc waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"C2 CompilerThread8" #14 daemon prio=9 os_prio=2 tid=0x000000002d7a3000 nid=0x1487c waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"C2 CompilerThread7" #13 daemon prio=9 os_prio=2 tid=0x000000002d7a1800 nid=0x31d00 waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"C2 CompilerThread6" #12 daemon prio=9 os_prio=2 tid=0x000000002d79f000 nid=0x54f44 waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"C2 CompilerThread5" #11 daemon prio=9 os_prio=2 tid=0x000000002d7a0000 nid=0x46ac4 waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"C2 CompilerThread4" #10 daemon prio=9 os_prio=2 tid=0x000000002d780000 nid=0xd6cc waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"C2 CompilerThread3" #9 daemon prio=9 os_prio=2 tid=0x000000002d774000 nid=0xc9dd4 waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"C2 CompilerThread2" #8 daemon prio=9 os_prio=2 tid=0x000000002d771800 nid=0x65138 waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"C2 CompilerThread1" #7 daemon prio=9 os_prio=2 tid=0x000000002d76f000 nid=0x80c44 waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"C2 CompilerThread0" #6 daemon prio=9 os_prio=2 tid=0x000000002d76c000 nid=0xaca18 waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"Attach Listener" #5 daemon prio=5 os_prio=2 tid=0x000000002d76a000 nid=0x32df4 waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"Signal Dispatcher" #4 daemon prio=9 os_prio=2 tid=0x000000002d706800 nid=0x721d0 runnable [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"Finalizer" #3 daemon prio=8 os_prio=1 tid=0x000000002b177000 nid=0x1e7bc in Object.wait() [0x000000003238e000]
+   java.lang.Thread.State: WAITING (on object monitor)
+	at java.lang.Object.wait(Native Method)
+	- waiting on <0x00000006eab08ed0> (a java.lang.ref.ReferenceQueue$Lock)
+	at java.lang.ref.ReferenceQueue.remove(ReferenceQueue.java:144)
+	- locked <0x00000006eab08ed0> (a java.lang.ref.ReferenceQueue$Lock)
+	at java.lang.ref.ReferenceQueue.remove(ReferenceQueue.java:165)
+	at java.lang.ref.Finalizer$FinalizerThread.run(Finalizer.java:216)
+
+"Reference Handler" #2 daemon prio=10 os_prio=2 tid=0x000000002d6f7800 nid=0x2b7a8 in Object.wait() [0x000000003138e000]
+   java.lang.Thread.State: WAITING (on object monitor)
+	at java.lang.Object.wait(Native Method)
+	- waiting on <0x00000006eab06bf8> (a java.lang.ref.Reference$Lock)
+	at java.lang.Object.wait(Object.java:502)
+	at java.lang.ref.Reference.tryHandlePending(Reference.java:191)
+	- locked <0x00000006eab06bf8> (a java.lang.ref.Reference$Lock)
+	at java.lang.ref.Reference$ReferenceHandler.run(Reference.java:153)
+
+"main" #1 prio=5 os_prio=0 tid=0x0000000002593800 nid=0x4f348 runnable [0x000000000258c000]
+   java.lang.Thread.State: RUNNABLE
+	at java.util.zip.Inflater.inflateBytes(Native Method)
+	at java.util.zip.Inflater.inflate(Inflater.java:259)
+	- locked <0x00000006eac90718> (a java.util.zip.ZStreamRef)
+	at java.util.zip.InflaterInputStream.read(InflaterInputStream.java:152)
+	at sun.misc.Resource.getBytes(Resource.java:124)
+	at java.net.URLClassLoader.defineClass(URLClassLoader.java:463)
+	at java.net.URLClassLoader.access$100(URLClassLoader.java:74)
+	at java.net.URLClassLoader$1.run(URLClassLoader.java:369)
+	at java.net.URLClassLoader$1.run(URLClassLoader.java:363)
+	at java.security.AccessController.doPrivileged(Native Method)
+	at java.net.URLClassLoader.findClass(URLClassLoader.java:362)
+	at java.lang.ClassLoader.loadClass(ClassLoader.java:424)
+	- locked <0x00000006eace69f0> (a java.lang.Object)
+	at java.lang.ClassLoader.loadClass(ClassLoader.java:357)
+	at java.util.ResourceBundle$RBClassLoader.loadClass(ResourceBundle.java:512)
+	at java.util.ResourceBundle$Control.newBundle(ResourceBundle.java:2657)
+	at java.util.ResourceBundle.loadBundle(ResourceBundle.java:1518)
+	at java.util.ResourceBundle.findBundle(ResourceBundle.java:1482)
+	at java.util.ResourceBundle.getBundleImpl(ResourceBundle.java:1370)
+	at java.util.ResourceBundle.getBundle(ResourceBundle.java:899)
+	at sun.util.resources.LocaleData$1.run(LocaleData.java:167)
+	at sun.util.resources.LocaleData$1.run(LocaleData.java:163)
+	at java.security.AccessController.doPrivileged(Native Method)
+	at sun.util.resources.LocaleData.getBundle(LocaleData.java:163)
+	at sun.util.resources.LocaleData.getCalendarData(LocaleData.java:79)
+	at sun.util.locale.provider.LocaleResources.getCalendarData(LocaleResources.java:128)
+	at sun.util.locale.provider.CalendarDataProviderImpl.getFirstDayOfWeek(CalendarDataProviderImpl.java:50)
+	at sun.util.locale.provider.CalendarDataUtility$CalendarWeekParameterGetter.getObject(CalendarDataUtility.java:197)
+	at sun.util.locale.provider.CalendarDataUtility$CalendarWeekParameterGetter.getObject(CalendarDataUtility.java:182)
+	at sun.util.locale.provider.LocaleServiceProviderPool.getLocalizedObjectImpl(LocaleServiceProviderPool.java:281)
+	at sun.util.locale.provider.LocaleServiceProviderPool.getLocalizedObject(LocaleServiceProviderPool.java:265)
+	at sun.util.locale.provider.CalendarDataUtility.retrieveFirstDayOfWeek(CalendarDataUtility.java:52)
+	at java.util.Calendar.setWeekCountData(Calendar.java:3379)
+	at java.util.Calendar.<init>(Calendar.java:1600)
+	at java.util.GregorianCalendar.<init>(GregorianCalendar.java:737)
+	at java.util.Calendar$Builder.build(Calendar.java:1482)
+	at sun.util.locale.provider.CalendarProviderImpl.getInstance(CalendarProviderImpl.java:88)
+	at java.util.Calendar.createCalendar(Calendar.java:1666)
+	at java.util.Calendar.getInstance(Calendar.java:1655)
+	at java.text.SimpleDateFormat.initializeCalendar(SimpleDateFormat.java:657)
+	at java.text.SimpleDateFormat.<init>(SimpleDateFormat.java:601)
+	at java.text.SimpleDateFormat.<init>(SimpleDateFormat.java:580)
+	at com.fasoo.commons.logger.Logger.printMessage(Logger.java:574)
+	at com.fasoo.commons.logger.Logger.info(Logger.java:210)
+	at com.fasoo.waIf.xml.XmlLoader.load(XmlLoader.java:105)
+	at com.fasoo.waIf.WebInfoExtractor.main(WebInfoExtractor.java:50)
+
+"VM Thread" os_prio=2 tid=0x000000002b174800 nid=0x399f8 runnable 
+
+"ParGC Thread#0" os_prio=0 tid=0x00000000025a9000 nid=0x7307c runnable 
+
+"ParGC Thread#1" os_prio=0 tid=0x00000000025aa800 nid=0xb02f4 runnable 
+
+"ParGC Thread#2" os_prio=0 tid=0x00000000025ac000 nid=0x7cd38 runnable 
+
+"ParGC Thread#3" os_prio=0 tid=0x00000000025ad800 nid=0xd82d8 runnable 
+
+"ParGC Thread#4" os_prio=0 tid=0x00000000025b0000 nid=0x14e0c runnable 
+
+"ParGC Thread#5" os_prio=0 tid=0x00000000025b1000 nid=0x6e988 runnable 
+
+"ParGC Thread#6" os_prio=0 tid=0x00000000025b5000 nid=0x9e414 runnable 
+
+"ParGC Thread#7" os_prio=0 tid=0x00000000025b6800 nid=0x883ec runnable 
+
+"ParGC Thread#8" os_prio=0 tid=0x00000000025b7800 nid=0x2189c runnable 
+
+"ParGC Thread#9" os_prio=0 tid=0x00000000025b9000 nid=0xde418 runnable 
+
+"ParGC Thread#10" os_prio=0 tid=0x00000000025ba000 nid=0x55108 runnable 
+
+"ParGC Thread#11" os_prio=0 tid=0x00000000025bd000 nid=0x52878 runnable 
+
+"ParGC Thread#12" os_prio=0 tid=0x00000000025be800 nid=0x72af4 runnable 
+
+"ParGC Thread#13" os_prio=0 tid=0x00000000025bf800 nid=0x9fe8 runnable 
+
+"ParGC Thread#14" os_prio=0 tid=0x00000000025c1000 nid=0x6aa28 runnable 
+
+"ParGC Thread#15" os_prio=0 tid=0x00000000025c4000 nid=0x3ce00 runnable 
+
+"ParGC Thread#16" os_prio=0 tid=0x00000000025ca000 nid=0xa2ff4 runnable 
+
+"ParGC Thread#17" os_prio=0 tid=0x00000000025d1000 nid=0xa8d14 runnable 
+
+"ParGC Thread#18" os_prio=0 tid=0x00000000025cc800 nid=0x43fa0 runnable 
+
+"ParGC Thread#19" os_prio=0 tid=0x00000000025ce800 nid=0xcd640 runnable 
+
+"ParGC Thread#20" os_prio=0 tid=0x00000000025d3800 nid=0xd4c54 runnable 
+
+"ParGC Thread#21" os_prio=0 tid=0x00000000025cd000 nid=0xbd0f8 runnable 
+
+"ParGC Thread#22" os_prio=0 tid=0x00000000025cf000 nid=0xfea28 runnable 
+
+"VM Periodic Task Thread" os_prio=2 tid=0x000000002d859800 nid=0x55e4 waiting on condition 
+
+JNI global references: 5
+

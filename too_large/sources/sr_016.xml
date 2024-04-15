@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+<service>
+	 
+ 
+    <method name ="getEvaDetail">
+    <![CDATA[
+		SELECT 	FH.E_FACTOR_REFITEM,													
+				FH.FACTOR_NAME,                                                          
+				FD.ITEM_NAME,                                                            
+		 	   	FD.SEQ,                                                                  
+		 	  	FD.ITEM_SCORE,                                                           
+		 	   	FH.FACTOR_TYPE,                                                           
+		 	   	FH.FACTOR_DESC,
+		 	   	FH.QNT_FLAG                                                         
+		 FROM ICOMVEFH FH, ICOMVEFD FD                                                 
+		 WHERE FH.E_FACTOR_REFITEM = FD.E_FACTOR_REFITEM
+		   AND FH.HOUSE_CODE = FD.HOUSE_CODE                               
+		   AND FH.E_FACTOR_REFITEM = ${e_factor_refitem}                          
+		 ORDER BY FD.SEQ ASC                                                           
+    ]]>
+    </method>
+ 	
+ 	
+ 	 <method name ="setEvaInsert_1">
+    <![CDATA[
+		INSERT INTO ICOMVEFH (						
+			 	  	HOUSE_CODE,                               
+			     	E_FACTOR_REFITEM,                         
+			     	FACTOR_NAME,                              
+			     	FACTOR_TYPE,                              
+			     	SCALE_COUNT,
+			     	FACTOR_DESC,
+			     	QNT_FLAG,                              
+			     	USE_FLAG,                                 
+			     	add_date,                                 
+			     	CHANGE_DATE,                              
+			     	ADD_USER_ID)                              
+			 select                                      
+			     ${session.HOUSE_CODE},                           
+			     ${e_factor_refitem},                     
+			     ${evaItemName},							            
+			     ${factor_type},    	                                
+			     ${scale},
+			     ${factor_desc},
+			     ${qnt_flag},	                                    
+			     'Y',                                      
+			     TO_CHAR(SYSDATE,'YYYYMMDD'),           
+			     TO_CHAR(SYSDATE,'YYYYMMDD'),		    
+			     ${session.ID} from dual							
+    ]]>
+    </method>
+    
+        <method name ="setEvaInsert_2">
+    <![CDATA[
+		INSERT INTO ICOMVEFD (					 			
+    		 		HOUSE_CODE,                               			
+			  		E_FACTOR_ITEM_REFITEM, 								
+			   		ITEM_NAME,    										
+			   		ITEM_SCORE,    										
+		   			USE_FLAG,                                 			
+		   			SEQ,  												
+		   			E_FACTOR_REFITEM) 									
+		select  											
+				${session.HOUSE_CODE},									
+			   	NVL(max(E_FACTOR_ITEM_REFITEM),0) + 1,   							
+			   	${item_name},													
+			   	${item_score},    
+			   	'Y',												
+			   	${seq},													
+			   	${e_factor_refitem} 
+		from icomvefd 							
+    ]]>
+    </method>
+    
+  
+    
+    
+     <method name = "setEvaUpdate_1">
+    <![CDATA[
+		UPDATE ICOMVEFH SET												
+			FACTOR_NAME = ${evaItemName},    															
+		    FACTOR_TYPE = ${factor_type},
+			FACTOR_DESC = ${factor_desc}, 
+			QNT_FLAG    = ${qnt_flag},   																
+			CHANGE_DATE = TO_CHAR(SYSDATE,'YYYYMMDD'), 	
+			ADD_USER_ID = ${session.ID}											
+		WHERE E_FACTOR_REFITEM = ${e_factor_refitem} 								
+    ]]>
+    </method>
+    
+    <method name = "setEvaUpdate_2">
+    <![CDATA[
+		UPDATE ICOMVEFD SET 									
+        	ITEM_NAME  = ${item_name}, 																		
+       		ITEM_SCORE = ${item_score} 																	
+		WHERE      SEQ = ${seq} 
+		AND E_FACTOR_REFITEM = ${e_factor_refitem} 		
+
+    ]]>
+    </method>
+    
+    
+      <method name="currvalForMssql">
+    <![CDATA[
+		select NVL(max(e_factor_refitem),0) + 1 as currVal
+			from icomvefh
+    ]]>
+    </method>
+    
+ 	 <method name ="chkUpdateEvaItem">
+    <![CDATA[
+    	SELECT * FROM ICOMVESI 
+    	WHERE E_SELECTED_FACTOR = ${e_factor_refitem}   	
+    	
+    ]]>
+    </method>
+    
+    
+</service>

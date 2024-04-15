@@ -1,0 +1,14 @@
+CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = NO
+CONFIGURATION_BUILD_DIR = ${PODS_CONFIGURATION_BUILD_DIR}/JRPodPrivate
+FRAMEWORK_SEARCH_PATHS = $(inherited) "${PODS_CONFIGURATION_BUILD_DIR}/AGGeometryKit" "${PODS_CONFIGURATION_BUILD_DIR}/DateTools" "${PODS_CONFIGURATION_BUILD_DIR}/FrameAccessor" "${PODS_CONFIGURATION_BUILD_DIR}/JKCategories" "${PODS_CONFIGURATION_BUILD_DIR}/MBProgressHUD" "${PODS_CONFIGURATION_BUILD_DIR}/Masonry" "${PODS_CONFIGURATION_BUILD_DIR}/SDWebImage" "${PODS_CONFIGURATION_BUILD_DIR}/TZImagePickerController" "${PODS_CONFIGURATION_BUILD_DIR}/XXNibBridge" "${PODS_CONFIGURATION_BUILD_DIR}/YBImageBrowser" "${PODS_CONFIGURATION_BUILD_DIR}/YYImage" "${PODS_CONFIGURATION_BUILD_DIR}/extobjc"
+GCC_PREPROCESSOR_DEFINITIONS = $(inherited) COCOAPODS=1
+OTHER_LDFLAGS = $(inherited) -framework "AGGeometryKit" -framework "CoreData" -framework "CoreGraphics" -framework "CoreLocation" -framework "DateTools" -framework "Foundation" -framework "FrameAccessor" -framework "JKCategories" -framework "MBProgressHUD" -framework "MapKit" -framework "Masonry" -framework "Photos" -framework "QuartzCore" -framework "Security" -framework "TZImagePickerController" -framework "UIKit" -framework "XXNibBridge" -framework "YBImageBrowser" -framework "extobjc"
+PODS_BUILD_DIR = ${BUILD_DIR}
+PODS_CONFIGURATION_BUILD_DIR = ${PODS_BUILD_DIR}/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)
+PODS_ROOT = ${SRCROOT}
+PODS_TARGET_SRCROOT = ${PODS_ROOT}/../..
+PODS_XCFRAMEWORKS_BUILD_DIR = $(PODS_CONFIGURATION_BUILD_DIR)/XCFrameworkIntermediates
+PRODUCT_BUNDLE_IDENTIFIER = org.cocoapods.${PRODUCT_NAME:rfc1034identifier}
+SKIP_INSTALL = YES
+USE_RECURSIVE_SCRIPT_INPUTS_IN_SCRIPT_PHASES = YES
+VALID_ARCHS = x86_64 armv7 arm64

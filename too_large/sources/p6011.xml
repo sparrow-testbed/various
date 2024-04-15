@@ -1,0 +1,1109 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<service>
+ <method name="GetCountMainProcess_RFQ_SUP">
+  <![CDATA[
+   		SELECT COUNT(*) AS RFQ_SUP_CNT 
+		FROM 
+		(           
+		SELECT
+		       RH.RFQ_NO
+		FROM ICOYRQHD RH
+		WHERE RH.HOUSE_CODE   = ${house_code}
+		--AND RH.RFQ_FLAG   = 'P'
+		      --AND (RH.RFQ_FLAG  = 'B' OR RH.RFQ_FLAG='G')
+		      AND RH.SIGN_STATUS = 'E'
+		      AND RH.BID_TYPE   = 'RQ'
+		      AND NOT EXISTS (SELECT QTA_NO
+		                        FROM ICOYQTHD
+		WHERE HOUSE_CODE  = ${house_code}
+		AND VENDOR_CODE = ${vendor_code}
+		AND RFQ_NO      = RH.RFQ_NO
+		                         AND RFQ_COUNT   = RH.RFQ_COUNT)
+		      AND RH.STATUS IN ('C', 'R')
+		AND RH.CREATE_TYPE    = 'PR'
+		AND TO_NUMBER(TO_CHAR(SYSDATE,'YYYYMMDDHH24MI'))  <=  TO_NUMBER(RH.RFQ_CLOSE_DATE || RH.RFQ_CLOSE_TIME)
+		AND ((RH.RFQ_TYPE = 'OP') OR
+		           (RH.RFQ_TYPE IN ('CL','PC') AND EXISTS (SELECT RFQ_NO
+		                                               FROM ICOYRQSE RS
+		WHERE RS.HOUSE_CODE  = ${house_code}
+		AND RS.VENDOR_CODE = ${vendor_code}
+		AND RS.RFQ_NO      = RH.RFQ_NO
+		                                                AND RS.RFQ_COUNT   = RH.RFQ_COUNT
+		                                                AND NVL(RS.BID_FLAG, 'Y') <> 'N')      
+		           ))  
+		     GROUP BY RH.HOUSE_CODE, RH.RFQ_NO, RH.RFQ_COUNT, RH.COMPANY_CODE, RH.CHANGE_USER_ID
+		) A
+
+  ]]>
+  </method>
+   <method name="GetCountMainProcess_BID_SUP">
+  <![CDATA[
+  SELECT COUNT(*) AS BID_SUP_CNT
+FROM ICOYBDHD HD INNER
+         JOIN ICOMVNGL VN 
+ON HD.HOUSE_CODE   = VN.HOUSE_CODE
+AND VN.VENDOR_CODE  = ${vendor_code}
+WHERE HD.STATUS   IN ('C' ,'R')
+AND HD.BID_STATUS  IN ('AC','UC','SR','QC','RC','SC')
+AND HD.SIGN_STATUS IN ('C')
+AND HD.HOUSE_CODE  = ${house_code}
+AND HD.ANN_DATE BETWEEN  ${from_date}
+AND  ${to_date}
+AND SYSDATE >= TO_DATE(HD.ANN_DATE||'000000', 'YYYYMMDDHH24MISS')  
+AND SYSDATE < TO_DATE(HD.APP_END_DATE||HD.APP_END_TIME, 'YYYYMMDDHH24MISS')
+  ]]>
+  </method>
+  <method name="GetCountMainProcess_NOT_NML_BID_SUP">
+  <![CDATA[
+ 			SELECT
+			     NVL(SUM(A.NOT_NML_BID_TCN),0) NOT_NML_BID_TCN_CNT 				
+			FROM
+			(
+				SELECT 
+				    G_DS_TCN.PN_YY  PN_YY
+				    ,G_DS_TCN.PN_UD PN_UD
+					,(G_DS_TCN.CNT - (NVL(G_BID_TCN.CNT,0) - NVL(G_NOT_PN_PRIC.CNT,0))) NOT_NML_BID_TCN
+				FROM 
+				(
+					SELECT PN_YY,PN_UD,COUNT(VENDOR_CODE) CNT
+					FROM
+					(
+						SELECT SUBSTR(PG.OPEN_DATE,1,4) PN_YY
+						      ,CASE WHEN TO_NUMBER(SUBSTR(OPEN_DATE,5,2)) < 7 THEN '0106' ELSE '0712' END PN_UD
+						      ,AP.VENDOR_CODE
+						FROM ICOYBDHD HD, ICOYBDPG PG, ICOYBDAP AP
+						WHERE HD.HOUSE_CODE  = PG.HOUSE_CODE
+						AND   HD.BID_NO      = PG.BID_NO                                              
+						AND   HD.BID_COUNT   = PG.BID_COUNT
+						AND   HD.HOUSE_CODE  = AP.HOUSE_CODE
+						AND   HD.BID_NO      = AP.BID_NO                                              
+						AND   HD.BID_COUNT   = AP.BID_COUNT
+						AND   HD.HOUSE_CODE  = ${house_code}
+						AND   HD.BID_STATUS  IN ('SB', 'NB')                                     
+						AND   HD.SIGN_STATUS  IN ('C')                                                
+						AND   HD.STATUS IN ('C' ,'R')                                                 
+						AND   PG.STATUS IN ('C' ,'R')
+						AND   AP.STATUS IN ('C' ,'R')                                              
+						AND   HD.BID_TYPE = 'C'
+						AND   HD.CONT_TYPE1 = 'NC'
+						AND   HD.PROM_CRIT = 'B'
+						AND   AP.VENDOR_CODE = ${vendor_code}
+						AND   PG.OPEN_DATE >= '20160101'
+					)
+					GROUP BY PN_YY,PN_UD
+				)G_DS_TCN,
+				(
+					SELECT PN_YY,PN_UD,COUNT(VENDOR_CODE) CNT
+					FROM
+					(
+						SELECT SUBSTR(PG.OPEN_DATE,1,4) PN_YY
+						      ,CASE WHEN TO_NUMBER(SUBSTR(OPEN_DATE,5,2)) < 7 THEN '0106' ELSE '0712' END PN_UD
+						      ,VO.VENDOR_CODE
+						FROM ICOYBDHD HD, ICOYBDPG PG, ICOYBDVO VO
+						WHERE HD.HOUSE_CODE  = PG.HOUSE_CODE
+						AND   HD.BID_NO      = PG.BID_NO                                              
+						AND   HD.BID_COUNT   = PG.BID_COUNT
+						AND   PG.HOUSE_CODE  = VO.HOUSE_CODE
+						AND   PG.BID_NO      = VO.BID_NO                                              
+						AND   PG.BID_COUNT   = VO.BID_COUNT					 
+						AND   VO.VOTE_COUNT  = 1
+						AND   HD.HOUSE_CODE  = ${house_code}
+						AND   HD.BID_STATUS  IN ('SB', 'NB')                                     
+						AND   HD.SIGN_STATUS  IN ('C')                                                
+						AND   HD.STATUS IN ('C' ,'R')                                                 
+						AND   PG.STATUS IN ('C' ,'R')                                              
+						AND   HD.BID_TYPE = 'C'
+						AND   HD.CONT_TYPE1 = 'NC'
+						AND   HD.PROM_CRIT = 'B'
+						AND   VO.BID_CANCEL = 'N'  
+						AND   VO.VENDOR_CODE = ${vendor_code}
+						AND   PG.OPEN_DATE >= '20160101'
+					)
+					GROUP BY PN_YY,PN_UD
+				)G_BID_TCN,
+				(
+					SELECT PN_YY,PN_UD,COUNT(VENDOR_CODE) CNT
+					FROM
+					(
+						SELECT SUBSTR(PG.OPEN_DATE,1,4) PN_YY
+						      ,CASE WHEN TO_NUMBER(SUBSTR(OPEN_DATE,5,2)) < 7 THEN '0106' ELSE '0712' END PN_UD
+						      ,VO.VENDOR_CODE
+						FROM ICOYBDHD HD, ICOYBDPG PG, ICOYBDVO VO, ICOYBDPN PN
+						WHERE HD.HOUSE_CODE  = PG.HOUSE_CODE
+						AND   HD.BID_NO      = PG.BID_NO                                              
+						AND   HD.BID_COUNT   = PG.BID_COUNT
+						AND   PG.HOUSE_CODE  = VO.HOUSE_CODE
+						AND   PG.BID_NO      = VO.BID_NO                                              
+						AND   PG.BID_COUNT   = VO.BID_COUNT
+						AND   VO.HOUSE_CODE  = PN.HOUSE_CODE
+						AND   VO.BID_NO      = PN.BID_NO
+						AND   VO.BID_COUNT   = PN.BID_COUNT						 
+						AND   VO.VOTE_COUNT  = 1
+						AND   HD.HOUSE_CODE  = ${house_code}
+						AND   HD.BID_STATUS  IN ('SB', 'NB')                                     
+						AND   HD.SIGN_STATUS  IN ('C')                                                
+						AND   HD.STATUS IN ('C' ,'R')                                                 
+						AND   PG.STATUS IN ('C' ,'R')                                              
+						AND   HD.BID_TYPE = 'C'
+						AND   HD.CONT_TYPE1 = 'NC'
+						AND   HD.PROM_CRIT = 'B'
+						AND   VO.BID_CANCEL = 'N'  
+						AND   VO.VENDOR_CODE = ${vendor_code}
+						AND   PG.OPEN_DATE >= '20160101'
+						AND   VO.BID_AMT_ENC NOT BETWEEN PN.PN_L_PRICE AND PN.PN_H_PRICE 
+					)
+					GROUP BY PN_YY,PN_UD
+				)G_NOT_PN_PRIC
+				WHERE G_DS_TCN.PN_YY  = G_BID_TCN.PN_YY(+)
+				AND G_DS_TCN.PN_UD = G_BID_TCN.PN_UD(+)
+				AND G_DS_TCN.PN_YY    = G_NOT_PN_PRIC.PN_YY(+)
+				AND G_DS_TCN.PN_UD = G_NOT_PN_PRIC.PN_UD(+)
+			)A
+			WHERE 1 = 1
+			  AND A.PN_YY = ${pn_yy}	 
+			  AND A.PN_UD = ${pn_ud}		
+  ]]>
+  </method>
+  
+  
+  <method name="GetPurchaseBlockInfo">
+  <![CDATA[
+ 		SELECT PURCHASE_BLOCK_FLAG
+       		  ,GETICOMCODE2(HOUSE_CODE,'M213',PURCHASE_BLOCK_FLAG) PURCHASE_BLOCK_FLAG_NAME
+              ,PURCHASE_BLOCK_NOTE 
+        FROM ICOMVNGL
+        WHERE HOUSE_CODE = ${house_code}
+        AND STATUS IN ('C','R')
+        AND VENDOR_CODE = ${vendor_code}
+  ]]>
+  </method>				
+	
+  
+   <method name="GetCountMainProcess_RAT_SUP">
+  <![CDATA[
+     SELECT COUNT(*) AS RAT_SUP_CNT
+     FROM   
+     (
+     SELECT ra_vv.RA_NO    
+     FROM ICOYRAHD RAHD                                                                                       
+         ,(SELECT                                                                                             
+                  ra_v.HOUSE_CODE                                                                             
+                 ,ra_v.RA_NO                                                                                  
+                 ,ra_v.RA_COUNT                                                                               
+                 ,decode(ra_v.SIGN_STATUS                                                                     
+                         ,'T', 'RT' 
+                           ,'P', 'RP'  
+                           ,'E', 'RC' 
+                           ,'R', 'RR'                                                                           
+                           ,(case when (SYSDATE < ra_v.ann_date) then 'CC'                                 
+                                when (ra_v.ann_date <= SYSDATE and SYSDATE < ra_v.bid_start_date) then 'RA'    
+                                when (ra_v.bid_start_date <= SYSDATE and SYSDATE < ra_v.bid_end_date) then 'BP' 
+                              else 'RF'                                                                   
+                         end)                                                                                 
+                        ) STATUS                                                                              
+                 ,ra_v.bid_start_date                                                                         
+                 ,ra_v.bid_end_date
+                 ,ra_v.JOIN_FLAG                                                                           
+                 ,ra_v.REG_FLAG
+             FROM (SELECT                                                                                     
+                          hd.HOUSE_CODE                                                                       
+                         ,hd.RA_NO                                                                            
+                         ,hd.RA_COUNT                                                                         
+                                  ,TO_DATE(hd.ANN_DATE||hd.ANN_TIME, 'YYYYMMDDHH24MISS')     ann_date                  
+                         ,TO_DATE(hd.START_DATE||hd.START_TIME, 'YYYYMMDDHH24MISS') bid_start_date            
+                         ,TO_DATE(hd.END_DATE||hd.END_TIME, 'YYYYMMDDHH24MISS')     bid_end_date              
+                         ,hd.SIGN_STATUS
+                         ,RQ.JOIN_FLAG
+                         ,RQ.REG_FLAG                                                                      
+                     FROM ICOYRAHD hd, ICOYRADT dt , ICOYRQSE RQ                                                           
+                    WHERE hd.HOUSE_CODE = dt.HOUSE_CODE                                                       
+                      AND hd.RA_NO      = dt.RA_NO                                                            
+                      AND hd.RA_COUNT   = dt.RA_COUNT
+                   AND RQ.HOUSE_CODE (+) = dt.HOUSE_CODE                                                                
+                   AND RQ.RFQ_NO     (+) = dt.RA_NO                                                                    
+                   AND RQ.RFQ_COUNT  (+) = dt.RA_COUNT
+                   AND RQ.RFQ_SEQ    (+) = dt.RA_SEQ                                                         
+                   AND RQ.VENDOR_CODE(+) = ${vendor_code}                                                         
+                      AND hd.HOUSE_CODE = ${house_code}                                             
+                      AND hd.TYPE    = 'R'                                                                    
+                      AND hd.STATUS <> 'D'                                                                    
+                AND   (hd.RA_TYPE1 <> 'NC' OR ${vendor_code}  IN (SELECT VENDOR_CODE FROM ICOYRQSE                                        
+                                                     WHERE HOUSE_CODE = HD.HOUSE_CODE                                                                
+                                                     AND RFQ_NO       = HD.RA_NO                                                                    
+                                                     AND RFQ_COUNT    = HD.RA_COUNT                                                                 
+                                                     AND STATUS IN ('C', 'R')) )                                                                     
+                      AND dt.STATUS <> 'D'                                                                    
+                      AND dt.RA_SEQ = '000001'                                                                
+                      AND dt.SETTLE_FLAG = 'P'
+AND hd.END_DATE BETWEEN ${from_date} 
+AND ${to_date}
+) ra_v                                                                                      
+          ) ra_vv                                                                                             
+    WHERE RAHD.HOUSE_CODE = ra_vv.HOUSE_CODE                                                                  
+      AND RAHD.RA_NO      = ra_vv.RA_NO                                                                       
+      AND RAHD.RA_COUNT   = ra_vv.RA_COUNT
+     AND (ra_vv.STATUS    in ('CC','RA','BP') OR RAHD.SIGN_STATUS = 'C' AND RAHD.RA_FLAG = 'D')
+     ) A
+  ]]>
+  </method>
+   <method name="GetCountMainProcess_CON_SUP">
+  <![CDATA[
+     SELECT 
+         COUNT(*) AS CON_SUP_CNT
+      FROM 
+           SCPGL GL 
+     WHERE 
+           1 = 1 
+       AND GL.DEL_FLAG = 'N' 
+       AND GL.CT_FLAG IN ( 'CB' , '' )
+	   AND GL.CONT_DATE BETWEEN TO_CHAR(TO_DATE(${from_date}), 'YYYYMMDD')
+	   AND TO_CHAR(TO_DATE(${to_date}), 'YYYYMMDD')
+	   AND GL.SELLER_CODE = ${vendor_code}
+  ]]>
+  </method>
+   <method name="GetCountMainProcess_INV_SUP">
+  <![CDATA[
+     SELECT COUNT(*) AS INV_SUP_CNT
+     FROM   
+     (
+        SELECT PH.PO_NO
+		FROM   ICOYPOHD PH,
+		         ICOYPODT PT, 
+		         ICOYECCT EC
+		WHERE  PH.HOUSE_CODE        = ${house_code}
+		AND    PH.VENDOR_CODE         = ${vendor_code}
+		AND    PH.SIGN_DATE    BETWEEN ${from_date}
+		AND ${to_date}
+		AND PH.STATUS    IN ('C', 'R')
+		     AND PT.STATUS    IN ('C', 'R')
+		     AND PH.SIGN_STATUS      = 'E'
+		  AND PH.PO_NO    = PT.PO_NO
+		  AND PH.SHIPPER_TYPE  = 'D'
+		  AND PH.HOUSE_CODE   = PT.HOUSE_CODE
+		        AND PH.HOUSE_CODE  = EC.HOUSE_CODE(+) 
+		        AND PH.PO_NO    = EC.BID_NO(+) 
+		  GROUP BY PH.CUR,
+		     PH.PO_NO,
+		     PH.SUBJECT,
+		     PH.SIGN_DATE,
+		     PH.CHANGE_DATE,
+		     PH.CHANGE_USER_ID,
+		     PH.ADD_USER_ID,
+		     PH.STATUS,
+		     PH.CONFIRM_CERTV,
+		     PH.CONFIRM_DATE,
+		     PH.CONFIRM_TIME,
+		     PH.HOUSE_CODE,
+		     PH.PO_CREATE_DATE,
+		     PH.PAY_TERMS,
+		     PH.CTRL_CODE,
+		     PH.PURCHASER_ID,
+		     PH.COMPANY_CODE,
+		     PH.TAKE_USER_NAME,
+		     PH.VENDOR_CODE, 
+		           EC.CONT_SEQ, 
+		           EC.CONT_COUNT,
+		           PH.REJECT_REMARK
+     ) A
+  ]]>
+  </method>
+  
+  <method name="GetCountMainProcess_App">
+  <![CDATA[
+    SELECT COUNT(A.DOC_NO) as APP_CNT
+      FROM ICOMSCTM A   ,ICOMSCTP E
+    WHERE A.HOUSE_CODE   = E.HOUSE_CODE
+      AND A.COMPANY_CODE = E.COMPANY_CODE
+      AND A.DOC_TYPE     = E.DOC_TYPE
+      AND A.DOC_SEQ      = E.DOC_SEQ
+      AND A.DOC_NO       = E.DOC_NO
+      AND A.APP_STATUS   = 'P'
+      <OPT=F,S> AND A.HOUSE_CODE = ?     </OPT>
+      AND E.SIGN_CHECK           = 'Y'
+      AND E.PROCEEDING_FLAG IN ('P','C')
+      AND A.STATUS !='N'
+      AND E.APP_STATUS IS NULL
+      <OPT=F,S> AND E.SIGN_USER_ID = ?   </OPT>
+      <OPT=F,S> AND A.ADD_DATE BETWEEN ? </OPT>
+      <OPT=F,S> AND ?           </OPT>
+  ]]>
+  </method>
+
+  <method name="GetCountMainProcess_AppReq">
+  <![CDATA[
+    SELECT COUNT(A.DOC_NO) as APP_REQ_CNT
+      FROM ICOMSCTM A 
+    WHERE A.APP_STATUS = 'P'
+      <OPT=F,S> AND A.HOUSE_CODE  = ?    </OPT>
+      <OPT=F,S> AND A.ADD_USER_ID = ?    </OPT>
+      <OPT=F,S> AND A.ADD_DATE BETWEEN ? </OPT>
+      <OPT=F,S> AND ? </OPT>
+      AND A.STATUS <> 'D'
+  ]]>
+  </method>
+
+  <method name="GetCountMainProcess_BR_PR">
+  <![CDATA[
+    SELECT
+           sum(CASE WHEN PRHD.REQ_TYPE = 'P' AND PRDT.PR_PROCEEDING_FLAG  = 'P' AND PRDT.CONFIRM_DATE IS NULL AND CTRL_CODE IN(#ctrl_code#) THEN 1 ELSE 0 END) as PR_NOT_RECEIPT_CNT
+          -- ,sum(CASE WHEN PRDT.PR_PROCEEDING_FLAG  = 'C' AND ( PRDT.PURCHASER_ID = '#user_id#' ) AND PRDT.CONFIRM_DATE IS NOT NULL AND CTRL_CODE IN(#ctrl_code#) THEN 1 ELSE 0 END) as PR_WAITING_CNT
+          --,nvl(sum(CASE WHEN PRHD.REQ_TYPE = 'B' AND PRDT.CONFIRM_DATE IS NULL     THEN 1 ELSE 0 END),0) as BR_NOT_RECEIPT_CNT
+          --,nvl(sum(CASE WHEN PRHD.REQ_TYPE = 'B' AND PRDT.CONFIRM_DATE IS NOT NULL THEN 1 ELSE 0 END),0) as BR_WAITING_CNT
+       FROM ICOYPRHD PRHD
+          ,ICOYPRDT PRDT
+     WHERE PRHD.SIGN_STATUS   = 'E'
+       AND PRHD.STATUS       != 'D'
+       AND PRDT.HOUSE_CODE    = PRHD.HOUSE_CODE
+     --AND PRDT.COMPANY_CODE  = PRHD.COMPANY_CODE
+       AND PRDT.PR_NO         = PRHD.PR_NO
+       --AND PRDT.PR_PROCEEDING_FLAG  = 'P'
+       AND PRDT.STATUS       != 'D'
+       <OPT=F,S> AND PRHD.HOUSE_CODE  = ? </OPT>
+       <OPT=S,S> AND PRHD.ADD_DATE BETWEEN ? </OPT>
+       <OPT=S,S>                       AND ? </OPT>
+  ]]>
+  	<if test="${ctrl_code1}" operator = "eq" value="P01">
+		--AND ( PRDT.PURCHASER_ID = '#user_id#'  OR PRDT.PURCHASER_ID IS NULL )
+	</if> 
+	<if test="${ctrl_code1}" operator = "ne" value="P01">
+		AND ( PRDT.PURCHASER_ID = '#user_id#' )
+	</if>
+  </method>
+
+
+  <method name="GetCountMainProcess_RFQ">
+  <![CDATA[
+    SELECT
+           nvl(sum(CASE WHEN REQ_TYPE = 'B' THEN 1 ELSE 0 END) + sum(CASE WHEN REQ_TYPE = 'P' THEN 1 ELSE 0 END),0) as RFQ_CNT
+          --,nvl(sum(CASE WHEN REQ_TYPE = 'B' THEN 1 ELSE 0 END),0) as BR_RFQ_CNT
+          --,nvl(sum(CASE WHEN REQ_TYPE = 'P' THEN 1 ELSE 0 END),0) as PR_RFQ_CNT
+     FROM (SELECT DISTINCT
+                   PRHD.REQ_TYPE
+                  ,RQHD.RFQ_NO
+                  ,RQHD.RFQ_COUNT
+              FROM ICOYPRHD PRHD
+                  ,ICOYPRDT PRDT
+                  ,ICOYRQHD RQHD
+                  ,ICOYRQDT RQDT
+             WHERE PRDT.HOUSE_CODE    = PRHD.HOUSE_CODE
+               --AND PRDT.COMPANY_CODE  = PRHD.COMPANY_CODE
+               AND PRDT.PR_NO         = PRHD.PR_NO
+               AND RQHD.HOUSE_CODE    = RQDT.HOUSE_CODE
+               AND RQHD.RFQ_NO        = RQDT.RFQ_NO
+               AND RQHD.RFQ_COUNT     = RQDT.RFQ_COUNT
+               AND RQDT.HOUSE_CODE    = PRDT.HOUSE_CODE
+               AND RQDT.PR_NO         = PRDT.PR_NO
+               AND RQDT.PR_SEQ        = PRDT.PR_SEQ
+               AND RQHD.STATUS IN ('C', 'R')
+               --AND RQHD.RFQ_FLAG    = 'B'
+               AND RQHD.SIGN_STATUS   = 'E'
+               AND TO_NUMBER(TO_CHAR(SYSDATE,'YYYYMMDD') || SUBSTR(TO_CHAR(SYSDATE, 'HH24MISS'), 1, 6)) < TO_NUMBER(RQHD.RFQ_CLOSE_DATE || rpad(RQHD.RFQ_CLOSE_TIME,6,'0'))
+               <OPT=F,S> AND PRHD.HOUSE_CODE  = ? </OPT>
+               <OPT=S,S> AND RQHD.CHANGE_DATE BETWEEN ? </OPT>
+               <OPT=S,S>                       AND ? </OPT>
+               <OPT=S,S> AND RQHD.ADD_USER_ID IN (?) </OPT>
+               AND RQDT.STATUS       != 'D'
+               AND RQHD.STATUS       != 'D'
+               AND PRDT.STATUS       != 'D'
+               AND PRHD.STATUS       != 'D'
+               /*
+               AND PRDT.PR_PROCEEDING_FLAG  = 'C'
+               PRHD.SIGN_STATUS   = 'E'
+               */
+           ) A
+  ]]>
+  </method>
+
+  <method name="GetCountMainProcess_BID">
+  <![CDATA[
+    SELECT
+           nvl(sum(CASE WHEN REQ_TYPE = 'B' THEN 1 ELSE 0 END),0) as BR_BID_CNT
+          ,nvl(sum(CASE WHEN REQ_TYPE = 'P' THEN 1 ELSE 0 END),0) as PR_BID_CNT
+      FROM (SELECT DISTINCT
+                   PRHD.REQ_TYPE
+                  ,BDHD.BID_NO
+              FROM ICOYPRHD PRHD
+                  ,ICOYPRDT PRDT
+                  ,ICOYBDHD BDHD
+                  ,ICOYBDDT BDDT
+                  ,ICOYBDPG BDPG
+             WHERE PRHD.SIGN_STATUS   = 'E'
+               AND PRHD.STATUS       != 'D'
+               AND PRDT.HOUSE_CODE    = PRHD.HOUSE_CODE
+               AND PRDT.COMPANY_CODE  = PRHD.COMPANY_CODE
+               AND PRDT.PR_NO         = PRHD.PR_NO
+               AND PRDT.STATUS       != 'D'
+               AND PRDT.PR_PROCEEDING_FLAG  = 'C'
+               AND BDHD.HOUSE_CODE    = BDDT.HOUSE_CODE
+               AND BDHD.BID_NO        = BDDT.BID_NO
+               AND BDHD.BID_COUNT     = BDDT.BID_COUNT
+               AND BDHD.HOUSE_CODE    = BDPG.HOUSE_CODE
+               AND BDHD.BID_NO        = BDPG.BID_NO
+               AND BDHD.BID_COUNT     = BDPG.BID_COUNT
+               AND BDHD.STATUS       != 'D'
+               AND BDDT.HOUSE_CODE    = PRDT.HOUSE_CODE
+               AND BDDT.PR_NO         = PRDT.PR_NO
+               AND BDDT.PR_SEQ        = PRDT.PR_SEQ
+               AND BDDT.STATUS       != 'D'
+               AND (SUBSTR(BDHD.BID_STATUS, 2, 1) = 'R'
+                 OR (( TO_NUMBER(TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')) < TO_NUMBER(BDPG.BID_END_DATE||BDPG.BID_END_TIME)
+                 OR BDPG.BID_END_DATE IS NULL))
+                 OR BDHD.BID_STATUS = 'AC')
+               AND BDHD.SIGN_STATUS  NOT IN ('J')
+               AND BDHD.BID_STATUS  NOT IN ('NB', 'SB')
+               AND BDHD.STATUS IN ('C' ,'R')
+               AND BDPG.STATUS IN ('C' ,'R')
+               AND BDHD.BID_TYPE = 'D'
+               <OPT=F,S> AND PRHD.HOUSE_CODE  = ? </OPT>
+               <OPT=S,S> AND BDHD.ANN_DATE BETWEEN ? </OPT>
+               <OPT=S,S>                       AND ? </OPT>
+               <OPT=S,S> AND PRDT.PURCHASER_ID = ? </OPT>
+           ) A
+  ]]>
+  </method>
+
+ 
+
+  <method name="GetCountMainProcess_RA">
+  <![CDATA[
+	SELECT nvl(sum(CASE WHEN PRHD.REQ_TYPE = 'B' THEN 1 ELSE 0 END),0) as BR_RA_CNT
+          ,nvl(sum(CASE WHEN PRHD.REQ_TYPE = 'P' THEN 1 ELSE 0 END),0) as PR_RA_CNT
+          FROM ICOYRAHD RAHD, ICOYPRHD PRHD, ICOYPRDT PRDT
+              ,(SELECT
+                       ra_v.HOUSE_CODE
+                      ,ra_v.RA_NO
+                      ,ra_v.RA_COUNT
+                      ,decode(ra_v.SIGN_STATUS
+                              ,'T', 'RT'  -- 작성중
+                              ,'P', 'RP'  -- 결재중
+                              ,'R', 'RR'  -- 결재반려
+                              ,'E', 'RC'  -- 결재완료
+                              ,(case when (SYSDATE < ra_v.ann_date) then 'CC' --공고확정
+                                    when (ra_v.ann_date <= SYSDATE and SYSDATE < ra_v.bid_start_date) then 'RA' --공고중
+                                    when (ra_v.bid_start_date <= SYSDATE and SYSDATE < ra_v.bid_end_date) then 'BP' --역경매진행
+                                    else 'RF' --역경매종료
+                              end)
+                             ) STATUS
+                      ,ra_v.bid_end_date
+                      ,ra_v.PR_NO
+                      ,ra_v.PR_SEQ
+                      ,ra_v.ADD_USER_ID
+                      ,ra_v.DEMAND_DEPT
+                      ,ra_v.DEMAND_DEPT_NAME
+                      ,ra_v.TEL_NO
+                      ,ra_v.CUST_CODE
+                      ,ra_v.CUST_NAME
+                  FROM (SELECT
+                               hd.HOUSE_CODE
+                              ,hd.RA_NO
+                              ,hd.RA_COUNT
+                              ,TO_DATE(hd.ANN_DATE||hd.ANN_TIME, 'YYYYMMDDHH24MISS')     ann_date
+                              ,TO_DATE(hd.START_DATE||hd.START_TIME, 'YYYYMMDDHH24MISS') bid_start_date
+                              ,CASE WHEN RA_FLAG = 'D' THEN NULL ELSE TO_DATE(hd.END_DATE||hd.END_TIME, 'YYYYMMDDHH24MISS') END  bid_end_date
+                              ,hd.SIGN_STATUS
+                              ,DT.PR_NO
+                              ,DT.PR_SEQ
+                              ,PRHD.ADD_USER_ID
+                              ,PRHD.DEMAND_DEPT
+                              ,PRHD.DEMAND_DEPT_NAME
+                              ,PRHD.TEL_NO
+                              ,PRHD.CUST_CODE
+                              ,getCustNameLoc(PRHD.CUST_CODE) AS CUST_NAME
+                          FROM ICOYRAHD hd, ICOYRADT dt, ICOYPRHD PRHD
+                         WHERE hd.HOUSE_CODE = dt.HOUSE_CODE
+                           AND PRHD.HOUSE_CODE = hd.HOUSE_CODE
+                           AND PRHD.HOUSE_CODE = dt.HOUSE_CODE
+                           AND hd.RA_NO      = dt.RA_NO
+                           AND hd.RA_COUNT   = dt.RA_COUNT
+                           AND PRHD.PR_NO = dt.PR_NO
+			<OPT=F,S>      AND hd.HOUSE_CODE =  ? </OPT>
+                           AND hd.TYPE    = 'R'
+                           AND hd.STATUS <> 'D'
+                           AND dt.STATUS <> 'D'
+                           AND dt.RA_SEQ  = '000001'
+                           AND dt.SETTLE_FLAG = 'P'
+            <OPT=S,S>      AND hd.ADD_DATE BETWEEN ? </OPT>
+            <OPT=S,S>                          AND ? </OPT> )  ra_v
+               ) ra_vv
+         WHERE RAHD.HOUSE_CODE = ra_vv.HOUSE_CODE
+           AND RAHD.HOUSE_CODE = PRDT.HOUSE_CODE
+           AND ra_vv.HOUSE_CODE = PRDT.HOUSE_CODE
+           AND RAHD.RA_NO      = ra_vv.RA_NO
+           AND RAHD.RA_COUNT   = ra_vv.RA_COUNT
+           AND ra_vv.PR_NO = PRDT.PR_NO
+           AND ra_vv.PR_SEQ = PRDT.PR_SEQ
+           AND PRHD.HOUSE_CODE = PRDT.HOUSE_CODE
+           AND PRHD.PR_NO = PRDT.PR_NO
+           AND ra_vv.STATUS  NOT IN('RF')
+ <OPT=S,S> AND PRDT.PURCHASER_ID = ? </OPT>
+  ]]>
+  </method>
+
+  <method name="GetCountMainProcess_RA_back">
+  <![CDATA[
+    SELECT
+           nvl(sum(CASE WHEN REQ_TYPE = 'B' THEN 1 ELSE 0 END),0) as BR_RA_CNT
+          ,nvl(sum(CASE WHEN REQ_TYPE = 'P' THEN 1 ELSE 0 END),0) as PR_RA_CNT
+      FROM (SELECT DISTINCT
+                   PRHD.REQ_TYPE
+                  ,RAHD.RA_NO
+              FROM ICOYPRHD PRHD
+                  ,ICOYPRDT PRDT
+                  ,ICOYRAHD RAHD
+                  ,ICOYRADT RADT
+             WHERE PRHD.SIGN_STATUS   = 'E'
+               AND PRHD.STATUS       != 'D'
+               AND PRDT.HOUSE_CODE    = PRHD.HOUSE_CODE
+               AND PRDT.COMPANY_CODE  = PRHD.COMPANY_CODE
+               AND PRDT.PR_NO         = PRHD.PR_NO
+               AND PRDT.STATUS       != 'D'
+               AND PRDT.PR_PROCEEDING_FLAG  = 'C'
+               AND RAHD.HOUSE_CODE    = RADT.HOUSE_CODE
+               AND RAHD.RA_NO         = RADT.RA_NO
+               AND RAHD.RA_COUNT      = RADT.RA_COUNT
+               AND RAHD.STATUS       != 'D'
+               AND RADT.HOUSE_CODE    = PRDT.HOUSE_CODE
+               AND RADT.PR_NO         = PRDT.PR_NO
+               AND RADT.PR_SEQ        = PRDT.PR_SEQ
+               AND RADT.STATUS       != 'D'
+               AND SYSDATE <= TO_DATE(RAHD.END_DATE||RAHD.END_TIME, 'YYYYMMDDHH24MISS')
+               AND RAHD.SIGN_STATUS IN ('T','P','R','E')
+               <OPT=F,S> AND PRHD.HOUSE_CODE  = ? </OPT>
+               <OPT=S,S> AND RAHD.ADD_DATE BETWEEN ? </OPT>
+               <OPT=S,S>                       AND ? </OPT>
+               <OPT=S,S> AND PRDT.PURCHASER_ID = ? </OPT>
+           ) A
+  ]]>
+  </method>
+
+  <method name="GetCountMainProcess_EX">
+  <![CDATA[
+	   SELECT   COUNT(*) AS PR_EX_CNT       
+	   FROM
+	    ICOYPRHD HD,
+	    ICOYPRDT DT,
+	    (
+	     SELECT
+	     RQDT.HOUSE_CODE              AS HOUSE_CODE,
+	     RQDT.PR_NO                   AS PR_NO,
+	     RQDT.PR_SEQ                  AS PR_SEQ
+	     FROM
+	      ICOYRQHD RQHD
+	     INNER JOIN ICOYRQDT RQDT ON RQHD.HOUSE_CODE = RQDT.HOUSE_CODE AND RQHD.RFQ_NO = RQDT.RFQ_NO AND RQHD.RFQ_COUNT = RQDT.RFQ_COUNT
+	     INNER JOIN ICOYQTDT QTDT ON RQDT.HOUSE_CODE = QTDT.HOUSE_CODE AND RQDT.RFQ_NO = QTDT.RFQ_NO AND RQDT.RFQ_COUNT = QTDT.RFQ_COUNT AND RQDT.RFQ_SEQ = QTDT.RFQ_SEQ
+	     WHERE
+	      RQHD.HOUSE_CODE = '#house_code#'
+	     AND 
+	      RQDT.SETTLE_FLAG = 'Y'
+	     AND
+	      QTDT.SETTLE_FLAG = 'Y'
+	     AND
+	      RQHD.STATUS IN ('C', 'R')
+	     AND
+	      RQDT.STATUS IN ('C', 'R')
+	     AND
+	      QTDT.STATUS IN ('C', 'R')
+	     UNION ALL
+	     SELECT
+	     BDDT.HOUSE_CODE                AS HOUSE_CODE,
+	     BDDT.PR_NO                     AS PR_NO,
+	      BDDT.PR_SEQ                   AS PR_SEQ
+	     FROM
+	      ICOYBDHD BDHD
+	     INNER JOIN ICOYBDVO BDVO ON BDHD.HOUSE_CODE = BDVO.HOUSE_CODE AND BDHD.BID_NO = BDVO.BID_NO AND BDHD.BID_COUNT = BDVO.BID_COUNT
+	     INNER JOIN ICOYBDVT BDVT ON BDVO.HOUSE_CODE = BDVT.HOUSE_CODE AND BDVO.BID_NO = BDVT.BID_NO AND BDVO.BID_COUNT = BDVT.BID_COUNT AND BDVO.VOTE_COUNT = BDVT.VOTE_COUNT AND BDVO.VENDOR_CODE = BDVT.VENDOR_CODE
+	     INNER JOIN ICOYBDDT BDDT ON BDVT.HOUSE_CODE = BDDT.HOUSE_CODE AND BDVT.BID_NO = BDDT.BID_NO AND BDVT.BID_COUNT = BDDT.BID_COUNT AND BDVT.ITEM_SEQ   = BDDT.ITEM_SEQ
+	     WHERE
+	      BDHD.HOUSE_CODE = '#house_code#' 
+	     AND
+	      BDVO.BID_STATUS = 'SB'
+	     AND
+	      BDHD.BID_STATUS = 'SB'
+	     AND
+	      (
+	       BDHD.PREFERRED_BIDDER != 'Y'
+	       OR
+	       (
+	        BDHD.PREFERRED_BIDDER = 'Y'
+	        AND
+	        NOT EXISTS (
+	         SELECT
+	          1
+	         FROM
+	          ICOYRQDT
+	         WHERE
+	          HOUSE_CODE = BDHD.HOUSE_CODE
+	         AND
+	          PR_NO     = BDDT.PR_NO
+	         AND
+	          PR_SEQ    = BDDT.PR_SEQ
+	         AND
+	          STATUS IN ('C', 'R')
+	        )
+	       )
+	      )
+	     AND
+	      BDHD.STATUS IN ('C', 'R')
+	     AND
+	      BDVO.STATUS IN ('C', 'R')
+	     AND
+	      BDVT.STATUS IN ('C', 'R')
+	     AND
+	      BDDT.STATUS IN ('C', 'R')
+	     UNION ALL
+	     SELECT
+	      RADT.HOUSE_CODE                                       AS HOUSE_CODE,
+	      RADT.PR_NO                                       AS PR_NO,
+	      RADT.PR_SEQ                                      AS PR_SEQ
+	     FROM
+	      ICOYRAHD RAHD
+	     INNER JOIN ICOYRABD RABD ON RAHD.HOUSE_CODE = RABD.HOUSE_CODE AND RAHD.RA_NO = RABD.RA_NO AND RAHD.RA_COUNT = RABD.RA_COUNT
+	     INNER JOIN ICOYRADT RADT ON RABD.HOUSE_CODE = RADT.HOUSE_CODE AND RABD.RA_NO = RADT.RA_NO AND RABD.RA_COUNT = RADT.RA_COUNT AND RABD.RA_SEQ = RADT.RA_SEQ
+	     WHERE
+	      RAHD.HOUSE_CODE  = '#house_code#'
+	     AND
+	      RABD.SETTLE_FLAG = 'Y'
+	     AND
+	      RAHD.RA_FLAG     = 'C'
+	     AND
+	      RADT.SETTLE_FLAG = 'Y'
+	     AND
+	      RAHD.STATUS IN ('C', 'R')
+	     AND
+	      RABD.STATUS IN ('C', 'R')
+	     AND
+	      RADT.STATUS IN ('C', 'R')
+	    ) SOURCING,
+	    ICOYPJTH PJTH,
+	    SOSLN SO,
+	    ICOMMTGL MTGL
+	WHERE HD.HOUSE_CODE = '#house_code#'
+	AND   HD.SIGN_DATE BETWEEN '#from_date#' AND '#to_Date#' 
+	AND   HD.HOUSE_CODE = DT.HOUSE_CODE
+	   AND   HD.PR_NO = DT.PR_NO
+	AND   DT.PR_PROCEEDING_FLAG = 'E'
+	AND   HD.PR_TYPE    = 'I'
+	AND   DT.PR_PROCEEDING_FLAG IN ('C', 'P', 'E')
+	   AND   DT.CTRL_CODE IN ('P01')
+	   AND   HD.REQ_TYPE IN ('P','M')
+	AND   DT.PURCHASER_ID = '#user_id#' 
+	AND   DT.HOUSE_CODE = SOURCING.HOUSE_CODE (+)
+	    AND   DT.PR_NO   = SOURCING.PR_NO  (+)
+	    AND   DT.PR_SEQ  = SOURCING.PR_SEQ  (+)
+	    AND   HD.HOUSE_CODE = PJTH.HOUSE_CODE (+)
+	      AND   HD.WBS      = PJTH.PJT_SEQ (+)
+	      AND   DT.PR_NO      = SO.PR_NO (+)
+	      AND   DT.PR_SEQ     = SO.PR_SEQ (+)
+	   -- AND   SOURCING.ORDER_SEQ(+) = '1'
+	    AND   DT.STATUS IN ('C', 'R')
+	    AND   DT.HOUSE_CODE = MTGL.HOUSE_CODE
+	    AND   DT.ITEM_NO    = MTGL.ITEM_NO
+      AND NOT EXISTS ( SELECT BID_NO FROM ICOYBDDT AA, ICOYBDHD BB
+           WHERE AA.HOUSE_CODE = BB.HOUSE_CODE
+           AND AA.BID_NO = BB.BID_NO
+           AND AA.BID_COUNT = BB.BID_COUNT 
+                       AND AA.PR_NO = DT.BD_PR_NO 
+                       AND AA.BID_COUNT IN ( SELECT MAX(BID_COUNT) FROM ICOYBDDT WHERE PR_NO = DT.BD_PR_NO ) 
+                       AND BB.STATUS NOT IN ('D')
+                       AND BB.BID_STATUS NOT IN ( 'NB', 'CC' )
+                      )
+      AND NOT EXISTS ( SELECT RA_NO FROM ICOYRADT AA, ICOYRAHD BB
+                       WHERE AA.HOUSE_CODE = BB.HOUSE_CODE
+                       AND AA.RA_NO = BB.RA_NO
+                       AND AA.RA_COUNT = BB.RA_COUNT
+                       AND AA.PR_NO = DT.BD_PR_NO 
+                       AND AA.RA_COUNT IN ( SELECT MAX(RA_COUNT) FROM ICOYRADT WHERE PR_NO = DT.BD_PR_NO ) 
+                       AND BB.STATUS NOT IN ( 'D' ) 
+                       AND BB.RA_FLAG NOT IN ('D')
+                       AND AA.SETTLE_FLAG NOT IN ('N')
+                      )
+  ]]>
+  </method>
+
+
+  <method name="GetCountMainProcess_EX222">
+  <![CDATA[
+    SELECT
+           nvl(sum(CASE WHEN REQ_TYPE = 'B' THEN 1 ELSE 0 END),0) as BR_EX_CNT
+          ,nvl(sum(CASE WHEN REQ_TYPE = 'P' THEN 1 ELSE 0 END),0) as PR_EX_CNT
+      FROM (SELECT DISTINCT PRHD.REQ_TYPE, RQDT.RFQ_NO, '' as BID_NO, '' as RA_NO
+              FROM ICOYPRHD PRHD
+                  ,ICOYPRDT PRDT
+                  ,ICOYRQDT RQDT
+                  ,ICOYQTDT QTDT
+             WHERE PRHD.HOUSE_CODE         = PRDT.HOUSE_CODE
+               AND PRHD.PR_NO              = PRDT.PR_NO
+               AND PRHD.STATUS            != 'D'
+               AND PRDT.PR_PROCEEDING_FLAG = 'E'
+               AND PRDT.STATUS            != 'D'
+               AND RQDT.HOUSE_CODE  (+)    = PRDT.HOUSE_CODE
+               AND RQDT.PR_NO       (+)    = PRDT.PR_NO
+               AND RQDT.PR_SEQ      (+)    = PRDT.PR_SEQ
+               AND RQDT.SETTLE_FLAG        = 'Y'
+               AND RQDT.STATUS            != 'D'
+               AND QTDT.HOUSE_CODE  (+)    = RQDT.HOUSE_CODE
+               AND QTDT.RFQ_NO      (+)    = RQDT.RFQ_NO
+               AND QTDT.RFQ_COUNT   (+)    = RQDT.RFQ_COUNT
+               AND QTDT.RFQ_SEQ     (+)    = RQDT.RFQ_SEQ
+               AND QTDT.SETTLE_FLAG        = 'Y'
+               AND QTDT.STATUS            != 'D'
+               AND NOT EXISTS (SELECT 1
+                                 FROM ICOYCNHD CNHD, ICOYCNDT CNDT
+                                WHERE CNHD.HOUSE_CODE = CNDT.HOUSE_CODE
+                                  AND CNHD.EXEC_NO    = CNDT.EXEC_NO
+                                  AND CNHD.STATUS    != 'D'
+                                  AND CNDT.HOUSE_CODE = PRDT.HOUSE_CODE
+                                  AND CNDT.PR_NO      = PRDT.PR_NO
+                                  AND CNDT.PR_SEQ     = PRDT.PR_SEQ
+                                  AND CNDT.STATUS    != 'D')
+       <OPT=F,S> AND PRHD.HOUSE_CODE = ?      </OPT>
+       <OPT=S,S> AND PRHD.SIGN_DATE BETWEEN ? </OPT>
+       <OPT=S,S>                        AND ? </OPT>
+       <OPT=S,S> AND PRDT.PURCHASER_ID = ?  </OPT>
+           union
+            SELECT DISTINCT PRHD.REQ_TYPE, '' as RFQ_NO, BDHD.BID_NO, '' as RA_NO
+              FROM ICOYPRHD PRHD
+                  ,ICOYPRDT PRDT
+                  ,ICOYBDHD BDHD
+                  ,ICOYBDDT BDDT
+             WHERE PRHD.HOUSE_CODE         = PRDT.HOUSE_CODE
+               AND PRHD.PR_NO              = PRDT.PR_NO
+               AND PRHD.STATUS            != 'D'
+               AND PRDT.PR_PROCEEDING_FLAG = 'E'
+               AND PRDT.STATUS            != 'D'
+               AND BDHD.HOUSE_CODE         = BDDT.HOUSE_CODE
+               AND BDHD.BID_NO             = BDDT.BID_NO
+               AND BDHD.BID_COUNT          = BDDT.BID_COUNT
+               AND BDHD.BID_STATUS         = 'SB'
+               AND BDHD.PREFERRED_BIDDER  != 'Y'
+               AND BDHD.STATUS            != 'D'
+               AND BDDT.HOUSE_CODE  (+)    = PRDT.HOUSE_CODE
+               AND BDDT.PR_NO       (+)    = PRDT.PR_NO
+               AND BDDT.PR_SEQ      (+)    = PRDT.PR_SEQ
+               AND BDDT.STATUS            != 'D'
+               AND NOT EXISTS (SELECT 1
+                                 FROM ICOYCNHD CNHD, ICOYCNDT CNDT
+                                WHERE CNHD.HOUSE_CODE = CNDT.HOUSE_CODE
+                                  AND CNHD.EXEC_NO    = CNDT.EXEC_NO
+                                  AND CNHD.STATUS    != 'D'
+                                  AND CNDT.HOUSE_CODE = PRDT.HOUSE_CODE
+                                  AND CNDT.PR_NO      = PRDT.PR_NO
+                                  AND CNDT.PR_SEQ     = PRDT.PR_SEQ
+                                  AND CNDT.STATUS    != 'D')
+       <OPT=F,S> AND PRHD.HOUSE_CODE = ?      </OPT>
+       <OPT=S,S> AND PRHD.SIGN_DATE BETWEEN ? </OPT>
+       <OPT=S,S>                        AND ? </OPT>
+       <OPT=S,S> AND PRDT.PURCHASER_ID = ?  </OPT>
+           union
+            SELECT DISTINCT PRHD.REQ_TYPE, '' as RFQ_NO, '' as BID_NO, RAHD.RA_NO
+              FROM ICOYPRHD PRHD
+                  ,ICOYPRDT PRDT
+                  ,ICOYRAHD RAHD
+                  ,ICOYRADT RADT
+             WHERE PRHD.HOUSE_CODE         = PRDT.HOUSE_CODE
+               AND PRHD.PR_NO              = PRDT.PR_NO
+               AND PRHD.STATUS            != 'D'
+               AND PRDT.PR_PROCEEDING_FLAG = 'E'
+               AND PRDT.STATUS            != 'D'
+               AND RAHD.HOUSE_CODE         = RADT.HOUSE_CODE
+               AND RAHD.RA_NO              = RADT.RA_NO
+               AND RAHD.RA_COUNT           = RADT.RA_COUNT
+               AND RAHD.STATUS            != 'D'
+               AND RADT.HOUSE_CODE  (+)    = PRDT.HOUSE_CODE
+               AND RADT.PR_NO       (+)    = PRDT.PR_NO
+               AND RADT.PR_SEQ      (+)    = PRDT.PR_SEQ
+               AND RADT.SETTLE_FLAG        = 'Y'
+               AND RADT.STATUS            != 'D'
+               AND NOT EXISTS (SELECT 1
+                                 FROM ICOYCNHD CNHD, ICOYCNDT CNDT
+                                WHERE CNHD.HOUSE_CODE = CNDT.HOUSE_CODE
+                                  AND CNHD.EXEC_NO    = CNDT.EXEC_NO
+                                  AND CNHD.STATUS    != 'D'
+                                  AND CNDT.HOUSE_CODE = PRDT.HOUSE_CODE
+                                  AND CNDT.PR_NO      = PRDT.PR_NO
+                                  AND CNDT.PR_SEQ     = PRDT.PR_SEQ
+                                  AND CNDT.STATUS    != 'D')
+       <OPT=F,S> AND PRHD.HOUSE_CODE = ?      </OPT>
+       <OPT=S,S> AND PRHD.SIGN_DATE BETWEEN ? </OPT>
+       <OPT=S,S>                        AND ? </OPT>
+       <OPT=S,S> AND PRDT.PURCHASER_ID = ?  </OPT>
+           ) A
+  ]]>
+  </method>
+
+  <method name="GetCountMainProcess_PO">
+  <![CDATA[
+ 
+ SELECT COUNT(*) AS PO_WAITING_CNT
+FROM ICOYCNDT DT, ICOYCNHD HD, ICOYCNDP DP, ICOYPRDT PRDT, ICOYPRHD PRHD
+WHERE DT.HOUSE_CODE   = HD.HOUSE_CODE
+  AND DT.EXEC_NO      = HD.EXEC_NO
+  AND DT.HOUSE_CODE   = DP.HOUSE_CODE
+  AND DT.EXEC_NO      = DP.EXEC_NO
+  AND DT.HOUSE_CODE   = PRDT.HOUSE_CODE
+  AND DT.PR_NO        = PRDT.PR_NO
+  AND DT.PR_SEQ       = PRDT.PR_SEQ
+  AND PRDT.HOUSE_CODE = PRHD.HOUSE_CODE
+  AND PRDT.PR_NO      = PRHD.PR_NO
+  AND DT.ITEM_NO      = PRDT.ITEM_NO
+  AND PRHD.REQ_TYPE   = 'P'               
+  AND PRDT.PR_PROCEEDING_FLAG = 'B'   
+  AND DP.DP_CODE = 3
+  AND DT.STATUS IN ('C','R')
+  AND HD.STATUS IN ('C','R')
+  AND DP.STATUS IN ( 'C','R')
+  AND PRHD.STATUS IN ( 'C','R')
+  AND PRDT.STATUS IN ( 'C','R')
+  AND DT.HOUSE_CODE = '#house_code#'
+  <OPT=S,S> AND  HD.SIGN_DATE  BETWEEN ?  </OPT> <OPT=S,S>  AND  ?  </OPT>
+  AND DT.ADD_USER_ID = '#user_id#'
+  AND DT.PO_NO NOT IN (
+               SELECT PO_NO FROM ICOYPOHD 
+                WHERE HOUSE_CODE = DT.HOUSE_CODE 
+                      AND PO_NO  = DT.PO_NO 
+                      AND END_DATE IS NOT NULL
+             ) 
+  ]]>
+  </method>
+
+  <method name="GetCountMainProcess_CT">
+  <![CDATA[
+    SELECT count(distinct CNDT.EXEC_NO) as CT_WAITING_CNT
+      FROM ICOYPODT PODT LEFT OUTER JOIN ICOYECCT ECCT
+                           ON ECCT.VENDOR_CODE = PODT.VENDOR_CODE
+                           AND ECCT.HOUSE_CODE = PODT.HOUSE_CODE
+                          AND ECCT.BID_NO      = PODT.PO_NO
+          ,ICOYCNHD CNHD
+          ,ICOYCNDT CNDT
+          ,ICOYPRHD PRHD
+          ,ICOMVNGL VNGL
+     WHERE CNHD.SIGN_STATUS = 'E'
+       <OPT=F,S> AND CNHD.HOUSE_CODE = ? </OPT>
+       AND CNHD.STATUS     != 'D'
+       AND CNDT.HOUSE_CODE  = CNHD.HOUSE_CODE
+       AND CNDT.EXEC_NO     = CNHD.EXEC_NO
+       --AND CNDT.CONTRACT_FLAG = 'Y'               --계약체결여부
+       AND CNDT.STATUS     != 'D'
+       AND PODT.HOUSE_CODE  = CNDT.HOUSE_CODE
+       AND PODT.EXEC_NO     = CNDT.EXEC_NO
+       AND PODT.EXEC_SEQ    = CNDT.EXEC_SEQ
+       AND PODT.VENDOR_CODE = CNDT.VENDOR_CODE
+       AND PODT.STATUS     != 'D'
+       AND PRHD.HOUSE_CODE  = CNDT.HOUSE_CODE
+       AND PRHD.PR_NO       = CNDT.PR_NO
+       AND PRHD.STATUS     != 'D'
+       AND VNGL.HOUSE_CODE  = PODT.HOUSE_CODE
+       AND VNGL.VENDOR_CODE = PODT.VENDOR_CODE
+       AND (ECCT.STATUS IN ('PR','Z') OR ECCT.STATUS IS NULL OR ECCT.STATUS ='' )
+       <OPT=S,S> AND PODT.CHANGE_DATE BETWEEN ? </OPT>
+       <OPT=S,S>                        AND ? </OPT>
+       <OPT=S,S> AND PODT.ADD_USER_ID = ?  </OPT>
+
+  ]]>
+  </method>
+<!-- 	<OPT=S,S> AND GETDEPTCODEBYID(VH.HOUSE_CODE,VH.COMPANY_CODE,VH.PURCHASE_ID) = ? </OPT> // 제거 -->
+  <method name="GetCountMainProcess_IV">
+  <![CDATA[
+  
+  select count(*) as IV_WAITING_CNT 
+		  FROM ICOYIVHD VH
+		  WHERE 1=1
+		  AND VH.STATUS   != 'D'
+		  AND VH.SIGN_STATUS   = 'P'               
+		<OPT=F,S> AND VH.HOUSE_CODE = ? </OPT>
+		<OPT=S,S> AND VH.INV_DATE BETWEEN ? </OPT>
+		<OPT=S,S>                     AND ? </OPT>           
+		<OPT=S,S> AND VH.INV_PERSON_ID = ?  </OPT>
+  ]]>
+  </method>
+
+<method name="GetCountMainProcess_Vendor">
+	<![CDATA[
+		SELECT 	COUNT(*) AS VENDOR_WAITING_CNT
+		FROM(
+		SELECT  A.VENDOR_CODE
+		     FROM ICOMVNGL A, SSGVN B, SSGGL C                          
+		     WHERE A.VENDOR_CODE = B.VENDOR_CODE
+		           AND A.HOUSE_CODE = B.HOUSE_CODE 
+		              AND B.HOUSE_CODE = C.HOUSE_CODE   
+		           AND B.SG_REFITEM = C.SG_REFITEM               
+		           AND B.APPLY_FLAG = 'Y' 
+		           AND C.USE_FLAG = 'Y' 
+		           AND B.REGISTRY_FLAG IN ('N') -- 처리하지 않은건, 반려건('N', 'R')
+		           AND B.STATUS <> 'D'               -- 업체일반정보상태가  D가 아닌것조회
+		       	<OPT=F,S> AND A.HOUSE_CODE = ? </OPT>
+		GROUP BY A.VENDOR_CODE
+		)       	
+  	]]>
+</method>
+
+  <method name="GetCountMainProcess_Item">
+  <![CDATA[
+      SELECT COUNT(*) as ITEM_WAITING_CNT
+        FROM ICOMREHD REHD 
+         <OPT=F,S> WHERE REHD.HOUSE_CODE = ? </OPT>
+           AND REHD.STATUS        != 'D'
+           AND REHD.SIGN_STATUS    = 'E'
+           AND REHD.DATA_OCCUR_TYPE IN('L', 'V')
+           AND REHD.CONFIRM_STATUS = 'P'
+    <OPT=S,S>AND  REHD.REQ_DATE BETWEEN ? </OPT>
+    <OPT=S,S>                       AND ? </OPT>
+  ]]>
+  </method>
+  
+  <method name="GetCountMainProcess_CsEv">
+	<![CDATA[
+			SELECT 	COUNT(1) CSEV_WAITING_CNT
+			FROM 	ICOYIVHD IVHD, ICOYIVDT IVDT, ICOYPOHD POHD
+			WHERE 	IVHD.HOUSE_CODE  = IVDT.HOUSE_CODE
+			AND   	IVHD.INV_NO   = IVDT.INV_NO
+			AND   	IVDT.HOUSE_CODE  = POHD.HOUSE_CODE
+			AND   	IVDT.PO_NO   = POHD.PO_NO
+			AND 	NVL(IVDT.TAX_YN, 'N') = 'N'
+			AND   	IVHD.STATUS   != 'D'
+			AND   	IVDT.STATUS   != 'D'
+			AND   	POHD.STATUS   != 'D'
+			<OPT=F,S> AND IVHD.HOUSE_CODE = ? </OPT>
+			AND     IVHD.SIGN_STATUS IN ('E1','RE')
+			AND     NVL(IVHD.EVAL_FLAG,'N') IN ('T','P')
+			AND     IVHD.CSKD_GB IN (SELECT CODE FROM SCODE WHERE TYPE = 'M903' AND USE_FLAG = 'Y' AND DEL_FLAG = 'N')		 
+			AND     IVDT.GR_QTY > 0
+			<OPT=F,S> AND IVHD.EVAL_USER_ID = ?  </OPT>			
+  	]]>
+</method>
+  
+  <method name="GetCountMainProcess_Item2">
+  <![CDATA[
+      SELECT COUNT(*) as ITEM_WAITING_CNT2
+      FROM  ICOMREHD RHD  LEFT OUTER JOIN  (SELECT USR.USER_ID,
+                                             USR.HOUSE_CODE,
+                                             NGL.VENDOR_CODE,
+                                             GETCOMPANYNAME(NGL.HOUSE_CODE, NGL.VENDOR_CODE, 'S', 'KR') AS NAME_LOC
+                                        FROM ICOMLUSR USR , ICOMVNGL NGL
+                                       WHERE USR.HOUSE_CODE   = '000'
+                                         AND USR.HOUSE_CODE   = NGL.HOUSE_CODE
+                                         AND USR.COMPANY_CODE = NGL.VENDOR_CODE
+                                      ) VDR
+                                       ON RHD.HOUSE_CODE  = VDR.HOUSE_CODE
+                                      AND RHD.REQ_USER_ID = VDR.USER_ID
+      	<OPT=F,S> WHERE RHD.HOUSE_CODE = ? </OPT>        
+        <OPT=F,S> AND RHD.REQ_USER_ID = ?  </OPT>
+        AND  RHD.STATUS <> 'D' 
+  ]]>
+  </method>
+  
+  <method name="GetCountPayOperateExpense">
+	<![CDATA[
+	    SELECT
+			COUNT(*) as PAYOPERATEEXPENSE_WAITING_CNT 
+		FROM 
+		(  
+			SELECT	TAX_NO,TAX_DATE
+			FROM
+			(
+				SELECT	TXHD.TAX_NO
+				,	   	(
+					    	SELECT	COUNT(1)
+					    	FROM
+					     	SPY1LN 	PYLN
+					    	INNER JOIN SPY1GL PYGL ON PYLN.HOUSE_CODE = PYGL.HOUSE_CODE AND PYLN.PAY_SEND_NO = PYGL.PAY_SEND_NO
+					    	WHERE	PYLN.HOUSE_CODE = TXDT.HOUSE_CODE
+					    	AND		PYLN.TAX_NO     = TXDT.TAX_NO
+					    	AND		PYLN.TAX_SEQ    = TXDT.TAX_SEQ
+					    	AND		PYGL.DEL_YN     = 'N'
+					   	) AS PY_CNT
+			   	,       CONVERT_DATE(TXHD.TAX_DATE) AS TAX_DATE
+	  			FROM	ICOYTRHD TRHD
+			  	,		ICOYTRDT TRDT
+			  	,		ICOYTXHD TXHD	
+			  	,		ICOYTXDT TXDT
+			  	,		(
+			    			SELECT  TAX_NO
+			    			,  		APP_STATUS_CD
+			    			FROM 
+			    			(
+								SELECT	RANK() OVER( PARTITION BY TAX_NO ORDER BY ADD_DATE||ADD_TIME DESC) AS ORDER_SEQ
+			     				,  		TAX_NO
+			     				, 	 	APP_STATUS_CD
+			     				FROM  SPY2GL 
+			    			)
+			    			WHERE  ORDER_SEQ = 1
+			       		) PYGL
+				WHERE 	TXHD.KTGRM = '02' 
+				AND 	TRHD.HOUSE_CODE = TRDT.HOUSE_CODE
+			    AND 	TRHD.PAY_NO = TRDT.PAY_NO
+				AND 	TRDT.HOUSE_CODE = TXHD.HOUSE_CODE
+				AND 	TRDT.TAX_NO = TXHD.TAX_NO
+				AND 	TRDT.HOUSE_CODE = TXDT.HOUSE_CODE
+				AND 	TRDT.TAX_NO = TXDT.TAX_NO
+				AND 	TRDT.TAX_SEQ = TXDT.TAX_SEQ            
+				AND 	TRDT.TAX_NO = PYGL.TAX_NO(+)
+			   
+	      		AND 	NVL(PYGL.APP_STATUS_CD, 'R') = 'R'
+	      		<OPT=F,S> AND   TRHD.HOUSE_CODE = ? </OPT>   
+			  	AND 	TXHD.PROGRESS_CODE IN ('P','E')
+			  	<OPT=F,S> AND   TXHD.PROC_DEPT = ? </OPT>   
+			  		  			 			
+			)
+	   		WHERE PY_CNT = 0
+			GROUP BY TAX_NO, TAX_DATE
+		)
+	]]>   		
+	</method>
+  
+  <method name="GetCountPayOperate">
+  <![CDATA[	 
+		SELECT
+			SUM(PAYOPERATE_WAITING_CNT) as PAYOPERATE_WAITING_CNT
+		FROM 
+		(
+		SELECT	COUNT(*) as PAYOPERATE_WAITING_CNT
+				FROM	SPY2GL GL
+				      , (SELECT * FROM SCODE WHERE TYPE='M815' AND USE_FLAG = 'Y') SC
+				      , ICOYTXHD TXHD
+				      , (SELECT RESSEQ, PUBCODE, LOADSTATUS, NTS_ISSUEID FROM SALEEBILL WHERE LOADSTATUS  = 1) SB
+				WHERE   GL.HOUSE_CODE    = SC.HOUSE_CODE(+)
+				  AND   GL.APP_STATUS_CD = SC.CODE(+)
+	    <OPT=F,S> AND   GL.HOUSE_CODE = ? </OPT>   
+				  AND   TXHD.HOUSE_CODE = GL.HOUSE_CODE
+				  AND   TXHD.TAX_NO = GL.TAX_NO
+				  AND   TXHD.TAX_NO = SB.RESSEQ
+		  		  AND   GL.APP_STATUS_CD = 'M'
+		  		  AND   GL.STATUS_CD = '30'
+		<OPT=F,S> AND   GL.SIGNER1_NO = ? </OPT>
+		UNION ALL
+		SELECT	COUNT(*) as PAYOPERATE_WAITING_CNT
+				FROM	SPY2GL GL
+				      , (SELECT * FROM SCODE WHERE TYPE='M815' AND USE_FLAG = 'Y') SC
+				      , ICOYTXHD TXHD
+				      , (SELECT RESSEQ, PUBCODE, LOADSTATUS, NTS_ISSUEID FROM SALEEBILL WHERE LOADSTATUS  = 1) SB
+				WHERE   GL.HOUSE_CODE    = SC.HOUSE_CODE(+)
+				  AND   GL.APP_STATUS_CD = SC.CODE(+)
+	    <OPT=F,S> AND   GL.HOUSE_CODE = ? </OPT>   
+				  AND   TXHD.HOUSE_CODE = GL.HOUSE_CODE
+				  AND   TXHD.TAX_NO = GL.TAX_NO
+				  AND   TXHD.TAX_NO = SB.RESSEQ
+		  		  AND   GL.APP_STATUS_CD = 'M'
+		  		  AND   GL.STATUS_CD = '40'
+		<OPT=F,S> AND   GL.SIGNER2_NO = ? </OPT>  		  
+		UNION ALL
+		SELECT	COUNT(*) as PAYOPERATE_WAITING_CNT
+				FROM	SPY2GL GL
+				      , (SELECT * FROM SCODE WHERE TYPE='M815' AND USE_FLAG = 'Y') SC
+				      , ICOYTXHD TXHD
+				      , (SELECT RESSEQ, PUBCODE, LOADSTATUS, NTS_ISSUEID FROM SALEEBILL WHERE LOADSTATUS  = 1) SB
+				WHERE   GL.HOUSE_CODE    = SC.HOUSE_CODE(+)
+				  AND   GL.APP_STATUS_CD = SC.CODE(+)
+	    <OPT=F,S> AND   GL.HOUSE_CODE = ? </OPT>   
+				  AND   TXHD.HOUSE_CODE = GL.HOUSE_CODE
+				  AND   TXHD.TAX_NO = GL.TAX_NO
+				  AND   TXHD.TAX_NO = SB.RESSEQ
+		  		  AND   GL.APP_STATUS_CD = 'M'
+		  		  AND   GL.STATUS_CD = '20'
+		)  		  
+  	]]>	  
+	</method>
+	
+	
+
+</service>

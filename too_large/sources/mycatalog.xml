@@ -1,0 +1,457 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<service>
+	<method name="et_setInsert_myCatalog">
+		INSERT INTO ICOYMYCL (
+			HOUSE_CODE, USER_ID,  MENU_FIELD_CODE, ITEM_NO, COMPANY_CODE,
+			STATUS,     ADD_DATE, ADD_TIME,        ADD_USER_ID
+		)
+		values (
+			${HOUSE_CODE},
+			${USER_ID},
+			'*',
+			${ITEM_NO},
+			${COMPANY_CODE},
+			'C',
+			TO_CHAR(SYSDATE, 'YYYYMMDD'),
+			TO_CHAR(SYSDATE, 'HH24MISS'),
+			${USER_ID}
+		)
+	</method>
+
+	<method name="et_getPoCreateCatalogSelect">
+			 SELECT
+			     MGL.MATERIAL_TYPE,
+			     MGL.MATERIAL_CTRL_TYPE,
+			     MGL.MATERIAL_CLASS1,
+			     MGL.ITEM_NO,
+			     MGL.DESCRIPTION_LOC,
+			     MGL.DESCRIPTION_ENG,
+			     MGL.SPECIFICATION,
+			     DECODE(INF.ITEM_NO,NULL,'N','Y') as  STD_INFO,
+			     '#dept#' as PURCHASE_DEPT_NAME,
+			     '#user_id#' as PURCHASER_NAME,
+			     DECODE(INF.SHIPPER_TYPE,'D','내자','O','외자',NULL) as SHIPPER,
+			     DECODE(MGL.ITEM_BLOCK_FLAG,'N','가능','불가') as P_HOLD,
+			     INF.PURCHASE_LOCATION,
+			     DECODE(VNGL.PURCHASE_BLOCK_FLAG,'N','가능','불가') as BLOCK_HOLD,
+			     INF.EXEC_NO,
+			     DECODE(INF.PRICE_TYPE, 'N', INF.UNIT_PRICE,
+	                   'P', NVL(
+	                              ( SELECT
+	                                    UNIT_PRICE
+	                                FROM ICOYINPR
+	                                WHERE   HOUSE_CODE     = INF.HOUSE_CODE
+	                                    AND VENDOR_CODE    = INF.VENDOR_CODE
+	                                    AND EXEC_NO        = INF.EXEC_NO
+	                                    AND ITEM_NO        = INF.ITEM_NO
+	                                    AND PURCHASE_LOCATION = INF.PURCHASE_LOCATION
+	                                    AND EXEC_SEQ       = INF.EXEC_SEQ
+	                                    AND TO_CHAR(SYSDATE,'YYYYMMDD')
+	                                                             BETWEEN VALID_FROM_DATE AND VALID_TO_DATE
+	                              ),
+	                              ( SELECT
+	                                        UNIT_PRICE
+	                                FROM ICOYINPR
+	                                WHERE   HOUSE_CODE     = INF.HOUSE_CODE
+	                                    AND VENDOR_CODE    = INF.VENDOR_CODE
+	                                    AND EXEC_NO        = INF.EXEC_NO
+	                                    AND ITEM_NO        = INF.ITEM_NO
+	                                    AND PURCHASE_LOCATION = INF.PURCHASE_LOCATION
+	                                    AND EXEC_SEQ       = INF.EXEC_SEQ
+	                                    AND VALID_TO_DATE  = ( SELECT
+	                                                               MAX(VALID_TO_DATE)
+	                                                           FROM ICOYINPR
+	                                                           WHERE   HOUSE_CODE     = INF.HOUSE_CODE
+	                                                               AND VENDOR_CODE    = INF.VENDOR_CODE
+	                                                               AND EXEC_NO        = INF.EXEC_NO
+	                                                               AND ITEM_NO        = INF.ITEM_NO
+	                                                               AND PURCHASE_LOCATION = INF.PURCHASE_LOCATION
+	                                                               AND EXEC_SEQ       = INF.EXEC_SEQ
+	                                                         )
+	                              )
+	                            ),
+	                   NULL
+			     ) as UNIT_PRICE,
+			     INF.CUR,
+			     INF.MOLDING_CHARGE,
+			     INF.VENDOR_ITEM_NO,
+			     MGL.ORIGIN_COUNTRY,
+			     '' as PREV_UNIT_PRICE,
+			     'A' as PKG_TYPE,
+			     INF.BASIC_UNIT,
+			     INF.VENDOR_ITEM_NO,
+			     '' as EXP_ITEM_NO,
+			     '' as DOM_EXP_FLAG,
+			     INF.PURCHASE_UNIT,
+			     MGL.HS_NO,
+			     INF.SHIPPER_TYPE,
+			     INF.COMPANY_CODE,
+			     INF.PURCHASE_LOCATION,
+			     GETICOMCODE2(INF.HOUSE_CODE,'M039',INF.PURCHASE_LOCATION) AS PURCHASE_OPER,
+			     '' as PLANT_CODE,
+			     DECODE(MGL.ITEM_BLOCK_FLAG,'N','N','Y') as HOLD_FLAG,
+			     DECODE(VNGL.PURCHASE_BLOCK_FLAG,'N','N','Y') as H_BLOCK_HOLD,
+			     '' as CREATE_TYPE,
+			     DECODE(SIGN(TO_CHAR(SYSDATE,'YYYYMMDD')-NVL(INF.VALID_FROM_DATE,0)),'-1','N',
+			                DECODE(SIGN(NVL(INF.VALID_TO_DATE,0)-TO_CHAR(SYSDATE,'YYYYMMDD')),'-1','N','Y')
+			           ) as VALID_DATE,
+			     DECODE(NVL(MGL.DRAWING_LINK_FLAG,'0'),'0','',MGL.DRAWING_NO1) AS DRAWING_NO,
+			     MGL.IMAGE_FILE_PATH,
+			     '' as PHANTOM_ITEM_FLAG,
+			     MGL.MAKER_CODE,
+			     MGL.MAKER_NAME,
+			     MGL.MAKER_ITEM_NO,
+			     '' as MIN_ORDER_QTY,
+			     '' as DELY_TO_ADDRESS,
+			     MYCL.MENU_FIELD_CODE
+			 FROM ICOMMTGL MGL, ICOYINFO INF, ICOMVNGL VNGL,
+			      ( SELECT
+			            HOUSE_CODE,
+			            PURCHASE_LOCATION
+			        FROM ICOMBAPR
+			        WHERE   HOUSE_CODE  = '#house_code#'
+			            AND PR_LOCATION = ( SELECT
+			                                    PR_LOCATION
+			                                FROM ICOMOGPL
+			                                WHERE   HOUSE_CODE   = '#house_code#'
+			                                    AND COMPANY_CODE = '#company_code#'
+			                                    AND PLANT_CODE   = '#plant_code#'
+			                               )
+			      ) BAPR
+			      , ICOYMYCL MYCL
+		<if test="${sub_query_flag}" operator="eq" value="N">
+			      , ICOMMUCL MUCL
+		</if>
+		<if test="${sub_query_flag}" operator="eq" value="Y">
+		          , ( SELECT
+		                  HOUSE_CODE,
+		                  USER_ID,
+		                  MENU_FIELD_CODE
+		              FROM   ICOMMUCL
+		              CONNECT  BY  PRIOR  MENU_FIELD_CODE        = MENU_PARENT_FIELD_CODE
+		                  AND  HOUSE_CODE = '#house_code#'
+		                  AND  USER_ID    = '#user_id#'
+		              START    WITH       MENU_PARENT_FIELD_CODE = '#menu_field_code#'
+		                  AND  HOUSE_CODE = '#house_code#'
+		                  AND  USER_ID    = '#user_id#'
+		              UNION  ALL
+		              SELECT
+		                  HOUSE_CODE,
+		                  USER_ID,
+		                  MENU_FIELD_CODE
+		              FROM   ICOMMUCL
+		              WHERE  MENU_FIELD_CODE = '#menu_field_code#'
+		            )  MUCL
+		</if>
+			 WHERE    MGL.STATUS              IN ('C','R')
+			     AND  VNGL.STATUS             IN ( 'C','R')
+			     AND  INF.STATUS              IN ( 'C','R')
+			     AND  MGL.HOUSE_CODE          =  MYCL.HOUSE_CODE
+			     AND  MGL.ITEM_NO             =  MYCL.ITEM_NO
+			     AND  MYCL.USER_ID            =  '#user_id#'
+			     AND  INF.VENDOR_CODE         =  '#vendor_code#'
+			     AND  INF.HOUSE_CODE          =  '#house_code#'
+			     AND  BAPR.HOUSE_CODE         =  INF.HOUSE_CODE
+			     AND  BAPR.PURCHASE_LOCATION  =  INF.PURCHASE_LOCATION
+			     AND  INF.HOUSE_CODE          =  MGL.HOUSE_CODE
+			     AND  INF.ITEM_NO             =  MGL.ITEM_NO
+			     AND  INF.HOUSE_CODE          =  VNGL.HOUSE_CODE
+			     AND  INF.VENDOR_CODE         =  VNGL.VENDOR_CODE
+			     AND  MUCL.HOUSE_CODE         =  MYCL.HOUSE_CODE
+			     AND  MUCL.USER_ID            =  MYCL.USER_ID
+
+		<if test="${sub_query_flag}" operator="eq" value="N">
+				 AND  MUCL.MENU_FIELD_CODE    = '#menu_field_code#'
+		</if>
+			     AND  MUCL.MENU_FIELD_CODE    =  MYCL.MENU_FIELD_CODE
+
+		<if test="${item_no}" operator="ne" value="null">
+			     AND  MGL.ITEM_NO             LIKE '%#item_no#%'          	-- 품번
+		</if>
+		<if test="${description_loc}" operator="ne" value="null">
+			     AND  MGL.DESCRIPTION_LOC     LIKE '%#description_loc#%'	-- 품명(LOC)
+		</if>
+		<if test="${description_eng}" operator="ne" value="null">
+			     AND  MGL.DESCRIPTION_ENG     LIKE '%#description_eng#%'	-- 품명(ENG)
+		</if>
+			-- 2003.08.01.(신병곤)  규격은 쓰이지는 않으나 그냥 둠 (청구의 MyCatalog 와 동일한 조회조건을 위하여 규격 추가 했으나 쓰이지 않음)
+			  ORDER   BY   MGL.MATERIAL_TYPE,
+			               MGL.MATERIAL_CTRL_TYPE,
+			               MGL.MATERIAL_CLASS1,
+			               MGL.ITEM_NO
+	</method>
+
+	<method name="et_getmyCatalog">
+		SELECT
+			GETICOMCODE2(HOUSE_CODE, 'M040', MATERIAL_TYPE) AS MATERIAL_TYPE_NAME,
+			GETICOMCODE2(HOUSE_CODE, 'M041', MATERIAL_CTRL_TYPE) AS MATERIAL_CTRL_TYPE_NAME,
+			GETICOMCODE2(HOUSE_CODE, 'M042', MATERIAL_CLASS1) AS MATERIAL_CLASS1_NAME,
+			GETICOMCODE2(HOUSE_CODE, 'M122', MATERIAL_CLASS2) AS MATERIAL_CLASS2_NAME,
+			MATERIAL_TYPE,
+			MATERIAL_CTRL_TYPE,
+			MATERIAL_CLASS1,
+			MATERIAL_CLASS2,
+			ITEM_NO,
+			DESCRIPTION_LOC,
+			DESCRIPTION_ENG,
+			SPECIFICATION,
+			BASIC_UNIT,
+			NVL(
+			 	(
+			 		SELECT
+			 			CODE
+			 		FROM
+						scode
+					WHERE TYPE = MATERIAL_CLASS1
+				),
+				'F'
+			) AS ITEMFLAG,
+			(
+				SELECT
+					USER_NAME_LOC
+				FROM
+					ICOMLUSR L,
+					ICOMOGDP O
+				WHERE L.HOUSE_CODE = ${house_code}
+				AND O.HOUSE_CODE = L.HOUSE_CODE
+				AND O.COMPANY_CODE = L.COMPANY_CODE
+				AND O.DEPT = L.DEPT
+				AND L.USER_ID = M.CTRL_PERSON_ID
+			) AS NAME_LOC,
+			CTRL_PERSON_NAME_LOC,
+			CTRL_PERSON_ID,
+			(
+				SELECT
+					DEPT
+				FROM
+					ICOMLUSR
+				WHERE HOUSE_CODE=${house_code}
+				AND USER_ID = M.CTRL_PERSON_ID
+			) AS DEPT,
+			ITEM_BLOCK_FLAG,
+			MAKER_CODE,
+			MAKER_NAME,
+			MAKER_ITEM_NO,
+			'',
+			'',
+			'',
+			'',
+			'',
+			'' AS STR_CODE,
+			'' AS OPERATING_CODE,
+			CTRL_CODE,
+			PURCHASE_LOCATION,
+			DRAWING_NO,
+			IMAGE_FILE_PATH,
+			ITEM_GROUP,
+			'',
+			MENU_FIELD_CODE,
+			SG_REFITEM,
+			DELY_TO_ADDRESS,
+			KTGRM,
+			IMAGE_FILE_PATH,
+			IMAGE_FILE			
+		FROM
+			(
+				SELECT
+					K.MATERIAL_TYPE,
+					K.MATERIAL_CTRL_TYPE,
+					K.MATERIAL_CLASS1,
+					K.MATERIAL_CLASS2,
+					K.ITEM_NO,
+					K.DESCRIPTION_LOC,
+					K.DESCRIPTION_ENG ,
+					K.SPECIFICATION,
+					K.CTRL_PERSON_NAME_LOC,
+					K.CTRL_PERSON_ID,
+					K.BASIC_UNIT,
+					K.MAKER_CODE,
+					K.MAKER_NAME,
+					K.MAKER_ITEM_NO,
+					K.HOUSE_CODE,
+					K.ITEM_BLOCK_FLAG ,
+					K.CTRL_CODE,
+					K.PURCHASE_LOCATION,
+					K.DRAWING_NO,
+					K.MENU_FIELD_CODE,
+					K.SG_REFITEM,
+					K.ITEM_GROUP,
+					(
+						SELECT
+							'(' || DELY_ZIP_CODE || ') ' || DELY_ADDRESS_LOC
+						FROM
+							ICOMADDR
+						WHERE HOUSE_CODE = ${house_code}
+						AND CODE_NO = ${user_id}
+						AND CODE_TYPE = '3'
+					) AS DELY_TO_ADDRESS,
+					K.KTGRM,
+					K.IMAGE_FILE_PATH,
+					K.IMAGE_FILE
+				FROM
+					(
+						SELECT
+							MTGL.MATERIAL_TYPE              AS MATERIAL_TYPE,
+							MTGL.MATERIAL_CTRL_TYPE         AS MATERIAL_CTRL_TYPE,
+							MTGL.MATERIAL_CLASS1            AS MATERIAL_CLASS1,
+							MTGL.MATERIAL_CLASS2            AS MATERIAL_CLASS2,
+							MTGL.ITEM_NO                    AS ITEM_NO,
+							MTGL.DESCRIPTION_LOC            AS DESCRIPTION_LOC,
+							MTGL.DESCRIPTION_ENG            AS DESCRIPTION_ENG ,
+							MTGL.SPECIFICATION              AS SPECIFICATION,
+							NVL(S.CTRL_TYPE,'P')            AS CTRL_TYPE,
+							' '                             AS CTRL_TYPE1,
+							S.PURCHASE_LOCATION  AS PURCHASE_LOCATION,
+							MTGL.BASIC_UNIT                 AS BASIC_UNIT,
+							MTGL.MAKER_CODE                 AS MAKER_CODE,
+							MTGL.MAKER_NAME                 AS MAKER_NAME,
+							MTGL.MAKER_ITEM_NO              AS MAKER_ITEM_NO,
+							MTGL.ITEM_GROUP              	 AS ITEM_GROUP,
+							${house_code}              	 AS HOUSE_CODE,
+							NVL(
+								MTGL.ITEM_BLOCK_FLAG,
+								'N'
+							)   AS ITEM_BLOCK_FLAG,
+<![CDATA[
+							NVL(
+								S.CTRL_CODE,
+								(
+									SELECT
+										CTRL_CODE
+									FROM
+										ICOMBACO
+									WHERE HOUSE_CODE = ${house_code}
+									AND COMPANY_CODE = ${company_code}
+									AND CTRL_TYPE = 'P' AND rownum < 2
+								)
+							) AS CTRL_CODE,
+							NVL(
+								S.CTRL_PERSON_ID,
+								(
+									SELECT
+										CTRL_PERSON_ID
+									FROM
+										ICOMBACP
+									WHERE HOUSE_CODE = ${house_code}
+									AND CTRL_CODE = (
+										SELECT
+											CTRL_CODE
+										FROM
+											ICOMBACO
+										WHERE HOUSE_CODE = ${house_code}
+										AND COMPANY_CODE = ${company_code}
+										AND CTRL_TYPE = 'P'
+										AND rownum < 2
+									)
+									AND CTRL_TYPE = 'P'
+									AND rownum < 2
+								)
+							) AS CTRL_PERSON_ID ,
+]]>
+							GETUSERNAMELOC(${house_code},S.CTRL_PERSON_ID) AS CTRL_PERSON_NAME_LOC,
+							CASE WHEN
+								NVL(DRAWING_LINK_FLAG,'0') = '0'
+							THEN
+								''
+							ELSE
+								DRAWING_NO1
+							END DRAWING_NO,
+							MYCL.MENU_FIELD_CODE AS   MENU_FIELD_CODE,
+							'11' AS SG_REFITEM,
+			     			MTGL.KTGRM,
+   			 				MTGL.IMAGE_FILE_PATH, --이미지경로(히든)
+   			 				MTGL.IMAGE_FILE_PATH AS IMAGE_FILE --이미지(사용자에게 보임)      			     			
+			     			
+						FROM
+							ICOYMYCL MYCL,
+							ICOMMTGL MTGL left outer join
+							(
+								SELECT
+									DISTINCT BACP.CTRL_PERSON_ID,
+									GETUSERNAMELOC(${house_code},BACP.CTRL_PERSON_ID) AS GETUSERNAMELOC,
+									MCPM.HOUSE_CODE,
+									MCPM.MATERIAL_CLASS1,
+									MCPM.CTRL_CODE,
+									BAPR.PURCHASE_LOCATION,
+									MCPM.CTRL_TYPE
+								FROM
+									ICOMMCPM MCPM,
+									ICOMBACP BACP,
+									ICOMBAPR BAPR,
+									scode CODE
+								WHERE BAPR.HOUSE_CODE = ${house_code}
+								AND  BAPR.PR_LOCATION = '01'
+								AND  MCPM.HOUSE_CODE = BAPR.HOUSE_CODE
+								AND  MCPM.PURCHASE_LOCATION = BAPR.PURCHASE_LOCATION
+								AND  MCPM.HOUSE_CODE = BACP.HOUSE_CODE
+								AND  MCPM.CTRL_CODE  = BACP.CTRL_CODE
+								AND  MCPM.CTRL_TYPE  = BACP.CTRL_TYPE
+								AND  BAPR.STATUS IN ('C','R')
+								AND  MCPM.STATUS IN ('C','R')
+								AND  BACP.STATUS IN ('C','R')
+								AND  MCPM.MATERIAL_CLASS1 = CODE.CODE
+								AND  CODE.HOUSE_CODE = MCPM.HOUSE_CODE
+								AND  CODE.TYPE = 'M122'
+								AND BACP.CTRL_PERSON_ID=${user_id}
+								AND ROWNUM = 1
+							) S
+							on   MTGL.HOUSE_CODE = S.HOUSE_CODE
+							AND   MTGL.MATERIAL_CLASS2 = S.MATERIAL_CLASS1
+						WHERE   MYCL.HOUSE_CODE = ${house_code}
+						AND   MYCL.USER_ID = ${user_id}
+						AND   MYCL.HOUSE_CODE = MTGL.HOUSE_CODE
+						AND   MYCL.ITEM_NO = MTGL.ITEM_NO
+						AND   MTGL.HOUSE_CODE = ${house_code}
+						AND   MYCL.ITEM_NO = MTGL.ITEM_NO
+						AND   UPPER(MTGL.ITEM_NO) LIKE UPPER('%' || $S{item_no} || '%')
+						AND   UPPER(MTGL.DESCRIPTION_LOC) LIKE UPPER('%' || $S{description_loc} || '%')
+						AND   UPPER(MTGL.DESCRIPTION_ENG) LIKE UPPER('%' || $S{description_eng} || '%')
+						AND   UPPER(MTGL.MAKER_NAME) LIKE UPPER('%' || $S{MAKER_NAME} || '%')
+						AND   MTGL.STATUS IN ('C','R')
+						AND   MTGL.USEDFLAG = 'Y'
+					)  K
+				) M
+			ORDER BY
+				MATERIAL_TYPE,
+				MATERIAL_CTRL_TYPE,
+				MATERIAL_CLASS1,
+				ITEM_NO
+	</method>
+
+	<method name="et_setDelete_myCatalog">
+		DELETE ICOYMYCL
+		WHERE HOUSE_CODE       = ${HOUSE_CODE}
+		  AND USER_ID          = ${USER_ID}
+		  AND ITEM_NO          = ${ITEM_NO}
+		  AND MENU_FIELD_CODE  = ${MENU_FIELD_CODE}
+	</method>
+
+	<method name="">
+
+	</method>
+
+	<method name="">
+
+	</method>
+
+	<method name="">
+
+	</method>
+
+	<method name="">
+
+	</method>
+
+	<method name="">
+
+	</method>
+
+	<method name="">
+
+	</method>
+
+	<method name="">
+
+	</method>
+
+</service>

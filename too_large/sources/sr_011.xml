@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+<service>
+	  <method name ="getChkList">
+    <![CDATA[
+		SELECT A.C_FACTOR_REFITEM, A.FACTOR_NAME, 			
+               A.SCALE_COUNT, A.CHANGE_DATE, B.USER_NAME_LOC  	
+		FROM ICOMVCFH A, ICOMLUSR B 						
+		WHERE A.ADD_USER_ID = B.USER_ID 					
+		AND A.HOUSE_CODE= ${session.HOUSE_CODE}			
+		AND A.HOUSE_CODE = B.HOUSE_CODE		 			
+		AND A.USE_FLAG = 'Y'
+		AND A.FACTOR_NAME  LIKE '%' || $S{item_name}  || '%'
+   		AND B.USER_NAME_LOC  LIKE '%' || $S{operator}  || '%'	
+   		order by A.CHANGE_DATE asc
+	 ]]>
+	 
+	 
+	 
+    </method>
+   
+   
+    <method name = "setChkDelete_1">
+    <![CDATA[
+		UPDATE ICOMVCFH SET use_flag = 'N'				
+		WHERE C_FACTOR_REFITEM IN ( ${c_factor_refitem} ) 
+    	AND HOUSE_CODE = ${session.HOUSE_CODE}				
+    ]]>
+    </method>
+    
+        <method name = "setChkDelete_2">
+    <![CDATA[
+		UPDATE ICOMVCFD 
+		SET	use_flag = 'N' 
+		WHERE C_FACTOR_REFITEM IN ( ${c_factor_refitem} ) 	
+    	AND HOUSE_CODE = ${session.HOUSE_CODE}				
+		
+	 ]]>
+    </method>
+
+</service>
